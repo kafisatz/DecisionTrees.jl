@@ -4798,10 +4798,10 @@ function determine_used_variables(bt::BoostedTree)
 
 	for iter=1:length(intNumVarsUsed)
 		for n=1:length(intNumVarsUsed[iter])
-			boolNumVarsUsedByModel[n][:]=intNumVarsUsed[iter][n].|boolNumVarsUsedByModel[n]
+			boolNumVarsUsedByModel[n][:]=(intNumVarsUsed[iter][n].>0).|boolNumVarsUsedByModel[n]
 		end
 		for n=1:length(intCharVarsUsed[iter])
-			boolCharVarsUsedByModel[n].=(intCharVarsUsed[iter][n]).|boolCharVarsUsedByModel[n]
+			boolCharVarsUsedByModel[n][:]=(intCharVarsUsed[iter][n].>0).|boolCharVarsUsedByModel[n]
 		end
 	end
 

@@ -3178,6 +3178,7 @@ end
 #Rank optimization write SAS Code fn
 function write_sas_code(numeratorval::Array{Float64,1},leafIndexWhichIsAdjustedArray::Array{Int64,1},leavesPerTree::Array{Array{Leaf,1},1},bt::BoostedTree,numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1},premStep::Float64,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"),indent::Int64=0)
 warn("this is in the works.... and will likely fail")
+warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
 iterations=size(bt.trees,1)
 fiostream=open(fileloc,"w")
 for i=1:iterations
@@ -3197,7 +3198,8 @@ end
 
 #write SAS Code fn
 function write_sas_code(candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"),indent::Int64=0)
-iterations=size(bt.trees,1)
+	warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
+	iterations=size(bt.trees,1)
 local vname
 notsign=convert(String,"not")
 insign=convert(String," in ")
@@ -3316,7 +3318,8 @@ close(fiostream)
 end
 
 function write_sas_code(candMatWOMaxValues::Array{Array{Float64,1},1},inTree::Tree,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),mdf::Float64=1.0;leafvarname::String=convert(String,"leaf"),indent::Int64=0)
-tree=inTree.rootnode
+	warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
+	tree=inTree.rootnode
 notsign=convert(String,"not")
 insign=convert(String," in ")
 quotestr=convert(String,"'")
@@ -3408,7 +3411,8 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
 end
 
 function write_sas_code(leaves::Array{Leaf,1},number_of_num_features::Int64,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"))
-#open file
+	warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
+	#open file
 fiostream=open(fileloc,"w")
   #write beginning
   #write BOM
@@ -4491,6 +4495,165 @@ function numberAsStringForCSharp(x)
 	return s
 end
 
+function vba_get_signature(mappings,df_name_vector,number_of_num_features)
+	res=""
+	for i=1:number_of_num_features
+		thisvarname=df_name_vector[i]		
+		res=string(res,thisvarname," As Double,")		
+	end
+	for i=1:length(mappings)
+		thisvarname=df_name_vector[number_of_num_features+i]		
+		res=string(res,thisvarname," As String,")
+	end	
+
+	str_fn_evaluate_profile="Function readDataAndDeriveRawRelativity() as Double\r\n\r\nApplication.Volatile\r\n'Define Variables\r\n"	
+	for i=1:number_of_num_features
+		thisvarname=df_name_vector[i]		
+		str_fn_evaluate_profile=string(str_fn_evaluate_profile,"Dim ",thisvarname," As Double\r\n")		
+	end
+	for i=1:length(mappings)
+		thisvarname=df_name_vector[number_of_num_features+i]		
+		str_fn_evaluate_profile=string(str_fn_evaluate_profile,"Dim ",thisvarname," As String\r\n")
+	end	
+
+	str_fn_evaluate_profile=string(str_fn_evaluate_profile,"\r\n\r\n'Read Data from named ranges\r\n'NOTE: all strings are converted to uppercase here!\r\n")
+
+	for i=1:number_of_num_features
+		thisvarname=df_name_vector[i]		
+		str_fn_evaluate_profile=string(str_fn_evaluate_profile,thisvarname," = Range(",DoubleQuote,thisvarname,DoubleQuote,").Value\r\n") #As Double\r\n")		
+	end
+	for i=1:length(mappings)
+		thisvarname=df_name_vector[number_of_num_features+i]		
+		str_fn_evaluate_profile=string(str_fn_evaluate_profile,thisvarname," = Ucase(Range(",DoubleQuote,thisvarname,DoubleQuote,").Text)\r\n")
+	end	
+
+	callString=""
+	for i=1:number_of_num_features
+		thisvarname=df_name_vector[i]		
+		callString=string(callString,thisvarname,"\:\=",thisvarname,", ")		
+	end
+	for i=1:length(mappings)
+		thisvarname=df_name_vector[number_of_num_features+i]		
+		callString=string(callString,thisvarname,"\:\=",thisvarname,", ")
+	end	
+	#remove last two chars
+	callString=callString[1:end-2]
+	callString=string("raw_rel = deriveRawRelativity(",callString,")\r\n readDataAndDeriveRawRelativity = raw_rel\r\n\r\nEnd Function\r\n")
+
+# resvba = deriveRawRelativity(GRP_NEW_NCD_NUMERIC:=GRP_NEW_NCD_NUMERIC, NEW_NCD_LAST_NUMERIC:=NEW_NCD_LAST_NUMERIC, GRP_CAR_AGE_NUMERIC:=GRP_CAR_AGE_NUMERIC, INC_YEAR:=INC_YEAR, SEAT:=SEAT, CAR_PRICE:=CAR_PRICE, AGE:=AGE, TONNAGE:=TONNAGE, HIGH_RISK_IND:=HIGH_RISK_IND, AIRBAG_JY:=AIRBAG_JY, DISP:=DISP, PROD_CODE:=PROD_CODE, BRAND_NAME_JY:=BRAND_NAME_JY, ORG_CLASS:=ORG_CLASS, CUST_TYPE:=CUST_TYPE, CHANNEL_GROUP:=CHANNEL_GROUP, NCD_BFD:=NCD_BFD, IS_NEW:=IS_NEW, MULTI_COV:=MULTI_COV, TRUCK_TYPE:=TRUCK_TYPE, SERIES_LEVEL:=SERIES_LEVEL, GRP_RENEW:=GRP_RENEW, GRP_SEX:=GRP_SEX)
+	str_fn_evaluate_profile=string(str_fn_evaluate_profile,"\r\n\r\n",callString,"\r\n\r\n")
+
+	#remove last comma from res
+	return res[1:end-1],str_fn_evaluate_profile 
+end
+
+function write_and_create_boollist_char_vba(fiostream::IOStream,mappings::Array{Array{String,1}},df_name_vector::Array{String,1},number_of_num_features::Int,boolCharVarsUsedByModel::Array{Array{Bool,1},1})
+	#note todo tbd check this: here we only consider the values which we observe in the training data
+	#of course we would also know the values from the validation data, but that should not matter here, since any new data which the module
+	#will see, might have even other/new values in it.
+	#Does that make sense? Or should we include the values from the val data in this list?
+		boollist=Array{Array{String,1}}(0)
+		for i=1:length(mappings)
+			thisvarname=df_name_vector[number_of_num_features+i]
+			thisboollist=Array{String}(0)
+			for j=1:length(mappings[i])
+					str=create_custom_string(mappings[i][j]) #this can be any String, let us see what C# can handle
+					#if C# isunable to handle the UTF8Strings, we need to convert it to some ASCIIString, while ensuring that we still have UNIQUENESS, todo /tbd check this
+					thisbool=convert(String,string(thisvarname,"_",str))
+					while in(thisbool,thisboollist) #need to ensure that the list is unique!
+						thisbool=convert(String,string(thisbool,"_2"))
+					end
+					push!(thisboollist,thisbool)
+					if boolCharVarsUsedByModel[i][j]
+						write(fiostream,"Dim ",thisbool," as Boolean: ",thisbool," = False\r\n")
+					end
+			end
+			@assert unique(thisboollist)==thisboollist
+			push!(boollist,copy(thisboollist))
+		end
+		write(fiostream,"\r\n")
+		return boollist
+end
+
+function write_and_create_boollist_num_vba(fiostream::IOStream,df_name_vector::Array{String,1},number_of_num_features::Int,candMatWOMaxValues::Array{Array{Float64,1},1},boolNumVarsUsedByModel::Array{Array{Bool,1},1})
+#NOTE, here we assume that the numerical variables are "first" in the df_name_vector
+#todo: only define booleans which are actually used by the model! this will keep the code smaller and likely more efficient
+boollist=Array{Array{String,1}}(0)
+	for i=1:number_of_num_features
+		thisvarname=df_name_vector[i]
+		thisboollist=Array{String}(0)
+		for j=1:length(candMatWOMaxValues[i])
+				thisbool=convert(String,string(thisvarname,"_isLE_",numberAsStringForCSharp(candMatWOMaxValues[i][j])))
+				while in(thisbool,thisboollist) #need to ensure that the list is unique!
+					thisbool=string(thisbool,"_2")
+				end
+				push!(thisboollist,thisbool)
+				if boolNumVarsUsedByModel[i][j]
+					write(fiostream,"Dim ",thisbool," as Boolean: ",thisbool," = False\r\n")
+				end
+		end
+		@assert unique(thisboollist)==thisboollist
+		push!(boollist,copy(thisboollist))
+	end
+	write(fiostream,"\r\n")
+	return boollist
+end
+
+function vba_write_writeIterations(indent::Int,fiostream::IOStream,iteration::Int,bt::BoostedTree,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features)
+	#write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n\{\r\n")
+	tree=bt.trees[iteration]
+	#orig_id=tree.featid
+	#orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
+	#write(fiostream," " ^ indent)
+	#if orig_id>0
+	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n\{\r\n")
+	#else
+#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n\{\r\n")
+#	end
+			vba_write_writeIterations_recursive(bt.moderationvector[iteration],indent,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
+#		write(fiostream," " ^ (indent-1))
+#		write(fiostream," \}\r\nelse\r\n\{\r\n")
+#			vba_write_writeIterations_recursive(indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings)
+#		write(fiostream," " ^ (indent-1))
+#		write(fiostream,"\}\r\n")
+
+	#write(fiostream,"return dRawscore;\r\n\}\r\n\r\n")
+	return nothing
+end
+
+function vba_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream::IOStream,tree::Node,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features::Int)
+	orig_id=tree.featid
+	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
+	write(fiostream," " ^ indent)
+	if orig_id>0
+		write(fiostream,repeat("\t",indent),"If (",boolListNum[this_id][tree.subset[end]],") Then\r\n")
+	else
+		write(fiostream,repeat("\t",indent),"If (",join(boolListChar[-orig_id][collect(tree.subset)]," Or "),") Then\r\n")
+	end
+		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n\{") : write(fiostream,'\{')
+		#write(fiostream,"EndIf\r\n")
+			vba_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.left,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
+		#if typeof(tree.left)!=Leaf
+		#	write(fiostream," " ^ (indent-1))
+			write(fiostream,repeat("\t",indent),"Else\r\n")
+		#end
+		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n\{") : write(fiostream,'\{')
+		#write(fiostream,"\r\n")
+				vba_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
+		#if typeof(tree.right)!=Leaf
+#		write(fiostream,"\r\n\{") : write(fiostream,'\{')
+		#	write(fiostream," " ^ (indent-1))
+			write(fiostream,repeat("\t",indent),"EndIf\r\n")
+		#end
+	return nothing
+end
+
+function vba_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream::IOStream,tree::Leaf,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features::Int)
+	val=_moderate(tree.fitted,mdf)	
+	write(fiostream,repeat("\t",indent),"dRawscore = dRawscore * $(val)\r\n") # \}\r\n") #//Leafnumber=$(tree.id)")
+	return nothing
+end
+
 function write_and_create_boollist_num(fiostream::IOStream,df_name_vector::Array{String,1},number_of_num_features::Int,candMatWOMaxValues::Array{Array{Float64,1},1},boolNumVarsUsedByModel::Array{Array{Bool,1},1})
 #NOTE, here we assume that the numerical variables are "first" in the df_name_vector
 #todo: only define booleans which are actually used by the model! this will keep the code smaller and likely more efficient
@@ -4591,7 +4754,62 @@ function csharp_write_RequiredElementsProvided(fiostream::IOStream,df_name_vecto
 	return nothing
 end
 
-function csharp_write_ScoreErrorRespeonseCodeCheck(fiostream::IOStream,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},boolCharVarsUsedByModel::Array{Array{Bool,1},1},boolNumVarsUsedByModel::Array{Array{Bool,1},1},boolVariablesUsed::Array{Bool,1})
+
+function vba_write_evaluate_profile_fn()
+
+	return nothing
+end
+
+function vba_write_booleans(fiostream::IOStream,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},boolCharVarsUsedByModel::Array{Array{Bool,1},1},boolNumVarsUsedByModel::Array{Array{Bool,1},1},boolVariablesUsed::Array{Bool,1})
+	start=
+	"""
+	'Definition of Booleans
+	"""
+	write(fiostream,start)
+	#numeric vars
+		for i=1:length(boolListNum)
+			if boolVariablesUsed[i]
+				#str=lowercase(df_name_vector[i])
+				str=df_name_vector[i]
+				#write(fiostream,"if (!Double.TryParse(strValue, NumberStyles.Number, numberFormatCulture, out dResult)) return ScoreError.ResponseCode.ValueIsNotAValidNumber;\r\n")
+				write(fiostream,"'initially all LE booleans are set to false <-> all numeric values are infinite\r\n")
+				write(fiostream,"'Note that VBA displays 'x <= 2.0' as 'x <= 2.\#' if x is of type Double\r\n")
+				for j=1:length(boolListNum[i])
+					if boolNumVarsUsedByModel[i][j]
+						write(fiostream,"if (",str," <= $(candMatWOMaxValues[i][j])) Then \r\n\t",boolListNum[i][j]," = True \r\n\ EndIf \r\n")						
+					end
+				end
+				
+			end
+		end
+	#character vars
+		for i=1:length(boolListChar)
+			i_index=length(boolListNum)+i
+			if boolVariablesUsed[i_index]
+				#str=lowercase(df_name_vector[i])
+				str=df_name_vector[i_index]
+				#write(fiostream,"case ",DoubleQuote,lowercase(str),DoubleQuote,'\:',"\r\n",str,"_Provided=true;\r\n")
+				#write(fiostream,"if (strValue.Length==0) return ScoreError.ResponseCode.BlankValuesNotValid;\r\n")
+				write(fiostream,"Select Case ",str,"\r\n")
+				for j=1:length(boolListChar[i])
+					if boolCharVarsUsedByModel[i][j]
+						write(fiostream,"Case Ucase(",DoubleQuote,string(mappings[i][j]),DoubleQuote,")\r\n\t$(boolListChar[i][j]) = True \r\n")
+					end
+				end
+				write(fiostream,"End Select\r\n\r\n")
+			end
+		end
+	endstr=
+	""" 
+	'End of the definition of the Boolean variables
+
+	'Start of the definition of the trees
+	"""
+	write(fiostream,endstr)
+	return nothing
+end
+
+function csharp_write_ScoreErrorResponseCodeCheck(fiostream::IOStream,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},boolCharVarsUsedByModel::Array{Array{Bool,1},1},boolNumVarsUsedByModel::Array{Array{Bool,1},1},boolVariablesUsed::Array{Bool,1})
 	start=
 	"""
 	public ScoreError.ResponseCode Check(string strKey, string strValue)
@@ -4673,6 +4891,94 @@ function csharp_write_elseif_ScoreMap(fiostream::IOStream,intArray_1_to_n::Array
 	end
 	return nothing
 end
+
+
+function vba_write_ScoreMap(fiostream::IOStream,maxRawRelativityPerScoreSorted::Array{Float64,1},estimatesPerScore::Array{Float64,1})
+	start=
+	"""
+
+	Function derive_score_from_raw_relativity(dRawScore as Double) as Integer 'as Collection
+		'Dim cResult as New Collection
+		Dim iScore as Integer
+		Dim dEstimate as Double
+		iScore = -1
+		dEstimate = 0.0
+
+		If dRawScore <= 0 Then
+			'This should not happen
+			derive_score_from_raw_relativity = -1
+			Exit Function
+		End If
+	"""
+	write(fiostream,start)
+	vba_write_elseif_ScoreMap(fiostream,0,collect(1:length(maxRawRelativityPerScoreSorted)),maxRawRelativityPerScoreSorted,estimatesPerScore)
+	endstr=
+	"""
+
+		'cResult.add CStr(iScore), "Score"
+		'cResult.add CStr(dEstimate), "Estimate"
+
+		derive_score_from_raw_relativity = iScore
+
+	End Function
+
+	"""
+	write(fiostream,endstr)
+
+	start2=
+	"""
+
+	Function derive_estimate_from_raw_relativity(dRawScore as Double) as Double		
+		Dim iScore as Integer
+		Dim dEstimate as Double
+		iScore = -1
+		dEstimate = 0.0
+
+		If dRawScore <= 0 Then
+        	'This should not happen
+        	derive_estimate_from_raw_relativity = -999.999
+        	Exit Function
+    	End If    
+	"""
+	write(fiostream,start2)	
+	vba_write_elseif_ScoreMap(fiostream,0,collect(1:length(maxRawRelativityPerScoreSorted)),maxRawRelativityPerScoreSorted,estimatesPerScore)
+	endstr2=
+	"""
+
+		derive_estimate_from_raw_relativity = dEstimate
+
+	End Function
+
+	"""
+	write(fiostream,endstr2)
+	return nothing
+end
+
+function vba_write_elseif_ScoreMap(fiostream::IOStream,indent::Int,intArray_1_to_n::Array{Int,1},maxRawRelativityPerScoreSorted::Array{Float64,1},estimatesPerScore::Array{Float64,1})
+	#NOTE: here we assume that the relativities are sorted in increasing order todo/tbd take this on a list of core assumptions
+	minval=10	
+	if length(maxRawRelativityPerScoreSorted)>minval
+		middle=fld(length(maxRawRelativityPerScoreSorted),2)
+		middle=max(2,min(length(maxRawRelativityPerScoreSorted)-1,middle))
+		write(fiostream,repeat("\t",indent),"If (dRawScore <= $(maxRawRelativityPerScoreSorted[middle])) Then\r\n")
+			vba_write_elseif_ScoreMap(fiostream,indent+1,intArray_1_to_n[1:middle],maxRawRelativityPerScoreSorted[1:middle],estimatesPerScore[1:middle])
+		write(fiostream,repeat("\t",indent),"Else\r\n")
+			vba_write_elseif_ScoreMap(fiostream,indent+1,intArray_1_to_n[middle+1:end],maxRawRelativityPerScoreSorted[middle+1:end],estimatesPerScore[middle+1:end])
+		write(fiostream,repeat("\t",indent),"EndIf\r\n")
+	else
+		indent_score=repeat("\t",indent+1)
+		write(fiostream,repeat("\t",indent),"If (dRawScore <= $(maxRawRelativityPerScoreSorted[1])) Then\r\n",indent_score,"iScore = $(intArray_1_to_n[1])\r\n",indent_score,"dEstimate = $(estimatesPerScore[1])\r\n")
+		for j=2:length(maxRawRelativityPerScoreSorted)
+			write(fiostream,repeat("\t",indent),"ElseIf (dRawScore <= $(maxRawRelativityPerScoreSorted[j])) Then\r\n",indent_score,"iScore=$(intArray_1_to_n[j])\r\n",indent_score,"dEstimate = $(estimatesPerScore[j])\r\n")
+			if j==length(maxRawRelativityPerScoreSorted)
+				write(fiostream,repeat("\t",indent),"Endif\r\n")
+			end
+		end
+		#Last else condition is "special"
+	end
+	return nothing
+end
+
 
 function csharp_write_ScoreMap(fiostream::IOStream,maxRawRelativityPerScoreSorted::Array{Float64,1},estimatesPerScore::Array{Float64,1})
 	start=
@@ -4822,8 +5128,83 @@ function determine_used_variables(bt::BoostedTree)
 return boolVariablesUsed,boolNumVarsUsedByModel,boolCharVarsUsedByModel
 end
 
-function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesPerScore::Array{Float64,1},trn_charfeatures_PDA::Array{pdaMod,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
-	#function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},vectorOfRulePathsToLeavesArrays::Array{Array{Array{Rulepath,1},1},1},estimatesPerScore::Array{Float64,1},trn_charfeatures_PDA::Array{pdaMod,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function write_vba_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},vectorOfRulePathsToLeavesArrays::Array{Array{Array{Rulepath,1},1},1},estimatesPerScore::Array{Float64,1},trn_charfeatures_PDA::Array{pdaMod,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
+	number_of_num_features=sett.number_of_num_features
+	df_name_vector=sett.df_name_vector
+	iterations=size(bt.trees,1)
+
+	fiostream=open(fileloc,"a")
+	start_str="""
+Function Score() As Integer
+    Application.Volatile
+    Dim rel As Double
+    Dim sc As Integer
+    rel = readDataAndDeriveRawRelativity()
+    sc = -1
+    sc = derive_score_from_raw_relativity(rel)
+    Score = sc
+End Function
+	
+	"""
+	write(fiostream,start_str)
+	sigstr,strEvaluteProfile=vba_get_signature(mappings,df_name_vector,number_of_num_features)
+	write(fiostream,strEvaluteProfile)
+	write(fiostream,"Function deriveRawRelativity")	
+	write(fiostream,'(')	
+	write(fiostream,sigstr)
+	write(fiostream,")\r\n")	
+	write(fiostream,"\r\n'Boosted Tree produced by Julia. Time: $(now())\r\n")
+	#generate_csharpheader(fiostream)	
+	write(fiostream,"\r\n")
+	boolVariablesUsed,boolNumVarsUsedByModel,boolCharVarsUsedByModel=determine_used_variables(bt)
+	
+	#NOTE: these two lists are not really booleans, but merely strings which define booleans in the C# code, the notation may be slighly misleading.
+	boolListNum=write_and_create_boollist_num_vba(fiostream,df_name_vector,number_of_num_features,candMatWOMaxValues,boolNumVarsUsedByModel)
+	@assert length(boolListNum)==length(candMatWOMaxValues) #todo/tbd we could even check here whether each bool list has the right size (then again it should be fulfilled
+	boolListChar=write_and_create_boollist_char_vba(fiostream,mappings,df_name_vector,number_of_num_features,boolCharVarsUsedByModel)
+	@assert length(boolListChar)==length(mappings)
+	#error("bk continue here")
+	#csharp_write_RequiredElementsProvided(fiostream,df_name_vector,boolVariablesUsed)
+	warn("todo, what if some variables are not as expected!!!")
+	vba_write_booleans(fiostream,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,boolCharVarsUsedByModel,boolNumVarsUsedByModel,boolVariablesUsed)
+	
+	#for i=1:length(df_name_vector)
+	#	if boolVariablesUsed[i]
+	#		write(fiostream,"private bool ",df_name_vector[i],"_Provided=false;\r\n")
+	#	end
+	#end
+	#write(fiostream,"\r\n")
+	
+	#todo tbd, take note of this somewhere and do not forget it!
+	#for the c# code the last entry of maxRawRelativityPerScoreSorted is modified to be 50% (50% is arbitrary here) higher than the value which was derived by Julia
+	#this means that any policy will get the maximal score if it is "worse" than any training policy
+	#but if it is much worse, it will get the default score of -1
+	modified_maxRawRelativityPerScoreSorted=deepcopy(bt.maxRawRelativityPerScoreSorted)
+	modified_maxRawRelativityPerScoreSorted[end]=modified_maxRawRelativityPerScoreSorted[end]*1.5
+	#csharp_write_GenerateScore(fiostream,bt)
+	write(fiostream,"Dim dRawscore as Double\r\n 'Initialize Raw Score \r\n dRawscore=1.0\r\n\r\n")
+	for i=1:length(bt.trees)
+		write(fiostream,"\r\n'Iteration $(i)\r\n")
+		vba_write_writeIterations(0,fiostream,i,bt,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
+	end
+	#write end of the code
+endstr="""
+deriveRawRelativity = dRawscore 
+End Function
+"""
+	write(fiostream,endstr)
+
+	warn("tbd derive score from raw relativity....")
+	vba_write_ScoreMap(fiostream,modified_maxRawRelativityPerScoreSorted,estimatesPerScore)
+	
+	close(fiostream)
+
+	return nothing
+end	
+
+
+function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},vectorOfRulePathsToLeavesArrays::Array{Array{Array{Rulepath,1},1},1},estimatesPerScore::Array{Float64,1},trn_charfeatures_PDA::Array{pdaMod,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -4847,13 +5228,13 @@ function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesP
 		end
 	end
 	write(fiostream,"\r\n")
-	#NOTE: these two lists are not really booleans, but merely strings which define booleans in the C# code, the notation may be slighly misleading.
+	#NOTE: these two lists are not really booleans, but merely strings which define booleans in the C# code, the notation may be slightly misleading.
 	boolListNum=write_and_create_boollist_num(fiostream,df_name_vector,number_of_num_features,candMatWOMaxValues,boolNumVarsUsedByModel)
 	@assert length(boolListNum)==length(candMatWOMaxValues) #todo/tbd we could even check here whether each bool list has the right size (then again it should be fulfilled
 	boolListChar=write_and_create_boollist_char(fiostream,mappings,df_name_vector,number_of_num_features,boolCharVarsUsedByModel)
 	@assert length(boolListChar)==length(mappings)
 	csharp_write_RequiredElementsProvided(fiostream,df_name_vector,boolVariablesUsed)
-	csharp_write_ScoreErrorRespeonseCodeCheck(fiostream,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,boolCharVarsUsedByModel,boolNumVarsUsedByModel,boolVariablesUsed)
+	csharp_write_ScoreErrorResponseCodeCheck(fiostream,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,boolCharVarsUsedByModel,boolNumVarsUsedByModel,boolVariablesUsed)
 	#todo tbd, take note of this somewhere and do not forget it!
 	#for the c# code the last entry of maxRawRelativityPerScoreSorted is modified to be 50% (50% is arbitrary here) higher than the value which was derived by Julia
 	#this means that any policy will get the maximal score if it is "worse" than any training policy
