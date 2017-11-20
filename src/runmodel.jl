@@ -522,6 +522,7 @@ datafolder,outfileStringOnly=splitdir(path_and_fn_wo_extension)
 
 filelistWithFilesToBeZipped=String[]
 csharp_code_file=string(path_and_fn_wo_extension,".cs")
+vba_code_file=string(datafolder,"\\",outfileStringOnly,".vba.txt")
 sas_code_file=string(path_and_fn_wo_extension,".sas")
 tree_file=string(path_and_fn_wo_extension,".txt")
 dot_graph_TXT_file=string(path_and_fn_wo_extension,".dot.txt")
@@ -733,6 +734,10 @@ prnt&&println("---Model Settings------------------------------------------------
 				estimatesPerScoreForCSSHARPCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
 				@time write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCSSHARPCode,trn_charfeatures_PDA,candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,csharp_code_file)
+				println("Writing VBA Code: \n $(vba_code_file)")
+				isfile(vba_code_file)&&rm(vba_code_file)
+				@time write_vba_code(vectorOfLeafArrays,vectorOfRulePathsToLeavesArrays,estimatesPerScoreForCSSHARPCode,trn_charfeatures_PDA,candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,mappings,0,sett)
+				push!(filelistWithFilesToBeZipped,vba_code_file)
 			end
 		#end #boosting
 		elseif "bagged_tree"==sett.model_type
