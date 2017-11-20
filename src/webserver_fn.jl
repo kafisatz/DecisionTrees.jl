@@ -66,7 +66,7 @@ function test_module_on_workers()
 							end
 							for l=1:ntests
 								chosenj=clist[l]
-								result= remotecall_fetch(p, DTM.run_model, [string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".csv") string("out_$(p)",chosenj)])
+								result= remotecall_fetch(p, DecisionTrees.run_model, [string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".csv") string("out_$(p)",chosenj)])
 								thisb=(result!=String["false"]) #expected result is a list of output files
 								@assert thisb
 								if !thisb
@@ -76,8 +76,8 @@ function test_module_on_workers()
 							end							
 						end			
 					end
-					#booleans[p] = remotecall_fetch(p,DTM.run_model,ARGS)
-					#rref=remotecall_wait(p,DTM.run_model,ARGS)
+					#booleans[p] = remotecall_fetch(p,DecisionTrees.run_model,ARGS)
+					#rref=remotecall_wait(p,DecisionTrees.run_model,ARGS)
 				end
 			end			
 		end		
@@ -293,7 +293,7 @@ function this_runs_on_worker(process,logFilename,juliaProgram,harg,arguments)
 		f1=open(logFilename, "w") 
 			redirect_stdout(f1)
 			redirect_stderr(f1)
-			this_result=DTM.run_model(arguments)
+			this_result=DecisionTrees.run_model(arguments)
 		close(f1)
 		redirect_stdout(std_orig)
 		redirect_stderr(stderr_orig)
@@ -322,7 +322,7 @@ function zipit{T<:AbstractString}(this_result::Array{T,1},arguments,logFilename)
 				tmplogfile=convert(String,string(dirname(dataf),'\\',"failed_log.log"))		
 				isfile(tmplogfile)&&rm(tmplogfile);
 				cp(logFilename,tmplogfile);
-				DTM.createZipFile(zipFilename,String[logFilename])	
+				DecisionTrees.createZipFile(zipFilename,String[logFilename])	
 		else
 			#just to be on the save side: check if files exist
 			flist=String[]
@@ -334,7 +334,7 @@ function zipit{T<:AbstractString}(this_result::Array{T,1},arguments,logFilename)
 					end
 				end
 			end		
-			DTM.createZipFile(zipFilename,flist)
+			DecisionTrees.createZipFile(zipFilename,flist)
 		end
 	end
 	return nothing

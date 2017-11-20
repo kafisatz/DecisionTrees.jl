@@ -12,14 +12,14 @@ println("************this is the DEVELOPMENT environment************")
 	#if nprocs()>0;include("sendto.jl");sendto(workers(),pdir=pdir);end;
 	#@everywhere include(string(pdir,"\\","totalsizeof.jl"))
 	#@everywhere include(string(pdir,"\\","init_python.jl"))
-	#@everywhere include(string(pdir,"\\","DTM.jl"))
+	#@everywhere include(string(pdir,"\\","DecisionTrees.jl"))
 	#@everywhere using Totalsizeof
 	@everywhere using DTM
 #report time	
 	telapsed=toq()
 	println("Time to start Julia and load packages: $(telapsed)")	
 #Run the model
-  #resbool=DTM.run_model(ARGS)
+  #resbool=DecisionTrees.run_model(ARGS)
   resbool=run_model(ARGS)
 
 telapsed=toq()

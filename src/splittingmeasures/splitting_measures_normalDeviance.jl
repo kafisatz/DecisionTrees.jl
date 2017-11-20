@@ -14,11 +14,11 @@
 	loc="C:\\jdata\\datafolder\\mortgage\\"
 	ARGS=[string(loc,"jmortgage.settings.csv") string(loc,"jmortgage.CSV") string("out_jmortgage")];
 	ARGS=[string(loc,"jmortgage.settings_profiling.csv") string(loc,"jmortgage.CSV") string("out_jmortgage")];
-	resbool=DTM.run_model(ARGS) #small version to compile functions
+	resbool=DecisionTrees.run_model(ARGS) #small version to compile functions
 
 	using Iterators
 	using DTM
-	#import DTM.pdaMod
+	#import DecisionTrees.pdaMod
 	using OnlineStats,SQLite,DataFrames, DataArrays, ProgressMeter, Iterators,PyCall,HDF5, JLD
 	dix=load(string(loc,"jmortgage.jld"));
 

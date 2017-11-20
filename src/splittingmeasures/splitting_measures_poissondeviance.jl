@@ -330,7 +330,7 @@ function get_poisson_deviances(current_meanl::Float64,current_meanr::Float64,lo,
 end
 
 #=
-	crit=DTM.PoissonDevianceSplit()
+	crit=DecisionTrees.PoissonDevianceSplit()
 	return_val,return_chosen_subset,return_chosen_sumwl,return_sumwr = calculateSplitValue(crit,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,features)
 	@show return_val
 	@show return_chosen_subset
