@@ -525,7 +525,14 @@ end
 
 function run_model_actual(dtmtable::DTMTable,sett::ModelSettings,fn::String)
 tic() #total modelling time , prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,1))s = $(round(elapsed_until_this_point/60,1))m")
+
 path_and_fn_wo_extension,ext=splitext(fn)
+if in(lowercase(ext),[".txt",".sas",".jl",".pdf"])
+else
+	@show fn
+	@show path_and_fn_wo_extension,ext
+	error("DTM: Unexpected file extension $(ext)")	
+end
 datafolder,outfileStringOnly=splitdir(path_and_fn_wo_extension)
 
 filelistWithFilesToBeZipped=String[]
