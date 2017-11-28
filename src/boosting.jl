@@ -204,7 +204,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	modelstats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
 	names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
 #resulting BT
-	resultingBT=BoostedTree(res,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,actual_moderationvector,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,BoolStartAtMean,MAPPINGSmoothedEstimatePerScore,est_matrix,modelstats)
+	resultingBT=BoostedTree(res,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,actual_moderationvector,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,BoolStartAtMean,MAPPINGSmoothedEstimatePerScore,est_matrix,modelstats,xlData)
 	return xlData,estimatedRatio,MatrixOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultingBT
 end
 
