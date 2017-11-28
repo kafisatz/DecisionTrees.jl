@@ -272,7 +272,7 @@ end
 function readSettings(settingsFilename)
 	local settingsArray,number_of_num_features
 	try
-		println("Importing Settings CSV: \n $(settingsFilename)")
+		println("Importing Settings CSV: \r\n $(settingsFilename)")
 		settingsArray=readcsv(settingsFilename,String) #it is read as String because otherwise some values are parsed as floats (which I want to suppress here)
 	catch readerror
 		@show readerror
@@ -935,7 +935,7 @@ function boolToUTF8String(x::Bool)
 end
 
 function writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
-	println("Exporting Stats to Excel file: \n $(statsfileExcel)")
+	println("Exporting Stats to Excel file: \r\n $(statsfileExcel)")
 	try 
 		isfile(statsfileExcel)&&rm(statsfileExcel)
 		@time write_statistics(xlData,statsfileExcel)
@@ -943,7 +943,7 @@ function writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
 	catch e
         @show e
         dump(2)
-		warn("DTM: Failed to create Excel Statistics file. \n $(statsfileExcel)")
+		warn("DTM: Failed to create Excel Statistics file. \r\n $(statsfileExcel)")
 	end
 	return nothing
 end
@@ -1727,7 +1727,7 @@ function deleteIfExists(f::AbstractString)
 	try
 		rm(f)
 	catch err
-		warn("Unable to delete file $(f) It might be open by another application.\n\n\n")
+		warn("Unable to delete file $(f) It might be open by another application.\r\n\r\n\r\n")
 		@show err
 	end
 	end
@@ -2568,7 +2568,7 @@ function full_indices(parentidx,left)
 end
 
 function my_write(f::IOStream,arr::AbstractArray;sep::Char=',')
-  write(f,"\n")
+  write(f,"\r\n")
   for i=1:size(arr,1)
     for j=1:size(arr,2)
       write(f,arr[i,j])
@@ -2576,9 +2576,9 @@ function my_write(f::IOStream,arr::AbstractArray;sep::Char=',')
         write(f,sep)
       end
     end
-    write(f,"\n")
+    write(f,"\r\n")
   end
-  write(f,"\n")
+  write(f,"\r\n")
   nothing
 end
 
@@ -3049,7 +3049,7 @@ function write_tree{E<:Ensemble}(candMatWOMaxValues::Array{Array{Float64,1},1},e
   f=open(fileloc,"a+")
   for i=1:iterations
 	leaves_array=create_leaves_array(ensemble.trees[i])
-    write(f,"\n\nIteration number $(i)\n")
+    write(f,"\r\n\r\nIteration number $(i)\r\n")
     #1-dim Variable Importance
     #@show size(leaves_array)
 	  var_imp1d_str_arr,var_imp2d_str_arr,onedimintvec,twodimintvec=variable_importance(leaves_array,df_name_vector,number_of_num_features)
@@ -3088,13 +3088,13 @@ function write_tree{E<:Ensemble}(candMatWOMaxValues::Array{Array{Float64,1},1},e
   srt2=sortperm(twodimintvec_avg,rev=true,alg=QuickSort)
 
   #f=open(fileloc,"a+")
-    write(f,"\n\nOverall predictor importance of boosted tree: \n")
+    write(f,"\r\n\r\nOverall predictor importance of boosted tree: \r\n")
     my_write(f,res1dim[srt,:])
     my_write(f,res2dim[srt2,:])
   #bagging only
   if typeof(ensemble)==BaggedTree
 	#wei=hcat([1:iterations],weightPerTree)
-	write(f,"\n\nWeights per Iteration")
+	write(f,"\r\n\r\nWeights per Iteration")
 	for i=1:iterations
 		write(f,i," ",ensemble.weightPerTree[i])
 	end
@@ -3114,39 +3114,39 @@ end
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
 #function in the special case where the whole tree is in fact a single leaf
 	#version which uses f::IOStream as input
-	write(f,"\n1 dimensional predictor importance:")
+	write(f,"\r\n1 dimensional predictor importance:")
 	my_write(f,var_imp1d_str_arr);
-	write(f,"\n2 dimensional predictor importance:")
+	write(f,"\r\n2 dimensional predictor importance:")
 	my_write(f,var_imp2d_str_arr);
-	write(f,"Number of observations in this tree: $(nodesize(tree))");write(f,"\n");
-    write(f,"Number of leaves: $(size(create_leaves_array(tree),1))");write(f,"\n");
-    write(f,"Number of Nodes: $(number_of_nodes(tree))");write(f,"\n");
-    write(f,"Maximal depth of the tree: $(maxdepth(tree))");write(f,"\n");
-    write(f,"\n")
-    write(f,"This tree is equal to a single leaf.\n")
+	write(f,"Number of observations in this tree: $(nodesize(tree))");write(f,"\r\n");
+    write(f,"Number of leaves: $(size(create_leaves_array(tree),1))");write(f,"\r\n");
+    write(f,"Number of Nodes: $(number_of_nodes(tree))");write(f,"\r\n");
+    write(f,"Maximal depth of the tree: $(maxdepth(tree))");write(f,"\r\n");
+    write(f,"\r\n")
+    write(f,"This tree is equal to a single leaf.\r\n")
 
-    write(f,"\n")
+    write(f,"\r\n")
     write(f," " ^ indent * "Leaf=")
     write_tree(candMatWOMaxValues,tree,number_of_num_features, indent + 1,f,df_name_vector,mappings)
 end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node,number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
 	#version which uses f::IOStream as input
-	write(f,"\n1 dimensional predictor importance:")
+	write(f,"\r\n1 dimensional predictor importance:")
 	my_write(f,var_imp1d_str_arr);
-	write(f,"\n2 dimensional predictor importance:")
+	write(f,"\r\n2 dimensional predictor importance:")
 	my_write(f,var_imp2d_str_arr);
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
-    write(f,"Number of observations in this tree: $(nodesize(tree))");write(f,"\n");
-    write(f,"Number of leaves: $(size(create_leaves_array(tree),1))");write(f,"\n");
-    write(f,"Number of Nodes: $(number_of_nodes(tree))");write(f,"\n");
-    write(f,"Maximal depth of the tree: $(maxdepth(tree))");write(f,"\n");
-    write(f,"\n")
-    write(f,"\n")
+    write(f,"Number of observations in this tree: $(nodesize(tree))");write(f,"\r\n");
+    write(f,"Number of leaves: $(size(create_leaves_array(tree),1))");write(f,"\r\n");
+    write(f,"Number of Nodes: $(number_of_nodes(tree))");write(f,"\r\n");
+    write(f,"Maximal depth of the tree: $(maxdepth(tree))");write(f,"\r\n");
+    write(f,"\r\n")
+    write(f,"\r\n")
 
     orig_id>0 ? write(f,"N|F$(this_id) $(df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][tree.subset[end]],5)),Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))")
-    write(f,"\n")
+    write(f,"\r\n")
     write(f," " ^ indent * "L=")
     write_tree(candMatWOMaxValues,tree.left,number_of_num_features, indent + 1,f,df_name_vector,mappings)
     write(f," " ^ indent * "R=")
@@ -3163,14 +3163,14 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,num
 end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
-    write(f,"L|S$(round(nodesize(tree),1)),Fit$(round(tree.fitted,2)),D$(tree.depth)\n")
+    write(f,"L|S$(round(nodesize(tree),1)),Fit$(round(tree.fitted,2)),D$(tree.depth)\r\n")
 end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node,number_of_num_features::Int64, indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
     orig_id>0 ? write(f,"N|F$(this_id)  $(df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][tree.subset[end]],5)),Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))")
-    write(f,"\n")
+    write(f,"\r\n")
     write(f," " ^ indent * "L=")
     write_tree(candMatWOMaxValues,tree.left, number_of_num_features,indent + 1,f,df_name_vector,mappings)
     write(f," " ^ indent * "R=")
@@ -3192,18 +3192,18 @@ utf8ListVarsUsed,boolListVarsUsed=variablesUsed(bt)
 fiostream=open(fileloc,"w")
 #write BOM
 write(fiostream,global_byte_order_mark)
-write(fiostream,"/* \nSettings: \n",settings,"\n*/ \n")
-write(fiostream,"/* \n Variables used by model: \n ",join(utf8ListVarsUsed,' ')," \nTODO:\n Replace the value for missing character values (default: \'\#\') EVERYWHERE IN THE CODE with \'\' \n Remove the value for \"other\" character values (e.g.\~) from the if conditions at the top (do not replace them in the actual model code further down). \n Define the lists of known character variables for each character variable. \n You can use the SAS macro \%define_known_char_varlist(data=runmodel)\; for this. \n Define the macro variable RARE_CHARACTER_VALUE \n %let RARE_CHARACTER_VALUE=\'\~\'; \n*/\n")
+write(fiostream,"/* \r\nSettings: \r\n",settings,"\r\n*/ \r\n")
+write(fiostream,"/* \r\n Variables used by model: \r\n ",join(utf8ListVarsUsed,' ')," \r\nTODO:\r\n Replace the value for missing character values (default: \'\#\') EVERYWHERE IN THE CODE with \'\' \r\n Remove the value for \"other\" character values (e.g.\~) from the if conditions at the top (do not replace them in the actual model code further down). \r\n Define the lists of known character variables for each character variable. \r\n You can use the SAS macro \%define_known_char_varlist(data=runmodel)\; for this. \r\n Define the macro variable RARE_CHARACTER_VALUE \r\n %let RARE_CHARACTER_VALUE=\'\~\'; \r\n*/\r\n")
 txtw="""
 %put WARNING: (bk) All character variables need to be in uppercase in the data otherwise SAS will produce wrong results!;
 """
-write(fiostream,"\n",txtw,"\n")
+write(fiostream,"\r\n",txtw,"\r\n")
 
-write(fiostream,"option nosource; \n\ndata vboosting/view=vboosting;\r\n format fitted_value fitted_value_best_guess best32. variables_have_unknown_values 8. variables_with_unknown_values \$1000. variables_have_rare_values 8. variables_with_rare_values \$1000.; format ")
+write(fiostream,"option nosource; \r\n\r\ndata vboosting/view=vboosting;\r\r\n format fitted_value fitted_value_best_guess best32. variables_have_unknown_values 8. variables_with_unknown_values \$1000. variables_have_rare_values 8. variables_with_rare_values \$1000.; format ")
 for i=1:iterations
       write(fiostream,leafvarname,"_iter$(i) ")
 end
-write(fiostream,"; \nset runmodel;\nvariables_have_unknown_values=0;\nvariables_have_rare_values=0;\nvariables_with_unknown_values=\'\';\nvariables_with_rare_values=\'\';")
+write(fiostream,"; \r\nset runmodel;\r\nvariables_have_unknown_values=0;\r\nvariables_have_rare_values=0;\r\nvariables_with_unknown_values=\'\';\r\nvariables_with_rare_values=\'\';")
 indexOfLastCharVarUsed=0
 #data prep and check
 	for i in 1:length(mappings)
@@ -3211,45 +3211,45 @@ indexOfLastCharVarUsed=0
 		vname=df_name_vector[number_of_num_features+i]
 		if boolListVarsUsed[number_of_num_features+i]
 			indexOfLastCharVarUsed=max(i,indexOfLastCharVarUsed)
-			write(fiostream,vname,"=upcase(",vname,");\n")
+			write(fiostream,vname,"=upcase(",vname,");\r\n")
 		end
 	end
 	for i in 1:length(mappings)
 		vid=number_of_num_features+i
 		vname=df_name_vector[vid]
 		if boolListVarsUsed[number_of_num_features+i]
-			write(fiostream,"/*Variable $(vname)*/\n")
-			write(fiostream,"if ",vname," not in (\&",uppercase(vname),"_VALS.) then do; _u_",vname,"=1;variables_have_unknown_values=1;end;else _u_",vname,"=0;\n")
-			write(fiostream,"if ",vname," not in (",quotestr,join(mappings[i],string(quotestr," ",quotestr)),quotestr,") then ",vname,"=\&RARE_CHARACTER_VALUE.;\n")
+			write(fiostream,"/*Variable $(vname)*/\r\n")
+			write(fiostream,"if ",vname," not in (\&",uppercase(vname),"_VALS.) then do; _u_",vname,"=1;variables_have_unknown_values=1;end;else _u_",vname,"=0;\r\n")
+			write(fiostream,"if ",vname," not in (",quotestr,join(mappings[i],string(quotestr," ",quotestr)),quotestr,") then ",vname,"=\&RARE_CHARACTER_VALUE.;\r\n")
 		end
 	end
 
 if length(mappings)>0&&(sum(boolListVarsUsed[number_of_num_features+1:end])>0)
-	write(fiostream,"\nvariables_with_unknown_values=catx(\',\',\n")
+	write(fiostream,"\r\nvariables_with_unknown_values=catx(\',\',\r\n")
 	for i in 1:length(mappings)
 		vid=number_of_num_features+i
 		vname=df_name_vector[vid]
 		if boolListVarsUsed[number_of_num_features+i]
 			write(fiostream,"\tifc(_u_",vname,",\'",vname,"\',\'\')")
 			if i<indexOfLastCharVarUsed
-				write(fiostream,",\n")
+				write(fiostream,",\r\n")
 			end
 		end
 	end
-	write(fiostream,"\n);\n")
+	write(fiostream,"\r\n);\r\n")
 #variables_with_rare_values
-	write(fiostream,"\nvariables_with_rare_values=catx(\',\',\n")
+	write(fiostream,"\r\nvariables_with_rare_values=catx(\',\',\r\n")
 	for i in 1:length(mappings)
 		vid=number_of_num_features+i
 		vname=df_name_vector[vid]
 		if boolListVarsUsed[number_of_num_features+i]
 			write(fiostream,"\tifc(",vname,"=\&RARE_CHARACTER_VALUE.,\'",vname,"\',\'\')")
 			if i<indexOfLastCharVarUsed
-				write(fiostream,",\n")
+				write(fiostream,",\r\n")
 			end
 		end
 	end
-	write(fiostream,"\n);\n")
+	write(fiostream,"\r\n);\r\n")
 end
 
 #write tree code
@@ -3257,19 +3257,19 @@ end
 		if typeof(bt.trees[i])==Node
 			orig_id=bt.trees[i].featid
 			orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
-			write(fiostream,"\n\n*Iteration $(i);\n")
+			write(fiostream,"\r\n\r\n*Iteration $(i);\r\n")
 			if orig_id>0
-				write(fiostream,"if ",df_name_vector[this_id],"<=$(candMatWOMaxValues[this_id][bt.trees[i].subset[end]]) then do;\n")
+				write(fiostream,"if ",df_name_vector[this_id],"<=$(candMatWOMaxValues[this_id][bt.trees[i].subset[end]]) then do;\r\n")
 					write_tree_at_each_node!(candMatWOMaxValues,bt.trees[i].left,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,string(leafvarname,"_iter$(i)"),bt.moderationvector[i])
-				write(fiostream," end;else do;\n")
+				write(fiostream," end;else do;\r\n")
 					write_tree_at_each_node!(candMatWOMaxValues,bt.trees[i].right,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,string(leafvarname,"_iter$(i)"),bt.moderationvector[i])
-				write(fiostream," end;\n")
+				write(fiostream," end;\r\n")
 			else
-				write(fiostream,"if ",df_name_vector[this_id],insign,listbeg,quotestr,join(mappings[-orig_id][[convert(Int,z) for z in bt.trees[i].subset]],string(quotestr," ",quotestr)),quotestr,listend," then do;\n")
+				write(fiostream,"if ",df_name_vector[this_id],insign,listbeg,quotestr,join(mappings[-orig_id][[convert(Int,z) for z in bt.trees[i].subset]],string(quotestr," ",quotestr)),quotestr,listend," then do;\r\n")
 					write_tree_at_each_node!(candMatWOMaxValues,bt.trees[i].left,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,string(leafvarname,"_iter$(i)"),bt.moderationvector[i])
-				write(fiostream," end;else do;\n")
+				write(fiostream," end;else do;\r\n")
 					write_tree_at_each_node!(candMatWOMaxValues,bt.trees[i].right,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,string(leafvarname,"_iter$(i)"),bt.moderationvector[i])
-				write(fiostream," end;\n")
+				write(fiostream," end;\r\n")
 			end
 		else
 			#"Tree is not a node (hence it must be a Leaf). Code to write SAS code for a single leaf is not yet implemented"
@@ -3285,7 +3285,7 @@ end
 	modified_maxRawRelativityPerScoreSorted[end]=modified_maxRawRelativityPerScoreSorted[end]*1.5
 	sas_write_ScoreMap(fiostream,modified_maxRawRelativityPerScoreSorted,estimatesPerScore)
 
-	# old approach write(fiostream,"\nfitted_value=$(bt.meanobserved); \narray tmpnum{*} rel_mod_leaf_iter:; \ndo i_loop=1 to dim(tmpnum); \nfitted_value=fitted_value*tmpnum[i_loop]; \nend;\nif variables_have_unknown_values then do;\nfitted_value_best_guess=fitted_value;fitted_value=.;\nend;\nelse do;fitted_value_best_guess=fitted_value;\nend;\nrun; \n\noption source; \n")
+	# old approach write(fiostream,"\r\nfitted_value=$(bt.meanobserved); \r\narray tmpnum{*} rel_mod_leaf_iter:; \r\ndo i_loop=1 to dim(tmpnum); \r\nfitted_value=fitted_value*tmpnum[i_loop]; \r\nend;\r\nif variables_have_unknown_values then do;\r\nfitted_value_best_guess=fitted_value;fitted_value=.;\r\nend;\r\nelse do;fitted_value_best_guess=fitted_value;\r\nend;\r\nrun; \r\n\r\noption source; \r\n")
 	
 	endtxt="""
 
@@ -3328,28 +3328,28 @@ fiostream=open(fileloc,"w")
   #write beginning
   #write BOM
 	write(fiostream,global_byte_order_mark)
-    write(fiostream,"/* \nSettings: \n WARNING: common issues with the SAS code: the data in sas may have leading zeros (categorical columns) which can be lost when exporting and importing!\n ")
+    write(fiostream,"/* \r\nSettings: \r\n WARNING: common issues with the SAS code: the data in sas may have leading zeros (categorical columns) which can be lost when exporting and importing!\r\n ")
     write(fiostream,settings)
-	write(fiostream,"\n*/ \n\n")	
+	write(fiostream,"\r\n*/ \r\n\r\n")	
     write(fiostream,"data sas_tree;format ",leafvarname,";set runmodel;;")
-    write(fiostream,"\n")
+    write(fiostream,"\r\n")
 
 if typeof(tree)==Node
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 
 	if orig_id>0
-		write(fiostream,"if ",df_name_vector[this_id],"<=$(candMatWOMaxValues[this_id][tree.subset[end]]) then do;\n\n")
+		write(fiostream,"if ",df_name_vector[this_id],"<=$(candMatWOMaxValues[this_id][tree.subset[end]]) then do;\r\n\r\n")
 			write_tree_at_each_node!(candMatWOMaxValues,tree.left,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,leafvarname,mdf)
-		write(fiostream," end;else do;\n")
+		write(fiostream," end;else do;\r\n")
 			write_tree_at_each_node!(candMatWOMaxValues,tree.right,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,leafvarname,mdf)
-		write(fiostream," end;\n")
+		write(fiostream," end;\r\n")
 	else
-		write(fiostream,"if ",df_name_vector[this_id],insign,listbeg,quotestr,join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],string(quotestr," ",quotestr)),quotestr,listend," then do;\n")
+		write(fiostream,"if ",df_name_vector[this_id],insign,listbeg,quotestr,join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],string(quotestr," ",quotestr)),quotestr,listend," then do;\r\n")
 			write_tree_at_each_node!(candMatWOMaxValues,tree.left,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,leafvarname,mdf)
-		write(fiostream," end;else do;\n")
+		write(fiostream," end;else do;\r\n")
 			write_tree_at_each_node!(candMatWOMaxValues,tree.right,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,leafvarname,mdf)
-		write(fiostream," end;\n")
+		write(fiostream," end;\r\n")
 	end
 else
 	#"Tree is not a node (hence it must be a Leaf). Code to write SAS code for a single leaf is not yet implemented"
@@ -3357,10 +3357,10 @@ else
 	write_tree_at_each_node!(candMatWOMaxValues,tree,number_of_num_features,indent,fiostream,df_name_vector,mappings,leafvarname,mdf)
 end
   #write rest of SAS code
-  write(fiostream,"run; \nproc summary data=sas_tree missing;class ",leafvarname,";var &var_dep.;types ",leafvarname,";output out=_summary_( rename=(_freq_=n)) sum=;");
-  write(fiostream,"where training_validation_bool eq 1;run; \ndata summary;set _summary_;est_sas=&var_dep./n;run; \nproc sql noprint;create table est_sas as select s.est_sas as est_from_trn,i.* from sas_tree as i ")
-  write(fiostream,"left join summary as s on (s.",leafvarname,"=i.",leafvarname,") order by irkey;quit; \n")
-  write(fiostream,"proc sort data=runmodel;by irkey;quit; \nproc sort data=res;by irkey;quit; \nproc compare out=compare base=res compare=est_sas;var &var_dep.;id irkey;quit; \n")
+  write(fiostream,"run; \r\nproc summary data=sas_tree missing;class ",leafvarname,";var &var_dep.;types ",leafvarname,";output out=_summary_( rename=(_freq_=n)) sum=;");
+  write(fiostream,"where training_validation_bool eq 1;run; \r\ndata summary;set _summary_;est_sas=&var_dep./n;run; \r\nproc sql noprint;create table est_sas as select s.est_sas as est_from_trn,i.* from sas_tree as i ")
+  write(fiostream,"left join summary as s on (s.",leafvarname,"=i.",leafvarname,") order by irkey;quit; \r\n")
+  write(fiostream,"proc sort data=runmodel;by irkey;quit; \r\nproc sort data=res;by irkey;quit; \r\nproc compare out=compare base=res compare=est_sas;var &var_dep.;id irkey;quit; \r\n")
  #close file
 close(fiostream)
 end
@@ -3375,37 +3375,37 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
 	listend=convert(String,")")
 	write(fiostream," " ^ indent)
 	if orig_id>0
-		write(fiostream,"if ",df_name_vector[this_id],"<=$(candMatWOMaxValues[this_id][tree.subset[end]]) then do;\n")
+		write(fiostream,"if ",df_name_vector[this_id],"<=$(candMatWOMaxValues[this_id][tree.subset[end]]) then do;\r\n")
 			write_tree_at_each_node!(candMatWOMaxValues,tree.left,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,leafvarname,mdf)
 		write(fiostream," " ^ (indent-1))
-		write(fiostream," end;else do;\n")
+		write(fiostream," end;else do;\r\n")
 			write_tree_at_each_node!(candMatWOMaxValues,tree.right,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,leafvarname,mdf)
 		write(fiostream," " ^ (indent-1))
-		write(fiostream," end;\n")
+		write(fiostream," end;\r\n")
 	else
-		write(fiostream,"if ",df_name_vector[this_id],insign,listbeg,quotestr,join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],string(quotestr," ",quotestr)),quotestr,listend," then do;\n")
+		write(fiostream,"if ",df_name_vector[this_id],insign,listbeg,quotestr,join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],string(quotestr," ",quotestr)),quotestr,listend," then do;\r\n")
 			write_tree_at_each_node!(candMatWOMaxValues,tree.left,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,leafvarname,mdf)
 		write(fiostream," " ^ (indent-1))
-		write(fiostream," end;else do;\n")
+		write(fiostream," end;else do;\r\n")
 			write_tree_at_each_node!(candMatWOMaxValues,tree.right,number_of_num_features, indent+1,fiostream,df_name_vector,mappings,leafvarname,mdf)
 		write(fiostream," " ^ (indent-1))
-		write(fiostream," end;\n")
+		write(fiostream," end;\r\n")
 	end
 end
 
 function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,indent::Int64,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0)
 	writecomments=false
   if writecomments
-    add=" *Nodesize: $(round(nodesize(tree),1)), Fitted Value: $(round(tree.fitted,2)), Depth: $(tree.depth);\n"
+    add=" *Nodesize: $(round(nodesize(tree),1)), Fitted Value: $(round(tree.fitted,2)), Depth: $(tree.depth);\r\n"
   else
-    add="\n"
+    add="\r\n"
   end
 	write(fiostream," " ^ indent,leafvarname,"=$(tree.id); $(add)")
     #this row is only meaningful for boosted multiplicative trees
 	#warn("check if this definition of val is accurate for a boosted tree (e.g. lr model)"
 	val=_moderate(tree.fitted,mdf)
 	#val=tree.fitted
-	write(fiostream," " ^ indent,"rel_mod_",leafvarname,"=$(val);\n")
+	write(fiostream," " ^ indent,"rel_mod_",leafvarname,"=$(val);\r\n")
 end
 
 function write_sas_code(leaves::Array{Leaf,1},number_of_num_features::Int64,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"))
@@ -3415,18 +3415,18 @@ fiostream=open(fileloc,"w")
   #write beginning
   #write BOM
 	write(fiostream,global_byte_order_mark)
-  write(fiostream,"/* \nSettings: \n")
+  write(fiostream,"/* \r\nSettings: \r\n")
   write(fiostream,settings)
-  write(fiostream,"\n*/ \n")
+  write(fiostream,"\r\n*/ \r\n")
     write(fiostream,"data sas_tree;format ",leafvarname,";set runmodel;")
-    write(fiostream,"\n")
+    write(fiostream,"\r\n")
   #write leaf definitions
     write_rules_to_file(leaves,fiostream,namevec,number_of_num_features,mappings)
   #write rest of SAS code
-   write(fiostream,"run; \nproc summary data=sas_tree missing;class ",leafvarname,";var &var_dep.;types ",leafvarname,";output out=_summary_( rename=(_freq_=n)) sum=;");
-  write(fiostream,"where training_validation_bool eq 1;run; \ndata summary;set _summary_;est_sas=&var_dep./n;run; \nproc sql noprint;create table est_sas as select s.est_sas as est_from_trn,i.* from sas_tree as i ")
-  write(fiostream,"left join summary as s on (s.",leafvarname,"=i.",leafvarname,") order by irkey;quit; \n")
-  write(fiostream,"proc sort data=runmodel;by irkey;quit; \nproc compare out=compare base=res compare=est_sas;var &var_dep.;id irkey;quit; \n")
+   write(fiostream,"run; \r\nproc summary data=sas_tree missing;class ",leafvarname,";var &var_dep.;types ",leafvarname,";output out=_summary_( rename=(_freq_=n)) sum=;");
+  write(fiostream,"where training_validation_bool eq 1;run; \r\ndata summary;set _summary_;est_sas=&var_dep./n;run; \r\nproc sql noprint;create table est_sas as select s.est_sas as est_from_trn,i.* from sas_tree as i ")
+  write(fiostream,"left join summary as s on (s.",leafvarname,"=i.",leafvarname,") order by irkey;quit; \r\n")
+  write(fiostream,"proc sort data=runmodel;by irkey;quit; \r\nproc compare out=compare base=res compare=est_sas;var &var_dep.;id irkey;quit; \r\n")
  #close file
 close(fiostream)
 end
@@ -3440,7 +3440,7 @@ function write_rules_to_file(leaves::Array{Leaf,1},f::IOStream,namevec::Array{St
     end
     write(f,rulpath_vector_to_str(leaves[i].rule_path,namevec,number_of_num_features,mappings))
     write(f," then $(leafvarname)=$(i);")
-    write(f,"\n")
+    write(f,"\r\n")
   end
 end
 
@@ -3758,7 +3758,7 @@ function return_file_and_folders(ARGS)
 	   try parse(Int,ASCIIStringARGS[1])
 		  #these are the settings if Julia is run in Juno or via the console
 		   @show ASCIIStringARGS
-		   warn("Using default input parameters!\n\n")
+		   warn("Using default input parameters!\r\n\r\n")
 		   println("$(fallback_inputSettingsFile)")
 		   println("$(fallback_inputDataFile)")
 		   settingsFilename=fallback_inputSettingsFile
@@ -3777,7 +3777,7 @@ function return_file_and_folders(ARGS)
     end
   else
     #these are the settings if Julia is run in Juno or via the console
-     warn("Using default input parameters!\n\n")
+     warn("Using default input parameters!\r\n\r\n")
 	 println("$(fallback_inputSettingsFile)")
 	 println("$(fallback_inputDataFile)")
 	 settingsFilename=fallback_inputSettingsFile
@@ -4194,7 +4194,7 @@ end
 
 nscoresPotentiallyReducedTWOTimes::Int=0
 if (length(scoreEndPoints)>1)&&(scoreEndPoints[end-1]>=scoreEndPoints[end])
-#warn("Failed to uniformly distribute the scores! Scores will be degenerated. \nThis usually indicates that: (i) there are too many scores compared to the granularity of the model or (ii) the data is 'degenerated' (i.e. there is a mass of exposure for certain risk details)")
+#warn("Failed to uniformly distribute the scores! Scores will be degenerated. \r\nThis usually indicates that: (i) there are too many scores compared to the granularity of the model or (ii) the data is 'degenerated' (i.e. there is a mass of exposure for certain risk details)")
 #Reduce the number of Scores again
 	thismax=maximum(scoreEndPoints)
 	endlocation::Int=searchsortedfirst(scoreEndPoints,convert(eltype(scoreEndPoints),thismax))
@@ -4251,7 +4251,7 @@ end
 
 nscoresPotentiallyReducedTWOTimes::Int=0
 if (length(scoreEndPoints)>1)&&(scoreEndPoints[end-1]>=scoreEndPoints[end])
-#warn("Failed to uniformly distribute the scores! Scores will be degenerated. \nThis usually indicates that: (i) there are too many scores compared to the granularity of the model or (ii) the data is 'degenerated' (i.e. there is a mass of exposure for certain risk details)")
+#warn("Failed to uniformly distribute the scores! Scores will be degenerated. \r\nThis usually indicates that: (i) there are too many scores compared to the granularity of the model or (ii) the data is 'degenerated' (i.e. there is a mass of exposure for certain risk details)")
 #Reduce the number of Scores again
 	thismax=maximum(scoreEndPoints)
 	endlocation::Int=searchsortedfirst(scoreEndPoints,convert(eltype(scoreEndPoints),thismax))
