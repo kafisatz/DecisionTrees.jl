@@ -10,7 +10,7 @@ VERSION >= v"0.6-"
 module DecisionTrees
 
 srand(1234)
-export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,updateSettingsMod!,prep_data_from_df_modernized,run_legacy
+export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,updateSettingsMod!,prep_data_from_df_modernized,run_legacy,prep_data_from_df
 
 #using SQLite #currently breaking...
 using OnlineStats, StatsFuns, SQLite, DataFrames, DataArrays, ProgressMeter, PyCall, HDF5, JLD
@@ -84,6 +84,18 @@ function __init__()
 	global const global_byte_order_mark='\ufeff'
 	global const CSHARP_VALID_CHARS="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_123456789äëöüïÿâêîôûàèìòùáéíóúý" #the list is probably much longer, but this will do for now
 	global const DoubleQuote='\"' #note, this is here at the end only because Notepad++ messes up the formatting after this definition
+end
+
+function get_sha1()
+	which_res=@which DecisionTrees.__init__()
+	dtpath=splitdir(splitext(string(which_res.file))[1])[1][1:end-4]
+	current_path=pwd()
+	cd(dtpath)
+	cmd=`git rev-parse HEAD`
+	#txa=run(cmd)
+	sha1_of_dt=readstring(cmd)[1:end-1] #need to discard \n at the end
+	cd(current_path)
+	return sha1_of_dt
 end
 
 end #end Module DTM

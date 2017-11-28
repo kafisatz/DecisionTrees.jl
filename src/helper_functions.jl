@@ -2102,17 +2102,19 @@ function myresort!(x,srt)
 return nothing
 end
 
-function numberOfLevels(trn_numfeatures,trn_charfeatures_PDA,sett)
+function numberOfLevels(f,sett)
       num_levels=Array{Int64}(0)
       char_levels=Array{Int64}(0)
       all_levels=Array{Int64}(0)
 	  for id=1:sett.number_of_num_features
-          s=Int64(size(levels(trn_numfeatures[id]),1))
+		  s=Int64(size(levels(f[id]),1))
+		  @assert s==length(f[id].pool)
+		  s=length(f[id].pool)
           push!(all_levels,s)
           push!(num_levels,s)
     end
 	  for id=1:sett.number_of_char_features
-          s=length(trn_charfeatures_PDA[id].pda.pool)
+          s=length(f[id+sett.number_of_num_features].pool)
           push!(all_levels,s)
           push!(char_levels,s)
       end
@@ -4164,6 +4166,7 @@ wi=0.0
 current_score=0
 current_relativity=0.0
 current_idx=0 #rowCountPerUniqueRelativity[1]
+
 while stillRunning
 current_score+=1
   	while current_idx<length(weight_srt) 
@@ -4177,7 +4180,10 @@ current_score+=1
 			#we now need to ensure that the 'cut' is made at a point where the relativity changes (otherwise it will be impossible to define the scores in relation to the (moderated) relativities)
 			while current_relativity==last_relativity
 				current_idx+=1
-				last_relativity=current_relativity
+				if current_idx>length(relativitiesSorted)
+					break
+				end
+				last_relativity=current_relativity				
 				@inbounds current_relativity=relativitiesSorted[current_idx]
 				@inbounds wi=weight_srt[current_idx]::Float64
 				current_cumulW += wi::Float64		
@@ -5089,30 +5095,33 @@ function csharp_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostre
 	return nothing
 end
 
-
 function determine_used_variables(bt::BoostedTree)
 	boolNumVarsUsedByModel=Array{Array{Bool,1}}(0)
 	boolCharVarsUsedByModel=Array{Array{Bool,1}}(0)
-	intNumVarsUsed=bt.intNumVarsUsed
-	intCharVarsUsed=bt.intCharVarsUsed
-	for n=1:length(intNumVarsUsed[1])
-		push!(boolNumVarsUsedByModel,zeros(Bool,length(intNumVarsUsed[1][n])))
+	#settings	#number_of_char_features
+	number_of_num_features=bt.settings.number_of_num_features
+	number_of_char_features=bt.settings.number_of_char_features	
+	intVarsUsed=bt.intVarsUsed
+	for n=1:number_of_num_features 
+		push!(boolNumVarsUsedByModel,zeros(Bool,length(intVarsUsed[1][1:number_of_num_features][n])))
 	end
-	for n=1:length(intCharVarsUsed[1])
-		push!(boolCharVarsUsedByModel,zeros(Bool,length(intCharVarsUsed[1][n])))
-	end
-
-	for iter=1:length(intNumVarsUsed)
-		for n=1:length(intNumVarsUsed[iter])
-			boolNumVarsUsedByModel[n][:]=(intNumVarsUsed[iter][n].>0).|boolNumVarsUsedByModel[n]
-		end
-		for n=1:length(intCharVarsUsed[iter])
-			boolCharVarsUsedByModel[n][:]=(intCharVarsUsed[iter][n].>0).|boolCharVarsUsedByModel[n]
-		end
+	for n=1:number_of_char_features
+		push!(boolCharVarsUsedByModel,zeros(Bool,length(intVarsUsed[1][1+number_of_num_features:end][n])))
 	end
 
-	boolVariablesUsed=zeros(Bool,length(intNumVarsUsed[1])+length(intCharVarsUsed[1]))
-	number_of_nums=length(intNumVarsUsed[1])
+	for iter=1:length(intVarsUsed)
+		for n=1:number_of_num_features
+			x=intVarsUsed[iter][1:number_of_num_features]
+			boolNumVarsUsedByModel[n][:]=(x[n].>0).|boolNumVarsUsedByModel[n]
+		end
+		for n=1:number_of_char_features
+			x=intVarsUsed[iter][1+number_of_num_features:end]
+			boolCharVarsUsedByModel[n][:]=(x[n].>0).|boolCharVarsUsedByModel[n]
+		end
+	end
+
+	boolVariablesUsed=zeros(Bool,length(intVarsUsed[1])) 
+	number_of_nums=number_of_num_features
 	for i=1:length(boolVariablesUsed)
 		if i>number_of_nums
 			j=i-number_of_nums
@@ -5128,7 +5137,7 @@ function determine_used_variables(bt::BoostedTree)
 return boolVariablesUsed,boolNumVarsUsedByModel,boolCharVarsUsedByModel
 end
 
-function write_vba_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},vectorOfRulePathsToLeavesArrays::Array{Array{Array{Rulepath,1},1},1},estimatesPerScore::Array{Float64,1},trn_charfeatures_PDA::Array{pdaMod,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function write_vba_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -5166,7 +5175,7 @@ End Function
 	@assert length(boolListChar)==length(mappings)
 	#error("bk continue here")
 	#csharp_write_RequiredElementsProvided(fiostream,df_name_vector,boolVariablesUsed)
-	warn("todo, what if some variables are not as expected!!!")
+	warn("todo, what if some variables are not as expected (unseen values for instance). Improve this / error handling similar to the generated SAS Code!")
 	vba_write_booleans(fiostream,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,boolCharVarsUsedByModel,boolNumVarsUsedByModel,boolVariablesUsed)
 	
 	#for i=1:length(df_name_vector)
@@ -5193,18 +5202,15 @@ endstr="""
 deriveRawRelativity = dRawscore 
 End Function
 """
-	write(fiostream,endstr)
-
-	warn("tbd derive score from raw relativity....")
-	vba_write_ScoreMap(fiostream,modified_maxRawRelativityPerScoreSorted,estimatesPerScore)
-	
+	write(fiostream,endstr)	
+        vba_write_ScoreMap(fiostream,modified_maxRawRelativityPerScoreSorted,estimatesPerScore)	
 	close(fiostream)
 
 	return nothing
 end	
 
 
-function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},vectorOfRulePathsToLeavesArrays::Array{Array{Array{Rulepath,1},1},1},estimatesPerScore::Array{Float64,1},trn_charfeatures_PDA::Array{pdaMod,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector

@@ -233,8 +233,16 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 #warn: this function has a lot of redundancies with another function in this file ->prep_data_from_df
 tic()
 
-	datafilename,ext=splitext(fn_with_ext)
+	datafilename,ext=splitext(fn_with_ext) #actually one can provide fn_with_ext="c:\\temp\\my folder\\out" (so no extension is necessary)
 	datafolder,outfileStringOnly=splitdir(datafilename)
+	if length(outfileStringOnly)==0
+		@show fn_with_ext
+		@show datafilename
+		@show ext
+		@show datafolder
+		@show outfileStringOnly
+		error("fn_with_ext should be of the form C:\\some\\folder\\my_output.txt (the extension is irrelevant) \n You provided: $(fn_with_ext) \nAbort.")
+	end
 	dfIndata=df_userinput
 	println("Preparing Data for analysis...")
 
@@ -540,6 +548,9 @@ weight=dtmtable.weight
 numerator=dtmtable.numerator
 denominator=dtmtable.denominator
 
+#define 'version', we store the sha1 hash of the current commit in sett.version
+sett.version=get_sha1()
+
 #initialize random number generator
 	#we may want to make this independent from the data (trn), then again different data should/will lead to a different result.
 	srand(floor(Int,hash(sett.seed,hash(numerator.+denominator.+weight.+prod(size(features))))/4))
@@ -732,11 +743,11 @@ prnt&&println("---Model Settings------------------------------------------------
 				println("Writing C# Code: \n $(csharp_code_file)")
 				isfile(csharp_code_file)&&rm(csharp_code_file)
 				estimatesPerScoreForCSSHARPCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
-				@time write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCSSHARPCode,trn_charfeatures_PDA,candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,mappings,0,sett)
+				@time write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCSSHARPCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,csharp_code_file)
 				println("Writing VBA Code: \n $(vba_code_file)")
 				isfile(vba_code_file)&&rm(vba_code_file)
-				@time write_vba_code(vectorOfLeafArrays,vectorOfRulePathsToLeavesArrays,estimatesPerScoreForCSSHARPCode,trn_charfeatures_PDA,candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,mappings,0,sett)
+				@time write_vba_code(vectorOfLeafArrays,estimatesPerScoreForCSSHARPCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,vba_code_file)
 			end
 		#end #boosting
