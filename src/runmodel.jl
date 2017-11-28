@@ -755,13 +755,15 @@ prnt&&println("---Model Settings------------------------------------------------
 				end
 				push!(filelistWithFilesToBeZipped,sas_code_file)
 			end
-			if sett.write_csharp_code
-				#write C# Code
+			#this line is for both the vba and csharp code
+			estimatesPerScoreForCSSHARPCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
+			if sett.write_csharp_code				
 				println("Writing C# Code: \n $(csharp_code_file)")
-				isfile(csharp_code_file)&&rm(csharp_code_file)
-				estimatesPerScoreForCSSHARPCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
+				isfile(csharp_code_file)&&rm(csharp_code_file)				
 				@time write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCSSHARPCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,csharp_code_file)
+			end 
+			if sett.write_vba_code
 				println("Writing VBA Code: \n $(vba_code_file)")
 				isfile(vba_code_file)&&rm(vba_code_file)
 				@time write_vba_code(vectorOfLeafArrays,estimatesPerScoreForCSSHARPCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)

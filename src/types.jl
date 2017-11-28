@@ -309,6 +309,7 @@ type ModelSettings
 	write_statistics::Bool #52
 	boolCreateZipFile::Bool #53
 	write_csharp_code::Bool
+	write_vba_code::Bool
 	nDepthToStartParallelization::Int
 	baggingWeightTreesError::String
 	cBB_niterBoosting::Int
@@ -391,6 +392,7 @@ type ModelSettings
 	write_statistics=true #52
 	boolCreateZipFile=false #true #53
 	write_csharp_code=false #true
+	write_vba_code=false
 	nDepthToStartParallelization=-1
 	baggingWeightTreesError="mae" # ::String
 	#combined bagging&boosting model
@@ -417,7 +419,7 @@ type ModelSettings
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
 
-	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices
+	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices
 	 ,ncolsdfIndata,ishift,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
   end  # ModelSettings()
 
