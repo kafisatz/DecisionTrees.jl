@@ -540,6 +540,16 @@ statsfile=string(path_and_fn_wo_extension,".stats.csv")
 jldresultsfile=string(path_and_fn_wo_extension,".jld")
 statsfileExcel=string(path_and_fn_wo_extension,".xlsx")
 
+#for now trnindx and validx should always be sorted!
+if !issorted(dtmtable.trnidx) 
+	info("DTM: trnidx was not sorted. Sorting trnindex")
+	sort!(dtmtable.trnidx)
+end
+if !issorted(dtmtable.validx) 
+	info("DTM: validx was not sorted. Sorting validx")
+	sort!(dtmtable.validx)
+end
+
 key=dtmtable.key
 trnidx=dtmtable.trnidx
 validx=dtmtable.validx
