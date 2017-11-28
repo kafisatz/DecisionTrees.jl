@@ -846,7 +846,7 @@ end #end distinction between three model types
 #as the *.7z file will be created by the listener (because the *.log file will only exist when run_model terminated
 
 #this code applis to all model types
-   #Create ZIP FILE
+   #Create ZIP file
      #Push Log file to file list
 	 #println("\n")
 	 elapsed_until_this_point=toq()
