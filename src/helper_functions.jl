@@ -4911,7 +4911,7 @@ function sas_write_ScoreMap(fiostream::IOStream,maxRawRelativityPerScoreSorted::
 		
 	"""
 	write(fiostream,start)
-	sas_write_elseif_ScoreMap(fiostream,0,collect(1:length(maxRawRelativityPerScoreSorted)),maxRawRelativityPerScoreSorted,estimatesPerScore)
+	sas_write_elseif_ScoreMap(fiostream,"",0,collect(1:length(maxRawRelativityPerScoreSorted)),maxRawRelativityPerScoreSorted,estimatesPerScore)
 	endstr=
 	"""
 	
@@ -4921,29 +4921,29 @@ function sas_write_ScoreMap(fiostream::IOStream,maxRawRelativityPerScoreSorted::
 	return nothing
 end
 
-function sas_write_elseif_ScoreMap(fiostream::IOStream,indent::Int,intArray_1_to_n::Array{Int,1},maxRawRelativityPerScoreSorted::Array{Float64,1},estimatesPerScore::Array{Float64,1})
-	#NOTE: here we assume that the relativities are sorted in increasing order todo/tbd take this on a list of core assumptions
-	minval=10	
-	if length(maxRawRelativityPerScoreSorted)>minval
-		middle=fld(length(maxRawRelativityPerScoreSorted),2)
+function sas_write_elseif_ScoreMap(fiostream::IOStream,prefix::String,indent::Int,intArray_1_to_n::Array{Int,1},maxRawRelativityPerScoreSorted::Array{Float64,1},estimatesPerScore::Array{Float64,1})
+    #NOTE: here we assume that the relativities are sorted in increasing order todo/tbd take this on a list of core assumptions
+    minval=10    
+    if length(maxRawRelativityPerScoreSorted)>minval
+        middle=fld(length(maxRawRelativityPerScoreSorted),2)
 		middle=max(2,min(length(maxRawRelativityPerScoreSorted)-1,middle))
-		write(fiostream,repeat("\t",indent),"If (raw_relativity <= $(maxRawRelativityPerScoreSorted[middle])) then do;\r\n")
-			sas_write_elseif_ScoreMap(fiostream,indent+1,intArray_1_to_n[1:middle],maxRawRelativityPerScoreSorted[1:middle],estimatesPerScore[1:middle])
-		write(fiostream,repeat("\t",indent),"eLse do;\r\n")
-			sas_write_elseif_ScoreMap(fiostream,indent+1,intArray_1_to_n[middle+1:end],maxRawRelativityPerScoreSorted[middle+1:end],estimatesPerScore[middle+1:end])
-		write(fiostream,repeat("\t",indent),"End;\r\n")
-	else
-		indent_score=repeat("\t",indent+1)
-		write(fiostream,repeat("\t",indent),"iF (raw_relativity <= $(maxRawRelativityPerScoreSorted[1])) then do;\r\n",indent_score,"score = $(intArray_1_to_n[1]);\r\n",indent_score,"fitted_value = $(estimatesPerScore[1]);\r\n",repeat("\t",indent),"END;\r\n")
-		for j=2:length(maxRawRelativityPerScoreSorted)0
-			write(fiostream,repeat("\t",indent),"elSE if (raw_relativity <= $(maxRawRelativityPerScoreSorted[j])) then do;\r\n",indent_score,"Score=$(intArray_1_to_n[j]);\r\n",indent_score,"fitted_value = $(estimatesPerScore[j]);\r\n",repeat("\t",indent),"EnD;\r\n")
-			if j==length(maxRawRelativityPerScoreSorted)
-				write(fiostream,repeat("\t",indent),"eNd;\r\n")
-			end
+		valtmp=maxRawRelativityPerScoreSorted[middle]
+        write(fiostream,repeat("\t",indent),prefix,"If (raw_relativity <= $(valtmp)) then do;\r\n")
+            sas_write_elseif_ScoreMap(fiostream,"",indent+1,intArray_1_to_n[1:middle],maxRawRelativityPerScoreSorted[1:middle],estimatesPerScore[1:middle])        
+		write(fiostream,repeat("\t",max(0,indent)),"eND;/* end of if clause - value <= $(valtmp)*/\r\n")		
+		if length(intArray_1_to_n[middle+1:end])>0
+			write(fiostream,repeat("\t",max(0,indent)),"ELSE DO;/* value > $(valtmp)*/\r\n")
+			valtmp2=maxRawRelativityPerScoreSorted[middle+1:end][1]
+        	sas_write_elseif_ScoreMap(fiostream,"",indent+1,intArray_1_to_n[middle+1:end],maxRawRelativityPerScoreSorted[middle+1:end],estimatesPerScore[middle+1:end])
+			write(fiostream,repeat("\t",max(0,indent)),"End;/* end of else do clause - value > $(valtmp)*/\r\n")
 		end
-		#Last else condition is "special"
-	end
-	return nothing
+    else        
+        write(fiostream,repeat("\t",max(0,indent)),prefix,"iF (raw_relativity <= $(maxRawRelativityPerScoreSorted[1])) then do;score = $(intArray_1_to_n[1]); fitted_value = $(estimatesPerScore[1]);END;\r\n")
+        for j=2:length(maxRawRelativityPerScoreSorted)
+            write(fiostream,repeat("\t",indent),"elSE if (raw_relativity <= $(maxRawRelativityPerScoreSorted[j])) then do;score = $(intArray_1_to_n[j]); fitted_value = $(estimatesPerScore[j]);EnD;\r\n")            
+        end        
+    end
+    return nothing
 end
 
 
