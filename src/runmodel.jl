@@ -684,31 +684,33 @@ prnt&&println("---Model Settings------------------------------------------------
 			if sett.boolSaveResultAsJLDFile
 				println("Saving results to jld file: \n $(jldresultsfile)")
 				isfile(jldresultsfile)&&rm(jldresultsfile)
-				@time @save jldresultsfile xlData res leaves_of_tree trnidx validx fitted_values_tree tree var_imp1d_str_arr var_imp2d_str_arr onedimintvec_unused twodimintvec_unused leaves_of_tree
+				@time @save jldresultsfile xlData res leaves_of_tree trnidx validx fitted_values_tree tree var_imp1d_str_arr var_imp2d_str_arr onedimintvec_unused twodimintvec_unused
 				push!(filelistWithFilesToBeZipped,jldresultsfile)
 			end
 
 		 #print_tree(tree)
+		 dot_graph=graph(resulting_model)
          model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(now()) \n"))
-		 if sett.bool_write_tree
+		 if sett.write_dot_graph
+			println("Writing DOT tree structure to file: \n $(dot_graph_TXT_file)")
+			isfile(dot_graph_TXT_file)&&rm(dot_graph_TXT_file)
+			f=open(dot_graph_TXT_file,"w");
+				write(f,"\n\n",dot_graph,"\n\n");
+			close(f);
+			draw_dot_graph(sett.graphvizexecutable,dot_graph_TXT_file,dot_graph_visualization_file)
+			push!(filelistWithFilesToBeZipped,dot_graph_TXT_file)
+			isfile(dot_graph_visualization_file)&&push!(filelistWithFilesToBeZipped,dot_graph_visualization_file)
+		end
+		if sett.bool_write_tree			
 			#write settings
-			println("Writing tree structure to file: \n $(tree_file)")
-				dot_graph=graph(resulting_model)
+			println("Writing tree structure to file: \n $(tree_file)")				
 				isfile(tree_file)&&rm(tree_file)
 				f=open(tree_file,"w")
 					write(f,model_setting_string)
 					write(f,"\n\n",dot_graph,"\n\n")
 				close(f);
 				@time write_tree(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,var_imp1d_str_arr,var_imp2d_str_arr,0,tree_file,sett.df_name_vector,dtmtable.mappings)
-				push!(filelistWithFilesToBeZipped,tree_file)
-			println("Writing DOT tree structure to file: \n $(dot_graph_TXT_file)")
-				isfile(dot_graph_TXT_file)&&rm(dot_graph_TXT_file)
-				f=open(dot_graph_TXT_file,"w");
-					write(f,"\n\n",dot_graph,"\n\n");
-				close(f);
-				draw_dot_graph(sett.graphvizexecutable,dot_graph_TXT_file,dot_graph_visualization_file)
-				push!(filelistWithFilesToBeZipped,dot_graph_TXT_file)
-				isfile(dot_graph_visualization_file)&&push!(filelistWithFilesToBeZipped,dot_graph_visualization_file)
+				push!(filelistWithFilesToBeZipped,tree_file)			
             end
 			if sett.write_sas_code
 				#write SAS Code
@@ -743,7 +745,11 @@ prnt&&println("---Model Settings------------------------------------------------
 			@timeConditional(sett.print_details,begin
 				xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultEnsemble=boosted_tree(dtmtable,sett)
 			end)
+			
 			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(now()) \n "))
+			#this line is for  the sas,vba and csharp code
+			estimatesPerScoreForCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
+			
 			if sett.write_sas_code
 				#write SAS Code
 				println("Writing SAS Code: \n $(sas_code_file)")
@@ -751,22 +757,20 @@ prnt&&println("---Model Settings------------------------------------------------
 				if sett.roptForcedPremIncr
 					error("this does currently not work")
 				else
-					@time write_sas_code(dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings)
+					@time write_sas_code(estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings)
 				end
 				push!(filelistWithFilesToBeZipped,sas_code_file)
 			end
-			#this line is for both the vba and csharp code
-			estimatesPerScoreForCSSHARPCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
 			if sett.write_csharp_code				
 				println("Writing C# Code: \n $(csharp_code_file)")
 				isfile(csharp_code_file)&&rm(csharp_code_file)				
-				@time write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCSSHARPCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
+				@time write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,csharp_code_file)
 			end 
 			if sett.write_vba_code
 				println("Writing VBA Code: \n $(vba_code_file)")
 				isfile(vba_code_file)&&rm(vba_code_file)
-				@time write_vba_code(vectorOfLeafArrays,estimatesPerScoreForCSSHARPCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
+				@time write_vba_code(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,vba_code_file)
 			end
 		#end #boosting

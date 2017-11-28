@@ -3177,31 +3177,10 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node,num
     write_tree(candMatWOMaxValues,tree.right,number_of_num_features, indent + 1,f,df_name_vector,mappings)
 end
 
-#Rank optimization write SAS Code fn
-function write_sas_code(numeratorval::Array{Float64,1},leafIndexWhichIsAdjustedArray::Array{Int64,1},leavesPerTree::Array{Array{Leaf,1},1},bt::BoostedTree,numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1},premStep::Float64,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"),indent::Int64=0)
-warn("this is in the works.... and will likely fail")
-warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
-iterations=size(bt.trees,1)
-fiostream=open(fileloc,"w")
-for i=1:iterations
-	leaves_of_tree=leavesPerTree[i]
-	leafNumberToAdjust=leafIndexWhichIsAdjustedArray[i]
-	rpvector=[x.rule_path for x in leaves_of_tree] #rule_path of each leaf is used to identify a leaf in the following (this could probably be done more efficiently) todo/tbd
-	@show size(rpvector)
-	thisrp=rpvector[i]
-	@show size(thisrp)
-	dump(thisrp)
-	#apply_tree_by_row(numeratorval,leaves_of_tree,tree.trees[i],numfeatures,charfeatures,leafIndexWhichIsAdjusted,premStep)
-end
-
-close(fiostream)
-	return true
-end
-
 #write SAS Code fn
-function write_sas_code(candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"),indent::Int64=0)
+function write_sas_code(estimatesPerScore,candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"),indent::Int64=0)	
 	warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
-	iterations=size(bt.trees,1)
+iterations=size(bt.trees,1)
 local vname
 notsign=convert(String,"not")
 insign=convert(String," in ")
@@ -3220,7 +3199,7 @@ txtw="""
 """
 write(fiostream,"\n",txtw,"\n")
 
-write(fiostream,"option nosource; \n\ndata fitted(drop=i_loop); format fitted_value fitted_value_best_guess best32. variables_have_unknown_values 8. variables_with_unknown_values \$1000. variables_have_rare_values 8. variables_with_rare_values \$1000.; format ")
+write(fiostream,"option nosource; \n\ndata vboosting/view=vboosting;\r\n format fitted_value fitted_value_best_guess best32. variables_have_unknown_values 8. variables_with_unknown_values \$1000. variables_have_rare_values 8. variables_with_rare_values \$1000.; format ")
 for i=1:iterations
       write(fiostream,leafvarname,"_iter$(i) ")
 end
@@ -3297,31 +3276,48 @@ end
 			write_tree_at_each_node!(candMatWOMaxValues,bt.trees[i],number_of_num_features,indent,fiostream,df_name_vector,mappings,string(leafvarname,"_iter$(i)"),bt.moderationvector[i])
 		end
 	end
-	write(fiostream,"\nfitted_value=$(bt.meanobserved); \narray tmpnum{*} rel_mod_leaf_iter:; \ndo i_loop=1 to dim(tmpnum); \nfitted_value=fitted_value*tmpnum[i_loop]; \nend;\nif variables_have_unknown_values then do;\nfitted_value_best_guess=fitted_value;fitted_value=.;\nend;\nelse do;fitted_value_best_guess=fitted_value;\nend;\nrun; \n\noption source; \n")
+
+	#todo tbd, take note of this somewhere and do not forget it!
+	#for the c# code the last entry of maxRawRelativityPerScoreSorted is modified to be 50% (50% is arbitrary here) higher than the value which was derived by Julia
+	#this means that any policy will get the maximal score if it is "worse" than any training policy
+	#but if it is much worse, it will get the default score of -1
+	modified_maxRawRelativityPerScoreSorted=deepcopy(bt.maxRawRelativityPerScoreSorted)
+	modified_maxRawRelativityPerScoreSorted[end]=modified_maxRawRelativityPerScoreSorted[end]*1.5
+	sas_write_ScoreMap(fiostream,modified_maxRawRelativityPerScoreSorted,estimatesPerScore)
+
+	# old approach write(fiostream,"\nfitted_value=$(bt.meanobserved); \narray tmpnum{*} rel_mod_leaf_iter:; \ndo i_loop=1 to dim(tmpnum); \nfitted_value=fitted_value*tmpnum[i_loop]; \nend;\nif variables_have_unknown_values then do;\nfitted_value_best_guess=fitted_value;fitted_value=.;\nend;\nelse do;fitted_value_best_guess=fitted_value;\nend;\nrun; \n\noption source; \n")
+	
 	endtxt="""
+
 	data fitted2;
-		format irkey;set fitted(drop=leaf_iter: rel_mod_leaf_iter:);
+		format irkey;
+		format score raw_relativity;
+		set vboosting(drop=i_loop leaf_iter: rel_mod_leaf_iter:);			
 	run;
 
 	proc sort data=res out=res_sorted;by irkey;quit;
 	proc sort data=fitted out=fitted_sorted;by irkey;quit;
 	proc compare criterion=1E-14 out=compared data=res_sorted compare=fitted_sorted(rename=fitted_value=est_from_trn);id irkey;var est_from_trn;quit;
 	proc compare criterion=1E-14 out=compared data=res_sorted compare=fitted_sorted(rename=fitted_value=rawEstimatePerObs);id irkey;var rawEstimatePerObs;quit;
+
 /*
+
 	proc compare criterion=1E-14 out=compared data=res_sorted(rename=(est_from_trn=est_from_trn_other rawEstimatePerObs=est_from_trn)) compare=fitted_sorted(rename=fitted_value=est_from_trn);id irkey;var est_from_trn;quit;
 	data sas_leafnrs;set fitted_sorted(keep=irkey leaf_iter:);run;
 	proc sort data=julia_leafnrs;by irkey;quit;
 	proc compare criterion=1E-14 out=cmp2 data=sas_leafnrs compare=julia_leafnrs;id irkey;quit;
 	data test;set fitted;keep fitted_value fitted_value_best_guess &var_dep.;run;
-	*/
+
+*/
+
 	"""
 	write(fiostream,endtxt)
 close(fiostream)
 end
 
+"""write_sas_code version for single trees"""
 function write_sas_code(candMatWOMaxValues::Array{Array{Float64,1},1},inTree::Tree,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),mdf::Float64=1.0;leafvarname::String=convert(String,"leaf"),indent::Int64=0)
-	warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
-	tree=inTree.rootnode
+tree=inTree.rootnode
 notsign=convert(String,"not")
 insign=convert(String," in ")
 quotestr=convert(String,"'")
@@ -3334,7 +3330,7 @@ fiostream=open(fileloc,"w")
 	write(fiostream,global_byte_order_mark)
     write(fiostream,"/* \nSettings: \n WARNING: common issues with the SAS code: the data in sas may have leading zeros (categorical columns) which can be lost when exporting and importing!\n ")
     write(fiostream,settings)
-    write(fiostream,"\n*/ \n\n")
+	write(fiostream,"\n*/ \n\n")	
     write(fiostream,"data sas_tree;format ",leafvarname,";set runmodel;;")
     write(fiostream,"\n")
 
@@ -3413,7 +3409,7 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
 end
 
 function write_sas_code(leaves::Array{Leaf,1},number_of_num_features::Int64,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"))
-	warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
+	error("BK: This function should not be used anymore. (right?)")	
 	#open file
 fiostream=open(fileloc,"w")
   #write beginning
@@ -4892,6 +4888,58 @@ function csharp_write_elseif_ScoreMap(fiostream::IOStream,intArray_1_to_n::Array
 		write(fiostream,"if (a_dRawScore <= $(maxRawRelativityPerScoreSorted[1])d) \{ iScore=$(intArray_1_to_n[1]); dEstimate= $(estimatesPerScore[1])d; \}\r\n")
 		for j=2:length(maxRawRelativityPerScoreSorted)
 			write(fiostream,"else if (a_dRawScore <= $(maxRawRelativityPerScoreSorted[j])d) \{ iScore=$(intArray_1_to_n[j]); dEstimate= $(estimatesPerScore[j])d; \}\r\n")
+		end
+		#Last else condition is "special"
+	end
+	return nothing
+end
+
+
+function sas_write_ScoreMap(fiostream::IOStream,maxRawRelativityPerScoreSorted::Array{Float64,1},estimatesPerScore::Array{Float64,1})
+	start=
+	"""
+
+	/*map raw relativity to score and fitted value*/
+		raw_relativity = 1.0;
+		score = -1;
+		fitted_value = 0.0;		
+		
+		array tmpnum{*} rel_mod_leaf_iter:; 
+		do i_loop=1 to dim(tmpnum); 
+			raw_relativity = raw_relativity * tmpnum[i_loop]; 
+		end;
+		
+	"""
+	write(fiostream,start)
+	sas_write_elseif_ScoreMap(fiostream,0,collect(1:length(maxRawRelativityPerScoreSorted)),maxRawRelativityPerScoreSorted,estimatesPerScore)
+	endstr=
+	"""
+	
+	run;
+	"""
+	write(fiostream,endstr)
+	return nothing
+end
+
+function sas_write_elseif_ScoreMap(fiostream::IOStream,indent::Int,intArray_1_to_n::Array{Int,1},maxRawRelativityPerScoreSorted::Array{Float64,1},estimatesPerScore::Array{Float64,1})
+	#NOTE: here we assume that the relativities are sorted in increasing order todo/tbd take this on a list of core assumptions
+	minval=10	
+	if length(maxRawRelativityPerScoreSorted)>minval
+		middle=fld(length(maxRawRelativityPerScoreSorted),2)
+		middle=max(2,min(length(maxRawRelativityPerScoreSorted)-1,middle))
+		write(fiostream,repeat("\t",indent),"If (raw_relativity <= $(maxRawRelativityPerScoreSorted[middle])) then do;\r\n")
+			sas_write_elseif_ScoreMap(fiostream,indent+1,intArray_1_to_n[1:middle],maxRawRelativityPerScoreSorted[1:middle],estimatesPerScore[1:middle])
+		write(fiostream,repeat("\t",indent),"eLse do;\r\n")
+			sas_write_elseif_ScoreMap(fiostream,indent+1,intArray_1_to_n[middle+1:end],maxRawRelativityPerScoreSorted[middle+1:end],estimatesPerScore[middle+1:end])
+		write(fiostream,repeat("\t",indent),"End;\r\n")
+	else
+		indent_score=repeat("\t",indent+1)
+		write(fiostream,repeat("\t",indent),"iF (raw_relativity <= $(maxRawRelativityPerScoreSorted[1])) then do;\r\n",indent_score,"score = $(intArray_1_to_n[1]);\r\n",indent_score,"fitted_value = $(estimatesPerScore[1]);\r\n",repeat("\t",indent),"END;\r\n")
+		for j=2:length(maxRawRelativityPerScoreSorted)0
+			write(fiostream,repeat("\t",indent),"elSE if (raw_relativity <= $(maxRawRelativityPerScoreSorted[j])) then do;\r\n",indent_score,"Score=$(intArray_1_to_n[j]);\r\n",indent_score,"fitted_value = $(estimatesPerScore[j]);\r\n",repeat("\t",indent),"EnD;\r\n")
+			if j==length(maxRawRelativityPerScoreSorted)
+				write(fiostream,repeat("\t",indent),"eNd;\r\n")
+			end
 		end
 		#Last else condition is "special"
 	end

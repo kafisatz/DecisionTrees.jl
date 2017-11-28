@@ -267,7 +267,7 @@ type ModelSettings
 	number_of_tariffs::Int64 #10
 	prem_buffer::Int64 #11
 	BoolStartAtMean::Bool #12
-	bool_write_tree::Bool #13
+	bool_write_tree::Bool #13	
 	number_of_num_features::Int64 #14
 	parallel_tree_construction::Bool #15
 	using_local_variables::Bool #16
@@ -326,6 +326,7 @@ type ModelSettings
 	graphvizexecutable::String #e.g. C:\Program Files (x86)\Graphviz2.38\ if this
 	showProgressBar_time::Bool # bar form iterators package (or some other package)
 	boolProduceEstAndLeafMatrices::Bool
+	write_dot_graph::Bool
 
 	#the following are treated specially
 	ncolsdfIndata::Int64
@@ -410,6 +411,7 @@ type ModelSettings
 	graphvizexecutable="" #C:\\Program Files (x86)\\Graphviz2.38\\bin\\"
 	showProgressBar_time=true
 	boolProduceEstAndLeafMatrices=false
+	write_dot_graph=false
 
 	#the following are treated specially
 	ncolsdfIndata=-1 #
@@ -419,7 +421,7 @@ type ModelSettings
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
 
-	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices
+	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph
 	 ,ncolsdfIndata,ishift,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
   end  # ModelSettings()
 
@@ -568,13 +570,20 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 end
 
 function updateSettingsMod!(s::ModelSettings;args...)
+	seen=[]
 	for (smember,v) in args
-		#@assert size(v)==() "Error, you can only specify values (and not lists) here! v=$(v)"
-		#@show smember,v 
-		oldValue=getfield(s,smember)
-		#@show typeof(oldValue)
-		valConverted=convertFromString(oldValue,string(v)) #tbd maybe string(v) could/should be replaced with v here
-		setfield!(s,smember,valConverted)
+		if in(smember,seen)
+			error("You provided multiple values for the field $(smember)")
+		end
+		push!(seen,smember)
+
+		oldValue=getfield(s,smember)		
+		if typeof(v)!=typeof(oldValue)
+			valConverted=convertFromString(oldValue,string(v)) #tbd maybe string(v) could/should be replaced with v here
+			setfield!(s,smember,valConverted)
+		else
+			setfield!(s,smember,v)
+		end		
 	end
 	res=checkIfSettingsAreValid(s)
 	@assert res==nothing "Some settings are invalid! Abort."
