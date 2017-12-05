@@ -1,4 +1,5 @@
 __precompile__()
+warn("DTM: BK to update to v0.7 -> use PooledArrays (fieldnames are refs and pool) for both cat and num data")
 info("DTM: BK possibly introduce an option not to calcuate intermediate metrics/scoring/sorting -> faster runtime")
 info("DTM: BK to check if sortperm! performance has improved in newer Julia versions")
 info("DTM: BK to fix this - we should not rely on mappings and candmatwomax anymore (if possible)")
