@@ -5,12 +5,20 @@ Pkg.update() #Upadate all packages
 #warn("You need to install mysql-connector-c-6.1.6-winx64 !!") #-> resources folder
 #warn("ensure that C:\Program Files\MySQL\MySQL Connector C 6.1\lib is in your path such that libmysql.dll is found")
 #Pkg.clone("https://github.com/JuliaDB/MySQL.jl")
+Pkg.add("RDatasets") #I do not think we really need this package
+Pkg.add("CSV")
+Pkg.add("ProfileView")
+Pkg.add("Coverage")
+
+Pkg.add("Revise")
+Pkg.add("BenchmarkTools")
+Pkg.add("Compat")
 Pkg.add("StatsBase")
 Pkg.add("DataFrames")
 Pkg.add("ProgressMeter")
 Pkg.add("Iterators")
 Pkg.add("OnlineStats")
-Pkg.add("ArrayViews")
+#Pkg.add("ArrayViews")
 Pkg.add("HDF5") #Load/Save *.jld files
 Pkg.add("JLD")
 Pkg.add("SQLite")
@@ -33,10 +41,7 @@ info("ensure that python, the correct verison, is in the path")
 warn("run this command in windows to install pandas "python -m pip install pandas")
 
 #For debugging purposes only
-Pkg.add("ProfileView")
-Pkg.add("Coverage")
 
-Pkg.add("RDatasets") #I do not think we really need this package
 Pkg.add("SortingAlgorithms") #I do not think we really need this package
 Pkg.add("ZipFile") #I do not think we really need this package
 #Pkg.add("Winston")

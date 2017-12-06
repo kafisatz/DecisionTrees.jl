@@ -1,9 +1,11 @@
 
 import Base: length,start,next,done,eltype,==,hash
 
-	export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,pdaMod,SplittingCriterion
+	export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion
 	export ModelSettings,updateSettings!
 
+    immutable pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
+    
 #Splitting Criterions use multiple dispatch
 	abstract type SplittingCriterion  end
 	immutable DifferenceSplit      <: SplittingCriterion end
@@ -208,51 +210,6 @@ immutable Node
     right::Union{Leaf,Node}
     rule_path::Array{Rulepath,1}
 end
-
-#todo / tbd this can be done nicer and more efficient.
-#this is not well-coded (I need to read up on constructors a little more)
-immutable pdaMod{T} #here T is String or Float64
-    pda::PooledDataArray{T,UInt8,1}
-    values::Array{T,1}
-    ids::Array{UInt8,1}
-	#constructor
-	function pdaMod{T}(pd,v,i) where T #{T} #Constructor called with pdaMod{T}(pd,v,i)
-		@assert length(v)==length(i)
-		#@assert sort!(unique(deepcopy(pd.refs)))==sort!(deepcopy(i))
-		return new(pd,v,i)
-		#return new{T}(pd,v,i)
-	end
-end
-#pdaMod(pd::PooledDataArray{T,UInt8,1},v::Array{T,1},i::Array{UInt8,1}) where {T} = pdaMod{T}(pd,v,i) #Constructor called with pdaMod(pd,v,i)
-#Hint: for any object/type use fieldnames(myvariable) to get the fields
-
-function pdaMod{V<:PooledDataArray}(pd::V) # where {V}
-		@assert typeof(pd)<:PooledDataArray
-		eltype(pd.refs)!=UInt8 ? pda=compact(pd) : pda=pd
-		values=deepcopy(pda.pool)
-		eltv=eltype(values)
-		@assert in(eltv,global_pldamod_valid_types) "Error during pdaMod construction. Invalid eltype: $(eltype(values))"
-		elt=eltype(pda.refs)
-		@assert elt==UInt8
-		if length(pda.refs)>0
-			mi,ma=extrema(pda.refs)
-			@assert length(values)==(ma-mi+1)
-			ids=collect(mi:ma)
-		else
-			ids=Array{elt}(0)
-		end
-		return pdaMod{eltv}(pda,values,ids)
-end
-
-#constructor for arrays and dataarrays
-pdaMod{TTT}(arr::Array{TTT,1})=pdaMod(PooledDataArray(arr))
-pdaMod{TTT}(arr::DataArray{TTT,1})=pdaMod(PooledDataArray(arr))
-#pdaMod{TTT}(arr::Array{TTT,1}) where {TTT}=pdaMod(PooledDataArray(arr))
-#pdaMod{TTT}(arr::DataArray{TTT,1}) where {TTT}=pdaMod(PooledDataArray(arr))
-
-#Base.convert(::Type{pdaMod},pda::PooledDataArray)=pdaMod(pda,deepcopy(pda.pool),[one(pda.refs[1]):maximum(pda.refs)])
-Base.copy(a::pdaMod)=pdaMod(copy(a.pda),copy(a.values),copy(a.ids))
-eltype(pdam::pdaMod)=eltype(pdam.pda)
 
 type ModelSettings
 	model_type::String #1

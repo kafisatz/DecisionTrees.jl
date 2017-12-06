@@ -212,7 +212,7 @@ function _split(number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{I
 			#ATTENTION: for char variables we pass the variable i with a negative sing!!
 			#this allows us to distinguish whether we are working on a char or num variable later on
 			modified_i = eltype(features[i])<:AbstractString ? number_of_num_features - i  :  i 
-			tmplist::Vector{Splitdef}=_split_feature_pdamod(number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef}
+			tmplist::Vector{Splitdef}=_split_feature(number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef}
 			append!(tmp_splitlist,tmplist)
 		end
 
@@ -253,7 +253,7 @@ end
 
 
 #new approach; first summarize by label, then iterate over the gray code such that only one category needs to switch classes and "online" update the metrics
-function _split_feature_pdamod(number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fname::Symbol,features,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int64,randomweight::Float64,catSortByThreshold::Int64,catSortBy::SortBy)
+function _split_feature(number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fname::Symbol,features,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int64,randomweight::Float64,catSortByThreshold::Int64,catSortBy::SortBy)
 crit_type=typeof(crit)
 #This function is now for numeric and character variables!
 #feature_column_id is negative in case of character variables

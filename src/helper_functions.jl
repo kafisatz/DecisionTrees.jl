@@ -1355,13 +1355,6 @@ function calcIterationsPerCore2(ntot::Int,ncores::Int)
 	end
 end
 
-function resize!(f::Array{pdaMod,1},n::Int)
-	for i=1:length(f)
-		resize!(f[i].pda,n)
-	end
-return nothing
-end
-
 function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) #,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1},smp::Array{Int,1},n::Array{Float64,1},d::Array{Float64,1},w::Array{Float64,1},numf::Array{pdaMod,1},charf::Array{pdaMod,1},un::Array{Float64,1},ud::Array{Float64,1},uw::Array{Float64,1},unumf::Array{pdaMod,1},ucharf::Array{pdaMod,1})
 #this version should (does it?) allocate less memory
 		repl=(samplesize<0)
@@ -1402,7 +1395,6 @@ function sampleData(prop::Float64,numerator::Array{Float64,1},denominator::Array
 	samplesize=convert(Int,round(prop*size(numerator,1)))
 	return sampleData(samplesize,numerator,denominator,weight,numfeatures,charfeatures)
 end
-
 
 function initSettingsWhichAreTheSameForBoostingAndBagging(trnidx::Vector{Int},validx::Vector{Int},actualNumerator::Array{Float64,1},denominator::Array{Float64,1},sett::ModelSettings)
 	empty_rows_after_iteration_stats=2
@@ -1472,7 +1464,7 @@ end
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
 This verison of the function is for String / Categorical variables
 """
-function lrIndices(trnidx::Vector{Int},f::DataArrays.PooledDataArray{String,T,1},subset::Array) where T<:Unsigned
+function lrIndices(trnidx::Vector{Int},f::PooledDataArray{String,T,1},subset::Array) where T<:Unsigned
 	l=Vector{Int}(0)
 	r=Vector{Int}(0)
 	sizehint!(l,length(trnidx))
@@ -1630,11 +1622,10 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
     @assert length(candlist)<255 "Currently at most 254 splitting points are supported. Please choose less splitting points for numeric column $(i):$(header[i])" #see note below
 	#prepare trn data	
 	compressed_vector=map_numdata_to_candidates(this_column,candlist)
-	features[thisname]=compact(PooledDataArray(compressed_vector))		
-	#pda=compact(PooledDataArray(compressed_vector))
+	features[thisname]=compact(PooledDataArray(compressed_vector))			
 end
+
 return candMatWOMaxValues
-#return restrn,resval,candMatWOMaxValues #todo/tbd check if we also want to return the candlist or candidate matrix or the unique values of each column here!
 end
 
 
@@ -1669,25 +1660,6 @@ function define_candidates(feature_column,max_splitting_points_num::Int64)
 	end
 	result_unique=unique(result)
 	return result_unique #NOTE! the length of domain_i may be smaller than max_splitting_points_num
-end
-
-function createCharData(charfeaturesAny::Array{Any,2},charheader::Array{AbstractString,1},number_of_char_features::Int64)
-	charfeatures_PDA_trnAndVal=Array{pdaMod}(number_of_char_features)
-	#Define Mappings UInt8->String
-	mappings=Array{Array{String,1}}(number_of_char_features)
-	nobs=size(charfeaturesAny,1)
-	utf8vec=Array{String}(nobs)
-	for i=1:number_of_char_features
-	  tmpthiscol=charfeaturesAny[:,i]
-	  #todo/tbd, check if this can be done more efficiently
-	  for jj=1:length(tmpthiscol)
-		  utf8vec[jj]=convert(String,string(tmpthiscol[jj]))
-	  end
-    #@show unique(utf8vec)
-	  charfeatures_PDA_trnAndVal[i]=pdaMod(utf8vec)
-	  mappings[i]=deepcopy(charfeatures_PDA_trnAndVal[i].pda.pool)
-	end
-	return charfeatures_PDA_trnAndVal,mappings
 end
 
 function deleteAllOutputFiles(datafolder::AbstractString,outfilename::AbstractString)
@@ -2198,72 +2170,6 @@ function get_firstpos{T}(v::Array{T,1})
   return firstpos
 end
 
-function custom_countsort(f::pdaMod,labels::Array{Float64,1})
-#     @assert length(f.pda)==length(labels)
-    a=f.pda.refs
-    (lo, hi) = extrema(levels(f))
-    lengtha=length(a)
-    b = zeros(UInt8, lengtha)
-    cnt = zeros(Int, hi - lo + 1)
-    for i in a
-        cnt[i - lo + 1] += 1
-    end
-    cntlevels=copy(cnt) #for the output of the levelcount (volume per level)
-    firstpos=get_firstpos(cnt)
-
-    z = one(Int)
-    for i in lo:hi
-        while cnt[i - lo + 1] > 0
-            b[z] = i
-            z += 1
-            cnt[i - lo + 1] -= 1
-        end
-    end
-
-    idx=zeros(Int,lengtha)
-    for count=1:lengtha
-      idx[firstpos[a[count]]]=count
-      firstpos[a[count]]+=1
-    end
-
-    return b,cntlevels,idx
-end
-
-function custom_countsort!(f::pdaMod,labels::Array{Float64,1},lcwiowatt::Array{Float64,1})
-#     @assert length(f.pda)==length(labels)
-    a=f.pda.refs
-    (lo, hi) = extrema(levels(f))
-    lengtha=length(a)
-    cnt = zeros(Int, hi - lo + 1)
-    for i in a
-        cnt[i - lo + 1] += 1
-    end
-    cntlevels=copy(cnt) #for the output of the levelcount (volume per level)
-    firstpos=get_firstpos(cnt)
-    firstpos_out=copy(firstpos)
-#     idx=zeros(Int,lengtha)
-#     labels_sorted=Array{Float64}(lengtha)
-    for count=1:lengtha
-#       xx=firstpos[a[count]]
-#       idx[xx]=count
-        acount=a[count]-lo+1
-        lcwiowatt[firstpos[acount]]=labels[count]
-        firstpos[acount]+=1
-    end
-
-    z = one(Int)
-    for i in lo:hi
-        while cnt[i - lo + 1] > 0
-            a[z] = i
-            z += 1
-            cnt[i - lo + 1] -= 1
-        end
-    end
-#     return cntlevels,idx
-  #do we need to return the index vector? we probably do not need it (maybe later when we also need to sort a weigth vector)
-  return cntlevels,firstpos_out #,lcwiowatt
-end
-
 function aggregate_data(f::pdaMod,scores::Array{Int64,1},numeratorEst::Array{Float64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     #this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
@@ -2358,7 +2264,7 @@ end
 
 function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})  where T<:SubArray
 	#! preliminary testing showed that we can save 10% if we explicitly type f as in
-	# aggregate_data_diff(f::SubArray{String,1,DataArrays.PooledDataArray{String,UInt8,1},Tuple{Array{Int64,1}},false},denominator....)
+	# aggregate_data_diff(f::SubArray{String,1,PooledDataArray{String,UInt8,1},Tuple{Array{Int64,1}},false},denominator....)
 	#warn("BK i am not sure if this is accurate....")
 	#lvl_mod=findin(levels(f),f.parent.pool)
 	#@show (lo::UInt8, hi::UInt8) = extrema(lvl_mod) #(lo, hi) = extrema(levels(f))
@@ -2511,7 +2417,7 @@ function build_listOfMeanResponse_mse(labels::Array{Float64,1},features::pdaMod,
   countlist,firstindices=custom_countsort!(features_sorted,labels,labels_sorted)
   sum_of_sum_of_squareslist=zeros(Float64,ncategories)
   meanobservedlist=zeros(Float64,ncategories)
-#   features_sorted=deepcopy(features) #pdaMod(deepcopy(features.pda),deepcopy(features.values),deepcopy(features.ids))
+#   features_sorted=deepcopy(features) 
   #this determines the order of all lists (output of this function)
 #   idx_sortfpda=sortperm(features_sorted.pda,alg=QuickSort)
 #   features_sorted.pda.refs=features_sorted.pda.refs[idx_sortfpda]
@@ -2835,89 +2741,6 @@ function get_left_index_vector(numfeatures::Array{Float64,2},id::Int64,thresh::F
   end
   return res
 end
-
-function valid_subsets(features::pdaMod,lvls::Array{UInt8,1},minw::Float64)
-  volumes=[sum(features.pda.refs.==x) for x in lvls]
-  maxvol=Float64(sum(volumes))
-  all_subsets=[i for i in subsets(lvls)]
-  half_the_subsets=all_subsets[2:convert(Int,length(all_subsets)/2)] #the first element is the empty subset, after the middle "subsets" become the complements
-  vols=[sum(volumes[findin(lvls,i)]) for i in half_the_subsets]
-  volsf=convert(Array{Float64,1},vols)
-  condition1=volsf.>minw  #too small sets
-  condition2=volsf.<(maxvol-minw) #complements of too small sets
-  cond=condition1 & condition2
-  subs=half_the_subsets[cond]
-
-  return subs
-  #halfen the candidates, since we consider binary splits anyway
- # res=Array(Array{UInt8,1},0)
- # k=1
- # for i in subs
- #   complement_is_in_set=false
- #   if k==1
- #     push!(res,i)
- #   else
- #     this_compl=setdiff(lvls,i)
- #     if !(in(this_compl,res))
- #       push!(res,i)
- #     end
- #   end
- #   k+=1
- # end
-end
-
-
-function split_pda_left_right(leftidx::Array{Int64,1},rightidx::Array{Int64,1},charfeatures::Array{pdaMod,1})
-  number_of_char_features=length(charfeatures)
-  res_charfeatures_left=Array{pdaMod}(number_of_char_features)
-  res_charfeatures_right=Array{pdaMod}(number_of_char_features)
-  for i=1:number_of_char_features
-    res_charfeatures_left[i]=subset_pda_mod(charfeatures[i],leftidx)
-    res_charfeatures_right[i]=subset_pda_mod(charfeatures[i],rightidx) #todo/tbd this can be done more efficiently: if we know "this_index" from the left side we have all the information for the right child! improve this
-	#this should work, but it does not.... why? todo: check this properly
-#	pda=copy(charfeatures[i].pda[rightidx])
-#	matchedindexBoolean=int_idx_to_bitarray(matchedindex,length(charfeatures[i].ids))
-#	res_charfeatures_right[i]=pdaMod(pda,copy(charfeatures[i].values)[!matchedindexBoolean],copy(charfeatures[i].ids)[!matchedindexBoolean])
-  end
-  return res_charfeatures_left,res_charfeatures_right
-end
-
-function subset_pda_mod(features::Array{pdaMod,1},idx::Array{Int,1})
-	nf=length(features)
-	resf=Array{pdaMod}(nf)
-	for i=1:nf
-		resf[i]=subset_pda_mod(features[i],idx)
-	end
-	return resf
-end
-
-function subset_pda_mod(a::pdaMod,idx::Array{Int64,1}) #note the function also works for a BitArray index, but I think performance is better with an Integer index, thus I want to throw a method error if it is called with a Boolean index vector (BitArray)
-  pda=a.pda[idx] #this line is currently (one of) the most neuralgic point of the whole code
-  #it takes a lot of time, I would say that more than 65% of the time is spent here!
-  #if we can improve it, that would increase performance A LOT
-
-  values=copy(a.values)
-  ids=copy(a.ids)
-
-	  #subset values and id
-	  #NOTE: for the variable which determines the split, we already know which values will fall into the left and right child,
-	  #however for the other variables it is unclear which distinct values will remain in the left and right chlid, thus we need to calculate them here.
-	  #todo/tbd then again it may not be relevant which values/ids remain.... the pda.refs will be accurate in any case
-	  #if we do not updated values/ids to only reflect the remaining values/ids, things may still work just fine, excpet that there will be values&ids which do not ocurr in the data =(pda.refs)
-	  #but we would save quite some time, namely the my_findin and myuniqe part would become obsolete
-
-	#todo / tbd : someone should check whether we can really leave the following lines commented
-	#=
-		  unq=myunique(pda.refs,length(ids))
-		  this_index=my_findin(ids,unq)
-		  ids=ids[this_index]
-		  values=values[this_index]
-	=#
-  pres=pdaMod{eltype(pda)}(pda,values,ids)
-  return pres
-end
-
-#subset_pda_mod(a::pdaMod,idx::Array{Int64,1})=subset_pda_mod(a,int_idx_to_bitarray(idx,length(a)))
 
 function myunique(C::Array{UInt8,1},maximalNumberOfDistinctValues::Int)
 #output is a vector of unique values
@@ -3638,36 +3461,6 @@ function index_vector_from_rulepath(rpArray::Array{Rulepath,1},numfeatures::Arra
         end
       end
       #Apply "subsetting"
-      res=(res & (restmp))
-  end
-  return res
-end
-
-function index_vector_from_rulepath(rpArray::Array{Rulepath,1},numfeatures::Array{Float64,2},charfeatures::Array{pdaMod,1})
-  size(numfeatures,2)>0 ? nobs=size(numfeatures,1) : nobs=length(charfeatures[1])
-  res=BitArray(nobs)
-  fill!(res,true)
-    for i=1:size(rpArray,1)
-      rule=rpArray[i]
-      if rule.featid>0
-          restmp=BitArray(nobs)
-          for jj=1:nobs
-             error("this is not working anymore, to be modified")
-			 restmp[jj]=(numfeatures[jj,rule.featid]<rule.featthresholdvalue)
-          end
-      else
-        restmp=BitArray(length(charfeatures[1]))
-        fill!(restmp,false)
-        for jj=1:nobs
-          for k=1:size(rule.subset,1)
-               restmp[jj]=restmp[jj] || (charfeatures[-rule.featid].pda.refs[jj] == rule.subset[k])
-            end
-        end
-      end
-      #Apply "subsetting"
-      if !(rule.isLeftChild)
-        restmp=.!restmp
-      end
       res=(res & (restmp))
   end
   return res
@@ -5390,11 +5183,6 @@ depth(tree::Tree) = depth(tree.rootnode)
 create_leaves_array(t::Tree)=create_leaves_array(t.rootnode)
 create_leaves_array(t::Node)=vcat(create_leaves_array(t.left),create_leaves_array(t.right)) #warning! it is essential that this concept/order of number of the leaves is consistent with the apply_tree_fn for validation data where we derive the leaf number for val
 create_leaves_array(x::Leaf)=[x]
-length(a::pdaMod)=length(a.pda)
-#getindex(a::pdaMod,i)=getindex(a.pda,i)
-levels(a::pdaMod)=copy(a.ids) #WARNING: the fact that we create a copy here is ESSENTIAL as we sort the levels, but do not want the IDS to be sorted too! without copy we would only create a reference
-findin(a::pdaMod,s::Array{String,1})=findin(a.pda,s)
-findin(a::pdaMod,s::Array{Float64,1})=findin(a.pda,s)
 number_of_nodes(t::Tree)=number_of_nodes(t.rootnode)
 number_of_nodes(t::Node)=1+number_of_nodes(t.left)+number_of_nodes(t.right)
 number_of_nodes(l::Leaf)=0

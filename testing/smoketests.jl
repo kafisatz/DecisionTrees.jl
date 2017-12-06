@@ -15,8 +15,8 @@ this_dir="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New R
 
  =#
 
-this_dir=string(dictGlobalSettings["Julia Code Folder"],"\\src");cd(this_dir);unshift!(LOAD_PATH,this_dir)
-using DTM
+#this_dir=string(dictGlobalSettings["Julia Code Folder"],"\\src");cd(this_dir);unshift!(LOAD_PATH,this_dir)
+using DecisionTrees
 using Base.Test
 #outputfldr="C:\\temp\\joutput\\"
 

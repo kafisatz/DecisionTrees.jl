@@ -6,7 +6,7 @@ info("DTM: BK to fix this - we should not rely on mappings and candmatwomax anym
 info("DTM: BK to add purity improvement for each split! Stop splitting if it is > threshold")
 info("BK: do not use df_name_vector anymore, but the symbol in the subset or simply names(features) - possibly also get rid of mappings and candmat....")
 info("BK: tbd add yes/no to the top of each printed DOT graph indicating that 'yes goes left'")
-warn("BK: avoid branching in critical functions / use ifelse or similar constructs")
+info("BK: avoid branching in critical functions / use ifelse or similar constructs")
 VERSION >= v"0.6-"
 
 module DecisionTrees
