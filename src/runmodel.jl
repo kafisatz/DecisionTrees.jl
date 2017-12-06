@@ -44,16 +44,16 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     numDA=dfin[Symbol(numcol)]
 
     if denomcol==""
-        info("Using constant denominator for each row (.==1)") #of the form DataArray(ones(size(yourIntputDataFrame,1)))")
-        denomDA=DataArray(ones(sz))
+        info("Using constant denominator for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))")
+        denomDA=ones(sz)
     else
         @assert in(Symbol(denomcol),dfnames) "Denominator column not found. We searched for the column $(denomcol) in the vector $(string.(dfnames))"
         denomDA=dfin[Symbol(denomcol)]
     end
 
     if weightcol==""
-        info("Using constant weight for each row (.==1)") #of the form DataArray(ones(size(yourIntputDataFrame,1)))")
-        weightDA=DataArray(ones(sz))
+        info("Using constant weight for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))")
+        weightDA=ones(sz)
     else
         @assert in(Symbol(weightcol),dfnames) "Weight column not found. We searched for the column $(weightcol) in the vector $(string.(dfnames))"
         weightDA=dfin[Symbol(weightcol)]
@@ -61,13 +61,13 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
 
     if trnvalcol==""
         info("Using random choice of Training-Validation column with porportion $(valpct) for validation")
-        trnvalDA=DataArray(map(x->x<valpct ? 1.0 : 0.0,rand(sz))) #trnvalDA=DataArray(rand(sz).<valpct)
+        trnvalDA=map(x->x<valpct ? 1.0 : 0.0,rand(sz))
     else
         @assert in(Symbol(trnvalcol),dfnames) "Training-Validation column not found. We searched for the column $(trnvalcol) in the vector $(string.(dfnames))"
         trnvalDA=dfin[Symbol(trnvalcol)]
         #tbd ensure trnvalDA has only 0 and 1 entries
         tmp_found_vals=float.(sort(unique(trnvalDA))[:])
-        tmp_expected_vals=DataArray(Float64[0 1][:])
+        tmp_expected_vals=Float64[0 1][:]
         if !isequal(tmp_found_vals,tmp_expected_vals)
             @show tmp_found_vals
             @assert false  "Error: Training-Validation column contained entries which are not equal to 1 or 0. Abort."
@@ -77,7 +77,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
 
     if keycol==""
         info("Using canonical choice of indentifier column 1:size(yourIntputDataFrame,1)")
-        irkeyDA=DataArray(collect(1:sz))
+        irkeyDA=collect(1:sz)
     else
         @assert in(Symbol(keycol),dfnames) "Identifier column not found. We searched for the column $(keycol) in the vector $(string.(dfnames))"
         irkeyDA=dfin[Symbol(keycol)]
@@ -165,7 +165,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     return dfres,this_sett
 end
 
-function is_categorical_column(x::DataArray)
+function is_categorical_column(x)
     return eltype(x) <:AbstractString
 end
 
@@ -303,7 +303,7 @@ tic()
 		if eltype(thiscol_as_utf8)!=String
 			thiscol_as_utf8=convert(Array{String,1},thiscol_as_utf8)
 		end
-		features[thisname]=compact(PooledDataArray(thiscol_as_utf8))
+		features[thisname]=PooledArray(thiscol_as_utf8)
 		if length(features[thisname].pool)>255
 			@show nlevels=length(features[thisname].pool)
 			warn("DTM: Variable $(string(thisname)) has more than 255 levels, namely $(nlevels)\nThe tree may take very long to be constructed.")			

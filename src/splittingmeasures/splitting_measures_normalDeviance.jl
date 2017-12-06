@@ -19,7 +19,7 @@
 	using Iterators
 	using DTM
 	#import DecisionTrees.pdaMod
-	using OnlineStats,SQLite,DataFrames, DataArrays, ProgressMeter, Iterators,PyCall,HDF5, JLD
+	using OnlineStats,SQLite,DataFrames, ProgressMeter, Iterators,PyCall,HDF5, JLD
 	dix=load(string(loc,"jmortgage.jld"));
 
 

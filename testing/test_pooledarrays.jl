@@ -13,3 +13,6 @@ pda.refs==pa.refs
 @assert isequal(pda,pa)
 @assert pda===pa
 pda===pa
+
+
+a=Array{PooledArray{String,UInt8}}(2)

@@ -1,13 +1,3 @@
-#module DTSplitMeasures
-#Split Measures
-
-#using DTTypes,DTHelperfunctions,DataArrays
-
-#export calculateSplitValue
-
-#function __init__()
-#end
-
 include("splitting_measures_difference.jl")
 include("splitting_measures_normalDeviance.jl")
 include("splitting_measures_poissondeviance.jl")

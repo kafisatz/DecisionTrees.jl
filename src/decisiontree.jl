@@ -265,7 +265,7 @@ elt=eltype(trnfeatures.parent.refs)
 #if randomweight>0;this_splitlist=Array{Splitdef}(0);end;
   labellist_sorted=collect(one(elt):convert(elt,length(trnfeatures.parent.pool))) #this used to be levels(features) #this also contains the val feature levels here! It is considerably faster than levels(view) \factor 100 or so
 	# THIS IS CRITICAL
-	# THE WAY A POOLEDDATAARRAY IS CONSTRUCTED, WE WILL ALWAYS HAVE
+	# THE WAY A PooledArray IS CONSTRUCTED, WE WILL ALWAYS HAVE
 	# pda.pool[2] == "some string" -> any pda.refs[x].==0x02 will be "some string" 
 	#todo/tbd countsort here might be obsolete: we should check if levels is always sorted by construction
   #also we will later sort the labels in a different order anyway (then again the list probably needs to be sorted in the natural manner such that build_listOfMeanResponse is working properly)

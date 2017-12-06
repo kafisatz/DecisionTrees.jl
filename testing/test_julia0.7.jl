@@ -1,7 +1,7 @@
-using CSV
-using DataFrames
 using Revise
 using Compat
+using CSV
+using DataFrames
 using StatsBase,BenchmarkTools
 using DecisionTrees
 using HDF5,JLD
@@ -38,8 +38,8 @@ using HDF5,JLD
 
 @assert isfile(tmpf)
 println("Reading data... \n $(tmpf)")
-#@time df_tmp0=CSV.read(tmpf);
-@time df_tmp=readtable(tmpf); #maybe around 15s for all the data
+@time df_tmp=CSV.read(tmpf);
+#@time df_tmp=readtable(tmpf); #maybe around 15s for all the data
 #enforce capitalized names
 names!(df_tmp,Symbol.(uppercase.(string.(names(df_tmp)))));
 
@@ -47,7 +47,7 @@ names!(df_tmp,Symbol.(uppercase.(string.(names(df_tmp)))));
 @time for i=1:size(df_tmp,1)
     di=df_tmp[i,:BRAND_NAME_JY]
     if di!="OTHER"
-        if isna(di)
+        if ismissing(di)
             @show "brand was na"
             df_tmp[i,:BRAND_NAME_JY]="missing"
         else
@@ -106,7 +106,7 @@ end
 
 #rows with zero exposure/weight
     idx_zero_exposure=df_prepped[:weight].<0
-    idx_missing_exposure=isna.(df_prepped[:weight])
+    idx_missing_exposure=ismissing.(df_prepped[:weight])
     idx_missing_or_zero_exposure=idx_zero_exposure.|idx_missing_exposure
     @show count_zero_or_missing_exposure=sum(idx_missing_or_zero_exposure)
     @show count_zero_or_missing_exposure/size(df_prepped,1)
@@ -120,7 +120,7 @@ end
 tmp_names=names(df_prepped)
 origrows=size(df_prepped,1)
 for i=1:size(df_prepped,2)
-    isnavec = isna.(df_prepped[i])
+    isnavec = ismissing.(df_prepped[i])
     na_count=sum(isnavec)
     if na_count>0
         df_prepped = df_prepped[.!isnavec,:];

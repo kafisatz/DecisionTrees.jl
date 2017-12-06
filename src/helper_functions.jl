@@ -7,7 +7,7 @@
 export removeBOM,sampleData,subset_pda_mod #for debugging purposes only
 
 import Base: append!,mean,length,findin,isless,eltype,resize!,convert
-import DataArrays.levels
+#import PooledArrays.levels
 #import MySQL: mysql_query,mysql_display_error,mysql_store_result,mysql_affected_rows,mysql_free_result,mysql_num_fields,mysql_fetch_fields,mysql_num_rows,mysql_get_julia_type,mysql_fetch_row,MYSQL_RES,MYSQL_TYPE,MYSQL_ROW #temporarily disabled
 export createZipFile
 
@@ -825,9 +825,9 @@ function modify_eltypes!(df::DataFrame,elt)
 	return nothing
 end
 
-function myconvertDAType{D<:DataArray,T<:DataType}(d::D,e::T)
+function myconvertDAType(d::D,e::T) where {D <: PooledArray,T <: DataType}
 	@assert size(d,2)==1 #this can probably be done in a  nicer way d::DataArry{sometype,1}
-	r= e<:AbstractString ? DataArray(e[convert(e,string(x)) for x in d]) : convert(DataArray{e,1},d)
+	r= e<:AbstractString ? PooledArray(e[convert(e,string(x)) for x in d]) : convert(PooledArray{e,1},d)
 	return r
 end
 
@@ -915,7 +915,7 @@ for i=1:cols
 		@show 2
 		dtmp2=String[boolToUTF8String(x)  for x in dtmp]
 		@show 3
-		da=DataArray(dtmp2)
+		da=PooledArray(dtmp2)
 		@show 4
 		d[i]=deepcopy(da)
 		@show 5
@@ -1297,7 +1297,7 @@ function goodnessOfFit(idx::Vector{Int},numESTIMATE,numACTUAL,w,d)
 	#currently the data is aggregated into (up to) 20 random groups here
 	obs=length(idx)
 	ngroups_max=20
-	f_randgroups=compact(PooledDataArray(rand(1.0:float(ngroups_max),obs)))
+	f_randgroups=PooledArray(rand(1.0:float(ngroups_max),obs))
 	not_meaningful_scores=zeros(Int,obs)
 	
 	numeratorEst=view(numESTIMATE,idx)
@@ -1464,7 +1464,7 @@ end
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
 This verison of the function is for String / Categorical variables
 """
-function lrIndices(trnidx::Vector{Int},f::PooledDataArray{String,T,1},subset::Array) where T<:Unsigned
+function lrIndices(trnidx::Vector{Int},f::PooledArray{String,T,1},subset::Array) where T<:Unsigned
 	l=Vector{Int}(0)
 	r=Vector{Int}(0)
 	sizehint!(l,length(trnidx))
@@ -1622,7 +1622,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
     @assert length(candlist)<255 "Currently at most 254 splitting points are supported. Please choose less splitting points for numeric column $(i):$(header[i])" #see note below
 	#prepare trn data	
 	compressed_vector=map_numdata_to_candidates(this_column,candlist)
-	features[thisname]=compact(PooledDataArray(compressed_vector))			
+	features[thisname]=PooledArray(compressed_vector)
 end
 
 return candMatWOMaxValues
@@ -2220,7 +2220,7 @@ end
 
 
 
-function aggregate_data(f::PooledDataArray,scores,numeratorEst,numerator,denominator,weight)
+function aggregate_data(f::PooledArray,scores,numeratorEst,numerator,denominator,weight)
 	lo=one(eltype(f.refs))
 	hi=convert(eltype(f.refs),length(f.pool)) 	
 	ooo=one(lo)-lo
@@ -2264,7 +2264,7 @@ end
 
 function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})  where T<:SubArray
 	#! preliminary testing showed that we can save 10% if we explicitly type f as in
-	# aggregate_data_diff(f::SubArray{String,1,PooledDataArray{String,UInt8,1},Tuple{Array{Int64,1}},false},denominator....)
+	# aggregate_data_diff(f::SubArray{String,1,PooledArray{String,UInt8,1},Tuple{Array{Int64,1}},false},denominator....)
 	#warn("BK i am not sure if this is accurate....")
 	#lvl_mod=findin(levels(f),f.parent.pool)
 	#@show (lo::UInt8, hi::UInt8) = extrema(lvl_mod) #(lo, hi) = extrema(levels(f))
@@ -2811,7 +2811,7 @@ function BitArrayIndexMatchingSubset(a::Array{String,1},leftsubset::Array{String
   return res
 end
 
-  function BitArrayIndexMatchingSubset(a::PooledDataArray{String,UInt8,1},leftsubset::Array{String,1})
+  function BitArrayIndexMatchingSubset(a::PooledArray{String,UInt8,1},leftsubset::Array{String,1})
   #this function is incredibly inefficient but the alternative below is not yet working
   #tbd / todo: improve splitting of PDAs
   res=BitArray(length(a))
@@ -3344,22 +3344,6 @@ function ismonotonic(x)
 return true
 end
 
-#=
-	function append!(x::DataArray{Float64,1},y::DataArray{Float64,1})
-		s=size(y,1)
-		for i=1:s
-			push!(x,y[i])
-		end
-		return x
-	end
-=#
-
-#function moderate!(indicated::Array{Float64},estimated::Array{Float64},moderationfactor::Float64)
-#updates the vector estimated by "moving" it closer to indicated "weighted" with the moderationfactor
-#	estimated=((indicated.-1.0).*moderationfactor.+1.0).*estimated
-#	return nothing
-#end
-
 function _moderate!(idx_to_be_moderated::Vector{Int},estimatedRatio::Array{Float64,1},indicatedRelativity::Array{Float64,1},current_mdf::Float64)
 	@assert size(estimatedRatio)==size(indicatedRelativity)
 	for i in idx_to_be_moderated
@@ -3472,11 +3456,11 @@ end
 
 function defineleftrightPDA(left::BitVector,right::BitVector,mat_charfeatures::Array{String,2})
   number_of_char_features=size(mat_charfeatures,2)
-  res_charfeatures_l=Array{PooledDataArray{String,UInt8}}(number_of_char_features)
-  res_charfeatures_r=Array{PooledDataArray{String,UInt8}}(number_of_char_features)
+  res_charfeatures_l=Array{PooledArray{String,UInt8}}(number_of_char_features)
+  res_charfeatures_r=Array{PooledArray{String,UInt8}}(number_of_char_features)
   for i=1:number_of_char_features
-    res_charfeatures_l[i]=PooledDataArray(mat_charfeatures[left,i],UInt8)
-    res_charfeatures_r[i]=PooledDataArray(mat_charfeatures[right,i],UInt8)
+    res_charfeatures_l[i]=PooledArray(mat_charfeatures[left,i],UInt8)
+    res_charfeatures_r[i]=PooledArray(mat_charfeatures[right,i],UInt8)
   end
   return res_charfeatures_l,res_charfeatures_r
 end
@@ -3486,8 +3470,8 @@ end
 	namevec=names(dfIndata)
 	for ii=1:size(dfIndata,2)
 	  if ii!=const_shift_cols
-      if any(isna,dfIndata[ii])
-		idx=isna(dfIndata[ii])
+      if any(ismissing,dfIndata[ii])
+		idx=ismissing(dfIndata[ii])
 		narows=find(idx)
 		@assert length(narows)>0 "this should not have happend" #narows should be >0 by definition
 		warn("Missing values detected. Rows= $(narows[1]), Column=$(ii):$(namevec[ii])")
