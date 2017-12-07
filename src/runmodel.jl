@@ -287,7 +287,7 @@ tic()
 	#this function modifies features -> the num features are added as pdas!
 	candMatWOMaxValues=add_coded_numdata!(dfIndata,sett,trn_val_idx,sett.max_splitting_points_num,features)
 	println(" done.")
-
+	#IMPORTANT convention  numerical data 'comes first' (i.e. first x columns are numerical), then categorical
 	print("Preparing character variables...")
 	for i=1:sett.number_of_char_features
 		if !(eltype(dfIndata[global_const_shift_cols+i+sett.ishift+sett.number_of_num_features])<:AbstractString) 

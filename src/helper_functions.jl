@@ -3002,7 +3002,7 @@ end
 
 #write SAS Code fn
 function write_sas_code(estimatesPerScore,candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"),indent::Int64=0)	
-	warn("DTM/BK: the fitted value in SAS should depend on the smoothed score!")
+	
 iterations=size(bt.trees,1)
 local vname
 notsign=convert(String,"not")
