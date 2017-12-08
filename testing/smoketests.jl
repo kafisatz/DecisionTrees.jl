@@ -1,23 +1,29 @@
-#=
-this_dir="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New Repo\\algorithms\\Julia\\Code\\dev\\src";cd(this_dir);push!(LOAD_PATH,this_dir)
-using DTM
-this_dir="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New Repo\\algorithms\\Julia\\Code\\dev\\src";cd(this_dir);push!(LOAD_PATH,this_dir)
- dictGlobalSettings["Data Folder"]="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\data_tmp\\"
- chosenj="boosting_small"
- ARGS=[string(dictGlobalSettings["Data Folder"],chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],chosenj,".csv") string("out_",chosenj)]
- @time resbool=DTM.run_model(ARGS) #with julia startup 41s, time for rist execution of run_model: 32s, time for next execution of the same model 5s (as code is already compiled)
- # @time resbool=DTM.run_model(ARGS) #time 5.4s
 
- chosenj="tree_normal"
- ARGS=[string(dictGlobalSettings["Data Folder"],chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],chosenj,".csv") string("out_",chosenj)]
- @time resbool=DTM.run_model(ARGS) #with julia startup 41s, time for rist execution of run_model: 32s, time for next execution of the same model 5s (as code is already compiled)
- # @time resbool=DTM.run_model(ARGS) #time 5.4s
-
- =#
-
-#this_dir=string(dictGlobalSettings["Julia Code Folder"],"\\src");cd(this_dir);unshift!(LOAD_PATH,this_dir)
 using DecisionTrees
 using Base.Test
+
+
+#peform CV for boosting
+niter=50 #5 #125
+mf=0.02
+randomw=0.0
+minw=-0.08
+subsampling_features_prop=0.8
+subsampling_prop=1.0
+smoothEstimates=1
+
+updateSettingsMod!(this_sett,minw=minw,write_dot_graph=true,write_csharp_code=true,write_vba_code=true,randomw=randomw,mf=mf,niter=niter,subsampling_features_prop=subsampling_features_prop,subsampling_prop=subsampling_prop,smoothEstimates=smoothEstimates,boolRandomizeOnlySplitAtTopNode="true",model_type="build_tree",scorebandsstartingpoints="1,100,200,300,400,500,600,700,800,900",showTimeUsedByEachIteration="false",moderationvector="$(mf)",write_result=false,print_details="true",boolSaveResultAsJLDFile="false",bool_write_tree="true",write_iteration_matrix="false",write_sas_code="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe");
+datafolder="C:\\temp\\"
+a,b=run_model_actual(dtmtable,this_sett,string(datafolder,"\\tree_",minw,".txt"));
+
+st2=deepcopy(this_sett);
+st2.model_type="build_tree"
+st2.minw=300
+this_sett.minw=800
+a,b=run_model_actual(dtmtable,[this_sett,st2 ],string(datafolder,"\\tree_",minw,".txt"));
+
+#=
+
 #outputfldr="C:\\temp\\joutput\\"
 
 dta_fld=dictGlobalSettings["Data Folder"]
@@ -54,10 +60,7 @@ chosenj="boosting_minimalexample";ARGS=[string(dictGlobalSettings["Data Folder"]
 chosenj="bagging_minimalexample";ARGS=[string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".csv") string("out_",chosenj)];resbool=DTM.run_model(ARGS)
 chosenj="tree_tiny";ARGS=[string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".csv") string("out_",chosenj)];resbool=DTM.run_model(ARGS)
 #tiny boosting
-#=
-this_dir="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New Repo\\algorithms\\Julia\\Code\\dev\\src";cd(this_dir);push!(LOAD_PATH,this_dir)
-using DTM
-=#
+
 chosenj="boosting_tiny";ARGS=[string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".csv") string("out_",chosenj)];resbool=DTM.run_model(ARGS)
 #tiny bagging
 chosenj="bagging_tiny";ARGS=[string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".csv") string("out_",chosenj)];resbool=DTM.run_model(ARGS)
@@ -125,7 +128,6 @@ info(string("\nrunning ",chosenj,"\n\n"))
 ARGS=[string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".settings.csv") string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".csv") string("out_",chosenj)]
 @time resbool=DTM.run_model(ARGS) # run once to trigger compilation
 
-#=
 chosenj="uniqa5m"
 ARGS=[string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".settings2.csv") string(dictGlobalSettings["Data Folder"],"\\JuliaTestData\\",chosenj,".jld") string("out_",chosenj)]
 ARGS=[string("T:\\temp\\",chosenj,".settings2.csv") string("T:\\temp\\",chosenj,".jld") string("out_",chosenj)]
@@ -139,10 +141,10 @@ ARGS=[string("T:\\temp\\",chosenj,".settings.csv") string("T:\\temp\\",chosenj,"
 ARGS=[string("T:\\temp\\",chosenj,".settings.csv") string("T:\\temp\\",chosenj,".csv") string("out_",chosenj)]
 @time resbool=DTM.run_model(ARGS) #with julia startup 41s, time for rist execution of run_model: 32s, time for next execution of the same model 5s (as code is already compiled)
 #the modelling for the 5m uniqa data set uses about 6GM of RAM.
-=#
 
 ARGS=["a:\\temp\\random.settings.csv" "a:\\temp\\random.jld" "outmxe"];
 resbool=DTM.run_model(ARGS);
 
 ARGS=["a:\\temp\\boost1settings.csv" "a:\\temp\\boost1.csv" "outmxe"];
 resbool=DTM.run_model(ARGS);
+=#

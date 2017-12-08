@@ -761,7 +761,65 @@ end #end distinction between three model types
  return filelistWithFilesToBeZipped,resulting_model
 end
 
-#@show "this is the end of the file runmodel.jl"
+"""
+If run_model_actual is called with an array of settings, the model is run on all settings.
+The model type (e.g. boosting/tree/bagging) needs to be the same for each entry of settings
+"""
+function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::String)
+	if length(unique(map(x->x.model_type,setts)))!=1 
+		uq_model_types = unique(map(x->x.model_type,setts))
+		error("DTM: model_type must be the same for all elements of the settings vector. You provided these model_types $(uq_model_types)")
+	end
+
+	path_and_fn_wo_extension="some"
+	header=Vector{String}(1)
+	header_settings=Vector{String}(1)
+	allstats=Array{Float64,2}
+	allsettings=Array{Any,2}
+	i=1
+	nsetts=length(setts)
+	for sett in setts 
+		path_and_fn_wo_extension,ext=splitext(fn)
+		path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
+		fnmod=string(path_and_fn_wo_extension_mod,ext)
+		somestrings,model=run_model_actual(dtmtable,sett,fnmod)
+		desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)
+		if i==1
+			header=deepcopy(desc)
+			header_settings=deepcopy(desc_settingsvec)
+			allstats=Array{Float64,2}(length(numbrs),nsetts)			
+			allsettings=Array{Any,2}(length(settingsvec),nsetts)			
+		else			
+			if !all(header.==desc)
+				warn("Model run $(i) returned an unexpected results vector:")
+				@show desc
+				@show header
+			end
+			if !all(header_settings.==desc_settingsvec)
+				warn("Model run $(i) returned an unexpected results vector:")
+				@show desc_settingsvec
+				@show header_settings
+			end
+		end
+		allstats[:,i].=deepcopy(numbrs)
+		allsettings[:,i].=deepcopy(settingsvec)
+		i+=1
+	end	
+
+	statsdf=DataFrame(transpose(allstats))
+	names!(statsdf,Symbol.(header))
+	settsdf=DataFrame(permutedims(allsettings,[2,1]))
+	names!(settsdf,Symbol.(header_settings))
+
+	@show fld,namestr=splitdir(path_and_fn_wo_extension)
+	filen=string(fld,"multistats.xlsx")
+	if isfile(filen)
+		info("Deleting $(filen).")
+		rm(filen)
+	end
+
+	return statsdf,settsdf #header,allstats,header_settings,allsettings
+end
 
 function run_legacy(mld::String,fld::String)
     @assert isdir(fld)

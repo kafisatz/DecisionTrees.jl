@@ -5,6 +5,25 @@ import Base: append!,mean,length,findin,isless,eltype,resize!,convert
 #import MySQL: mysql_query,mysql_display_error,mysql_store_result,mysql_affected_rows,mysql_free_result,mysql_num_fields,mysql_fetch_fields,mysql_num_rows,mysql_get_julia_type,mysql_fetch_row,MYSQL_RES,MYSQL_TYPE,MYSQL_ROW #temporarily disabled
 export createZipFile
 
+function get_stats(model::Tree)
+	#typeof(b)==Tree
+	#fieldnames(b)
+	statsdf=model.exceldata.sheets[2].data
+	#find the last rows of the results sheet
+	str="Correlation"
+	rows=findin(statsdf[:,1],[str])
+	if length(rows)!=1
+		@show rows
+		error("Multiple rows with 'name' Correlation found. This is not expected")
+	end
+	stats=statsdf[rows[1]:end,1:2]	
+	desc=string.(stats[:,1])
+	numbers=float.(stats[:,2])
+	setti=model.exceldata.sheets[1].data[:,2]
+	setti_desc=string.(model.exceldata.sheets[1].data[:,1])
+	return desc,numbers,setti_desc,setti
+end
+
 function try_convert(T,x)
 	local res::T
 	try

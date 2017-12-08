@@ -1,27 +1,27 @@
 
 import Base: length,start,next,done,eltype,==,hash
 
-	export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion
-	export ModelSettings,updateSettings!
+export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion
+export ModelSettings,updateSettings!
 
-    immutable pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
+    struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
     
 #Splitting Criterions use multiple dispatch
 	abstract type SplittingCriterion  end
-	immutable DifferenceSplit      <: SplittingCriterion end
-	immutable NormalDevianceSplit      <: SplittingCriterion end
-	immutable PoissonDevianceSplit      <: SplittingCriterion end
-	immutable GammaDevianceSplit      <: SplittingCriterion end
-	immutable MaxValueSplit      <: SplittingCriterion end
-	immutable MaxAbsValueSplit      <: SplittingCriterion end
-	immutable MaxMinusValueSplit      <: SplittingCriterion end
-	immutable MSESplit             <: SplittingCriterion end
-	immutable RankOptSplit         <: SplittingCriterion end
-	immutable ROptMinRLostPctSplit	   <: SplittingCriterion end
-	immutable ROptMinRLostSplit	   <: SplittingCriterion end
+	struct DifferenceSplit      <: SplittingCriterion end
+	struct NormalDevianceSplit      <: SplittingCriterion end
+	struct PoissonDevianceSplit      <: SplittingCriterion end
+	struct GammaDevianceSplit      <: SplittingCriterion end
+	struct MaxValueSplit      <: SplittingCriterion end
+	struct MaxAbsValueSplit      <: SplittingCriterion end
+	struct MaxMinusValueSplit      <: SplittingCriterion end
+	struct MSESplit             <: SplittingCriterion end
+	struct RankOptSplit         <: SplittingCriterion end
+	struct ROptMinRLostPctSplit	   <: SplittingCriterion end
+	struct ROptMinRLostSplit	   <: SplittingCriterion end
 #sortby options for categorical splits
 	abstract type SortBy end
-	immutable SortByMean 	<: SortBy end
+	struct SortByMean 	<: SortBy end
 
 function canbeint(a)
 	try convert(Int,parse(Float64,a))
@@ -39,24 +39,24 @@ function canbefloat(a)
 	end
 end
 
-type Chart	
+mutable struct Chart	
 	sheet::String
 	chartDict::Dict{AbstractString,Dict{AbstractString,Any}}
 	location::String
 end
 
-type ExcelSheet
+mutable struct ExcelSheet
 	name::String #I think this name is currently not used anywhere
 	data::DataFrame
 end
 
-type ExcelData
+mutable struct ExcelData
 	sheets::Array{ExcelSheet,1}
 	charts::Array{Chart,1}
 end
 
 #errorStats
-immutable ErrorStats
+struct ErrorStats
 	mse::Float64
 	mae::Float64
 	mrse::Float64
@@ -74,7 +74,7 @@ end
 abstract type DTSubsets end
 
 #custom loop over subsets (Gray Code) ONLY UNTIL the middle - USING SYMMETRY of the list as we consider binary splits
-	immutable MyGrayCodeSubsetsHALF <: DTSubsets
+	struct MyGrayCodeSubsetsHALF <: DTSubsets
 		size_of_set::Int64
 		stopat::Int64 #(1 << it.size_of_set)-2
 	end
@@ -94,7 +94,7 @@ abstract type DTSubsets end
 	bitflip_graycode_subsetsHALF(xs) = MyGrayCodeSubsetsHALF(length(xs),(1 << (length(xs)-1))-2)
 
 #normal subset list for numeric splitting points ("increasing" subset)
-	immutable MyIncreasingSubsets <: DTSubsets
+	struct MyIncreasingSubsets <: DTSubsets
 		size_of_set::Int64
 	end
 
@@ -134,7 +134,7 @@ mutable struct DTMTable
 end
 
 #todo check the difference between immutable and type!! are we using immutables correctly here?
-immutable Splitdef #Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
+struct Splitdef #Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
 	featid::Int64
 	featid_new_positive::Int64
     featurename::Symbol
@@ -157,7 +157,7 @@ function hash(x::Splitdef,h::UInt64)
   return h
 end
 
-immutable Rulepath
+struct Rulepath
   featid::Int64
   subset::Array{UInt8,1}
   isLeftChild::Bool
@@ -173,7 +173,7 @@ function hash(x::Rulepath,h::UInt64)
   return h
 end
 
-type Leaf #leafs are mutable, since we determine the number of the leaf a posteriori
+mutable struct Leaf #leafs are mutable, since we determine the number of the leaf a posteriori
     #NOTE: the idx array can have an unexpected meaning/size in the case where we perform subsampling!
 	rowcount::Int #number of observations of the training data set that fell into thta leaf
     mean::Float64
@@ -200,7 +200,7 @@ function hash(x::Leaf,h::UInt64)
   return h
 end
 
-immutable Node
+struct Node
     #todo, add depth!
     featid::Int64
     featid_new_positive::Int64
@@ -211,7 +211,7 @@ immutable Node
     rule_path::Array{Rulepath,1}
 end
 
-type ModelSettings
+mutable struct ModelSettings
 	model_type::String #1
 	minw::Float64 #2
 	randomw::Float64 #3
@@ -684,7 +684,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
 end
 
 abstract type DTModel end
-type Tree <: DTModel
+mutable struct Tree <: DTModel
 	rootnode::Union{Leaf,Node}
 	intVarsUsed::Array{Array{Int,1},1}
 	#intCharVarsUsed::Array{Array{Int,1},1}
@@ -710,14 +710,14 @@ end
 
 #this type was only created, such that the @parallel results can be created more easilty (with a vcat operation)
 #there would have been other workarounds which would have worked too
-type TreeWithErrorStats
+mutable struct TreeWithErrorStats
 	tree::Tree
 	err::ErrorStats
 end
 
 abstract type Ensemble <: DTModel end
 
-immutable BoostedTree <: Ensemble
+struct BoostedTree <: Ensemble
     trees::Vector{Union{Leaf,Node}} #todo tbd make this to trees!
 
 	settings::ModelSettings
@@ -738,7 +738,7 @@ immutable BoostedTree <: Ensemble
 	exceldata::ExcelData
 end
 
-immutable BaggedTree <: Ensemble
+struct BaggedTree <: Ensemble
     trees::Vector{Node} #todo tbd make this to trees! (? really)
 	weightPerTree::Array{Float64,1}
 	oobagErr::Array{ErrorStats,1}
@@ -759,4 +759,4 @@ immutable BaggedTree <: Ensemble
 	modelstats::DataFrame
 end
 
-#@show "this is the end of the file types.jl"
+
