@@ -330,15 +330,18 @@ tic()
 		end
 	end
 		
+	trnidx,validx=createIntegerIndices(trn_val_idx)
+	dtmtable=DTMTable(key,trnidx,validx,numerator,denominator,weight,features,candMatWOMaxValues,mappings)
+	
 	if sett.boolSaveJLDFile
         jldfile=string(fileroot(datafilename),".jld2")
         println("Saving prepped data to file:\n $(jldfile)")
 		isfile(jldfile)&&rm(jldfile)
-		@time save(jldfile,"candMatWOMaxValues",candMatWOMaxValues,"features",features,"mappings",mappings,"key",key,"trn_val_idx",trn_val_idx,"numerator",numerator,"denominator",denominator,"weight",weight,"oldsettings",sett)
+		#@time save(jldfile,"dtmtable",dtmtable,"candMatWOMaxValues",candMatWOMaxValues,"features",features,"mappings",mappings,"key",key,"trn_val_idx",trn_val_idx,"numerator",numerator,"denominator",denominator,"weight",weight,"oldsettings",sett)
+		@time save(jldfile,"dtmtable",dtmtable,"candMatWOMaxValues",candMatWOMaxValues,"mappings",mappings,"oldsettings",sett)
 		println("JLD2 file saved. Starting modelling... \n")
 	end
-	trnidx,validx=createIntegerIndices(trn_val_idx)
-	dtmtable=DTMTable(key,trnidx,validx,numerator,denominator,weight,features,candMatWOMaxValues,mappings)
+
 	return dtmtable
 end
 

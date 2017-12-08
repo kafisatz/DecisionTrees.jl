@@ -39,6 +39,23 @@ function canbefloat(a)
 	end
 end
 
+mutable struct CVOptions	
+	folds::UInt16 #number of cv models
+	disjoint::Bool #whether we split the data into 'folds' disjoing subsets, if this is false then random sampling is performed
+	training_proportion::Float64 #size of trn data
+	use_all_data::Bool #if false, the CVOptions will never use the 'original' validation rows in the data
+	function CVOptions()
+		x=new(2,false,NaN,true)
+		@assert check_cvoptions(x)
+		return x
+	end
+	function CVOptions(a::UInt8,b::Bool,c::Float64)
+		x=new(a,b,c,false)
+		@assert check_cvoptions(x)
+		return x
+	end
+end
+
 mutable struct Chart	
 	sheet::String
 	chartDict::Dict{AbstractString,Dict{AbstractString,Any}}
@@ -760,3 +777,21 @@ struct BaggedTree <: Ensemble
 end
 
 
+function check_cvoptions(cvo::CVOptions)
+	# folds::UInt16 #number of cv models
+	# disjoint::Bool #whether we split the data into 'folds' disjoing subsets, if this is false then random sampling is performed
+	# training_proportion::Float64 #size of trn data
+	# use_all_data::Bool #if false, the CVOptions will never use the 'original' validation rows in the data
+	@assert cvo.folds>0
+	# training_proportion == 1 could be possible but is a somewhat degenerate case
+	@assert (cvo.disjoint || (cvo.training_proportion>0 && cvo.training_proportion<1))
+	if !cvo.disjoint 
+		@assert cvo.training_proportion==0.0 "CVOptions: training proportion must be 0.0 if disjoint is set to true. You provided training_proportion=$(cvo.training_proportion)."
+	end 
+	#@assert cvo.training_proportion>=0
+	#@assert cvo.training_proportion<1 # ==1 could be possible but is a somewhat degenerate case
+	if cvo.folds>20 && cvo.disjoint
+		warn("CVOptions with $(cvo.folds) disjoint samples defined. The individual sample size could be very small.\r\nSet disjoint=false to enable random sampling.")
+	end
+	return true
+end

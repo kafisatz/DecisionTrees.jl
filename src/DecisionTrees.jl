@@ -31,6 +31,7 @@ include("runmodel_multi.jl")
 include("charts.jl")
 include("dot_graphs.jl")
 include("roc.jl")
+include("cross_validation.jl")
 #include("onlineStats_addons.jl")
 #include("sqlite_query.jl")
 
