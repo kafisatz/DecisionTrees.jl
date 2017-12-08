@@ -1732,22 +1732,11 @@ function pathname(x::AbstractString)
 end
 
 function fileroot(f)
-	fe=fileending(f)
-	if fe==f
-		return f
-	else
-		return f[1:end-length(fe)]
-	end
+	a,fe=splitext(f)
+	return a	
 end
 
-function fileending(f)
-	x=findin(f,'.')
-	if length(x)>0
-		return f[x[end]:end]
-	else
-		return f
-	end
-end
+fileending(f)=splitext(f)[2]	
 
 function printover(s::AbstractString)
 	printover(STDOUT,s,:green)
