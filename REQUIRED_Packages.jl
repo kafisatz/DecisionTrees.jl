@@ -23,8 +23,8 @@ Pkg.add("SQLite")
 Pkg.add("Loess")
 Pkg.add("PyCall") #Will be used to export to *.xlsx and create graphs
 
-#=
-#if pycall is not working, you may want to try this....
+#= 
+#if pycall is not working, you may want to try this...
 warn("Follow this step by step:")
 warn("this may be outdated, newer versions of python will probably work too")
 info("FIRST Install Anaconda with Python 2.7")
