@@ -18,11 +18,13 @@ Pkg.add("DataFrames")
 Pkg.add("ProgressMeter")
 Pkg.add("Iterators")
 Pkg.add("OnlineStats")
-#Pkg.add("ArrayViews")
-#Pkg.add("HDF5") #Load/Save *.jld files
 Pkg.add("JLD2")
 Pkg.add("SQLite")
 Pkg.add("Loess")
+Pkg.add("PyCall") #Will be used to export to *.xlsx and create graphs
+
+#=
+#if pycall is not working, you may want to try this....
 warn("Follow this step by step:")
 warn("this may be outdated, newer versions of python will probably work too")
 info("FIRST Install Anaconda with Python 2.7")
@@ -31,7 +33,7 @@ info("Then start an anaconda command prompt and type this")
 info("then add an environment Variable PYTHON which points to the python.exe")
 info("then perform a reboot of the computer and add the PyCall package")
 #After the reboot in Julia ENV["PYTHON"] should point to the executable
-Pkg.add("PyCall") #Will be used to export to *.xlsx and create graphs
+
 #ENV["PYTHON"]="C:\\JuliaPro-0.5.1.1\\Python\\python.exe"
 Pkg.build("PyCall")
 warn("install package xlsxwriter for python")
@@ -54,6 +56,7 @@ Pkg.update() #Upadate all packages
 
 #Also I would suggest to open *.jl files with Notepad++
 #and install the Autohotkey plugin
+=#
 
 #=
 	#you should test this
