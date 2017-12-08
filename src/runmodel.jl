@@ -821,7 +821,7 @@ function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::St
 		rm(filen)
 	end
 
-	return statsdf,settsdf #header,allstats,header_settings,allsettings
+	return statsdf,settsdf
 end
 
 function run_legacy(mld::String,fld::String)

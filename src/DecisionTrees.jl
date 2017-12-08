@@ -1,6 +1,7 @@
 __precompile__()
 VERSION >= v"0.6-"
 
+info("DTM: BK need to ensure that the code runs smoothly even when no split is found (e.g. minw too big)")
 info("DTM: BK possibly introduce an option not to calculate intermediate metrics/scoring/sorting -> faster runtime")
 info("DTM: BK to check if sortperm! performance has improved in newer Julia versions")
 info("DTM: BK to fix this - we should not rely on mappings and candmatwomax anymore (if possible)")
@@ -19,6 +20,7 @@ using OnlineStats, StatsBase, StatsFuns, SQLite, DataFrames, ProgressMeter, PyCa
 
 #include("check_if_python_packages_are_installed.jl")
 include("types.jl")
+include("cross_validation_samplers.jl") #needs to be included early on as types are in here
 include("sorting.jl")
 include("splittingmeasures\\splittingmeasures.jl")
 include("helper_functions.jl")

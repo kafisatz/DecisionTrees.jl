@@ -1,7 +1,7 @@
 
 import Base: length,start,next,done,eltype,==,hash
 
-export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion
+export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions
 export ModelSettings,updateSettings!
 
     struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
@@ -36,28 +36,6 @@ function canbefloat(a)
 	   return true
 	catch
 		return false
-	end
-end
-
-mutable struct CVOptions	
-	folds::UInt16 #number of cv models
-	disjoint::Bool #whether we split the data into 'folds' disjoing subsets, if this is false then random sampling is performed
-	training_proportion::Float64 #size of trn data
-	use_all_data::Bool #if false, the CVOptions will never use the 'original' validation rows in the data
-	function CVOptions()
-		x=new(2,false,NaN,true)
-		@assert check_cvoptions(x)
-		return x
-	end
-	function CVOptions(a::UInt8,b::Bool,c::Float64)
-		x=new(a,b,c,false)
-		@assert check_cvoptions(x)
-		return x
-	end
-	function CVOptions(f,d,t,u)
-		x=new(f,d,t,u)
-		@assert check_cvoptions(x)
-		return x
 	end
 end
 
@@ -781,22 +759,57 @@ struct BaggedTree <: Ensemble
 	modelstats::DataFrame
 end
 
+mutable struct CVOptions	
+	folds::Int #number of cv models
+	#if folds<0 then we consider n disjoint training sets
+	training_proportion::Float64 #size of trn data
+	use_all_data::Bool #if false, the CVOptions will never use the 'original' validation rows in the data
+	function CVOptions()
+		x=new(10,0.7,true)		
+		@assert check_cvoptions(x)
+		return x
+	end	
+	function CVOptions(a::T,b::N,c::Bool) where {T<:Integer,N<:Number}
+	#function CVOptions(a<:Integer,b<:Number,c::Bool)
+		x=new(Int(a),float(b),c)
+		@assert check_cvoptions(x)
+		return x
+	end
+end
 
 function check_cvoptions(cvo::CVOptions)
 	# folds::UInt16 #number of cv models
 	# disjoint::Bool #whether we split the data into 'folds' disjoing subsets, if this is false then random sampling is performed
 	# training_proportion::Float64 #size of trn data
 	# use_all_data::Bool #if false, the CVOptions will never use the 'original' validation rows in the data
-	@assert cvo.folds>=0
+	#@assert cvo.folds>0
 	# training_proportion == 1 could be possible but is a somewhat degenerate case
-	@assert (cvo.disjoint || (cvo.training_proportion>0 && cvo.training_proportion<1))
-	if !cvo.disjoint 
-		@assert cvo.training_proportion==0.0 "CVOptions: training proportion must be 0.0 if disjoint is set to true. You provided training_proportion=$(cvo.training_proportion)."
-	end 
-	#@assert cvo.training_proportion>=0
-	#@assert cvo.training_proportion<1 # ==1 could be possible but is a somewhat degenerate case
-	if cvo.folds>20 && cvo.disjoint
-		warn("CVOptions with $(cvo.folds) disjoint samples defined. The individual sample size could be very small.\r\nSet disjoint=false to enable random sampling.")
-	end
+	@assert (cvo.training_proportion>=0 && cvo.training_proportion<1)	
 	return true
 end
+
+#=
+#not used anymore
+mutable struct CVOptions	
+	folds::UInt16 #number of cv models
+	disjoint::Bool #whether we split the data into 'folds' disjoing subsets, if this is false then random sampling is performed
+	training_proportion::Float64 #size of trn data
+	use_all_data::Bool #if false, the CVOptions will never use the 'original' validation rows in the data
+	function CVOptions()
+		x=new(2,false,.7,true)
+		@assert check_cvoptions(x)
+		return x
+	end
+	function CVOptions(a::UInt8,b::Bool,c::Float64)
+		x=new(a,b,c,false)
+		@assert check_cvoptions(x)
+		return x
+	end
+	function CVOptions(f,d,t,u)
+		x=new(f,d,t,u)
+		@assert check_cvoptions(x)
+		return x
+	end
+end
+
+=#
