@@ -1,9 +1,3 @@
-#module DTHelperfunctions
-
-#using DataFrames,ProgressMeter,ArrayViews,Iterators #,FastAnonymous
-#using DTTypes #DataArrays
-#using HDF5,JLD #this is only used for debugging purposes
-
 export removeBOM,sampleData,subset_pda_mod #for debugging purposes only
 
 import Base: append!,mean,length,findin,isless,eltype,resize!,convert
@@ -1665,7 +1659,7 @@ end
 function deleteAllOutputFiles(datafolder::AbstractString,outfilename::AbstractString)
 	#deleteIfExists(string(datafolder,outfilename,".log"))
 	deleteIfExists(string(datafolder,outfilename,".zip"))
-	deleteIfExists(string(datafolder,outfilename,".jld"))
+	deleteIfExists(string(datafolder,outfilename,".jld2"))
 	deleteIfExists(string(datafolder,outfilename,".7z"))
 	deleteIfExists(string(datafolder,outfilename,".txt"))
 	deleteIfExists(string(datafolder,outfilename,".sas"))
@@ -1678,7 +1672,7 @@ function deleteAllOutputFiles(datafolder::AbstractString,outfilename::AbstractSt
 	deleteIfExists(string(datafolder,outfilename,".stats.xlsx"))
 	deleteIfExists(string(datafolder,outfilename,".roptstats.csv"))
 	deleteIfExists(string(datafolder,outfilename,".leafnumbers.csv"))
-	deleteIfExists(string(datafolder,outfilename,"_iteration_matrix.csv.jld"))
+	deleteIfExists(string(datafolder,outfilename,"_iteration_matrix.csv.jld2"))
 	deleteIfExists(string(datafolder,outfilename,"_iteration_matrix.csv"))
 	deleteIfExists(string(datafolder,outfilename,"_iteration_matrixFromScores.csv"))
 return nothing
@@ -4255,7 +4249,7 @@ function addPredictorData(listOfValues,colnames,sett::ModelSettings,scores,numer
 		@show size(sumdenominator)
 		@show size(avgscores)
 		@show size(sumnumeratorEst./sumdenominator)
-		save("c:\\temp\\mi.jld","f",f,"listOfValues"	,listOfValues,	"colnames"	,colnames,	"sett"	,sett,	"scores"	,scores,	"numeratorEst"	,numeratorEst,	"numerator"	,numerator,	"denominator"	,denominator,	"weight"	,weight,	"finalEstimateForCharts"	,finalEstimateForCharts,	"varnum"	,varnum)
+		save("c:\\temp\\mi.jld2","f",f,"listOfValues"	,listOfValues,	"colnames"	,colnames,	"sett"	,sett,	"scores"	,scores,	"numeratorEst"	,numeratorEst,	"numerator"	,numerator,	"denominator"	,denominator,	"weight"	,weight,	"finalEstimateForCharts"	,finalEstimateForCharts,	"varnum"	,varnum)
 		@assert false "Critical Error when concatenating predictor statistics"
 	end
 	thisdata=vcat(thisdata,tbl,repmat([""],1,length(colnames)))
@@ -5196,15 +5190,4 @@ function sendto(ps::Vector{Int}; args...)
     sendto(p; args...)
   end
 end
-
-
-  #We need these defintions such that the function build_listOfMeanResponse is aware of their existance
-  #this should probably be solved in a better manner!! todo/tbd
-#_mse(x::Bool)=x
-#_difference(x::Bool)=x
-
-
-#end #end module DTHelperfunctions
-
-#@show "this is the end of the file helper_functions.jl"
 

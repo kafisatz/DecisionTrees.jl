@@ -175,7 +175,7 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 	@assert length(dataFilename)>3
 	const_shift_cols=global_const_shift_cols #this was 6 in earlier versions where the settings column was column 6, now the settings column is separate
 	@assert isfile(settingsFilename) "Settings file $(settingsFilename) not found. Abort."
-	if !(lowercase(dataFilename)[end-2:end]=="sql")&&!isfile(dataFilename);error("Data file $(dataFilename) not found.");end; # Did you provide a *.csv instead of a *.jld file (or vice-versa)?");end;
+	if !(lowercase(dataFilename)[end-2:end]=="sql")&&!isfile(dataFilename);error("Data file $(dataFilename) not found.");end; # Did you provide a *.csv instead of a *.jld2 file (or vice-versa)?");end;
 	#the next function is mainly here to avoid that there is a result from an old run, whis is interpreted as the result of the current run (which may have failed for instance)
 		#we should check how much time it needs and maybe disable it eventually
 		deleteAllOutputFiles(datafolder,outfileStringOnly)
@@ -189,9 +189,9 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 			settingsArrayTWOROWS=settingsArray[1:2,:]
 			key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArrayTWOROWS,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
 			dataFilename,extp=splitext(dataFilename)
-			dataFilename=string(dataFilename,".jld")
+			dataFilename=string(dataFilename,".jld2")
 			info("this will probably fail with a *.db or mysql  input file/reference")
-			@assert isfile(dataFilename) "Something went wrong: dataFilename should be a prepped *.jld file here"
+			@assert isfile(dataFilename) "Something went wrong: dataFilename should be a prepped *.jld2 file here"
 		end
 		println("Loading Julia save file: \n $(dataFilename)")
 		dictOfVariables=load(dataFilename);
@@ -218,7 +218,7 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 	end
 end
 
-#function if dictionary from *.jld was loaded
+#function if dictionary from *.jld2 was loaded
 function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)
 	tic()
 	oldsettings=di["oldsettings"]
@@ -331,11 +331,11 @@ tic()
 	end
 		
 	if sett.boolSaveJLDFile
-        jldfile=string(fileroot(datafilename),".jld")
+        jldfile=string(fileroot(datafilename),".jld2")
         println("Saving prepped data to file:\n $(jldfile)")
 		isfile(jldfile)&&rm(jldfile)
 		@time save(jldfile,"candMatWOMaxValues",candMatWOMaxValues,"features",features,"mappings",mappings,"key",key,"trn_val_idx",trn_val_idx,"numerator",numerator,"denominator",denominator,"weight",weight,"oldsettings",sett)
-		println("JLD file saved. Starting modelling... \n")
+		println("JLD2 file saved. Starting modelling... \n")
 	end
 	trnidx,validx=createIntegerIndices(trn_val_idx)
 	dtmtable=DTMTable(key,trnidx,validx,numerator,denominator,weight,features,candMatWOMaxValues,mappings)
@@ -420,7 +420,7 @@ dot_graph_TXT_file=string(path_and_fn_wo_extension,".dot.txt")
 dot_graph_visualization_file=string(path_and_fn_wo_extension,".dot.pdf")
 this_outfile=convert(String,string(path_and_fn_wo_extension,".csv"))
 statsfile=string(path_and_fn_wo_extension,".stats.csv")
-jldresultsfile=string(path_and_fn_wo_extension,".jld")
+jldresultsfile=string(path_and_fn_wo_extension,".jld2")
 statsfileExcel=string(path_and_fn_wo_extension,".xlsx")
 
 #for now trnindx and validx should always be sorted!
@@ -558,7 +558,7 @@ prnt&&println("---Model Settings------------------------------------------------
 			names!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
 			resulting_model.modelstats=dfStats
 			if sett.boolSaveResultAsJLDFile
-				println("Saving results to jld file: \n $(jldresultsfile)")
+				println("Saving results to jld2 file: \n $(jldresultsfile)")
 				isfile(jldresultsfile)&&rm(jldresultsfile)
 				@time @save jldresultsfile xlData res leaves_of_tree trnidx validx fitted_values_tree tree var_imp1d_str_arr var_imp2d_str_arr onedimintvec_unused twodimintvec_unused
 				push!(filelistWithFilesToBeZipped,jldresultsfile)
@@ -668,9 +668,9 @@ resulting_model=resultEnsemble
 if sett.write_result
 	res=hcat(key,resultEnsemble.scores,estimateUnsmoothed,estimateSmoothed,estimatedRatio)
 end	
-#save results as *.JLD file
+#save results as *.JLD2 file
 if sett.boolSaveResultAsJLDFile
-	println("Saving results to jld file: \n $(jldresultsfile)")
+	println("Saving results to jld2 file: \n $(jldresultsfile)")
 	isfile(jldresultsfile)&&rm(jldresultsfile)
 	@time @save jldresultsfile xlData dtmtable trnidx validx vectorOfLeafNumbers vectorOfLeafArrays rawObservedRatioPerScore est_matrixFromScores stats estimateUnsmoothed estimateSmoothed estimateFromRelativities resultEnsemble
 	push!(filelistWithFilesToBeZipped,jldresultsfile)

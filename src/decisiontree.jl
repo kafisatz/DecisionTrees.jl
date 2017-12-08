@@ -43,7 +43,6 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
 	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath}(0),settings.parallel_tree_construction,myid(),fitted_values)
 	#set Leaf Numbers
 	set_leaf_numbers!(resultingTree)
-	#save("c:\\temp\\t.jld","settings",settings,"resultingTree",resultingTree,"candMatWOMaxValues",candMatWOMaxValues,"denominator",denominator,"numerator",numerator,"charfeatures",charfeatures,"numfeatures",numfeatures,"mappings",mappings)
 	return resultingTree
 end
 

@@ -112,9 +112,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			if boolProduceEstAndLeafMatrices
 				write_column!(est_matrix,iter+1,estimatedRatio)
 			end
-			update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)	
-			#warn("remove this")		
-		#		save("C:\\temp\\sc.jld","trnidx",trnidx,"validx",validx,"estimatedRatio",estimatedRatio,"currentRelativity",currentRelativity,"sett",sett,"actualNumerator",actualNumerator,"denominator",denominator,"weight",weight,"trn_meanobservedvalue",trn_meanobservedvalue,"iter",iter)
+			update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)				
 		#Derive Scores for this iteration #NOTE (tbd/todo: keep in mind) For large datasets (>5m rows) the sorting in construct scores may become a dominant part of the algorithm
 			maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nscoresPotentiallyReduced				=constructANDderiveScores!(trnidx,validx,sortvec_reused_trn_only,estimatedRatio,currentRelativity,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett)
 			update_and_derive_scores!(scores,maxRawRelativityPerScoreSorted,currentRelativity)			

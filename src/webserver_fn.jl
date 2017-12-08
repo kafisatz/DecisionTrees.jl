@@ -169,7 +169,7 @@ function getdata_and_settingsfile(flist)
 		fl=[lowercase(x) for x in deepcopy(flist)]
 		#*.jld are pushed first such that they are prioritized
 		for x in fl
-			if length(x)>4&&(fileending(x)==".jld")
+			if length(x)>4&&(fileending(x)==".jld2")
 				push!(fl2,deepcopy(x))
 			end
 		end		

@@ -276,7 +276,7 @@ type ModelSettings
 	bINTERNALignoreNegRelsBoosting::Bool
 	statsByVariables::Array{Int,1}
 	statsRandomByVariable::Int
-	boolSaveJLDFile::Bool #if this is set to false no *.jld file is saved #todo we should rename this to ensure it is clear that this refers to the prepped data only!
+	boolSaveJLDFile::Bool #if this is set to false no *.jld2 file is saved #todo we should rename this to ensure it is clear that this refers to the prepped data only!
 	boolSaveResultAsJLDFile::Bool #this refers to the model output/result
 	print_details::Bool #whether julia should print details to the log or not (note to developers: warnings/errors and certain important infos should always be printed!)
 	seed::Int #optional entropy
@@ -414,7 +414,7 @@ return stringValue
 end
 
 function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int64,const_shift_cols::Int64,columnnames::Array{String,1})
-	dataisJLD=lowercase(dataFilename[end-3:end])==".jld"
+	dataisJLD=lowercase(dataFilename[end-3:end])==".jld2"
 	s.ncolsdfIndata=ncolsdfIndata
 	#@show columnnames
 	s.df_name_vector=copy(columnnames)
@@ -430,7 +430,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 	end
 	values=settings[2,:]
 	#todo/tbd check if we should prohibit that some settings are changed
-	#todo/tbd max_splitting_points_num cannot be changed if a *.JLD is provided
+	#todo/tbd max_splitting_points_num cannot be changed if a *.JLD2 is provided
 	#check for mandatory settings
 	@assert checkForMandatorySettings(headerLowercase)==nothing "Settings are missing some mandatory fields."
 	valConverted=oldValue=0
@@ -440,7 +440,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 		col=headerLowercase[i]
 		stringValue=values[i] #this should always be a String
 		if col=="max_splitting_points_num"&&dataisJLD
-			warn("max_splitting_points_num setting cannot be changed if a *.jld file is provided.")
+			warn("max_splitting_points_num setting cannot be changed if a *.jld2 file is provided.")
 		end
 		@assert col!="moderationvector" "Moderationvector is currently disabled."
 		#@assert col!="chosen_apply_tree_fn" "You are not allowed to modify the setting chosen_apply_tree_fn"

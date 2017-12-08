@@ -6,7 +6,7 @@ function run_model_multirow_settings(dataFilename::String,multirowSettingsArray:
 	nmodels=size(multirowSettingsArray,1)-1
 	@assert nmodels>1
 	#this is a hack to suppress a warning in updateSettings! which depends on the ending of dataFilename (here we won't read any data anyway)	
-		dataFilenameMOD=string(dataFilename[1:end-2],"jld") 	
+		dataFilenameMOD=string(dataFilename[1:end-2],"jld2") 	
 	#Parallelized Run
 	#NOTE: it may make sense to submit a parameter to calcIterationsPerCore2 which is larger than "nrpocs()" 
 	#the pmap function will distribute the work evenly among all processes anyway
@@ -17,8 +17,8 @@ function run_model_multirow_settings(dataFilename::String,multirowSettingsArray:
 		
 		warn("defaulted_modelstats_df! this may not work!")
 		
-		df_modelstats_loc="R:\\TariffWatch New Repo\\algorithms\\Julia\\Code\\defaulted_modelstats_df.jld"
-		loaded_dict = JLD.load(df_modelstats_loc);
+		df_modelstats_loc="R:\\TariffWatch New Repo\\algorithms\\Julia\\Code\\defaulted_modelstats_df.jld2"
+		loaded_dict = JLD2.load(df_modelstats_loc);
 		global const defaulted_modelstats_df = loaded_dict["defaulted_modelstats_df"]
 		@show defaulted_modelstats_df
 		
@@ -90,7 +90,7 @@ end
 function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_list,smoothEstimates_list,niter_list,mf_list,nscores_list,boolRandomizeOnlySplitAtTopNode_list,subsampling_prop_list;metric="Sum MRAE VAL (Raw Estimates)")
 	srand(1234)
 	settingsFilename,dataFilename,datafolder,outfilename,outfileStringOnly=return_file_and_folders(main_ARGS)
-	@assert lowercase(reverse(dataFilename)[1:4])=="dlj." "Grid search requires a *.jld file as input. Abort!"
+	@assert lowercase(reverse(dataFilename)[1:4])=="dlj." "Grid search requires a *.jld2 file as input. Abort!"
 	
 	#settingsFilename="A:\\JuliaTestData\\boostmed.settings.csv"
 	settingsArray,number_of_num_features=readSettings(settingsFilename)	
@@ -136,8 +136,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 		#allmodelStats=reduce(vcat, v0fetched, pmapresult)
 		local bestmodels,best10models_idx,best_model_per_iteration
 		try
-			#find best model according to metrics
-			#info("remove this");@time save("c:\\temp\\allmodelStats.jld","allmodelStats",allmodelStats);
+			#find best model according to metrics			
 			bestmodels=best_models(allmodelStats,metric)
 			best10models_idx=bestmodels[1:min(size(bestmodels,1),10),1][:]			
 			best_model_per_iteration=best_model_per_iter(allmodelStats,metric)			

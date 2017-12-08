@@ -1,4 +1,6 @@
 __precompile__()
+VERSION >= v"0.6-"
+
 info("DTM: BK possibly introduce an option not to calculate intermediate metrics/scoring/sorting -> faster runtime")
 info("DTM: BK to check if sortperm! performance has improved in newer Julia versions")
 info("DTM: BK to fix this - we should not rely on mappings and candmatwomax anymore (if possible)")
@@ -6,14 +8,13 @@ info("DTM: BK to add purity improvement for each split! Stop splitting if it is 
 info("BK: do not use df_name_vector anymore, but the symbol in the subset or simply names(features) - possibly also get rid of mappings and candmat....")
 info("BK: tbd add yes/no to the top of each printed DOT graph indicating that 'yes goes left'")
 info("BK: avoid branching in critical functions / use ifelse or similar constructs")
-VERSION >= v"0.6-"
 
 module DecisionTrees
 
 srand(1234)
 export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,updateSettingsMod!,prep_data_from_df_modernized,run_legacy,prep_data_from_df
 
-using OnlineStats, StatsBase, StatsFuns, SQLite, DataFrames, ProgressMeter, PyCall, JLD2, PooledArrays # DataArrays is not used anymore
+using OnlineStats, StatsBase, StatsFuns, SQLite, DataFrames, ProgressMeter, PyCall, FileIO, JLD2, PooledArrays # DataArrays is not used anymore
 #using MySQL, # temporarily disabled
 
 #include("check_if_python_packages_are_installed.jl")
