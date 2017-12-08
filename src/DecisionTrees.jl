@@ -1,6 +1,5 @@
 __precompile__()
-warn("DTM: BK to update to v0.7 -> use PooledArrays (fieldnames are refs and pool) for both cat and num data")
-info("DTM: BK possibly introduce an option not to calcuate intermediate metrics/scoring/sorting -> faster runtime")
+info("DTM: BK possibly introduce an option not to calculate intermediate metrics/scoring/sorting -> faster runtime")
 info("DTM: BK to check if sortperm! performance has improved in newer Julia versions")
 info("DTM: BK to fix this - we should not rely on mappings and candmatwomax anymore (if possible)")
 info("DTM: BK to add purity improvement for each split! Stop splitting if it is > threshold")
@@ -14,16 +13,9 @@ module DecisionTrees
 srand(1234)
 export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,updateSettingsMod!,prep_data_from_df_modernized,run_legacy,prep_data_from_df
 
-#using SQLite #currently breaking...
-using OnlineStats, StatsBase, StatsFuns, SQLite, DataFrames, ProgressMeter, PyCall, HDF5, JLD, PooledArrays # DataArrays is not used anymore
-#using Iterators
-#using ArrayViews #with Julia 0.5 view() seems to be part of Base, see ?Base.view
-# using MySQL, # temporarily disabled
+using OnlineStats, StatsBase, StatsFuns, SQLite, DataFrames, ProgressMeter, PyCall, JLD2, PooledArrays # DataArrays is not used anymore
+#using MySQL, # temporarily disabled
 
-#using Totalsizeof
-#using InitPython #these two are modules which are not "added through Pkg.add(....) "
-
-#export return_file_and_folders, run_model, build_tree, build_tree_iteration!, boosted_tree, _split, apply_tree,index_vector_from_rulepath
 #include("check_if_python_packages_are_installed.jl")
 include("types.jl")
 include("sorting.jl")

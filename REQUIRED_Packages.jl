@@ -19,8 +19,8 @@ Pkg.add("ProgressMeter")
 Pkg.add("Iterators")
 Pkg.add("OnlineStats")
 #Pkg.add("ArrayViews")
-Pkg.add("HDF5") #Load/Save *.jld files
-Pkg.add("JLD")
+#Pkg.add("HDF5") #Load/Save *.jld files
+Pkg.add("JLD2")
 Pkg.add("SQLite")
 Pkg.add("Loess")
 warn("Follow this step by step:")
