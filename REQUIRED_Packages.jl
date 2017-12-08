@@ -9,6 +9,7 @@ Pkg.add("RDatasets") #I do not think we really need this package
 Pkg.add("CSV")
 Pkg.add("ProfileView")
 Pkg.add("Coverage")
+Pkg.add("PooledArrays")
 
 Pkg.add("Revise")
 Pkg.add("BenchmarkTools")
