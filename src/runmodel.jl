@@ -338,7 +338,7 @@ tic()
         println("Saving prepped data to file:\n $(jldfile)")
 		isfile(jldfile)&&rm(jldfile)
 		#@time save(jldfile,"dtmtable",dtmtable,"candMatWOMaxValues",candMatWOMaxValues,"features",features,"mappings",mappings,"key",key,"trn_val_idx",trn_val_idx,"numerator",numerator,"denominator",denominator,"weight",weight,"oldsettings",sett)
-		@time save(jldfile,"dtmtable",dtmtable,"candMatWOMaxValues",candMatWOMaxValues,"mappings",mappings,"oldsettings",sett)
+		@time save(jldfile,"dtmtable",dtmtable,"candMatWOMaxValues",candMatWOMaxValues,"mappings",mappings,"sett",sett)
 		println("JLD2 file saved. Starting modelling... \n")
 	end
 
