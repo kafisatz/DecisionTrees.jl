@@ -54,6 +54,11 @@ mutable struct CVOptions
 		@assert check_cvoptions(x)
 		return x
 	end
+	function CVOptions(f,d,t,u)
+		x=new(f,d,t,u)
+		@assert check_cvoptions(x)
+		return x
+	end
 end
 
 mutable struct Chart	
@@ -782,7 +787,7 @@ function check_cvoptions(cvo::CVOptions)
 	# disjoint::Bool #whether we split the data into 'folds' disjoing subsets, if this is false then random sampling is performed
 	# training_proportion::Float64 #size of trn data
 	# use_all_data::Bool #if false, the CVOptions will never use the 'original' validation rows in the data
-	@assert cvo.folds>0
+	@assert cvo.folds>=0
 	# training_proportion == 1 could be possible but is a somewhat degenerate case
 	@assert (cvo.disjoint || (cvo.training_proportion>0 && cvo.training_proportion<1))
 	if !cvo.disjoint 
