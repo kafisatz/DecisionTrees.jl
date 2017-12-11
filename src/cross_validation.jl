@@ -73,7 +73,9 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
             #notably trn and val "do not fill out" all data, there is third part of the data which remains unused here
         end
         dtmtable.trnidx=deepcopy(this_trnidx)
-        sett.minw=minw_prop*length(dtmtable.trnidx) #note minw is adjusted for each run!
+        if sett.minw>0 #if sett.minw is specified as a negative number then it will be interpreted as a percentage anyway (no need to update it)
+            sett.minw=minw_prop*length(dtmtable.trnidx) #note minw is adjusted for each run!
+        end
         
         path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
         fnmod=string(path_and_fn_wo_extension_mod,ext)
@@ -114,7 +116,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     names!(settsdf,Symbol.(header_settings))
 
     fld,namestr=splitdir(path_and_fn_wo_extension)
-    filen=string(fld,"multistats.xlsx")
+    filen=string(fld,"\\","multistats.xlsx")
     if isfile(filen)
         info("Deleting $(filen).")
         rm(filen)
@@ -149,13 +151,11 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
 	catch e
         @show e       
 		warn("DTM: Failed to create Excel Statistics file. \r\n $(filen)")
-	end
-        
+	end        
     #restore indices
     dtmtable.trnidx=deepcopy(trnidx_orig)
     dtmtable.validx=deepcopy(validx_orig)  
     sett.minw=deepcopy(minw_orig)
     
-    return statsdf,settsdf
-    #return nothing
+    return statsdf,settsdf    
 end
