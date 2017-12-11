@@ -79,8 +79,8 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
         
         path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
         fnmod=string(path_and_fn_wo_extension_mod,ext)
-        somestrings,model=run_model_actual(dtmtable,sett,fnmod)
-        desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)
+        somestrings,model=run_model_actual(dtmtable,sett,fnmod)        
+        desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)        
         
         #add index as first column        
         numbrs=unshift!(numbrs,i)
@@ -110,7 +110,6 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     end # this_sample in cvsampler
 
     #3. aggregate some statistics
-
     statsdf=DataFrame(transpose(allstats))    
     settsdf=DataFrame(permutedims(allsettings,[2,1]))
     names!(settsdf,Symbol.(header_settings))

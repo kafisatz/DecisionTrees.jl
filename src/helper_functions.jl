@@ -41,11 +41,11 @@ function get_stats(model::Tree)
 end
 
 function get_stats(model::Union{BoostedTree,BaggedTree})	
-	numbers=float.(model.modelstats[end,:])
+	numbers=Array{Float64,2}(model.modelstats[end,:])[:]
 	desc=names(model.modelstats)
 	settdf=convert(DataFrame,writeAllFieldsToArray(model.settings))
 	setti_desc=string.(settdf[:,1])
-	setti=settdf[:,2]	
+	setti=settdf[:,2]
 	return desc,numbers,setti_desc,setti
 end
 

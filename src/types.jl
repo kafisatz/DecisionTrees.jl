@@ -1,7 +1,7 @@
 
 import Base: length,start,next,done,eltype,==,hash
 
-export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions
+export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree
 export ModelSettings,updateSettings!
 
     struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
