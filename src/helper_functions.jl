@@ -1,9 +1,25 @@
-export removeBOM,sampleData,subset_pda_mod #for debugging purposes only
+export resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
 
 import Base: append!,mean,length,findin,isless,eltype,resize!,convert
 #import PooledArrays.levels
 #import MySQL: mysql_query,mysql_display_error,mysql_store_result,mysql_affected_rows,mysql_free_result,mysql_num_fields,mysql_fetch_fields,mysql_num_rows,mysql_get_julia_type,mysql_fetch_row,MYSQL_RES,MYSQL_TYPE,MYSQL_ROW #temporarily disabled
 export createZipFile
+
+function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
+	@assert trnprop>0
+	@assert trnprop<1
+	sz=length(x.weight)
+	trnsz=round(Int,trnprop*sz)
+	trnsz=max(1,min(sz,trnsz))
+	t=sample(1:sz,trnsz,replace=false,ordered=true)
+	v=setdiff(1:sz,t)
+	@assert issorted(t)
+	@assert issorted(v)
+	x.trnidx=t
+	x.validx=v
+	   
+	return nothing
+end
 
 function get_stats(model::Tree)
 	#typeof(b)==Tree
