@@ -117,7 +117,7 @@ function update_current_rels!(vec,estratios,mat::Array{Float64,1})
 	return nothing
 end
 
-function quadratic_weighted_kappa{T<:Number,U<:Number}(actual::Array{T,1},estimate::Array{U,1})
+function quadratic_weighted_kappa(actual::Array{T,1},estimate::Array{U,1}) where {T <: Number,U <: Number}
 	estimate_int=try_convert(Array{Int,1},estimate)
 	actual_int=try_convert(Array{Int,1},actual)
 	return quadratic_weighted_kappa(actual_int,estimate_int)
@@ -188,7 +188,7 @@ function tryQWKappa(actual,estimate)
 	return quadratic_weighted_kappa(actual_int,estimate_int)
 end
 
-function limit_estimate!{T<:Number}(est::Array{T,1},mi::Number,ma::Number)
+function limit_estimate!(est::Array{T,1},mi::Number,ma::Number) where {T <: Number}
 	@assert mi<=ma
 	for i=1:length(est)
 		est[i]=min(max(est[i],mi),ma)
@@ -380,7 +380,7 @@ function write_any_array_to_excel_file(arr::Array,file::String)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr))]
 	xld=ExcelData(sheets,Array{Chart}(0))
-	write_statistics(xld,file)
+	write_statistics(xld,file,false,false)
 	return nothing
 end
 
@@ -389,7 +389,7 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,file::String)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2))]
 	xld=ExcelData(sheets,Array{Chart}(0))
-	write_statistics(xld,file)
+	write_statistics(xld,file,false,false)
 	return nothing
 end
 
@@ -398,7 +398,7 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,arr3::Array,file::
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2)),ExcelSheet("sheet3",convert(DataFrame,arr3))]
 	xld=ExcelData(sheets,Array{Chart}(0))
-	write_statistics(xld,file)
+	write_statistics(xld,file,false,false)
 	return nothing
 end
 
@@ -407,16 +407,16 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,arr3::Array,arr4::
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2)),ExcelSheet("sheet3",convert(DataFrame,arr3)),ExcelSheet("sheet4",convert(DataFrame,arr4))]
 	xld=ExcelData(sheets,Array{Chart}(0))
-	write_statistics(xld,file)
+	write_statistics(xld,file,false,false)
 	return nothing
 end
 
-function write_any_array_to_excel_file{T<:Any}(arr::Array{Array{T,2},1},file::String)
+function write_any_array_to_excel_file(arr::Array{Array{T,2},1},file::String) where {T <: Any}
 	ascii(file)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet(string("sheet",i),convert(DataFrame,arr[i])) for i=1:length(arr)]
 	xld=ExcelData(sheets,Array{Chart}(0))
-	write_statistics(xld,file)
+	write_statistics(xld,file,false,false)
 	return nothing
 end
 
@@ -441,7 +441,7 @@ function gini(actual,estimate,weight)
 	return res
 end
 
-function gini_more_accurate_but_slower{T<:Number}(a,estimate::Array{T,1},weight=ones(T,length(estimate)))
+function gini_more_accurate_but_slower(a,estimate::Array{T,1},weight=ones(T,length(estimate))) where {T <: Number}
 	#@assert (size(actual)==size(estimate)==size(weight))&&(size(actual,2)==1) # I think it takes too much time to check this as we call this fn very often
 	actual=deepcopy(a)
 	arrlen=length(actual)
@@ -463,7 +463,7 @@ function gini_more_accurate_but_slower{T<:Number}(a,estimate::Array{T,1},weight=
 	return res
 end
 
-function normalized_gini{T<:Number}(actual,estimate::SubArray{T,1},weight=ones(T,length(estimate)))
+function normalized_gini(actual,estimate::SubArray{T,1},weight=ones(T,length(estimate))) where {T <: Number}
 	return gini(actual,estimate,weight)/gini(actual,actual,weight)
 end
 
@@ -844,7 +844,7 @@ function myconvertDAType(d::D,e::T) where {D <: PooledArray,T <: DataType}
 	return r
 end
 
-function myconvertDAType{D<:Array,T<:DataType}(d::D,e::T)
+function myconvertDAType(d::D,e::T) where {D <: Array,T <: DataType}
 	@assert size(d,2)==1 #this can probably be done in a  nicer way d::DataArry{sometype,1}
 	r= e<:AbstractString ? Array(e[convert(e,string(x)) for x in d]) : convert(Array{e,1},d)
 	return r
@@ -951,17 +951,17 @@ function writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
 	println("Exporting Stats to Excel file: \r\n $(statsfileExcel)")
 	try 
 		isfile(statsfileExcel)&&rm(statsfileExcel)
-		@time write_statistics(xlData,statsfileExcel)
+		@time write_statistics(xlData,statsfileExcel,false,false)
 		push!(filelistWithFilesToBeZipped,statsfileExcel)
 	catch e
         @show e
-        dump(2)
+        dump(e)
 		warn("DTM: Failed to create Excel Statistics file. \r\n $(statsfileExcel)")
 	end
 	return nothing
 end
 
-function removeBOM{T}(s::Array{T,2})
+function removeBOM(s::Array{T,2}) where {T}
 	#remove Byte Order Mark https://en.wikipedia.org/wiki/Byte_order_mark
 	#if first(s[1])=='\ufeff' #parse(Int,first(s[1]))==65279
 	if first(s[1])==global_byte_order_mark #'\ufeff' #parse(Int,first(s[1]))==65279
@@ -1130,7 +1130,7 @@ function addTariffEstimationStatsAndGraphs!(xlData,
 return errors_num_estimates
 end
 
-function tariffEstStats{T<:AbstractString}(sumactual::Float64,actual::Array{Float64,1},estimateMat::Array{Float64,2},sumactualVAL::Float64,actualVAL::Array{Float64,1},estimateMatVAL::Array{Float64,2},name::T)
+function tariffEstStats(sumactual::Float64,actual::Array{Float64,1},estimateMat::Array{Float64,2},sumactualVAL::Float64,actualVAL::Array{Float64,1},estimateMatVAL::Array{Float64,2},name::T) where {T <: AbstractString}
 	@assert size(estimateMat,2)==size(estimateMatVAL,2)
 	result=Array{Any}(size(estimateMat,2)-1,12)
 	for i=1:size(estimateMat,2)-1 #NOTE the first column of estimateMat is iteration 0 which is the mean fitted value for all obersvations (which is not interesting at all!)
@@ -1141,7 +1141,7 @@ function tariffEstStats{T<:AbstractString}(sumactual::Float64,actual::Array{Floa
 	return result
 end
 
-function tariffEstStats{T<:AbstractString}(sumactual::Float64,actual::Array{Float64,1},estimate::Array{Float64,1},sumactualVAL::Float64,actualVAL::Array{Float64,1},estimateVAL::Array{Float64,1},name::T,count::Int)
+function tariffEstStats(sumactual::Float64,actual::Array{Float64,1},estimate::Array{Float64,1},sumactualVAL::Float64,actualVAL::Array{Float64,1},estimateVAL::Array{Float64,1},name::T,count::Int) where {T <: AbstractString}
 	mse,mrse,mae,mrae,sumrae=calcErrors(sumactual,actual,estimate)
 	mseVAL,mrseVAL,maeVAL,mraeVAL,sumraeVAL=calcErrors(sumactualVAL,actualVAL,estimateVAL)
 	res=[name count mse mrse mae mrae sumrae mseVAL mrseVAL maeVAL mraeVAL sumraeVAL]
@@ -1195,7 +1195,7 @@ function defineWeightPerTree(vectorOfAllTreesWithErrorStats::Array{TreeWithError
 	end
 end
 
-function customInverseNormalized!{T<:Number}(weightPerTree::Array{T,1})
+function customInverseNormalized!(weightPerTree::Array{T,1}) where {T <: Number}
 	#todo, this can be done more efficiently
 	for i=1:length(weightPerTree)
 		@inbounds weightPerTree[i]=1/weightPerTree[i]
@@ -1246,7 +1246,7 @@ function aggregateByLeafNr(leafNrVector::Array{Int,1},numeratorEST::Array{Float6
 end
 
 
-function corw{T<:Number,U<:Number,W<:AbstractWeights}(x::Array{T,1},y::Array{U,1},wvec::W)
+function corw(x::Array{T,1},y::Array{U,1},wvec::W) where {T <: Number,U <: Number,W <: AbstractWeights}
   @assert length(x)==length(y)==length(wvec)
   #todo this can be done more efficiently
   #soon it will probably be available in StatsBase or in some other package
@@ -1545,7 +1545,7 @@ function randint(n::Int)
 	return convert(Int,ceil(rand()*abs(n)))
 end
 
-function createZipFile{T<:AbstractString,U<:AbstractString}(zipFilename::T,filelist::Array{U,1},silent::Bool=false)
+function createZipFile(zipFilename::T,filelist::Array{U,1},silent::Bool=false) where {T <: AbstractString,U <: AbstractString}
 #use 7zip to zip the result files
   if isfile(zipFilename)
     try
@@ -1571,9 +1571,9 @@ function createZipFile{T<:AbstractString,U<:AbstractString}(zipFilename::T,filel
 	end
   return rc
 end
-createZipFile{T<:AbstractString,U<:AbstractString}(zipFilename::T,filelist::U)=createZipFile(zipFilename,[filelist])
+createZipFile(zipFilename::T,filelist::U) where {T <: AbstractString,U <: AbstractString}=createZipFile(zipFilename,[filelist])
 
-function mergeLeftAndRightFittedValues{T<:Number}(fitted_valuesl::Array{T,1},fitted_valuesr::Array{T,1},left::BitVector)
+function mergeLeftAndRightFittedValues(fitted_valuesl::Array{T,1},fitted_valuesr::Array{T,1},left::BitVector) where {T <: Number}
 	  fitted_values=Array{eltype(fitted_valuesl)}(length(left))
 	  loopl=loopr=1
 	  @inbounds for jj=1:length(left)
@@ -1784,7 +1784,7 @@ function someRankOptStats(mat::Array{Float64,2},numerator::Array{Float64,1},Prem
 	return res
 end
 
-function firstmatch{T}(x::Array{T,1},y::T)
+function firstmatch(x::Array{T,1},y::T) where {T}
   res=0
   for i=1:length(x)
     if y==x[i]
@@ -1857,7 +1857,7 @@ return xlData,overallstats
 end
 
 #,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
-function createTrnValStats!{T<:AbstractString}(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,nameOfModelStatisticsSheet::T,nameOfSettingsSheet::T,xlData,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function createTrnValStats!(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,nameOfModelStatisticsSheet::T,nameOfSettingsSheet::T,xlData,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}) where {T <: AbstractString}
 t=tree.rootnode
 #function for SINGLE Tree
 	nClasses=length(leaves_of_tree)
@@ -1940,7 +1940,7 @@ function wAverage(vec,w)
 	end
 	return res/wsum
 end
-function wAverage{T,U}(vec::Array{T,1},w::Array{U,1})
+function wAverage(vec::Array{T,1},w::Array{U,1}) where {T,U}
 	@assert size(vec)==size(w)
 	res=zero(eltype(vec))
 	wsum=zero(eltype(vec))
@@ -2124,7 +2124,7 @@ function crit_string_to_type(str)
   @assert false "Unknown split criterion $(str). ABORT."
 end
 
-function countsort{T<:Integer}(a::Array{T,1})
+function countsort(a::Array{T,1}) where {T <: Integer}
     (lo, hi) = extrema(a)
     b = zeros(T, length(a))
     cnt = zeros(Int, hi - lo + 1)
@@ -2142,7 +2142,7 @@ function countsort{T<:Integer}(a::Array{T,1})
     return b
 end
 
-function countsort!{T<:Integer}(a::Array{T,1})
+function countsort!(a::Array{T,1}) where {T <: Integer}
     (lo, hi) = extrema(a)
 #     b = zeros(T, length(a))
     cnt = zeros(Int, hi - lo + 1)
@@ -2160,7 +2160,7 @@ function countsort!{T<:Integer}(a::Array{T,1})
     end
 end
 
-function get_firstpos{T}(v::Array{T,1})
+function get_firstpos(v::Array{T,1}) where {T}
   #v=volume vector (v[i] = number of occurrences of element k in the feature vector)
   #return value is the a vector containing the first positions of element k in an ordered set
   firstpos=zeros(Int,length(v))
@@ -2294,7 +2294,7 @@ function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array
   return cnt,sumnumerator,sumdenominator,sumweight
 end
 
-function myfindin{T}(big::Array{T,1},small::Array{T,1})
+function myfindin(big::Array{T,1},small::Array{T,1}) where {T}
 	#returns boolean array which indicates which elements are not found in the smaller array
 	res=Array{Bool}(length(big))
 	for i=1:length(big)
@@ -2304,7 +2304,7 @@ function myfindin{T}(big::Array{T,1},small::Array{T,1})
 	return res
 end
 
-function myfindinInt{T}(big::Array{T,1},small::Array{T,1})
+function myfindinInt(big::Array{T,1},small::Array{T,1}) where {T}
 	#returns integer array which indicates which elements are not found in the smaller array
 	res=Array{Int}(0)
 	for i=1:length(big)
@@ -2865,7 +2865,7 @@ function print_tree(tree::Node,sett::ModelSettings,candMatWOMaxValues::Array{Arr
 end
 
 #write Tree Fn
-function write_tree{E<:Ensemble}(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,number_of_num_features::Int64,indent::Int64=0,fileloc="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,number_of_num_features::Int64,indent::Int64=0,fileloc="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where {E <: Ensemble}
   iterations=size(ensemble.trees,1)
   sz=length(df_name_vector)
   onedimintvec_sum=zeros(Float64,sz)
@@ -3393,7 +3393,7 @@ function char_rule(subset::Array{String,1},symbol_column::Symbol,b::Bool)
     end
 end
 
-function inverse_permutation{T}(a::Array{T,1})
+function inverse_permutation(a::Array{T,1}) where {T}
   #returns the "inverse permutation" for a permutation vector such as srt=sortperm(rand(10))
   res=similar(a)
   for i=1:length(a)
@@ -3698,7 +3698,7 @@ end
 	return mylinreg(x,y,FrequencyWeights(w))
 end
 =#
-function mylinreg{W<:AbstractWeights}(x::Array{Float64,1},y::Array{Float64,1},w::W)	
+function mylinreg(x::Array{Float64,1},y::Array{Float64,1},w::W) where {W <: AbstractWeights}	
 	meanx=0.0
 	meany=0.0
 	meanxy=0.0
@@ -4139,14 +4139,14 @@ function insert_gaps_to_scores!(wtot,nscores::Int,nscoresPotentiallyReducedTWOTi
 	return nothing
 end
 
-function cumulativeToIncremental!{T<:Number}(x::Vector{T})
+function cumulativeToIncremental!(x::Vector{T}) where {T <: Number}
 	for i=length(x):-1:2
 		x[i]-=x[i-1]
 	end
 	return nothing
 end
 
-function incrementalToCumulative!{T<:Number}(x::Vector{T})
+function incrementalToCumulative!(x::Vector{T}) where {T <: Number}
 	for i=2:length(x)
 		x[i]+=x[i-1]
 	end
@@ -4195,7 +4195,7 @@ function createPredictorData(idx::Vector{Int},nameOfpredictorsSheet,mappings,can
 	return predictorsData,predictorCharts
 end
 
-function replace_in_vector!{T}(arr::Array{T,1},orig::T,new::T)
+function replace_in_vector!(arr::Array{T,1},orig::T,new::T) where {T}
 	for i=1:length(arr)
 		if arr[i]==orig
 			arr[i]=new

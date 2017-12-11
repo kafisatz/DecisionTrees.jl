@@ -79,32 +79,37 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
         fnmod=string(path_and_fn_wo_extension_mod,ext)
         somestrings,model=run_model_actual(dtmtable,sett,fnmod)
         desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)
+        
+        #add index as first column        
+        numbrs=unshift!(numbrs,i)
+        settingsvec=unshift!(settingsvec,string(i))        
+        desc=unshift!(desc,"Number")        
+        desc_settingsvec=unshift!(desc_settingsvec,"Number")
         if i==1
             header=deepcopy(desc)
             header_settings=deepcopy(desc_settingsvec)
             allstats=Array{Float64,2}(length(numbrs),n_folds)			
             allsettings=Array{Any,2}(length(settingsvec),n_folds)			
         else			
-            if !all(header.==desc)
+            if !all(header[2:end].==desc[2:end])
                 warn("Model run $(i) returned an unexpected results vector:")
                 @show desc
                 @show header
             end
-            if !all(header_settings.==desc_settingsvec)
+            if !all(header_settings[2:end].==desc_settingsvec[2:end])
                 warn("Model run $(i) returned an unexpected results vector:")
                 @show desc_settingsvec
                 @show header_settings
             end
         end
         allstats[:,i].=deepcopy(numbrs)
-        allsettings[:,i].=deepcopy(settingsvec)
+        allsettings[:,i].=deepcopy(settingsvec)        
         i+=1
     end # this_sample in cvsampler
 
     #3. aggregate some statistics
 
-    statsdf=DataFrame(transpose(allstats))
-    names!(statsdf,Symbol.(header))
+    statsdf=DataFrame(transpose(allstats))    
     settsdf=DataFrame(permutedims(allsettings,[2,1]))
     names!(settsdf,Symbol.(header_settings))
 
@@ -115,6 +120,37 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
         rm(filen)
     end
     
+    #calc some 'stats of stats'
+    col_rng_stats=2:size(statsdf,2)    
+    means=map(x->mean(statsdf[x]),col_rng_stats)
+    medians=map(x->median(statsdf[x]),col_rng_stats)
+    mins=map(x->minimum(statsdf[x]),col_rng_stats)
+    maxs=map(x->maximum(statsdf[x]),col_rng_stats)
+    stds=map(x->std(statsdf[x]),col_rng_stats)
+    sums=map(x->sum(statsdf[x]),col_rng_stats)
+
+    stats_of_stats=hcat(means,medians,mins,maxs,stds,sums)
+    titles=["Mean","Median","Min","Max","Std Dev","Sum"]
+    stats_of_stats=hcat(titles,transpose(stats_of_stats))
+    stats_of_stats=vcat(repmat([""],1,size(stats_of_stats,2)),stats_of_stats)
+    
+    allstats_with_stats=vcat(transpose(allstats),stats_of_stats)
+    #NOTE! statsdf is RE defined here!
+    statsdf=DataFrame(allstats_with_stats)
+    names!(statsdf,Symbol.(header))
+    
+    #define Exceldata
+    sh1=ExcelSheet("settings",settsdf)
+    sh2=ExcelSheet("stats",statsdf)
+    xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(0))
+    #write data
+    try 		
+		@time write_statistics(xld,filen,true,false)		
+	catch e
+        @show e       
+		warn("DTM: Failed to create Excel Statistics file. \r\n $(filen)")
+	end
+        
     #restore indices
     dtmtable.trnidx=deepcopy(trnidx_orig)
     dtmtable.validx=deepcopy(validx_orig)  

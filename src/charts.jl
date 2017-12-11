@@ -1,7 +1,7 @@
 #tbd todo add single quotes around sheetnames for all chart formulas
 export write_statistics
 
-function create_dataframe{T<:AbstractString,U<:Any}(arr::Array{U,2},header::Array{T,1})
+function create_dataframe(arr::Array{U,2},header::Array{T,1}) where {T <: AbstractString,U <: Any}
 	res=convert(DataFrame,arr)
 	hsym=Symbol[x for x in header]
 	names!(res,hsym)
@@ -65,11 +65,11 @@ function addChartToWorkbook!(workbook::PyObject,worksheet::PyObject,chartDict::D
 	#writer[:save]()
 end
 
-function write_statistics{T<:AbstractString}(excelData::ExcelData,statsfile::T) #,charts::Array{Chart,1})		
+function write_statistics(excelData::ExcelData,statsfile::T,write_header::Bool,write_index::Bool) where {T <: AbstractString} #,charts::Array{Chart,1})		
 	#writing an Excel file seems very slow if the file already exists!
 	isfile(statsfile)&&rm(statsfile)
 	
-	writer=writeDFtoExcel(excelData,statsfile,0,0)
+	writer=writeDFtoExcel(excelData,statsfile,0,0,write_header,write_index)
 	workbook = writer[:book]
 	#Plot charts	
 	for c in excelData.charts
@@ -82,7 +82,7 @@ function write_statistics{T<:AbstractString}(excelData::ExcelData,statsfile::T) 
 	return nothing
 end
 
-function writeDFtoExcel{T<:AbstractString}(excelData::ExcelData,existingFile::T,row::Int,col::Int)
+function writeDFtoExcel(excelData::ExcelData,existingFile::T,row::Int,col::Int,write_header::Bool,write_index::Bool) where {T <: AbstractString}
 #http://search.cpan.org/~jmcnamara/Excel-Writer-XLSX/lib/Excel/Writer/XLSX.pm
 	#@assert isfile(existingFile)
 	@assert min(row,col)>=0
@@ -99,7 +99,7 @@ function writeDFtoExcel{T<:AbstractString}(excelData::ExcelData,existingFile::T,
 		dataDict = create_custom_dict(df)
 		#pyDF = pyModPandas.DataFrame(dataDict,columns=names(df)) #this was working under 0.4 but in 0.5 is converted to a julia dict (instead of being a python DF)
 		pyDF=pycall(pyModPandas[:DataFrame], PyObject, dataDict,columns=names(df))		
-		pycall(pyDF["to_excel"],PyAny,writer, header=false,index=false, sheet_name = sheet,startrow=row, startcol=col, encoding="utf-8")  #index=false suppress the rowcount		
+		pycall(pyDF["to_excel"],PyAny,writer, header=write_header,index=write_index, sheet_name = sheet,startrow=row, startcol=col, encoding="utf-8")  #index=false suppress the rowcount		
 	end
 	#DataFrame.to_excel(excel_writer, sheet_name='Sheet1', na_rep='', float_format=None, columns=None, header=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf')
 	#writer[:save]()
@@ -131,7 +131,7 @@ function excelLetter(x::Int)
 	return convert(String,letter)
 end
 
-function defineRelativityChart{T<:AbstractString}(sheetWhereChartIsLocated::T,dataSheet::T,location::T,rows::Int,headercol1::Int,headerrow1::Int;headerrow2::Int=0,headercol2::Int=0,datarow2::Int=0,xtitle="Score Band",ytitle="Relativity",xscale=1.4,title="",datarow::Int=0,valuescol::Int=0,categoriescol::Int=0,valuescol2::Int=0,yscale::Float64=NaN)
+function defineRelativityChart(sheetWhereChartIsLocated::T,dataSheet::T,location::T,rows::Int,headercol1::Int,headerrow1::Int;headerrow2::Int=0,headercol2::Int=0,datarow2::Int=0,xtitle="Score Band",ytitle="Relativity",xscale=1.4,title="",datarow::Int=0,valuescol::Int=0,categoriescol::Int=0,valuescol2::Int=0,yscale::Float64=NaN) where {T <: AbstractString}
 	chartDict=Dict{AbstractString,Dict{AbstractString,Any}}()
 	chartDict["add_chart"]=Dict{Any,Any}("type"=>"column")
 	if categoriescol==0
@@ -187,7 +187,7 @@ function defineRelativityChart{T<:AbstractString}(sheetWhereChartIsLocated::T,da
 	return resChart
 end
 
-function defineScoreChart{T<:AbstractString}(sheetWhereChartIsLocated::T,dataSheet::T,location::T,rows::Int,scoreCol::Int,weightCol::Int,observedCol::Int,SmoothedCol::Int)
+function defineScoreChart(sheetWhereChartIsLocated::T,dataSheet::T,location::T,rows::Int,scoreCol::Int,weightCol::Int,observedCol::Int,SmoothedCol::Int) where {T <: AbstractString}
 	#headercol1::Int,headerrow1::Int)
 	chartDict=Dict{AbstractString,Dict{AbstractString,Any}}()
 	chartDict["add_chart"]=Dict{Any,Any}("type"=>"line")
@@ -228,7 +228,7 @@ function defineScoreChart{T<:AbstractString}(sheetWhereChartIsLocated::T,dataShe
 	return resChart
 end
 
-function defineUnivariateChart{T<:AbstractString}(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttitle::String,rows::Int,categoriescol::Int,scoreCol::Int,weightCol::Int,headerrow::Int)
+function defineUnivariateChart(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttitle::String,rows::Int,categoriescol::Int,scoreCol::Int,weightCol::Int,headerrow::Int) where {T <: AbstractString}
 	#headercol1::Int,headerrow1::Int)
 	chartDict=Dict{AbstractString,Dict{AbstractString,Any}}()
 	chartDict["add_chart"]=Dict{Any,Any}("type"=>"column")
@@ -264,7 +264,7 @@ function defineUnivariateChart{T<:AbstractString}(sheetWhereChartIsLocated::T,da
 end
 
 
-function defineUnivariateChartWith2Lines{T<:AbstractString}(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttitle::String,rows::Int,categoriescol::Int,line1Col::Int,line2Col::Int,weightCol::Int,headerrow::Int)
+function defineUnivariateChartWith2Lines(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttitle::String,rows::Int,categoriescol::Int,line1Col::Int,line2Col::Int,weightCol::Int,headerrow::Int) where {T <: AbstractString}
 	#headercol1::Int,headerrow1::Int)
 	chartDict=Dict{AbstractString,Dict{AbstractString,Any}}()
 	chartDict["add_chart"]=Dict{Any,Any}("type"=>"column")
@@ -306,8 +306,8 @@ function defineUnivariateChartWith2Lines{T<:AbstractString}(sheetWhereChartIsLoc
 	return resChart
 end
 
-function defineTwoWayCharts{T<:AbstractString}(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttype::T,firstdatarow::Int,rows::Int,headercol::Int,nClasses::Int,descriptorcolumn::Int,xaxisname::T,yaxisname::T,
-		title::T;legendpos="top",categoriescol=1,xaxisformat="",yaxisformat="",xscale=3,yscale=1.5)
+function defineTwoWayCharts(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttype::T,firstdatarow::Int,rows::Int,headercol::Int,nClasses::Int,descriptorcolumn::Int,xaxisname::T,yaxisname::T,
+		title::T;legendpos="top",categoriescol=1,xaxisformat="",yaxisformat="",xscale=3,yscale=1.5) where {T <: AbstractString}
 	#http://xlsxwriter.readthedocs.org/en/latest/chart.html
 	chartDict=Dict{AbstractString,Dict{AbstractString,Any}}()
 	chartDict["add_chart"]=Dict{Any,Any}("type"=>charttype)
@@ -337,7 +337,7 @@ function defineTwoWayCharts{T<:AbstractString}(sheetWhereChartIsLocated::T,dataS
 end
 
 
-function defineChartWithNSeries{T<:AbstractString}(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttype::T,firstdatarow::Int,rows::Int,headercols::Array{Int,1},headerrow1::Int,xaxisname::T,yaxisname::T,title::T;legendpos="top",categoriescol=1,xaxisformat="",yaxisformat="",xscale=3,yscale=1.5)
+function defineChartWithNSeries(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttype::T,firstdatarow::Int,rows::Int,headercols::Array{Int,1},headerrow1::Int,xaxisname::T,yaxisname::T,title::T;legendpos="top",categoriescol=1,xaxisformat="",yaxisformat="",xscale=3,yscale=1.5) where {T <: AbstractString}
 	#http://xlsxwriter.readthedocs.org/en/latest/chart.html
 	chartDict=Dict{AbstractString,Dict{AbstractString,Any}}()
 	chartDict["add_chart"]=Dict{Any,Any}("type"=>charttype)
@@ -367,7 +367,7 @@ function defineChartWithNSeries{T<:AbstractString}(sheetWhereChartIsLocated::T,d
 	return resChart
 end
 
-function defineChartWith2Series{T<:AbstractString}(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttype::T,rows::Int,headercol1::Int,headercol2::Int,headerrow1::Int)
+function defineChartWith2Series(sheetWhereChartIsLocated::T,dataSheet::T,location::T,charttype::T,rows::Int,headercol1::Int,headercol2::Int,headerrow1::Int) where {T <: AbstractString}
 	#http://xlsxwriter.readthedocs.org/en/latest/chart.html
 	chartDict=Dict{AbstractString,Dict{AbstractString,Any}}()
 	chartDict["add_chart"]=Dict{Any,Any}("type"=>charttype)
