@@ -115,7 +115,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     names!(settsdf,Symbol.(header_settings))
 
     fld,namestr=splitdir(path_and_fn_wo_extension)
-    filen=string(fld,"\\","multistats.xlsx")
+    filen=string(path_and_fn_wo_extension,"_multistats.xlsx")
     if isfile(filen)
         info("Deleting $(filen).")
         rm(filen)
