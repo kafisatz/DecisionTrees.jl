@@ -8,7 +8,7 @@ function run_model(ARGS;nrows::Int=-1)
    try
 		tic() #this tic is for the time measurment until right before the zip file is created.
 		tic()
-		srand(1234) #initialize random number generator
+		#srand(1234) #initialize random number generator
 		#first function which is called by run.jl:
 		settingsFilename,dataFilename,datafolder,outfilename,outfileStringOnly=return_file_and_folders(ARGS)
 		result_of_runmodel,resulting_model=run_model_main(settingsFilename,dataFilename,convert(String,datafolder),outfilename,outfileStringOnly,nrows=nrows)
@@ -449,7 +449,7 @@ sett.version=get_sha1()
 
 #initialize random number generator
 	#we may want to make this independent from the data (trn), then again different data should/will lead to a different result.
-	srand(floor(Int,hash(sett.seed,hash(numerator.+denominator.+weight.+prod(size(features))))/4))
+	srand(floor(Int,.25*hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator.+denominator.+weight)))))))
 	#@show rand();@show rand();@show rand(); #check reproducability
 #this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
 if sett.subsampling_prop <1.0 

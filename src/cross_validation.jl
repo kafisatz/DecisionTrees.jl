@@ -1,4 +1,4 @@
-export dtm 
+export dtm,dtm_debug
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String)
     return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,fn::String)
@@ -26,7 +26,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     
 #1. sample Data
     size_which_is_sampled=0
-    local cvsampler
+    #local cvsampler
     if cvo.use_all_data
         #this is the default case
         #trn and val datat is considered for the "sampled trn data"
@@ -58,9 +58,9 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
             allsettings=Array{Any,2}
             i=1
             n_folds=abs(cvo.folds)
-    
+
     #2. run models   
-    for this_sample in cvsampler
+    for this_sample in cvsampler        
         if cvo.use_all_data
             #size_which_is_sampled=fullsize            
             this_trnidx=this_sample
@@ -72,7 +72,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
             #here we leave the val data as it is
             #notably trn and val "do not fill out" all data, there is third part of the data which remains unused here
         end
-        dtmtable.trnidx=deepcopy(this_trnidx)
+        dtmtable.trnidx=this_trnidx
         if sett.minw>0 #if sett.minw is specified as a negative number then it will be interpreted as a percentage anyway (no need to update it)
             sett.minw=minw_prop*length(dtmtable.trnidx) #note minw is adjusted for each run!
         end
