@@ -35,16 +35,16 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
         size_which_is_sampled=trnsize_orig
     end
     if cvo.training_proportion>0
-        info("DTM: training_proportion > 0 provided. Performing random sampling without replacment ($(cvo.folds) samples)")
+        info("DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)")
         sample_size=max(1,round(cvo.training_proportion*size_which_is_sampled))
         cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)
     else
         if cvo.folds<0
-            info("DTM: Performing 'DISJOINT' kfold cross validation")
+            info("DTM: Performing 'DISJOINT training sets' k-fold cross validation (k=$(cvo.folds))")
             cvsampler=KfoldDisjoint(size_which_is_sampled,abs(cvo.folds))
         else
             #we have folds>=0
-            info("DTM: Performing kfold cross validation")
+            info("DTM: Performing k-fold cross validation (disjoint validation sets, k=$(cvo.folds))")
             cvsampler=Kfold(size_which_is_sampled,cvo.folds)
         end
     end
