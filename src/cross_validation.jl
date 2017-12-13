@@ -27,7 +27,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     
 #set rnd state to make this function reporducible (irrespective of trn/val idx)
 #srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
-intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
+@show intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
 @show srand(intDatahash)
 
 
