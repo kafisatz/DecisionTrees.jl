@@ -1,16 +1,19 @@
+#this file is outdated and should not be used anymore
+#place your packge in the folder 
+
+# ~/.julia/v0.X/DecisionTrees/src/DecisionTrees.jl
+
+# see also https://stackoverflow.com/questions/29211641/julia-create-and-use-a-local-package-without-internet 
 #First, install the most recent Julia version
 
-Pkg.update() #Upadate all packages
-#Pkg.add("MySQL") #this may not work
-#warn("You need to install mysql-connector-c-6.1.6-winx64 !!") #-> resources folder
-#warn("ensure that C:\Program Files\MySQL\MySQL Connector C 6.1\lib is in your path such that libmysql.dll is found")
-#Pkg.clone("https://github.com/JuliaDB/MySQL.jl")
+#Pkg.update() #Update all packages
+
+ #=
 Pkg.add("RDatasets") #I do not think we really need this package
 Pkg.add("CSV")
 Pkg.add("ProfileView")
 Pkg.add("Coverage")
 Pkg.add("PooledArrays")
-
 Pkg.add("Revise")
 Pkg.add("BenchmarkTools")
 Pkg.add("Compat")
@@ -23,8 +26,10 @@ Pkg.add("JLD2")
 Pkg.add("SQLite")
 Pkg.add("Loess")
 Pkg.add("PyCall") #Will be used to export to *.xlsx and create graphs
+=#
 
 #= 
+OLDER NOTES
 #if pycall is not working, you may want to try this...
 warn("Follow this step by step:")
 warn("this may be outdated, newer versions of python will probably work too")
@@ -64,3 +69,7 @@ Pkg.update() #Upadate all packages
 	Pkg.build("PyCall")
 	using PyCall
 =#
+
+#regarding myslq (which is not used anymore)
+#warn("You need to install mysql-connector-c-6.1.6-winx64 !!") #-> resources folder
+#warn("ensure that C:\Program Files\MySQL\MySQL Connector C 6.1\lib is in your path such that libmysql.dll is found")
