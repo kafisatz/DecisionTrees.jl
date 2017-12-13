@@ -27,7 +27,9 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     
 #set rnd state to make this function reporducible (irrespective of trn/val idx)
 #srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
-@time srand(floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight)))))))
+intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
+@time srand(intDatahash)
+
 
 #1. sample Data
     size_which_is_sampled=0
@@ -66,7 +68,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
 
     #2. run models   
     for this_sample in cvsampler
-        sett.seed = Int(hash(i)/4) + seed_orig 
+        sett.seed = Int(hash(intDatahash,hash(99812,hash(i)/4)))
         if cvo.use_all_data
             #size_which_is_sampled=fullsize            
             this_trnidx=this_sample
