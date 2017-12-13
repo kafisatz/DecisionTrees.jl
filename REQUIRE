@@ -1,13 +1,16 @@
-julia 0.5
+julia 0.6
+PyCall
+CSV
+Loess
+BenchmarkTools
+Compat
 OnlineStats
 StatsBase
 Distributions
 DataFrames
 ProgressMeter
 Iterators
-ArrayViews
-HDF5
-JLD
+JLD2
 SQLite
 ProfileView
 Coverage
