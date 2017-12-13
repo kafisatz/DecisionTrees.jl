@@ -68,7 +68,7 @@ intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,h
 
     #2. run models   
     for this_sample in cvsampler
-        sett.seed = Int(hash(intDatahash,hash(99812,hash(i)/4)))
+        sett.seed = Int(hash(intDatahash,hash(99812,Int(hash(i)/4))))
         if cvo.use_all_data
             #size_which_is_sampled=fullsize            
             this_trnidx=this_sample
