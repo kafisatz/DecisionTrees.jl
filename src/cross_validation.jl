@@ -26,7 +26,8 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     minw_prop=minw_orig/trnsize_orig
     
 #set rnd state to make this function reporducible (irrespective of trn/val idx)
-@time srand(floor(Int,.25*hash(2231,hash(dtmtable.features,hash(sett.seed,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))))
+#srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
+@time srand(floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight)))))))
 
 #1. sample Data
     size_which_is_sampled=0
