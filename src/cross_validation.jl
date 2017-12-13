@@ -17,13 +17,17 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     
     #during CV  we will overwrite trnidx and validx!
     #store orig indices
-    trnidx_orig=deepcopy(dtmtable.trnidx)
-    trnsize_orig=length(trnidx_orig)
-    fullsize=length(dtmtable.weight)
-    validx_orig=deepcopy(dtmtable.validx)
-    minw_orig=deepcopy(sett.minw)
+    const trnidx_orig=deepcopy(dtmtable.trnidx)
+    const trnsize_orig=length(trnidx_orig)
+    const fullsize=length(dtmtable.weight)
+    const validx_orig=deepcopy(dtmtable.validx)
+    const minw_orig=deepcopy(sett.minw)
+    const seed_orig=deepcopy(sett.seed)
     minw_prop=minw_orig/trnsize_orig
     
+#set rnd state to make this function reporducible (irrespective of trn/val idx)
+@time srand(floor(Int,.25*hash(2231,hash(dtmtable.features,hash(sett.seed,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))))
+
 #1. sample Data
     size_which_is_sampled=0
     #local cvsampler
@@ -60,7 +64,8 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
             n_folds=abs(cvo.folds)
 
     #2. run models   
-    for this_sample in cvsampler        
+    for this_sample in cvsampler
+        sett.seed = Int(hash(i)/4) + seed_orig 
         if cvo.use_all_data
             #size_which_is_sampled=fullsize            
             this_trnidx=this_sample
@@ -155,6 +160,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     dtmtable.trnidx=deepcopy(trnidx_orig)
     dtmtable.validx=deepcopy(validx_orig)  
     sett.minw=deepcopy(minw_orig)
+    sett.seed = seed_orig 
     
     return statsdf,settsdf    
 end
