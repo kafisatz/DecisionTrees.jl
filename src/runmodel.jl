@@ -540,7 +540,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		fitted_values_tree=zeros(numerator)		
 		@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
 		resulting_model=tree
-		println("Deriving Trn Estimates... Time: $(now())")
+		prnt&&println("Deriving Trn Estimates... Time: $(now())")
 		leaves_of_tree=create_leaves_array(tree)
         leaf_number_vector=zeros(Int,length(fitted_values_tree))
         #todo/tbd possibly improve this by only applying the function once!

@@ -1,4 +1,4 @@
-export dtm,dtm_debug
+export dtm,dtm_debug,dtm_multicore
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String)
     return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,fn::String)
@@ -258,9 +258,10 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CV
             fill!(defaulted_stats,0.0)
 
         #create a dictionary which contains all data
-            di=Dict("defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"cvsampler"=>cvsampler,"intDatahash"=>intDatahash,"sett"=>deepcopy(sett),"cvo"=>cvo,"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
+            di=Dict("ext"=>ext,"minw_prop"=>minw_prop,"size_which_is_sampled"=>size_which_is_sampled,"defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"cvsampler"=>cvsampler,"intDatahash"=>intDatahash,"sett"=>deepcopy(sett),"cvo"=>cvo,"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
         #send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)
-			sendto_module(DTM,workers(),local_data_dict=deepcopy(di))
+        #sendto(workers(),local_data_dict=deepcopy(di))
+        sendto_module(DecisionTrees,workers(),local_data_dict=deepcopy(di))
         
         #run all models in parallel
             pmapresult=pmap(iLoop -> run_cvsample_on_a_process(iLoop,local_data_dict),1:length(cvsampler))
@@ -327,10 +328,14 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CV
     end
         
 function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)	
+    di=local_data_dict
     defaulted_settings=di["defaulted_settings"]
     defaulted_stats=di["defaulted_stats"]        
     
     try         
+        ext=di["ext"]
+        minw_prop=di["minw_prop"]
+        size_which_is_sampled=di["size_which_is_sampled"]
         header_settings=di["header_settings"]       
         header=di["header"]       
         cvsampler=di["cvsampler"]       
@@ -390,7 +395,8 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
                 @show desc_settingsvec
                 @show header_settings
             end
-
+            @show size(numbrs)
+            @show size(settingsvec)
         return numbrs,settingsvec,i
     catch eri
         warn("DTM: CV model $(i) failed.")
