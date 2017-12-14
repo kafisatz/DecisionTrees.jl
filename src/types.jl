@@ -154,9 +154,9 @@ function Base.getindex(r::DTMTable,idx)
 		if eltype(features[i])!=UInt8
 			features[i]=PooledArray(Array(features[i]))
 		end
-	end
-    
-    mp=deepcopy(map(i->features[i].pool,tmp_number_of_num_features+1:size(features,2)))
+	end    
+	mp=deepcopy(map(i->features[i].pool,tmp_number_of_num_features+1:size(features,2)))
+	error("this does not work properly. we NEED to update candmatmaxtrix otherwise we get a modelling error later on....")
     #for now candMatWOMaxValues is left as it was...
     dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),deepcopy(mp))
     return dt
