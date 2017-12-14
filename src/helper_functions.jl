@@ -5,6 +5,11 @@ import Base: append!,mean,length,findin,isless,eltype,resize!,convert
 #import MySQL: mysql_query,mysql_display_error,mysql_store_result,mysql_affected_rows,mysql_free_result,mysql_num_fields,mysql_fetch_fields,mysql_num_rows,mysql_get_julia_type,mysql_fetch_row,MYSQL_RES,MYSQL_TYPE,MYSQL_ROW #temporarily disabled
 export createZipFile
 
+#it is critical to define levels properly for PooledArray
+function Missings.levels(x::PooledArray)
+    return deepcopy(x.pool)
+end
+
 function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
 	@assert trnprop>0
 	@assert trnprop<1
@@ -2101,27 +2106,6 @@ function myresort!(x,srt)
 return nothing
 end
 
-function numberOfLevels(f,sett)
-      num_levels=Array{Int64}(0)
-      char_levels=Array{Int64}(0)
-      all_levels=Array{Int64}(0)
-	  for id=1:sett.number_of_num_features
-		  s=Int64(size(levels(f[id]),1))
-		  @assert s==length(f[id].pool)
-		  s=length(f[id].pool)
-          push!(all_levels,s)
-          push!(num_levels,s)
-    end
-	  for id=1:sett.number_of_char_features
-          s=length(f[id+sett.number_of_num_features].pool)
-          push!(all_levels,s)
-          push!(char_levels,s)
-      end
-      all_levels_as_string_vector=[string(x) for x in all_levels]
-      names_and_levels=hcat(sett.df_name_vector,all_levels_as_string_vector)
-return num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels
-end
-
 function print_graycode(m)
   #this functions print the first m gray codes (binary numbers such that with each step exactly one bit flips)
   n=uint8(m)
@@ -2253,7 +2237,7 @@ function aggregate_data(f::PooledArray,scores,numeratorEst,numerator,denominator
 	ooo=one(lo)-lo
 	vecsize=hi+ooo
 
-	valuelist=levels(f)
+	valuelist=levels(f) #we should not use levels here, it is the wrong function
     cnt = zeros(Int, vecsize)
     sumnumerator = zeros(Float64, vecsize)
 	sumnumeratorEst = zeros(Float64, vecsize)
@@ -2291,10 +2275,7 @@ end
 
 function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})  where T<:SubArray
 	#! preliminary testing showed that we can save 10% if we explicitly type f as in
-	# aggregate_data_diff(f::SubArray{String,1,PooledArray{String,UInt8,1},Tuple{Array{Int64,1}},false},denominator....)
-	#warn("BK i am not sure if this is accurate....")
-	#lvl_mod=findin(levels(f),f.parent.pool)
-	#@show (lo::UInt8, hi::UInt8) = extrema(lvl_mod) #(lo, hi) = extrema(levels(f))
+	# aggregate_data_diff(f::SubArray{String,1,PooledArray{String,UInt8,1},Tuple{Array{Int64,1}},false},denominator....)	
     #if we never subset the pda and always work on a view of the original data, then lo, hi are always 1: size(pool)!
     lo=one(eltype(f.parent.refs)) #UInt8(1)    
     hi=convert(eltype(f.parent.refs),length(f.parent.pool)) #hi=convert(UInt8,length(f.parent.pool))

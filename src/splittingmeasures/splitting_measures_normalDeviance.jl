@@ -119,8 +119,7 @@ function aggregate_data_normal_deviance(f::pdaMod,numerator::Array{Float64,1},de
 	#most of the time is spent here, if we can improve the for loop below, that would improve performance greatly!
 	#one possibility would be to introduce parallelization here (which is not straightforward, I think....)
 	a= f.pda.refs
-	(lo::UInt8, hi::UInt8) = extrema(levels(f))
-  #lo,hi=extrema(levels(f))
+	(lo::UInt8, hi::UInt8) = extrema(levels(f))  
   ooo=one(lo)-lo
 	vecsize=hi+ooo
   cnt = zeros(Int, vecsize)
