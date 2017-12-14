@@ -3,6 +3,7 @@ import Base: length,start,next,done,eltype,==,hash
 
 export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree
 export ModelSettings,updateSettings!
+#export getindex
 
     struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
     
@@ -145,10 +146,17 @@ function Base.getindex(r::DTMTable,idx)
     numerator=r.numerator[idx]    
     denominator=r.denominator[idx]    
     weight=r.weight[idx]    
-    features=r.features[idx,:]
-
-    tmp_number_of_num_features=sum(map(x->eltype(r.features[x].pool),1:size(r.features,2)).!=String)
-    mp=deepcopy(map(i->r.features[i].pool,tmp_number_of_num_features+1:size(r.features,2)))
+	tmp_number_of_num_features=sum(map(x->eltype(r.features[x].pool),1:size(r.features,2)).!=String)
+	
+	features=r.features[idx,:]
+	#"compact" features, it is possible that we could do this in a better/faster way
+	for i=tmp_number_of_num_features+1:size(features,2)
+		if eltype(features[i])!=UInt8
+			features[i]=PooledArray(Array(features[i]))
+		end
+	end
+    
+    mp=deepcopy(map(i->features[i].pool,tmp_number_of_num_features+1:size(features,2)))
     #for now candMatWOMaxValues is left as it was...
     dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),deepcopy(mp))
     return dt
