@@ -448,7 +448,14 @@ sett.version=get_sha1()
 
 #initialize random number generator
 	#we may want to make this independent from the data (trn), then again different data should/will lead to a different result.
-	srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
+#hash of DF is not working properly, thus we need to iteration over the columns of the DF (this can be simpplified later on.)
+s00=hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))
+for x=1:size(features,2)
+	s00=hash(features[x],s00)
+end
+@show srandInt=floor(Int,1/3*hash(931,s00))
+srand(srandInt)
+	#srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
 	#@show rand();@show rand();@show rand(); #check reproducability
 #this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
 if sett.subsampling_prop <1.0 
