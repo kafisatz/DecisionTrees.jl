@@ -402,6 +402,7 @@ return 	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfe
 end
 
 function run_model_actual(dtmtable::DTMTable,sett::ModelSettings,fn::String)
+#this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
 tic() #total modelling time , prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,1))s = $(round(elapsed_until_this_point/60,1))m")
 
 path_and_fn_wo_extension,ext=splitext(fn)
@@ -453,11 +454,10 @@ s00=hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(
 for x=1:size(features,2)
 	s00=hash(features[x],s00)
 end
-@show srandInt=floor(Int,1/3*hash(931,s00))
+srandInt=floor(Int,1/3*hash(931,s00))
 srand(srandInt)
 	#srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
 	#@show rand();@show rand();@show rand(); #check reproducability
-#this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
 if sett.subsampling_prop <1.0 
 	warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")
 end
