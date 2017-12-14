@@ -32,7 +32,7 @@ for x=1:size(dtmtable.features,2)
     s=hash(dtmtable.features[x],s)    
 end
 @show intDatahash = Int(.25*hash(2231,s)) 
- # the next line does not work, it is not clear why....
+ # the next line does not work because (at the time of writing) the DataFrames Pkg has not implemented hash(x::DataFrame,u::UInt) correctly.
  # intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
 srand(intDatahash)
 
