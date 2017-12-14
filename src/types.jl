@@ -133,6 +133,27 @@ mutable struct DTMTable
 	end
 end
 
+function Base.getindex(r::DTMTable,idx)
+    #r=deepcopy(a)
+    key=r.key[idx]
+    one_to_n=collect(1:length(r.weight))
+    rows_to_keep=one_to_n[idx]        
+    new_trnidx=indexin(r.trnidx,rows_to_keep)
+    new_validx=indexin(r.validx,rows_to_keep)
+    filter!(!iszero,new_trnidx)
+    filter!(!iszero,new_validx)        
+    numerator=r.numerator[idx]    
+    denominator=r.denominator[idx]    
+    weight=r.weight[idx]    
+    features=r.features[idx,:]
+
+    tmp_number_of_num_features=sum(map(x->eltype(r.features[x].pool),1:size(r.features,2)).!=String)
+    mp=deepcopy(map(i->r.features[i].pool,tmp_number_of_num_features+1:size(r.features,2)))
+    #for now candMatWOMaxValues is left as it was...
+    dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),deepcopy(mp))
+    return dt
+end
+
 #todo check the difference between immutable and type!! are we using immutables correctly here?
 struct Splitdef #Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
 	featid::Int64
