@@ -3,9 +3,8 @@ import Base: length,start,next,done,eltype,==,hash
 
 export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree
 export ModelSettings,updateSettings!,copySettingsToCurrentType
-#export getindex
 
-    struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
+struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
     
 #Splitting Criterions use multiple dispatch
 	abstract type SplittingCriterion  end
@@ -133,6 +132,8 @@ mutable struct DTMTable
 		return new(key,trnidx,validx,numerator,denominator,weight,features,cands,maps)
 	end
 end
+
+Base.size(d::DTMTable) = size(d.features)
 
 function Base.getindex(r::DTMTable,idx)
     #r=deepcopy(a)
@@ -852,28 +853,3 @@ function check_cvoptions(cvo::CVOptions)
 	return true
 end
 
-#=
-#not used anymore
-mutable struct CVOptions	
-	folds::UInt16 #number of cv models
-	disjoint::Bool #whether we split the data into 'folds' disjoing subsets, if this is false then random sampling is performed
-	training_proportion::Float64 #size of trn data
-	use_all_data::Bool #if false, the CVOptions will never use the 'original' validation rows in the data
-	function CVOptions()
-		x=new(2,false,.7,true)
-		@assert check_cvoptions(x)
-		return x
-	end
-	function CVOptions(a::UInt8,b::Bool,c::Float64)
-		x=new(a,b,c,false)
-		@assert check_cvoptions(x)
-		return x
-	end
-	function CVOptions(f,d,t,u)
-		x=new(f,d,t,u)
-		@assert check_cvoptions(x)
-		return x
-	end
-end
-
-=#
