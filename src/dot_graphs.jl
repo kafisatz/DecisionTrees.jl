@@ -61,7 +61,7 @@ http://www.graphviz.org/content/dot-language
     return dot_graph
 end
 
-function total_n_subnodes(node::Node)
+function total_n_subnodes(node::Node{T}) where T<:Unsigned
     n_nodes_childl=number_of_nodes(node.left)
     n_leafs_childl=number_of_nodes(node.left)
     n_nodes_childr=number_of_nodes(node.right)
@@ -71,7 +71,7 @@ function total_n_subnodes(node::Node)
     return n_nodes_and_leafsr,n_nodes_and_leafsl
 end
 
-function graph(node::Node,counter::Int,parentname::String,sett::ModelSettings,edge_from_parent_description::String,mappings,candMatWOMaxValues,total_weight_of_tree::Float64)
+function graph(node::Node{T},counter::Int,parentname::String,sett::ModelSettings,edge_from_parent_description::String,mappings,candMatWOMaxValues,total_weight_of_tree::Float64) where T<:Unsigned
     orig_id=node.featid
 	orig_id<0 ? this_id=sett.number_of_num_features-orig_id : this_id=orig_id
 #    label = orig_id>0 ? "N|F$(this_id)  $(sett.df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][node.subset[end]],5)),Fit$(round(fittedratio(node),2)),S$(round(nodesize(node),1)))" : "N|F$(this_id)  $(sett.df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in node.subset]],","))],Fit$(round(fittedratio(node),2)),S$(round(nodesize(node),1)))"

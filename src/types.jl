@@ -236,8 +236,8 @@ struct Node{T<:Unsigned}
     featid_new_positive::Int64
     #we have redundance in the tree structure, the rulepath contains the same information as the members of the node; todo - remove it!
     subset::Array{T,1}
-    left::Union{Leaf,Node}
-    right::Union{Leaf,Node}
+    left::Union{Leaf,Node{UInt8},Node{UInt16}}
+    right::Union{Leaf,Node{UInt8},Node{UInt16}}
     rule_path::Array{Rulepath,1}
 end
 
@@ -750,7 +750,7 @@ end
 
 abstract type DTModel end
 mutable struct Tree <: DTModel
-	rootnode::Union{Leaf,Node}
+	rootnode::Union{Leaf,Node{UInt8},Node{UInt16}}
 	intVarsUsed::Array{Array{Int,1},1}
 	#intCharVarsUsed::Array{Array{Int,1},1}
 	candMatWOMaxValues::Array{Array{Float64,1},1}
@@ -763,7 +763,7 @@ mutable struct Tree <: DTModel
 	#this is highly inefficient, modelstats should be a Dataframe!
 	modelstats::DataFrame # #overall model statistics and performance (trn and val), this needs to be a matrix (Any) with a header row NOTE: this is a feature of multiple model types! (tree, boosting, bagging) and we need consistency because of the function run_model_multirow_settings
 	exceldata::ExcelData
-	function Tree(rootnode::Union{Leaf,Node},intVarsUsed::Array{Array{Int,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},charMappings::Array{Array{String,1},1},inds_considered::Array{Int64,1},settings::ModelSettings,exceldata::ExcelData)
+	function Tree(rootnode::Union{Leaf,Node{UInt8},Node{UInt16}},intVarsUsed::Array{Array{Int,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},charMappings::Array{Array{String,1},1},inds_considered::Array{Int64,1},settings::ModelSettings,exceldata::ExcelData)
 		nf=settings.number_of_char_features+settings.number_of_num_features
 		@assert length(settings.df_name_vector)==nf
 		variableImp1Dim=zeros(Int,nf)
@@ -783,7 +783,7 @@ end
 abstract type Ensemble <: DTModel end
 
 struct BoostedTree <: Ensemble
-    trees::Vector{Union{Leaf,Node}} #todo tbd make this to trees!
+    trees::Vector{Union{Leaf,Node{UInt8},Node{UInt16}}} #todo tbd make this to trees!
 
 	settings::ModelSettings
 	intVarsUsed::Array{Array{Array{Int,1},1},1}

@@ -61,7 +61,7 @@ function get_stats(model::Tree)
 	return desc,numbers,setti_desc,setti
 end
 
-function get_stats(model::Union{BoostedTree,BaggedTree})	
+function get_stats(model::Union{BoostedTree,BaggedTree})
 	numbers=Array{Float64,2}(model.modelstats[end,:])[:]
 	desc=names(model.modelstats)
 	settdf=convert(DataFrame,writeAllFieldsToArray(model.settings))
@@ -2878,7 +2878,7 @@ function print_tree(tree::Leaf,sett::ModelSettings,candMatWOMaxValues::Array{Arr
     println("L|S$(round(nodesize(tree),1)),Fit$(round(tree.fitted,2)),D$(tree.depth)")
 end
 
-function print_tree(tree::Node,sett::ModelSettings,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},indent::Int64=0)
+function print_tree(tree::Node{T},sett::ModelSettings,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},indent::Int64=0) where T<:Unsigned 
 	orig_id=tree.featid
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -2982,7 +2982,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,num
     write_tree(candMatWOMaxValues,tree,number_of_num_features, indent + 1,f,df_name_vector,mappings)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node,number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where T<:Unsigned 
 	#version which uses f::IOStream as input
 	write(f,"\r\n1 dimensional predictor importance:")
 	my_write(f,var_imp1d_str_arr);
@@ -3018,7 +3018,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,num
     write(f,"L|S$(round(nodesize(tree),1)),Fit$(round(tree.fitted,2)),D$(tree.depth)\r\n")
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node,number_of_num_features::Int64, indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64, indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
     orig_id>0 ? write(f,"N|F$(this_id)  $(df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][tree.subset[end]],5)),Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))")
@@ -3220,7 +3220,7 @@ end
 close(fiostream)
 end
 
-function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node,number_of_num_features::Int64, indent::Int64,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0)
+function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64, indent::Int64,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 	notsign=convert(String,"not")
@@ -3334,31 +3334,45 @@ end
 
 #Statistics
 mean(tree::Tree)=mean(tree.rootnode)
-mean(tree::Node)=((nodesize(tree.left)*mean(tree.left)+nodesize(tree.right)*mean(tree.right))/nodesize(tree))
+function mean(tree::Node{T}) where T<:Unsigned  
+return ((nodesize(tree.left)*mean(tree.left)+nodesize(tree.right)*mean(tree.right))/nodesize(tree))
+end
 mean(tree::Leaf)=tree.mean
 
 fittedratio(tree::Tree)=fittedratio(tree.rootnode)
-fittedratio(tree::Node)=numeratorsum(tree)/denominatorsum(tree) #((nodesize(tree.left)*fittedratio(tree.left)+nodesize(tree.right)*fittedratio(tree.right))/nodesize(tree))
+function fittedratio(tree::Node{T}) where T<:Unsigned 
+return numeratorsum(tree)/denominatorsum(tree)
+end #((nodesize(tree.left)*fittedratio(tree.left)+nodesize(tree.right)*fittedratio(tree.right))/nodesize(tree))
 fittedratio(tree::Leaf)=numeratorsum(tree)/denominatorsum(tree)
 
 numeratorsum(tree::Tree)=numeratorsum(tree.rootnode)
-numeratorsum(tree::Node)=numeratorsum(tree.left)+numeratorsum(tree.right)
+function numeratorsum(tree::Node{T}) where T<:Unsigned 
+return numeratorsum(tree.left)+numeratorsum(tree.right)
+end
 numeratorsum(x::Leaf)=x.sumnumerator
 
 denominatorsum(tree::Tree)=denominatorsum(tree.rootnode)
-denominatorsum(tree::Node)=denominatorsum(tree.left)+denominatorsum(tree.right)
+function denominatorsum(tree::Node{T}) where T<:Unsigned  
+return denominatorsum(tree.left)+denominatorsum(tree.right)
+end
 denominatorsum(x::Leaf)=x.sumdenominator
 
 nodesize(tree::Tree)=nodesize(tree.rootnode)
-nodesize(tree::Node)=nodesize(tree.left)+nodesize(tree.right)
+	function nodesize(tree::Node{T}) where T<:Unsigned 
+return nodesize(tree.left)+nodesize(tree.right)
+end
 nodesize(tree::Leaf)=tree.size
 
 rowcount(tree::Tree)=rowcount(tree.rootnode)
-rowcount(tree::Node)=rowcount(tree.left)+rowcount(tree.right)
+function rowcount(tree::Node{T}) where T<:Unsigned  
+return rowcount(tree.left)+rowcount(tree.right)
+end
 rowcount(tree::Leaf)=tree.rowcount::Int
 
 maxdepth(tree::Tree)=maxdepth(tree.rootnode)
-maxdepth(tree::Node)=(1+max(maxdepth(tree.left),maxdepth(tree.right)))
+function maxdepth(tree::Node{T}) where T<:Unsigned  
+return (1+max(maxdepth(tree.left),maxdepth(tree.right)))
+end
 maxdepth(tree::Leaf)=0
 
 #helperfunctions
@@ -4373,7 +4387,7 @@ function vba_write_writeIterations(indent::Int,fiostream::IOStream,iteration::In
 	return nothing
 end
 
-function vba_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream::IOStream,tree::Node,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features::Int)
+function vba_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream::IOStream,tree::Node{T},boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features::Int) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 	write(fiostream," " ^ indent)
@@ -4860,7 +4874,7 @@ function csharp_write_writeIterations(indent::Int,fiostream::IOStream,iteration:
 	return nothing
 end
 
-function csharp_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream::IOStream,tree::Node,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features::Int)
+function csharp_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream::IOStream,tree::Node{T},boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features::Int) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 	write(fiostream," " ^ indent)
@@ -5139,13 +5153,22 @@ promote_rule(::Type{Node{UInt16}}, ::Type{Leaf}) = Node{UInt16}
 promote_rule(::Type{Leaf}, ::Type{Node{UInt8}}) = Node{UInt8}
 promote_rule(::Type{Leaf}, ::Type{Node{UInt16}}) = Node{UInt16}
 depth(leaf::Leaf) = 0
-depth(tree::Node) = 1 + max(depth(tree.left), depth(tree.right))
+function depth(tree::Node{T}) where T<:Unsigned  
+return  1 + max(depth(tree.left), depth(tree.right))
+end
 depth(tree::Tree) = depth(tree.rootnode)
 create_leaves_array(t::Tree)=create_leaves_array(t.rootnode)
-create_leaves_array(t::Node)=vcat(create_leaves_array(t.left),create_leaves_array(t.right)) #warning! it is essential that this concept/order of number of the leaves is consistent with the apply_tree_fn for validation data where we derive the leaf number for val
+function create_leaves_array(t::Node{T}) where T<:Unsigned 
+    return vcat(create_leaves_array(t.left),create_leaves_array(t.right)) 
+#warning! it is essential that this concept/order of
+# number of the leaves is consistent with the apply_tree_fn for validation data where we derive the leaf number for val
+end
+
 create_leaves_array(x::Leaf)=[x]
 number_of_nodes(t::Tree)=number_of_nodes(t.rootnode)
-number_of_nodes(t::Node)=1+number_of_nodes(t.left)+number_of_nodes(t.right)
+function number_of_nodes(t::Node{T}) where T<:Unsigned
+    return 1+number_of_nodes(t.left)+number_of_nodes(t.right)
+end
 number_of_nodes(l::Leaf)=0
 
 

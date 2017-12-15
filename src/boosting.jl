@@ -35,7 +35,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	#intCharVarsUsed=Array{Array{Array{Int,1},1}}(0);sizehint!(intCharVarsUsed,iterations)
 	#char_inds_considered=Array{Array{Int64,1}}(0);sizehint!(char_inds_considered,iterations)
 	
-	res=Array{Union{Leaf,Node}}(iterations)
+	res=Array{Union{Leaf,Node{UInt8},Node{UInt16}}}(iterations)
 	if boolProduceEstAndLeafMatrices
 		est_matrix=Array{Float64}(obs,iterations+1)
 		est_matrixFromScores=deepcopy(est_matrix)

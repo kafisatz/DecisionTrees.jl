@@ -3,7 +3,7 @@ function apply_tree_by_leaf(idx::Vector{Int},leaves_of_tree::Array{Leaf,1},t::Tr
 	return apply_tree_by_leaf(idx,leaves_of_tree,t.rootnode,features)
 end
 
-function apply_tree_by_leaf!(fit::Vector{Float64},leaf::Vector{Int},idx::Vector{Int},t::Union{Leaf,Node},features::DataFrame)  
+function apply_tree_by_leaf!(fit::Vector{Float64},leaf::Vector{Int},idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt16}},features::DataFrame)  
   nobs=size(features,1) 
   @assert nobs==length(fit)==length(leaf)
   #rpvector=[x.rule_path for x in leaves_of_tree] #rule_path of each leaf is used to identify a leaf in the following (this could probably be done more efficiently) todo/tbd
@@ -11,7 +11,7 @@ function apply_tree_by_leaf!(fit::Vector{Float64},leaf::Vector{Int},idx::Vector{
 return nothing
 end
   
-function apply_tree_by_leaf(idx::Vector{Int},t::Union{Leaf,Node},features::DataFrame)  
+function apply_tree_by_leaf(idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt16}},features::DataFrame)  
   #as we always supply an index here, the function will always return two arrays of length size(features,2)
   #thus the "training" observations will be empty if this function is called on a validation index only!!
   nobs=size(features,1) 
