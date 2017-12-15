@@ -176,7 +176,7 @@ end
 
 
 function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
-    warn("this requires testing!..")
+    warn("This requires testing especially when nprocs()>2")
     #if folds<0 then we consider n disjoint training sets
     
     #currently we have trhee possible CVs
@@ -269,9 +269,9 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CV
         sendto_module(DecisionTrees,workers(),local_data_dict=deepcopy(di))
         
         #run all models in parallel
+        warn("this is currently terribly slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
             pmapresult=pmap(iLoop -> run_cvsample_on_a_process(iLoop,local_data_dict),1:length(cvsampler))
-                
-        @show 119.1
+                       
         #2. run models   
         for pmap_entry in pmapresult# this_sample in cvsampler
             numbrs=pmap_entry[1]

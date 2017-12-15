@@ -1861,8 +1861,7 @@ end
 function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstartingpoints::Array{Int64,1}
 ,numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn
 ,numeratorval,denominatorval,weightval,numeratorEstval,scoresval)
-		nClasses=length(scorebandsstartingpoints)
-		#@show extrema(scorestrn),extrema(scoresval)
+		nClasses=length(scorebandsstartingpoints)		
 		sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn=aggregateScores(numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn,scorebandsstartingpoints)
 		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,numeratorEstval,scoresval,scorebandsstartingpoints)		
 		normalized_unweighted_gini_numeratorTrn=1.0 #normalized_gini(numeratortrn,numeratorEsttrn) #currently disabled gini takes a LOT of time especially due to sorting
@@ -3856,8 +3855,7 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 
 	#aggregate scores
 	numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore=aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
-	#smooth scores	
-	warn("BEFORE THIS WAS BASED ON rawObservedRatioPerScore INSTEAD OFaggregatedModelledRatioPerScore. POSSILBY INTRODUCE A BOOLEAN HERE!")
+	#smooth scores		
 	#deriveFitPerScoreFromObservedRatios::Bool (if this is true then the fit per score will be based on the observed ratio per score (instead of the fitted ratio per score)) . Note that this does not influence the structure of the tree, but only the fitted ratio per score (and scoreband)	
 	referenceVec = deriveFitPerScoreFromObservedRatios ? rawObservedRatioPerScore : aggregatedModelledRatioPerScore
 	estimatedRatioPerScore=smooth_scores(referenceVec,print_details,boolSmoothingEnabled)		

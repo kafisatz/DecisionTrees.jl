@@ -108,33 +108,23 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
                     MatrixOfLeafNumbers[:,iter+1]=reused_fitted_leafnr_vector #leaf_numbers(vectorOfLeafArrays[1+iter],obs) #TODO / TBD adjust this for subsampling. this may not work properly, as each tree will use a different amount of data AND DIFFERENT OBSERVATIONS! thus we cannot rely on the *.idx field of the leaves!			
             end			
 			#Moderate the estimate, this is done for BOTH trn and val!
-			#@show current_mdf
-			#@show sort!(unique(estimatedRatio))
-			#@show sort!(unique(indicatedRelativityForApplyTree_reused))
-			_moderate!(estimatedRatio,indicatedRelativityForApplyTree_reused,current_mdf)
-			#@show sort!(unique(estimatedRatio))			
+			_moderate!(estimatedRatio,indicatedRelativityForApplyTree_reused,current_mdf)			
 			if boolProduceEstAndLeafMatrices
 				write_column!(est_matrix,iter+1,estimatedRatio)
 			end
-			update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)	
-			@show sort!(unique(estimatedRatio))
+			update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)				
 		#Derive Scores for this iteration #NOTE (tbd/todo: keep in mind) For large datasets (>5m rows) the sorting in construct scores may become a dominant part of the algorithm
 			maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nscoresPotentiallyReduced=constructANDderiveScores!(trnidx,validx,sortvec_reused_trn_only,estimatedRatio,currentRelativity,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett)
 			update_and_derive_scores!(scores,maxRawRelativityPerScoreSorted,currentRelativity)			
-		#Define estimated Numerator
-		@show sett.smoothEstimates				
+		#Define estimated Numerator		
 			sett.smoothEstimates=="0" ? referenceForNumEstimates=rawObservedRatioPerScore : referenceForNumEstimates=MAPPINGSmoothedEstimatePerScore
-			@show unique(referenceForNumEstimates)			
-			@show unique(rawObservedRatioPerScore)
-			@show unique(MAPPINGSmoothedEstimatePerScore)
 			update_mapped_estFromScores!(estFromScores,referenceForNumEstimates,scores)
 			#estFromScores=map(x->referenceForNumEstimates[x],scores)	
 			if boolProduceEstAndLeafMatrices
 				write_column!(est_matrixFromScores,iter+1,estFromScores)
 			end
 		#Derive Cumulative Statistics
-			 #todo tbd there is potential for optimization here
-			 @show unique(view(estFromScores,trnidx))
+			 #todo tbd there is potential for optimization here			 
 			statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,iter,sett.scorebandsstartingpoints,view(actualNumerator,trnidx),view(denominator,trnidx),view(weight,trnidx),view(estFromScores,trnidx),view(scores,trnidx),view(actualNumerator,validx),view(denominator,validx),view(weight,validx),view(estFromScores,validx),view(scores,validx))			
 			statsPerIteration=vcat(statsPerIteration,singleRowWithKeyMetrics)
 			if iter==1
@@ -216,4 +206,3 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	return xlData,estimatedRatio,MatrixOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultingBT
 end
 
-#@show "this is the end of the file boosting.jl"
