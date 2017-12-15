@@ -22,7 +22,7 @@ function apply_tree_by_leaf(idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt
   return fit,leaf
 end
 
-function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node,features::DataFrame,fit::Vector{Float64},leaf::Vector{Int})
+function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::DataFrame,fit::Vector{Float64},leaf::Vector{Int}) where T<:Unsigned
 	 if length(idx)==0
        info("DTM: No data (an empty index) was provided to apply tree function")  #@show "mix"
         return nothing
