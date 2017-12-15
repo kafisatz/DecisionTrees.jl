@@ -554,9 +554,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		else
 			tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
 		end
-		@show tree.rootnode.featid
-		@show tree.rootnode.subset
-
+		
 		resulting_model=tree
 		prnt&&println("Deriving Trn Estimates... Time: $(now())")
 		leaves_of_tree=create_leaves_array(tree)
