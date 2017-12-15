@@ -1871,8 +1871,8 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		qwkappaVal=tryQWKappa(numeratorval,numeratorEstval)
 		observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
 		cumulativeStatsMatrix=[description sumweighttrn sumweightval sumnumeratortrn sumnumeratorval sumdenominatortrn sumdenominatorval observedratiotrn observedratioval sumnumeratorEstimatetrn sumnumeratorEstimateval fittedratiotrn fittedratioval relativitytrn relativityval]
-		reltrntitle="Relativity Trn" #this is used for the charts
-		header=["Cumulative Stats n=$(iter)" "Weight Trn" "Weight Val" "Numerator Trn" "Numerator Val" "Denominator Trn" "Denominator Val" "Observed Ratio Trn" "Observed Ratio Val" "Numerator Est Trn" "Numerator Est Val" "Fitted Ratio Trn" "Fitted Ratio Val" reltrntitle "Relativity Val"]
+		reltrntitle="Relativity Trn (Observed)" #this is used for the charts
+		header=["Cumulative Stats n=$(iter)" "Weight Trn" "Weight Val" "Numerator Trn" "Numerator Val" "Denominator Trn" "Denominator Val" "Observed Ratio Trn" "Observed Ratio Val" "Numerator Est Trn" "Numerator Est Val" "Fitted Ratio Trn" "Fitted Ratio Val" reltrntitle "Relativity Val (Observed)"]
 		columnOfRelativityTrn=findin(header,[reltrntitle])[1]
 		cumulativeStatsMatrix=vcat(header,cumulativeStatsMatrix)
 		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal qwkappaTrn qwkappaVal]
@@ -3791,9 +3791,6 @@ return rowCountPerUniqueRelativity,weightPerUniqueRelativity
 end
 
 function sum_up_ratios!(rawObservedRatioPerScore,aggregatedModelledRatioPerScore,idx::Int,numerator_srt,numeratorEstimatedPerRow_srt,denominator_srt,previdx::Int,nextidx::Int)
-	#rawObservedRatioPerScore[i]=			sum(view(numerator_srt,previdx:nextidx))/sum(view(denominator_srt,previdx:nextidx))
-	#aggregatedModelledRatioPerScore[i]=	sum(view(numeratorEstimatedPerRow_srt,previdx:nextidx))/sum(view(denominator_srt,previdx:nextidx)) #todo/tbd someone should check whether we do not have any redundancy here
-	#sum_up_ratios!(rawObservedRatioPerScore,aggregatedModelledRatioPerScore,i,numerator_srt,numeratorEstimatedPerRow_srt,denominator_srt,previdx,nextidx)		 
 	nest=0.0
 	n=0.0
 	d=0.0	
@@ -3807,84 +3804,22 @@ function sum_up_ratios!(rawObservedRatioPerScore,aggregatedModelledRatioPerScore
 	return nothing
 end
 
-function constructANDderiveScores_old!(trnidx::Vector{Int},validx::Vector{Int},sortvec_reused::Vector{Int},estimatedRatio::Array{Float64,1},relativities::Array{Float64,1},actualNumerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},meanobservedvalue::Float64,currentIteration::Int,sett::ModelSettings)
-	nscores=sett.nscores
-	smooth=sett.smoothEstimates
-	print_details=sett.print_details
-	boolSmoothingEnabled=!(smooth=="0")
-	#derive Scores from relativities
-	uniqueRelativitiesSorted=unique(view(relativities,trnidx)) #this line allocates a MAJOR part of the memory (~40% in some cases) of the whole algorithm
-	sort!(uniqueRelativitiesSorted,alg=QuickSort)
-	ns=min(nscores,size(uniqueRelativitiesSorted,1))
-	#ns<nscores&&warn("There are only $(ns) distinct relativities. Number of scores will be limited to $(ns) instead of $(nscores).")
-	aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=constructScores!(trnidx,validx,sortvec_reused,estimatedRatio,relativities,uniqueRelativitiesSorted,actualNumerator,denominator,weight,meanobservedvalue,ns,nscores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
-return maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,uniqueRelativitiesSorted,ns
-end
-
-function constructScores_old!(trnidx::Vector{Int},validx::Vector{Int},srt::Vector{Int},estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},uniqueRelativitiesSorted::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nscoresPotentiallyReduced::Int,nscores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
-	@assert nscores>=nscoresPotentiallyReduced
-	maxItersForSmoothing=0
-    #todo,tbd this can probably be done more efficiently
-    raw_rel=view(raw_rel_full_vec,trnidx)
-    weight=view(weight_full_vec,trnidx)
-    numerator=view(numerator_full_vec,trnidx)
-    denominator=view(denominator_full_vec,trnidx)
-    estimatedRatioPerRow=view(estimatedRatioPerRow_full_vec,trnidx)
-	
-	#warn("remove this");writecsv("C:\\temp\\raw_rel.csv",raw_rel)
-	#srt::Vector{Int}=sortperm(raw_rel,alg=QuickSort) #we could use RadixSort here, it uses about 40m of memory for 5m obs, AND I am unsure how easy it is to get the permutation (compared to sorting in place). But the algorithm is about 50% faster for random floats than QuickSort.
-	#sortperm!(srt,raw_rel,alg=QuickSort)
-	my_sortperm_you_should_regularily_check_if_sortperm_in_base_has_become_more_efficient!(srt,raw_rel) #we could use RadixSort here, it uses about 40m of memory for 5m obs, AND I am unsure how easy it is to get the permutation (compared to sorting in place). But the algorithm is about 50% faster for random floats than QuickSort.
-	obs=length(raw_rel)
-	raw_rel_srt=view(raw_rel,srt)
-	weight_srt=view(weight,srt)
-	estimatedRatioPerRow_srt=view(estimatedRatioPerRow,srt)
-	denominator_srt=view(denominator,srt)
-	numerator_srt=view(numerator,srt)
-
-	rowCountPerUniqueRelativity::Vector{Int64},weightPerUniqueRelativity::Vector{Float64}=deriveRowCountAndWeight(weight_srt,raw_rel_srt,uniqueRelativitiesSorted)
-	
-	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt
-	wtot=sum(weight_srt)
-	wperscore=wtot/nscoresPotentiallyReduced
-	scoreEndPoints=zeros(Int,nscoresPotentiallyReduced)
-	scoreEndPoints[end]=size(weight_srt,1)
-	vectorWeightPerScore=Array{Float64}(nscoresPotentiallyReduced)
-	cumulativeNumberOfDistinctRawRelativitesPerScore=zeros(Int,nscoresPotentiallyReduced)
-
-	nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step_old!(nscoresPotentiallyReduced,wperscore,uniqueRelativitiesSorted,weightPerUniqueRelativity,rowCountPerUniqueRelativity,cumulativeNumberOfDistinctRawRelativitesPerScore,scoreEndPoints,vectorWeightPerScore)
-	
-	obsPerScore=copy(scoreEndPoints)
-	cumulativeToIncremental!(obsPerScore)
-	cumulativeToIncremental!(vectorWeightPerScore)
-
-	#aggregate scores
-	numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore=aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
-	#smooth scores
-	estimatedRatioPerScore=smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabled)	
-	#insert gaps if necessary
-	insert_gaps_to_scores!(wtot,nscores,nscoresPotentiallyReducedTWOTimes,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
-
-	return aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore
-end
-
 function constructANDderiveScores!(trnidx::Vector{Int},validx::Vector{Int},sortvec_reused::Vector{Int},estimatedRatio::Array{Float64,1},relativities::Array{Float64,1},actualNumerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},meanobservedvalue::Float64,currentIteration::Int,sett::ModelSettings)
+	deriveFitPerScoreFromObservedRatios=sett.deriveFitPerScoreFromObservedRatios
 	nscores=sett.nscores
 	smooth=sett.smoothEstimates
 	print_details=sett.print_details
 	boolSmoothingEnabled=!(smooth=="0")
-	aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=constructScores!(trnidx,validx,sortvec_reused,estimatedRatio,relativities,actualNumerator,denominator,weight,meanobservedvalue,nscores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
+	aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=constructScores!(deriveFitPerScoreFromObservedRatios,trnidx,validx,sortvec_reused,estimatedRatio,relativities,actualNumerator,denominator,weight,meanobservedvalue,nscores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
 return maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nscores
 end
 
-function constructScores!(trnidx::Vector{Int},validx::Vector{Int},srt::Vector{Int},estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nscores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
+function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vector{Int},validx::Vector{Int},srt::Vector{Int},estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nscores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
 	#@assert nscores>=nscoresPotentiallyReduced
 	maxItersForSmoothing=0
     #todo,tbd this can probably be done more efficiently
-	raw_rel=view(raw_rel_full_vec,trnidx)
-	#uq=unique(raw_rel);@show size(uq)
-	#@show uq
-    weight=view(weight_full_vec,trnidx)
+	raw_rel=view(raw_rel_full_vec,trnidx)	
+	weight=view(weight_full_vec,trnidx)
     numerator=view(numerator_full_vec,trnidx)
     denominator=view(denominator_full_vec,trnidx)
     estimatedRatioPerRow=view(estimatedRatioPerRow_full_vec,trnidx)
@@ -3895,15 +3830,17 @@ function constructScores!(trnidx::Vector{Int},validx::Vector{Int},srt::Vector{In
 	my_sortperm_you_should_regularily_check_if_sortperm_in_base_has_become_more_efficient!(srt,raw_rel) #we could use RadixSort here, it uses about 40m of memory for 5m obs, AND I am unsure how easy it is to get the permutation (compared to sorting in place). But the algorithm is about 50% faster for random floats than QuickSort.
 	obs=length(raw_rel)
 	raw_rel_srt=view(raw_rel,srt)
+	#@show unique(raw_rel_srt) #this is moderated and has 'little' spread for small mf
 	weight_srt=view(weight,srt)
 	estimatedRatioPerRow_srt=view(estimatedRatioPerRow,srt)
+	#@show unique(estimatedRatioPerRow_srt) #this is moderated and has 'little' spread for small mf
 	denominator_srt=view(denominator,srt)
 	numerator_srt=view(numerator,srt)
 
 	#rowCountPerUniqueRelativity::Vector{Int64},weightPerUniqueRelativity::Vector{Float64}=deriveRowCountAndWeight(weight_srt,raw_rel_srt,uniqueRelativitiesSorted)
 	weightPerUniqueRelativity=weight_srt
 	
-	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt
+	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt	
 	wtot=sum(weight_srt)
 	wperscore=wtot/nscores
 	scoreEndPoints=zeros(Int,nscores)
@@ -3919,8 +3856,11 @@ function constructScores!(trnidx::Vector{Int},validx::Vector{Int},srt::Vector{In
 
 	#aggregate scores
 	numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore=aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
-	#smooth scores
-	estimatedRatioPerScore=smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabled)	
+	#smooth scores	
+	warn("BEFORE THIS WAS BASED ON rawObservedRatioPerScore INSTEAD OFaggregatedModelledRatioPerScore. POSSILBY INTRODUCE A BOOLEAN HERE!")
+	#deriveFitPerScoreFromObservedRatios::Bool (if this is true then the fit per score will be based on the observed ratio per score (instead of the fitted ratio per score)) . Note that this does not influence the structure of the tree, but only the fitted ratio per score (and scoreband)	
+	referenceVec = deriveFitPerScoreFromObservedRatios ? rawObservedRatioPerScore : aggregatedModelledRatioPerScore
+	estimatedRatioPerScore=smooth_scores(referenceVec,print_details,boolSmoothingEnabled)		
 	#insert gaps if necessary
 	insert_gaps_to_scores!(wtot,nscores,nscoresPotentiallyReducedTWOTimes,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
 
@@ -4073,11 +4013,14 @@ function aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPo
 		end
 		previdx=scoreEndPoints[i]
 	end
+	#@show 1,extrema(numeratorEstimatedPerRow_srt.-numerator_srt) #these are different
+	#@show 2,extrema(aggregatedModelledRatioPerScore.-rawObservedRatioPerScore) #these are different
 	return numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore
 end
 
-
-function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabled)		
+function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabled)	
+	#notably the smoothing here is performed regardless of the value of boolSmoothingEnabled
+	#however the Excel (and other stats) will show different figures depending on the value of sett.smoothestimates ("0" or "1")
 		maxItersForSmoothing=0
 		#smooth the scores
 		estimatedRatioPerScore=copy(rawObservedRatioPerScore)
@@ -4100,8 +4043,7 @@ function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabl
 					i=0
 					sumrev=typemax(Int)
 					maxiterNotReached=true
-					revs=max(10,convert(Int,round(size(estimatedRatioPerScore,1)/100)))
-					#mat=Array{Float64}(size(rawObservedRatioPerScore,1),0)
+					revs=max(10,convert(Int,round(size(estimatedRatioPerScore,1)/100)))					
 					#arbitrary number of 10 passes which is always done (if there are still reversions)
 					while (i<min(maxiterNotReached,10)&&sumrev>0)||((sumrev>revs)&&maxiterNotReached) #todo/tbd simplify this: What exactly do we want to achieve here!? what is our approach?
 						i+=1

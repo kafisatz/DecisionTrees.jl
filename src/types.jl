@@ -2,7 +2,7 @@
 import Base: length,start,next,done,eltype,==,hash
 
 export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree
-export ModelSettings,updateSettings!
+export ModelSettings,updateSettings!,copySettingsToCurrentType
 #export getindex
 
     struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
@@ -287,6 +287,7 @@ mutable struct ModelSettings
 	scorebandsstartingpoints::Array{Int64,1} #44
 	showTimeUsedByEachIteration::Bool #45
 	smoothEstimates::String #46
+	deriveFitPerScoreFromObservedRatios::Bool #deriveFitPerScoreFromObservedRatios::Bool (if this is true then the fit per score will be based on the observed ratio per score (instead of the fitted ratio per score)) . Note that this does not influence the structure of the tree, but only the fitted ratio per score (and scoreband)
     roptForcedPremIncr::Bool #47
     premStep::Float64 #48
 	write_sas_code::Bool #49
@@ -371,7 +372,8 @@ mutable struct ModelSettings
 	scorebandsstartingpoints=[parse(Int,x) for x in split("1,100,200,300,400,500,600,700,800,900",',')] #scorebandsstartingpoints=parse(Int,split("1,100,200,300,400,500,600,700,800,900",',')) #44
 	showTimeUsedByEachIteration=false #true #45
 	smoothEstimates="1" #46 this is a string for now (as there could be different smoothing methods specified by this string)
-    roptForcedPremIncr=false #47
+	deriveFitPerScoreFromObservedRatios=true
+	roptForcedPremIncr=false #47
     premStep=-0.01 #48
 	write_sas_code=true #49
 	write_iteration_matrix=false#50
@@ -407,7 +409,7 @@ mutable struct ModelSettings
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
 
-	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph
+	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph
 	 ,ncolsdfIndata,ishift,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
   end  # ModelSettings()
 
@@ -553,6 +555,39 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 	res=checkIfSettingsAreValid(s)
 	@assert res==nothing "Some settings are invalid! Abort."
 	return nothing
+end
+
+function copySettingsToCurrentType(oldSetting)
+	s=ModelSettings()
+	newfields=fieldnames(s)
+	oldfields=fieldnames(oldSetting)    
+	
+	for field in fieldnames(oldSetting)
+		if in(field,newfields)
+			v=getfield(oldSetting,field)
+			setfield!(s,field,v)
+		end
+    end
+	
+	#consider new and dropped fields
+		newfs=setdiff(newfields,oldfields)
+		droppedfs=setdiff(oldfields,newfields)
+	info("DTM: Copied settings to new type.")
+	if length(newfs)>0
+		info("DTM: New type has the following new fields:")	
+		for f in newfs        
+			v=getfield(s,f)
+			@show f,v
+		end
+	end
+	if length(droppedfs)>0
+		info("DTM: Old type had the following fields which were dropped:")	
+		for f in droppedfs        
+			v=getfield(oldSetting,f)
+			@show f,v
+		end
+	end
+    return s
 end
 
 function updateSettingsMod!(s::ModelSettings;args...)

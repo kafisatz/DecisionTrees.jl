@@ -501,7 +501,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
         char_level_string=""
         prnt&&println("The data does not contain any character attributes.")
       end
-	  prnt&&println("catSortByThreshold: $(sett.catSortByThreshold), catSortBy: $(sett.catSortBy), smoothEstimates: $(sett.smoothEstimates)")
+	  prnt&&println("catSortByThreshold: $(sett.catSortByThreshold), catSortBy: $(sett.catSortBy), smoothEstimates: $(sett.smoothEstimates), deriveFitPerScoreFromObservedRatios: $(sett.deriveFitPerScoreFromObservedRatios)")
 
   #create a string which contains all model settings (this will be written to output file(s))
       model_setting_string=convert(String,string("Number of records - Trn: $(length(trnidx)) Val: $(sum(validx)) \nNumber of levels for numeric variables: (Maximal # of linear steps: $(sett.max_splitting_points_num)) "))
@@ -538,7 +538,11 @@ prnt&&println("---Model Settings------------------------------------------------
 
 	#build a simple tree
 		fitted_values_tree=zeros(numerator)		
-		@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
+		if prnt
+			@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
+		else
+			tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
+		end
 		resulting_model=tree
 		prnt&&println("Deriving Trn Estimates... Time: $(now())")
 		leaves_of_tree=create_leaves_array(tree)
@@ -603,12 +607,7 @@ prnt&&println("---Model Settings------------------------------------------------
 				isfile(sas_code_file)&&rm(sas_code_file)
 				@time write_sas_code(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings,1.0)
 				push!(filelistWithFilesToBeZipped,sas_code_file)
-			end
-		#Write result to CSV
-		#writecsv(this_outfile,res)
-		#prrr=sortperm(float.(res)[:,1])
-		#res[:,2]=round.(res[:,2],13)
-		#writecsv(string(this_outfile,"sorted"),res[prrr,:])
+			end		
 			if sett.write_result
 				println("Exporting Data: \n $(this_outfile)")
 				isfile(this_outfile)&&rm(this_outfile)
