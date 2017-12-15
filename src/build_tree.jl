@@ -78,7 +78,8 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 	boolMDFPerLeaf=false #this is disabled here
     fnames=names(features)
 	#@code_warntype _split(settings.number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames,features, minweight, depth,randomweight,crit,parallel_level_threshold,parallel_weight_threshold,inds,catSortByThreshold,catSortBy)
-	best_split = _split(settings.number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames,features, minweight, depth,randomweight,crit,parallel_level_threshold,parallel_weight_threshold,inds,catSortByThreshold,catSortBy)
+	T=find_max_type(features) #::U #::Union{UInt8,UInt16,UInt32}
+	best_split = _split(one(T),settings.number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames,features, minweight, depth,randomweight,crit,parallel_level_threshold,parallel_weight_threshold,inds,catSortByThreshold,catSortBy)
 	id=best_split.featid
 	subset=best_split.subset
 	fname=best_split.featurename
@@ -200,18 +201,18 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 return Node(id,id2,subset,fetched_left,fetched_right,parent_rp)::Node
 end
 
-function _split(number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int64,randomweight::Float64,crit::SplittingCriterion,parallel_level_threshold::Int64=9999999999,parallel_weight_threshold::Int64=9999999999,inds::Array{Int64,1}=Array{Int64}(0),catSortByThreshold::Int64=8,catSortBy::SortBy=SORTBYMEAN)
-  #This function selects the maximal possible split defined by crit (thus depending on the impurity function, we need to put a minus sign in front of it)
+function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int64,randomweight::Float64,crit::SplittingCriterion,parallel_level_threshold::Int64=9999999999,parallel_weight_threshold::Int64=9999999999,inds::Array{Int64,1}=Array{Int64}(0),catSortByThreshold::Int64=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned
+	#This function selects the maximal possible split defined by crit (thus depending on the impurity function, we need to put a minus sign in front of it)
 		tmpsz::Int=0
 		if sum(view(weight,trnidx))<2*minweight;
-			return const_default_splitdef::Splitdef;
+			return const_default_splitdef::Splitdef{T};
 		end
-		tmp_splitlist=Array{Splitdef}(0)
+		tmp_splitlist=Vector{Splitdef{T}}(0)
 		for i in inds
 			#ATTENTION: for char variables we pass the variable i with a negative sing!!
 			#this allows us to distinguish whether we are working on a char or num variable later on
 			modified_i = eltype(features[i])<:AbstractString ? number_of_num_features - i  :  i 
-			tmplist::Vector{Splitdef}=_split_feature(number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef}
+			tmplist::Vector{Splitdef{T}}=_split_feature(val_of_some_UInt_type,number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef{T}}
 			append!(tmp_splitlist,tmplist)
 		end
 
@@ -223,36 +224,36 @@ function _split(number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{I
 				if !(size(tmp_splitlist,1)>0)
 					return const_default_splitdef
 				else
-            splitlist_sorted::Vector{Splitdef}=sort_splitlist(tmp_splitlist)::Vector{Splitdef}
+            splitlist_sorted::Vector{Splitdef{T}}=sort_splitlist(tmp_splitlist)::Vector{Splitdef{T}}
 						tmpsz=size(splitlist_sorted,1)::Int
 						if tmpsz>0 #can it be that splitlist_sorted is empty even though tmp_splitlist was not? I think so!
 							#randomize choice
-							spl::Splitdef=splitlist_sorted[1]
+							spl::Splitdef{T}=splitlist_sorted[1]
 							if randomweight>0 #((depth==0) && (randomweight>0))
 								rnd=Int64(max(1,min(tmpsz,ceil(rand()*randomweight*tmpsz)))) #I am not sure if it can happen that rnd becomes 0 if we do not impose the max(1,...) condition. But it seems safe to enforce it in case an incredibly small random number is generated
-								spl=splitlist_sorted[rnd]::Splitdef
+								spl=splitlist_sorted[rnd]::Splitdef{T}
 							else #randomweight<=0
 								#deterministic choice (greedy)
-								spl=splitlist_sorted[1]::Splitdef
+								spl=splitlist_sorted[1]::Splitdef{T}
 							end #"if condition randomweight>0"
 
 							if isfinite(spl.splitvalue) && (spl.featid<0)				
 								#For Character variables: The split can be defined by the subset or its complement, We choose to define it via the subset which defines the smaller child node such that when new values arrive (in out of sample testing) they will "go with the larger child node"
 								if spl.weightl>spl.weightr
-										lvls::Vector{UInt8}=unique(view(features[spl.featid_new_positive].refs,trnidx))::Vector{UInt8}
-										spl=Splitdef(spl.featid,spl.featid_new_positive,spl.featurename,setdiff(lvls,spl.subset),spl.splitvalue,spl.weightl,spl.weightr)::Splitdef
+										lvls=unique(view(features[spl.featid_new_positive].refs,trnidx))
+										spl=Splitdef(spl.featid,spl.featid_new_positive,spl.featurename,setdiff(lvls,spl.subset),spl.splitvalue,spl.weightl,spl.weightr)::Splitdef{T}
 								end
 							end #isfinite(best_value_split) && (best[1]<0)
 						end #size(splitlist_sorted,1)>0
         end #size(tmp_splitlist,1)>0
 		end #size(tmp_splitlist,1)>0
 		
-return spl::Splitdef
+return spl::Splitdef{T}
 end
 
 
 #new approach; first summarize by label, then iterate over the gray code such that only one category needs to switch classes and "online" update the metrics
-function _split_feature(number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fname::Symbol,features,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int64,randomweight::Float64,catSortByThreshold::Int64,catSortBy::SortBy)
+function _split_feature(return_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fname::Symbol,features,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int64,randomweight::Float64,catSortByThreshold::Int64,catSortBy::SortBy) where T<:Unsigned
 crit_type=typeof(crit)
 #This function is now for numeric and character variables!
 #feature_column_id is negative in case of character variables
@@ -261,7 +262,6 @@ best_thresh=best_wl=best_wr=NaN
 best_subset=Array{UInt8}(0)
 trnfeatures=view(features,trnidx)
 elt=eltype(trnfeatures.parent.refs)
-#if randomweight>0;this_splitlist=Array{Splitdef}(0);end;
   labellist_sorted=collect(one(elt):convert(elt,length(trnfeatures.parent.pool))) #this used to be levels(features) #this also contains the val feature levels here! It is considerably faster than levels(view) \factor 100 or so
 	# THIS IS CRITICAL
 	# THE WAY A PooledArray IS CONSTRUCTED, WE WILL ALWAYS HAVE
@@ -269,7 +269,7 @@ elt=eltype(trnfeatures.parent.refs)
 	#todo/tbd countsort here might be obsolete: we should check if levels is always sorted by construction
   #also we will later sort the labels in a different order anyway (then again the list probably needs to be sorted in the natural manner such that build_listOfMeanResponse is working properly)
   if size(labellist_sorted,1) <= 1
-    return collect(Array{Splitdef}(0))
+    return collect(Vector{Splitdef{T}}(0))
   else
 	countsort!(labellist_sorted)
     #here I am (somewhat) misusing multiple dispatch since I was too lazy to parametrize this at the moment (todo/tbd in the future)
@@ -313,9 +313,9 @@ elt=eltype(trnfeatures.parent.refs)
     #error("the next step may be incorrect")
     if isfinite(tmp_result[1])
         feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id) + number_of_num_features : feature_column_id
-      return [Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
+      return [Splitdef(feature_column_id,feature_column_id2,fname,Vector{T}(tmp_result[2]),tmp_result[1],tmp_result[3],tmp_result[4])]
     else
-      return collect(Array{Splitdef}(0))
+      return collect(Vector{Splitdef{T}}(0))
     end
   else
   #randomweight>0
@@ -327,7 +327,11 @@ elt=eltype(trnfeatures.parent.refs)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures,feature_column_id)
 		#error("PoissonDevianceSplit is not yet implemented for randomw>0")
 	end
-	return tmpres
+	if eltype(tmpres.subset)==T
+		return tmpres
+	else
+		return Splitdef{T}(tmpres)
+	end
   end
 end
 end

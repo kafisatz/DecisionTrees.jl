@@ -5,6 +5,22 @@ import Base: append!,mean,length,findin,isless,eltype,resize!,convert
 #import MySQL: mysql_query,mysql_display_error,mysql_store_result,mysql_affected_rows,mysql_free_result,mysql_num_fields,mysql_fetch_fields,mysql_num_rows,mysql_get_julia_type,mysql_fetch_row,MYSQL_RES,MYSQL_TYPE,MYSQL_ROW #temporarily disabled
 export createZipFile
 
+#this could certainly be done nice
+#tries to find the 'max' type of the refs (which is likely UInt8 or UInt16)
+function find_max_type(x::DataFrame)
+    for col in 1:size(x,2)
+        if eltype(x[col].refs)==UInt32 
+            return UInt32
+        end
+    end
+    for col in 1:size(x,2)
+        if eltype(x[col].refs)==UInt16
+            return UInt16
+        end
+    end
+    return UInt8
+end
+
 #it is critical to define levels properly for PooledArray
 function Missings.levels(x::PooledArray)
     return deepcopy(x.pool)
@@ -2054,36 +2070,28 @@ function buildStatistics(header,description,sumnumeratortrn,sumdenominatortrn,su
 	return stats,overallstats
 end
 
-function sortlists!(catSortBy::SortByMean,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1})
-#todo/tbd generalize this function for an arbitrary number of input vectors
-	#function for sorting all the lists by the mean
-	meanratioperclass=sumnumerator./sumdenominator
-	srt=sortperm(meanratioperclass,alg=QuickSort)
-	myresort!(labellist,srt)
-	myresort!(sumnumerator,srt)
-	myresort!(sumdenominator,srt)
-	myresort!(sumweight,srt)
-	myresort!(countlistfloat,srt)
-	return nothing
+#todo/tbd find out how to parametrize these functions properly....
+#this syntax does not seem to work when it is called with a labellist::Array{UInt8,1}
+#function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1}) where T<:UInt
+#ERROR: MethodError: no method matching sortlists!(::DecisionTrees.SortByMean, ::Array{UInt8,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1})
+#Closest candidates are:
+#sortlists!(::DecisionTrees.SortByMean, ::Array{T<:UInt64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}) where T<:UInt64 at C:\Users\bernhard.konig\Documents\ASync\home\Code\Julia\DecisionTrees.jl\src\helper_functions.jl:2060
+#sortlists!(::DecisionTrees.SortByMean, ::Array{T<:UInt64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}) where T<:UInt64 at C:\Users\bernhard.konig\Documents\ASync\home\Code\Julia\DecisionTrees.jl\src\helper_functions.jl:2085
+#sortlists!(::DecisionTrees.SortByMean, ::Array{T<:UInt64,1}, ::Array{Int64,1}, ::Array{Float64,1}, ::Array{Float64,1}) where T<:UInt64 at C:\Users\bernhard.konig\Documents\ASync\home\Code\Julia\DecisionTrees.jl\src\helper_functions.jl:2073
+function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1}) where T<:Unsigned
+	#todo/tbd generalize this function for an arbitrary number of input vectors
+		#function for sorting all the lists by the mean
+		meanratioperclass=sumnumerator./sumdenominator
+		srt=sortperm(meanratioperclass,alg=QuickSort)
+		myresort!(labellist,srt)
+		myresort!(sumnumerator,srt)
+		myresort!(sumdenominator,srt)
+		myresort!(sumweight,srt)
+		myresort!(countlistfloat,srt)
+		return nothing
 end
 
-
-function sortlists!(catSortBy::SortByMean,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},moments_per_pdaclass)
-#todo/tbd generalize this function for an arbitrary number of input vectors
-	#function for sorting all the lists by the mean
-	meanratioperclass=sumnumerator./sumdenominator
-	srt=sortperm(meanratioperclass,alg=QuickSort)
-	myresort!(labellist,srt)
-	myresort!(sumnumerator,srt)
-	myresort!(sumdenominator,srt)
-	myresort!(sumweight,srt)
-	myresort!(countlistfloat,srt)
-	myresort!(moments_per_pdaclass,srt)
-	return nothing
-end
-
-
-function sortlists!(catSortBy::SortByMean,labellist::Array{UInt8,1},intSumrklost::Array{Int64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1})
+function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},intSumrklost::Array{Int64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1}) where T<:Unsigned
 	#function for sorting all the lists by the mean
 #	meanratioperclass=sumnumerator./sumdenominator
 	#srt=sortperm(meanratioperclass,alg=QuickSort)
@@ -2094,6 +2102,20 @@ function sortlists!(catSortBy::SortByMean,labellist::Array{UInt8,1},intSumrklost
 	myresort!(sumweight,srt)
 	myresort!(countlistfloat,srt)
 	return nothing
+end
+
+function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},moments_per_pdaclass::Array{Float64,1}) where T<:Unsigned
+	#todo/tbd generalize this function for an arbitrary number of input vectors
+		#function for sorting all the lists by the mean
+		meanratioperclass=sumnumerator./sumdenominator
+		srt=sortperm(meanratioperclass,alg=QuickSort)
+		myresort!(labellist,srt)
+		myresort!(sumnumerator,srt)
+		myresort!(sumdenominator,srt)
+		myresort!(sumweight,srt)
+		myresort!(countlistfloat,srt)
+		myresort!(moments_per_pdaclass,srt)
+		return nothing
 end
 
 function myresort!(x,srt)
@@ -3084,7 +3106,7 @@ end
 
 #write tree code
     for i=1:iterations
-		if typeof(bt.trees[i])==Node
+		if typeof(bt.trees[i])!=Leaf
 			orig_id=bt.trees[i].featid
 			orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 			write(fiostream,"\r\n\r\n*Iteration $(i);\r\n")
@@ -3164,7 +3186,7 @@ fiostream=open(fileloc,"w")
     write(fiostream,"data sas_tree;format ",leafvarname,";set runmodel;;")
     write(fiostream,"\r\n")
 
-if typeof(tree)==Node
+if (typeof(tree)!=Leaf)  #in an earlier version we had ==Node ; however now node has a paramter -> (x==Node{UInt8}||x==Node{UInt16})
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 
@@ -3183,8 +3205,11 @@ if typeof(tree)==Node
 	end
 else
 	#"Tree is not a node (hence it must be a Leaf). Code to write SAS code for a single leaf is not yet implemented"
-	@assert typeof(tree)==Leaf
-	write_tree_at_each_node!(candMatWOMaxValues,tree,number_of_num_features,indent,fiostream,df_name_vector,mappings,leafvarname,mdf)
+	#@assert typeof(tree)==Leaf
+	info("DTM: Tree was a single leaf. No proper SAS Code was produced.")
+	@assert false
+	write(fiostream," /*ERROR; the tree was a single leaf*/")
+	#write_tree_at_each_node!(candMatWOMaxValues,tree,number_of_num_features,indent,fiostream,df_name_vector,mappings,leafvarname,mdf)
 end
   #write rest of SAS code
   write(fiostream,"run; \r\nproc summary data=sas_tree missing;class ",leafvarname,";var &var_dep.;types ",leafvarname,";output out=_summary_( rename=(_freq_=n)) sum=;");
@@ -3407,7 +3432,7 @@ function inverse_permutation(a::Array{T,1}) where {T}
   return res
 end
 
-function sort_splitlist(sd::Array{Splitdef,1})
+function sort_splitlist(sd::Vector{Splitdef{T}}) where T<:Unsigned #::Array{Splitdef,1})
     ar=Array{Float64}(0)
 	sizehint!(ar,size(sd,1))
     #todo, sort by splitvalue, feature_id, threshold and some interpretation of subset
@@ -3423,9 +3448,9 @@ function sort_splitlist(sd::Array{Splitdef,1})
     return sd[p]
 end
 
-function subset_splitlist(sd::Array{Splitdef,1},minweight::Float64)
+function subset_splitlist(sd::Vector{Splitdef{T}},minweight::Float64) where T<:Unsigned
 	#outputs only these members that have enough weight
-	res=Array{Splitdef}(0)
+	res=Vector{Splitdef{T}}(0)
 	for i=1:size(sd,1)
 		if min(sd[i].weightr,sd[i].weightl)>=minweight
 			push!(res,sd[i])
@@ -5109,6 +5134,10 @@ end
 
 promote_rule(::Type{Node}, ::Type{Leaf}) = Node
 promote_rule(::Type{Leaf}, ::Type{Node}) = Node
+promote_rule(::Type{Node{UInt8}}, ::Type{Leaf}) = Node{UInt8}
+promote_rule(::Type{Node{UInt16}}, ::Type{Leaf}) = Node{UInt16}
+promote_rule(::Type{Leaf}, ::Type{Node{UInt8}}) = Node{UInt8}
+promote_rule(::Type{Leaf}, ::Type{Node{UInt16}}) = Node{UInt16}
 depth(leaf::Leaf) = 0
 depth(tree::Node) = 1 + max(depth(tree.left), depth(tree.right))
 depth(tree::Tree) = depth(tree.rootnode)

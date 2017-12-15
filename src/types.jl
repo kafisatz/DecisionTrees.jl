@@ -164,11 +164,11 @@ function Base.getindex(r::DTMTable,idx)
 end
 
 #todo check the difference between immutable and type!! are we using immutables correctly here?
-struct Splitdef #Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
+struct Splitdef{T<:Unsigned} #Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
 	featid::Int64
 	featid_new_positive::Int64
     featurename::Symbol
-    subset::Array{UInt8,1}
+    subset::Array{T,1}
     splitvalue::Float64 #Depends on the criterion function used (e.g. _difference)
     weightl::Float64
     weightr::Float64
@@ -187,9 +187,9 @@ function hash(x::Splitdef,h::UInt64)
   return h
 end
 
-struct Rulepath
+struct Rulepath{T<:Unsigned}
   featid::Int64
-  subset::Array{UInt8,1}
+  subset::Vector{T}
   isLeftChild::Bool
 end
 ==(x::Rulepath,y::Rulepath)= (x.featid==y.featid) && (x.isLeftChild==y.isLeftChild) && (x.subset==y.subset)
@@ -230,12 +230,12 @@ function hash(x::Leaf,h::UInt64)
   return h
 end
 
-struct Node
+struct Node{T<:Unsigned}
     #todo, add depth!
     featid::Int64
     featid_new_positive::Int64
     #we have redundance in the tree structure, the rulepath contains the same information as the members of the node; todo - remove it!
-    subset::Array{UInt8,1}
+    subset::Array{T,1}
     left::Union{Leaf,Node}
     right::Union{Leaf,Node}
     rule_path::Array{Rulepath,1}
@@ -853,3 +853,6 @@ function check_cvoptions(cvo::CVOptions)
 	return true
 end
 
+function Base.convert(::Type{Splitdef{UInt16}},x::Splitdef{UInt8})
+    return Splitdef{UInt16}(x.featid,x.featid_new_positive,x.featurename,Vector{UInt16}(x.subset),x.splitvalue,x.weightl,x.weightr)
+end
