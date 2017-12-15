@@ -1,6 +1,6 @@
 __precompile__()
 VERSION >= v"0.6-"
-
+info("DTM: BK add 'time_finished' to model result (and possibly the time needed for the modelling)")
 info("DTM: BK need to ensure that the code runs smoothly even when no split is found (e.g. minw too big)")
 info("DTM: BK possibly introduce an option not to calculate intermediate metrics/scoring/sorting -> faster runtime")
 info("DTM: BK to check if sortperm! performance has improved in newer Julia versions")
