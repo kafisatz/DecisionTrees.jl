@@ -465,6 +465,7 @@ end
 #there are at least two ways to derive estimates for hold out data: either loop through the leaves of the tree or loop over the rows of the validation data setting
 #also there are two types of hold out estimates: either the ones derived from training data (more meaningful case) or the ones derived from validation labels
 sumwtrn=sum(view(weight,trnidx))
+sumwval=sum(view(weight,validx))
 minweighttmp = sett.minw < 0.0 ? sumwtrn*(-max(-1.0,sett.minw)) : sett.minw
 @assert minweighttmp>=0
 sumwtrn>=2*minweighttmp||warn("DTM: Specified minweight is larger than half of the total training weight!! No split is possible!")
@@ -481,7 +482,8 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 		  println(general_settings)
 		  print_some_settings(sett,["write_sas_code","write_iteration_matrix","write_result","write_statistics","boolCreateZipFile","write_csharp_code","statsRandomByVariable","boolSaveJLDFile"])
 		  println("---Data Summary----------------------------------------------------------------")
-		  println("Number of records - Trn: $(length(trnidx)) Val: $(length(validx))")
+		  println("Number of records - Trn: $(length(trnidx)) Val: $(length(validx)) Val Proportion: $(signif(length(validx)/(length(trnidx)+length(validx)),4))")
+		  println("Weight - Trn: $(signif(sumwtrn,6)) Val: $(signif(sumwval,6)) Val Proportion: $(signif(sumwval/(sumwtrn+sumwval),4))")
 		  println("Number of numeric/character variables: $(sett.number_of_num_features)/$(sett.number_of_char_features)")
       end
 	  if size(num_levels,1) >0
