@@ -97,10 +97,10 @@ srand(intDatahash)
         desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)        
         
         #add index as first column        
-        numbrs=unshift!(numbrs,i)
-        settingsvec=unshift!(settingsvec,string(i))        
-        desc=unshift!(desc,"Number")        
-        desc_settingsvec=unshift!(desc_settingsvec,"Number")
+            unshift!(numbrs,i)
+            unshift!(settingsvec,string(i))
+            unshift!(desc,"Number")
+            unshift!(desc_settingsvec,"Number")        
         if i==1
             header=deepcopy(desc)
             header_settings=deepcopy(desc_settingsvec)
@@ -248,6 +248,11 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CV
             fnmod=string(path_and_fn_wo_extension_mod,ext)
             somestrings,model=run_model_actual(dtmtable,dummySett,fnmod)
             desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)
+            #add first column
+                unshift!(numbrs,i)
+                unshift!(settingsvec,string(i))
+                unshift!(desc,"Number")
+                unshift!(desc_settingsvec,"Number")
             header=deepcopy(desc)
             header_settings=deepcopy(desc_settingsvec)
             allstats=Array{Float64,2}(length(numbrs),n_folds)			
@@ -265,12 +270,13 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CV
         
         #run all models in parallel
             pmapresult=pmap(iLoop -> run_cvsample_on_a_process(iLoop,local_data_dict),1:length(cvsampler))
-		        
+                
+        @show 119.1
         #2. run models   
         for pmap_entry in pmapresult# this_sample in cvsampler
-            numbrs=pmapresult[1]
-            settingsvec=pmapresult[2]
-            i=pmapresult[3]
+            numbrs=pmap_entry[1]
+            settingsvec=pmap_entry[2]
+            i=pmap_entry[3]
             #append stats 
                 allstats[:,i].=deepcopy(numbrs)
                 allsettings[:,i].=deepcopy(settingsvec)
@@ -375,28 +381,24 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
             path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
             fnmod=string(path_and_fn_wo_extension_mod,ext)
         #run model
-            somestrings,model=run_model_actual(dtmtable,sett,fnmod)
-        desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)        
-        
+            somestrings,model=run_model_actual(dtmtable,sett,fnmod)            
+        desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)                
         #add index as first column        
-            numbrs=unshift!(numbrs,i)
-            settingsvec=unshift!(settingsvec,string(i))        
-            desc=unshift!(desc,"Number")        
-            desc_settingsvec=unshift!(desc_settingsvec,"Number")
-        
+            unshift!(numbrs,i)
+            unshift!(settingsvec,string(i))
+            unshift!(desc,"Number")
+            unshift!(desc_settingsvec,"Number")
         #check if header and settings header are as expected
             if !all(header[2:end].==desc[2:end])
                 warn("Model run $(i) returned an unexpected results vector:")
                 @show desc
                 @show header
-            end
+            end            
             if !all(header_settings[2:end].==desc_settingsvec[2:end])
                 warn("Model run $(i) returned an unexpected results vector:")
                 @show desc_settingsvec
                 @show header_settings
-            end
-            @show size(numbrs)
-            @show size(settingsvec)
+            end            
         return numbrs,settingsvec,i
     catch eri
         warn("DTM: CV model $(i) failed.")
