@@ -309,7 +309,7 @@ function this_runs_on_worker(process,logFilename,juliaProgram,harg,arguments)
 	return this_result
 end
 
-function zipit{T<:AbstractString}(this_result::Array{T,1},arguments,logFilename)
+function zipit(this_result::Array{T,1},arguments,logFilename) where {T <: AbstractString}
 	dataf=arguments[2]
 	outFilename=arguments[3]	
 	info("Zipping model results...")

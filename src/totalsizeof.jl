@@ -38,7 +38,7 @@ function totalsizeof(x::Tuple, ptr_cache = Set())
 end
 
 # Array
-function  totalsizeof{T<:Any}(x::Array{T}, ptr_cache = Set())
+function  totalsizeof(x::Array{T}, ptr_cache = Set()) where {T <: Any}
   is_seen!(x, ptr_cache) && return 0
   result = sizeof(x)
   el = nothing

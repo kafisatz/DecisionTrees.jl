@@ -610,17 +610,17 @@ function updateSettingsMod!(s::ModelSettings;args...)
 	@assert res==nothing "Some settings are invalid! Abort."
 end
 
-convertFromString{T<:Any}(oldvalue::T,val)=convert(T,val) #generic method catchall
-convertFromString{T<:AbstractString}(oldvalue::T,val)=convert(T,string(val))
-convertFromString{T<:AbstractFloat}(oldvalue::T,val)=float(val)
-convertFromString{T<:Integer}(oldvalue::T,val)=convert(Integer,float(val)) #parse(Int,float(val))
-convertFromString{T<:Unsigned}(oldvalue::T,val)=uint(float(val))
-convertFromString{T<:Bool}(oldvalue::T,val)=(lowercase(val)=="t"||lowercase(val)=="true"||val=="1")
-function convertFromString{T<:SortBy}(oldvalue::T,val)
+convertFromString(oldvalue::T,val) where {T <: Any}=convert(T,val) #generic method catchall
+convertFromString(oldvalue::T,val) where {T <: AbstractString}=convert(T,string(val))
+convertFromString(oldvalue::T,val) where {T <: AbstractFloat}=float(val)
+convertFromString(oldvalue::T,val) where {T <: Integer}=convert(Integer,float(val)) #parse(Int,float(val))
+convertFromString(oldvalue::T,val) where {T <: Unsigned}=uint(float(val))
+convertFromString(oldvalue::T,val) where {T <: Bool}=(lowercase(val)=="t"||lowercase(val)=="true"||val=="1")
+function convertFromString(oldvalue::T,val) where {T <: SortBy}
 	@assert lowercase(val)=="sortbymean"||lowercase(val)=="mean"
 	return SortByMean()  #currently only mean is possible here
 end
-function convertFromString{T<:SplittingCriterion}(oldvalue::T,critfnstr)
+function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion}
 	local allowedinputstrings=[lowercase(x) for x in ["_poissondeviance" "_difference" "_maxvalue" "_maxabsvalue" "_maxminusvalue" "ROptMinRLost" "ROptMinRLostPct"]]
 	critfnstr=lowercase(critfnstr)
 	if critfnstr=="_difference"

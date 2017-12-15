@@ -150,7 +150,7 @@ end
 # merge method merge!{T <: Series}(s1::T, s2::T, method::Symbol = :append)
 # #this extends the functionality of the package
 # https://github.com/joshday/OnlineStats.jl
- function unmerge!{T <: OnlineStats.Series}(s1::T, s2::T)
+ function unmerge!(s1::T, s2::T) where {T <: OnlineStats.Series}
   #this function updates the variance of s1
   #we assume that the underlying data of s2 is a subset of s1
   #thus we "substract" the series s2 from the series s1 and update the mean and variance of s1 accordingly
