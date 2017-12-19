@@ -5,6 +5,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String)
 end
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
+    info("DTM: (bk) consider the multi threaded verison of this function, dtm_multicore")
 #if folds<0 then we consider n disjoint training sets
 
 #currently we have trhee possible CVs
@@ -159,6 +160,7 @@ srand(intDatahash)
     sh2=ExcelSheet("stats",statsdf)
     xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(0))
     #write data
+    info("DTM: Writing multistats to file:\r\n$(filen)")
     try 		
 		@time write_statistics(xld,filen,true,false)		
 	catch e
@@ -173,7 +175,6 @@ srand(intDatahash)
     
     return statsdf,settsdf    
 end
-
 
 function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
     warn("This requires testing especially when nprocs()>2")
