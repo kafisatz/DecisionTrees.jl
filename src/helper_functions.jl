@@ -4272,7 +4272,7 @@ function vba_get_signature(mappings,df_name_vector,number_of_num_features)
 		res=string(res,thisvarname," As String,")
 	end	
 
-	str_fn_evaluate_profile="Function readDataAndDeriveRawRelativity() as Double\r\n\r\nApplication.Volatile\r\n'Define Variables\r\n"	
+	str_fn_evaluate_profile="\r\nFunction readDataAndDeriveRawRelativity() as Double\r\n\r\nApplication.Volatile\r\n'Define Variables\r\n"	
 	for i=1:number_of_num_features
 		thisvarname=df_name_vector[i]		
 		str_fn_evaluate_profile=string(str_fn_evaluate_profile,"Dim ",thisvarname," As Double\r\n")		
