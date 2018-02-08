@@ -255,8 +255,14 @@ tic()
 		denominator=convert(Array{Float64,1},dfIndata[:denominator])
 		weight=convert(Array{Float64,1},dfIndata[:weight])
 		
-	if any(denominator.<=0) 
-	  warn("denominator[trn] contains observations with value 0.0")
+	count_neg_denom=sum(denominator.<=0)
+	if count_neg_denom>0 
+		warn("denominator contains observations with values <= 0.0")
+		tot_sz=length(denominator)
+		warn("negative rowcount: $(count_neg_denom) of $(tot_sz). I.e. a proportion of $(count_neg_denom/tot_sz)")
+	end
+	if any(denominator.==0) 
+	  warn("denominator[trn] contains observations with values 0.0")
 	  foundobs=findfirst(denominator,0.0)
 	  foundk=key[foundobs]
 	  println("First observation: key=$(foundk), rownumber_trn=$(foundobs), value=$(denominator[foundobs])")
