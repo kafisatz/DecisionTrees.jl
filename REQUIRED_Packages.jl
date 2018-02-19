@@ -15,6 +15,7 @@ WinRPM.update()
 
  #=
 Pkg.add("RDatasets") #I do not think we really need this package
+Pkg.add("PooledArrays")
 Pkg.add("CSV")
 Pkg.add("ProfileView")
 Pkg.add("Coverage")
@@ -27,6 +28,7 @@ Pkg.add("DataFrames")
 Pkg.add("ProgressMeter")
 Pkg.add("Iterators")
 Pkg.add("OnlineStats")
+Pkg.add("HDF5")
 Pkg.add("JLD2")
 Pkg.add("SQLite")
 Pkg.add("Loess")
