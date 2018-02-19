@@ -1,4 +1,4 @@
-#Bagging
+#Bagging s
 function bagged_tree(dtmtable::DTMTable,sett::ModelSettings)		
 #	function bagged_tree(mappings::Array{Array{String,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},sett::ModelSettings,actualNumerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1},actualNumeratorVAL::Array{Float64,1},denominatorVAL::Array{Float64,1},weightVAL::Array{Float64,1}, numfeaturesVAL::Array{pdaMod,1},charfeaturesVAL::Array{pdaMod,1})
 trnidx=dtmtable.trnidx
