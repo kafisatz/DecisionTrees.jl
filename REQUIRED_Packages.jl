@@ -8,6 +8,11 @@
 
 #Pkg.update() #Update all packages
 
+Pkg.update()
+Pkg.add("WinRPM")
+using WinRPM
+WinRPM.update()
+
  #=
 Pkg.add("RDatasets") #I do not think we really need this package
 Pkg.add("CSV")
@@ -27,6 +32,8 @@ Pkg.add("SQLite")
 Pkg.add("Loess")
 Pkg.add("PyCall") #Will be used to export to *.xlsx and create graphs
 =#
+
+Pkg.update()
 
 #= 
 OLDER NOTES
