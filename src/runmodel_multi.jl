@@ -117,7 +117,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 	t0=now()
 	#fist iteration 
 		i=1		
-		v0=@spawn run_mode_grids_single(DataFrame(),t0,i,length(settlist),deepcopy(settlist[i]),dataFilename,local_data_dict,datafolder,outfilename,outfileStringOnly,const_shift_cols)
+		v0=@spawn run_model_grids_single(DataFrame(),t0,i,length(settlist),deepcopy(settlist[i]),dataFilename,local_data_dict,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 		v0fetched=fetch(v0) #we want to ensure that this iteration runs properly, before starting work on all workers()
 	ncols_stats=size(v0fetched,2)
 	@assert ncols_stats>4 "this should not have happened"
@@ -125,7 +125,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 	deleterows!(defaulted_modelstats_df,1:size(defaulted_modelstats_df,1))
 	
 	pmapresult=pmap(i->
-		      run_mode_grids_single(defaulted_modelstats_df,t0,i,length(settlist),deepcopy(settlist[i]),dataFilename,local_data_dict,datafolder,outfilename,outfileStringOnly,const_shift_cols)
+		      run_model_grids_single(defaulted_modelstats_df,t0,i,length(settlist),deepcopy(settlist[i]),dataFilename,local_data_dict,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 				,2:length(settlist))				
 	
 	info("Aggregating results...")
@@ -173,7 +173,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 	return String["true"],"No Model was returned as this was a multirow run" #need to think about what we return here....
 end
 	
-function run_mode_grids_single(defaulted_modelstats_df::DataFrame,t0::DateTime,i::Int,nmodels::Int,sett::ModelSettings,dataFilename::String,di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)	
+function run_model_grids_single(defaulted_modelstats_df::DataFrame,t0::DateTime,i::Int,nmodels::Int,sett::ModelSettings,dataFilename::String,di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)	
 	tic();tic();tic();
 	try
 		outfileStringOnly=string(outfileStringOnly,i)

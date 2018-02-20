@@ -180,7 +180,7 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CV
     warn("This requires testing especially when nprocs()>2")
     #if folds<0 then we consider n disjoint training sets
     
-    #currently we have trhee possible CVs
+    #currently we have three possible CVs
     #k disjoint samples 
     #    KfoldDisjoint(length(weight),k) 
     #random sampling, k samples of size samplesize
