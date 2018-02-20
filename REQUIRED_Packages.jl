@@ -52,6 +52,7 @@ info("then perform a reboot of the computer and add the PyCall package")
 #ENV["PYTHON"]="C:\\JuliaPro-0.5.1.1\\Python\\python.exe"
 Pkg.build("PyCall")
 warn("install package xlsxwriter for python")
+run this command in windows "python -m pip install SomePackage"
 warn("install package pandas for python")
 
 info("ensure that python, the correct verison, is in the path")
