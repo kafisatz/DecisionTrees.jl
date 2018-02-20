@@ -80,6 +80,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			#showTimeUsedByEachIteration&&println("Calculating iteration $(iter). Time: $(now())")
 			current_mdf=moderationvector[min(iter,size(moderationvector,1))] #mdf remains constant if a vector of size 1 was provided (instead of a vector of size iterations)
 			estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
+			#@show estimatedNumerator[1:10]
+			#@show mean(estimatedNumerator),sum(estimatedNumerator),mean(estimatedRatio),sum(estimatedRatio)
 			if showTimeUsedByEachIteration
 			#todo tbd: this can be done more efficiently: We can avoid the tmpTree object (also we do not need to call "sometreesettings" every time!, improve this
 				@time 	tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)

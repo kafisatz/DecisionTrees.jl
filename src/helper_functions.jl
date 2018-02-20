@@ -1916,21 +1916,26 @@ function calc_sum_squares(num_actual,num_estimate,denom)
 	mean_act=mean(num_actual)
 	mean_ratio_pointwise=0.0	
 	for i=1:sz
-		@inbounds mean_ratio_pointwise+=ifelse(denom[i]==0.0,0.0,num_actual[i]/denom[i])
+		@inbounds mean_ratio_pointwise += ifelse(denom[i]==0.0,0.0,num_actual[i]/denom[i])
 	end 	
-	mean_ratio_pointwise/=sz
-
+	
 	for i=1:sz
 		@inbounds act=num_actual[i]
-		@inbounds est=num_estimate[i]
-		@inbounds den=denom[i]		
+		@inbounds den=denom[i]
+		#WE NEED TO MULTIPLY THE NUMERATOR WITH THE DENOMINATOR HERE \ TBD, TODO: SOMEONE NEEDS TO REVIEW THIS
+		@inbounds est=num_estimate[i]*den
 		ssres+=abs2(est-act)
 		sstot+=abs2(act-mean_act) #THIS SHOULD BE CACHED (be careful as the training data set may change over time)! todo, tbd
 
 		ssres_ratio+=ifelse(den==0,0.0,abs2((est-act)/den))
 		sstot_ratio+=ifelse(den==0,0.0,abs2(act/den-mean_ratio_pointwise))		
+		#if i<3
+		#	@show mean(num_actual),mean(num_estimate),mean(denom),sum(num_actual),sum(num_estimate),sum(denom)
+		#	@show i,act,est,abs2(est-act),abs2(act-mean_act),abs2((est-act)/den),abs2(act/den-mean_ratio_pointwise)
+		#end
 	end
 		
+	#@show sstot,ssres,sstot_ratio,ssres_ratio
 	return sstot,ssres,sstot_ratio,ssres_ratio
 end
 
