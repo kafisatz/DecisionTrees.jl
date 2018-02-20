@@ -1876,17 +1876,27 @@ end
 
 function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstartingpoints::Array{Int64,1}
 ,numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn
-,numeratorval,denominatorval,weightval,numeratorEstval,scoresval,boolCalculateGini:Bool)
+,numeratorval,denominatorval,weightval,numeratorEstval,scoresval,boolCalculateGini::Bool)
 		nClasses=length(scorebandsstartingpoints)		
 		sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn=aggregateScores(numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn,scorebandsstartingpoints)
 		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,numeratorEstval,scoresval,scorebandsstartingpoints)		
 		if boolCalculateGini
-			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) #currently disabled gini takes a LOT of time especially due to sorting
+			#these statistics are optinally disabled as the gini takes a LOT of time especially due to sorting
+			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) 
 			normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
+			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,numeratorEsttrn,denominatortrn)
+			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,numeratorEstval,denominatorval)		
 		else
-			normalized_unweighted_gini_numeratorTrn=1.0 #normalized_gini(numeratortrn,numeratorEsttrn) #currently disabled gini takes a LOT of time especially due to sorting
-			normalized_unweighted_gini_numeratorVal=1.0 #normalized_gini(numeratorval,numeratorEstval)			
+			normalized_unweighted_gini_numeratorTrn=1.0 
+			normalized_unweighted_gini_numeratorVal=1.0 	
+			total_sum_squares_of_numeratorTrn=residual_sum_squares_of_numeratorTrn=total_sum_squares_of_ratioTrn=residual_sum_squares_of_ratioTrn=1.0
+			total_sum_squares_of_numeratorVal=residual_sum_squares_of_numeratorVal=total_sum_squares_of_ratioVal=residual_sum_squares_of_ratioVal=1.0
 		end
+		r2_of_numeratortrn=1.0-residual_sum_squares_of_numeratorTrn/total_sum_squares_of_numeratorTrn
+		r2_of_ratiotrn=1.0-residual_sum_squares_of_ratioTrn/total_sum_squares_of_ratioTrn
+		r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
+		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal
+
 		qwkappaTrn=tryQWKappa(numeratortrn,numeratorEsttrn)
 		qwkappaVal=tryQWKappa(numeratorval,numeratorEstval)
 		observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
@@ -1895,8 +1905,33 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		header=["Cumulative Stats n=$(iter)" "Weight Trn" "Weight Val" "Numerator Trn" "Numerator Val" "Denominator Trn" "Denominator Val" "Observed Ratio Trn" "Observed Ratio Val" "Numerator Est Trn" "Numerator Est Val" "Fitted Ratio Trn" "Fitted Ratio Val" reltrntitle "Relativity Val (Observed)"]
 		columnOfRelativityTrn=findin(header,[reltrntitle])[1]
 		cumulativeStatsMatrix=vcat(header,cumulativeStatsMatrix)
-		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal qwkappaTrn qwkappaVal]
+		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal qwkappaTrn qwkappaVal r2_of_ratiotrn r2_of_ratioval r2_of_numeratortrn r2_of_numeratorval residual_sum_squares_of_ratioTrn residual_sum_squares_of_ratioVal residual_sum_squares_of_numeratorTrn residual_sum_squares_of_numeratorVal]
 return cumulativeStatsMatrix,singleRowWithKeyMetrics,columnOfRelativityTrn
+end
+
+function calc_sum_squares(num_actual,num_estimate,denom)
+	@assert length(num_estimate)==length(num_actual)==length(denom)
+	sstot=0.0;ssres=0.0;sstot_ratio=0.0;ssres_ratio=0.0
+	sz=length(num_actual)
+	mean_act=mean(num_actual)
+	mean_ratio_pointwise=0.0	
+	for i=1:sz
+		@inbounds mean_ratio_pointwise+=ifelse(denom[i]==0.0,0.0,num_actual[i]/denom[i])
+	end 	
+	mean_ratio_pointwise/=sz
+
+	for i=1:sz
+		@inbounds act=num_actual[i]
+		@inbounds est=num_estimate[i]
+		@inbounds den=denom[i]		
+		ssres+=abs2(est-act)
+		sstot+=abs2(act-mean_act) #THIS SHOULD BE CACHED (be careful as the training data set may change over time)! todo, tbd
+
+		ssres_ratio+=ifelse(den==0,0.0,abs2((est-act)/den))
+		sstot_ratio+=ifelse(den==0,0.0,abs2(act/den-mean_ratio_pointwise))		
+	end
+		
+	return sstot,ssres,sstot_ratio,ssres_ratio
 end
 
 #createSingleTreeExcel(trnidx,validx,sett,tree,leaves_of_tree,fitted_values_tree,leaf_number_vector,numerator,denominator,weight)

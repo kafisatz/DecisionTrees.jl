@@ -61,7 +61,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	#currently not supported
 		BoolAdaptiveLearningRate&&error("DTM: this is not yet updated to reflect numerator/denominator objectives!!")
 	#this header needs to be in line with the output of the function createTrnValStatsForThisIteration
-	statsPerIteration=global_statsperiter_header	# statsPerIteration=["Iteration" "Correlation" "Std Dev Trn" "Std Dev Val" "Std Dev Ratio" "Lift Trn" "Lift Val" "Reversals Trn" "Reversals Val" "RelDiff TrnObs vs ValObs" "RelDiff ValObs vs TrnFitted" "Min Rel Trn" "Max Rel Trn" "Min Observed Ratio Trn" "Max Observed Ratio Trn"  "Min Rel Val" "Max Rel Val" "Min Observed Ratio Val" "Max Observed Ratio Val"]
+	statsPerIteration=global_statsperiter_header	
 	currentRelativity=Array{Float64}(obs)
 	scoreBandLabels=createScorebandsUTF8List(sett.scorebandsstartingpoints,sett.nscores,addtotal=true)
 	#this row is only here such that the variables are initialized outside the for loop
