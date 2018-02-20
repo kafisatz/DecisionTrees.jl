@@ -2461,11 +2461,11 @@ function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Flo
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass
 end
 
-function build_listOfMeanResponse(crit::PoissonDevianceSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64)
-    return build_listOfMeanResponse(DifferenceSplit(),numerator,denominator,weight,features,feature_levels,minweight)
+function build_listOfMeanResponse(crit::PoissonDevianceSplit,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64)
+    return build_listOfMeanResponse(DifferenceSplit(),trnidx,validx,numerator,denominator,weight,features,feature_levels,minweight)
 end 
 
-function build_listOfMeanResponse(crit::DifferenceSplit,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64)
+function build_listOfMeanResponse(crit::DifferenceSplit,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64)  
   #todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
   ncategories=length(feature_levels)  #currently also contains the val feature levels!
   countlist,sumnumerator,sumdenominator,sumweight=aggregate_data_diff(features,numerator,denominator,weight)
