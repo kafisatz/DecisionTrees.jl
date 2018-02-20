@@ -1,5 +1,4 @@
 #this file is outdated and should not be used anymore
-#place your packge in the folder 
 
 # ~/.julia/v0.X/DecisionTrees/src/DecisionTrees.jl
 
