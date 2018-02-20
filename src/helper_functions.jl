@@ -834,7 +834,7 @@ for intVarname in integerVarlist
 			@assert all(v9.==v9b)
 			@assert all(v10.==v10b)
 		=#
-		statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,-1,sett.scorebandsstartingpoints,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10)
+		statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,-1,sett.scorebandsstartingpoints,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,sett.boolCalculateGini)
 		statsThisIteration[1,1]="Scoreband" #this cell has the value "Cumulative Stats n=-1" by default which is not useful here.
 		statsThisIteration=hcat(statsThisIteration[:,1],vcat([strVarname],repmat([strthresh],size(statsThisIteration,1)-1,1)),statsThisIteration[:,2:end])
 		outMatrix=vcat(deepcopy(outMatrix),deepcopy(statsThisIteration))
@@ -1876,12 +1876,17 @@ end
 
 function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstartingpoints::Array{Int64,1}
 ,numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn
-,numeratorval,denominatorval,weightval,numeratorEstval,scoresval)
+,numeratorval,denominatorval,weightval,numeratorEstval,scoresval,boolCalculateGini:Bool)
 		nClasses=length(scorebandsstartingpoints)		
 		sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn=aggregateScores(numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn,scorebandsstartingpoints)
 		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,numeratorEstval,scoresval,scorebandsstartingpoints)		
-		normalized_unweighted_gini_numeratorTrn=1.0 #normalized_gini(numeratortrn,numeratorEsttrn) #currently disabled gini takes a LOT of time especially due to sorting
-		normalized_unweighted_gini_numeratorVal=1.0 #normalized_gini(numeratorval,numeratorEstval)
+		if boolCalculateGini
+			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) #currently disabled gini takes a LOT of time especially due to sorting
+			normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
+		else
+			normalized_unweighted_gini_numeratorTrn=1.0 #normalized_gini(numeratortrn,numeratorEsttrn) #currently disabled gini takes a LOT of time especially due to sorting
+			normalized_unweighted_gini_numeratorVal=1.0 #normalized_gini(numeratorval,numeratorEstval)			
+		end
 		qwkappaTrn=tryQWKappa(numeratortrn,numeratorEsttrn)
 		qwkappaVal=tryQWKappa(numeratorval,numeratorEstval)
 		observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
