@@ -423,6 +423,9 @@ function add_iteration_charts!(xlData::ExcelData,settings::ModelSettings,startro
 	thischart=defineChartWithNSeries("Overview","ModelStatistics",string("A",currentChartRow),"line",2,settings.niter,Int[12,13,16,17],1,"Iteration","","")		
 	push!(xlData.charts,deepcopy(thischart))
 	currentChartRow+=chartRowStep
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,22,23,1)
+	push!(xlData.charts,deepcopy(thischart))
+	currentChartRow+=chartRowStep
 	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,20,21,1)
 	push!(xlData.charts,deepcopy(thischart))
 	#Feb 2018 

@@ -466,6 +466,12 @@ function write_any_array_to_excel_file(arr::Array{Array{T,2},1},file::String) wh
 	return nothing
 end
 
+function gini_single_argument(x)
+    n = length(x)
+    xx = sort(x)
+    2*(sum(collect(1:n).*xx))/(n*sum(xx))-1
+end
+
 function gini(actual,estimate,weight)
 	#weight=ones(eltype(estimate),length(estimate))
 	#@assert (size(actual)==size(estimate)==size(weight))&&(size(actual,2)==1) # I think it takes too much time to check this as we call this fn very often
@@ -1881,12 +1887,18 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn=aggregateScores(numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn,scorebandsstartingpoints)
 		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,numeratorEstval,scoresval,scorebandsstartingpoints)		
 		if boolCalculateGini
-			#these statistics are optinally disabled as the gini takes a LOT of time especially due to sorting
+			#these statistics are optinally disabled as the gini takes a LOT of time especially due to sorting			
+			#NOTE: we currently have two different gini values which we calculate, one approach takes only one argument (the estimator) while the other appraoch considers the truth and the estimator
+			#it seems that the single_agrument_gini is more common (it should correspond to the gini in library(reldist) in R).
+			gini_single_argtrn=gini_single_argument(numeratorEsttrn.*denominatortrn)
+			gini_single_argval=gini_single_argument(numeratorEstval.*denominatorval)			
 			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) 
 			normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
 			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,numeratorEsttrn,denominatortrn)
 			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,numeratorEstval,denominatorval)		
 		else
+			gini_single_argtrn=1.0
+			gini_single_argval=1.0
 			normalized_unweighted_gini_numeratorTrn=1.0 
 			normalized_unweighted_gini_numeratorVal=1.0 	
 			total_sum_squares_of_numeratorTrn=residual_sum_squares_of_numeratorTrn=total_sum_squares_of_ratioTrn=residual_sum_squares_of_ratioTrn=1.0
@@ -1905,7 +1917,7 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		header=["Cumulative Stats n=$(iter)" "Weight Trn" "Weight Val" "Numerator Trn" "Numerator Val" "Denominator Trn" "Denominator Val" "Observed Ratio Trn" "Observed Ratio Val" "Numerator Est Trn" "Numerator Est Val" "Fitted Ratio Trn" "Fitted Ratio Val" reltrntitle "Relativity Val (Observed)"]
 		columnOfRelativityTrn=findin(header,[reltrntitle])[1]
 		cumulativeStatsMatrix=vcat(header,cumulativeStatsMatrix)
-		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal qwkappaTrn qwkappaVal r2_of_ratiotrn r2_of_ratioval r2_of_numeratortrn r2_of_numeratorval residual_sum_squares_of_ratioTrn residual_sum_squares_of_ratioVal residual_sum_squares_of_numeratorTrn residual_sum_squares_of_numeratorVal]
+		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal gini_single_argtrn gini_single_argval r2_of_ratiotrn r2_of_ratioval r2_of_numeratortrn r2_of_numeratorval residual_sum_squares_of_ratioTrn residual_sum_squares_of_ratioVal residual_sum_squares_of_numeratorTrn residual_sum_squares_of_numeratorVal]
 return cumulativeStatsMatrix,singleRowWithKeyMetrics,columnOfRelativityTrn
 end
 
