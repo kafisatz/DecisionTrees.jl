@@ -8,6 +8,7 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int64,df_name_vec
 
     dot_graph=""
     node=tree.rootnode
+    total_weight_of_tree = nodesize(node)
     candMatWOMaxValues=tree.candMatWOMaxValues
     mappings=tree.charMappings
     sett=tree.settings
@@ -31,9 +32,8 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int64,df_name_vec
             "$(sett.df_name_vector[this_id]) in [$(join(mappings[-orig_id][[convert(Int,z) for z in node.subset]],","))]"
         end
     end
-    #label = orig_id>0 ? "Fit$(round(fittedratio(node),2)) Weight$(round(nodesize(node),1))" : "Fit$(round(fittedratio(node),2)) Weight$(round(nodesize(node),1))"
-	total_weight_of_tree = nodesize(node)
-	label = "Fit $(signif(fittedratio(node),3)) Weight $(round(total_weight_of_tree,1))"		
+
+	label = "Fit $(signif(fittedratio(node),3)) Weight $(round(nodesize(node),1))"		
 
     name_of_this_node="R"
     dot_graph *= """$(name_of_this_node)[label="$(label)"]\n"""
@@ -84,15 +84,8 @@ function graph(node::Node{T},counter::Int,parentname::String,sett::ModelSettings
             "$(sett.df_name_vector[this_id]) in [$(join(mappings[-orig_id][[convert(Int,z) for z in node.subset]],","))]"
         end
     end
-
-    #if orig_id<=0
-    #    @show join(mappings[-orig_id][[convert(Int,z) for z in node.subset]],",")
-    #end
-
-    #label = orig_id>0 ? "Fit $(signif(fittedratio(node),3)) Weight $(round(nodesize(node),1))" : "Fit $(signif(fittedratio(node),3)) Weight $(round(nodesize(node),1))"
-    #label = orig_id>0 ? "Fit$(round(fittedratio(node),2)) Weight$(round(nodesize(node),1))" : "Fit$(round(fittedratio(node),2)) Weight$(round(nodesize(node),1))"
-	total_weight_of_tree = nodesize(node)
-	label = "Fit $(signif(fittedratio(node),3)) Weight $(round(total_weight_of_tree,1))"		
+    
+	label = "Fit $(signif(fittedratio(node),3)) Weight $(round(nodesize(node),1))"		
     
 
     name_of_this_node="N$(counter)"
