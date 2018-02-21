@@ -3187,7 +3187,7 @@ end
 	end
 
 	#todo tbd, take note of this somewhere and do not forget it!
-	#for the c# code the last entry of maxRawRelativityPerScoreSorted is modified to be 50% (50% is arbitrary here) higher than the value which was derived by Julia
+	#for the code which is generated here the last entry of maxRawRelativityPerScoreSorted is modified to be 50% (50% is arbitrary here) higher than the value which was derived by Julia
 	#this means that any policy will get the maximal score if it is "worse" than any training policy
 	#but if it is much worse, it will get the default score of -1
 	modified_maxRawRelativityPerScoreSorted=deepcopy(bt.maxRawRelativityPerScoreSorted)
