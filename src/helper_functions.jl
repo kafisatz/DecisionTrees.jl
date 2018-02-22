@@ -1999,10 +1999,27 @@ t=tree.rootnode
 
 	header=["Segment" "Weight" "Relative Weight" "Numerator" "Denominator" "Observed Ratio" "Numerator Estimate" "Fitted Ratio" "Relativity"]
 	thisres,overallstats=buildStatistics(header,segmentlist,sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
-	#gini
+	if sett.boolCalculateGini
+        nest=denominator.*est
+        giniTrn=gini_single_argument(view(nest,trnidx))			
+        giniVal=gini_single_argument(view(nest,validx))        
+        #normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) 
+        #normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
+        total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(view(numerator,trnidx),view(nest,trnidx),view(denominator,trnidx))
+        total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(view(numerator,validx),view(nest,validx),view(denominator,validx))
+    else 
+    #gini
 		giniTrn=1.0 #normalized_gini(view(numerator,trnidx),view(est,trnidx))  #currently disabled gini takes a LOT of time especially due to sorting
-		giniVal=1.0 #normalized_gini(view(numerator,validx),view(est,validx))
-	#attach Gini
+		giniVal=1.0 #normalized_gini(view(numerator,validx),view(est,validx))        	
+        total_sum_squares_of_numeratorTrn=residual_sum_squares_of_numeratorTrn=total_sum_squares_of_ratioTrn=residual_sum_squares_of_ratioTrn=1.0
+        total_sum_squares_of_numeratorVal=residual_sum_squares_of_numeratorVal=total_sum_squares_of_ratioVal=residual_sum_squares_of_ratioVal=1.0
+    end
+    
+    r2_of_numeratortrn=1.0-residual_sum_squares_of_numeratorTrn/total_sum_squares_of_numeratorTrn
+    r2_of_ratiotrn=1.0-residual_sum_squares_of_ratioTrn/total_sum_squares_of_ratioTrn
+    r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
+    r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal    
+    #attach Gini
 		ginirowtrn=["Gini (Numerator - Normalized & Unweighted) Trn" giniTrn repmat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;ginirowtrn];overallstats=[overallstats;ginirowtrn];
 		ginirowval=["Gini (Numerator - Normalized & Unweighted) Val" giniVal repmat([""],1,size(thisres,2)-2)]
@@ -2015,7 +2032,17 @@ t=tree.rootnode
 		thisres=[thisres;qwkapparowtrn];overallstats=[overallstats;qwkapparowtrn];
 		qwkapparowval=["Quadratic Weighted Kappa (Numerator) Val" qwkappaVal repmat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;qwkapparowval];overallstats=[overallstats;qwkapparowval];
-
+    #attach r squared
+        r2rowtrn=["R Squared of Numerator Trn" r2_of_numeratortrn repmat([""],1,size(thisres,2)-2)]
+		thisres=[thisres;r2rowtrn];overallstats=[overallstats;r2rowtrn];
+		r2rowval=["R Squared of Numerator Val" r2_of_numeratorval repmat([""],1,size(thisres,2)-2)]
+		thisres=[thisres;r2rowval];overallstats=[overallstats;r2rowval];
+    #attach rss
+        rss_rowtrn=["RSS of Numerator Trn" residual_sum_squares_of_numeratorTrn repmat([""],1,size(thisres,2)-2)]
+		thisres=[thisres;rss_rowtrn];overallstats=[overallstats;rss_rowtrn];
+		rss_rowval=["RSS of Numerator Val" residual_sum_squares_of_numeratorVal repmat([""],1,size(thisres,2)-2)]
+		thisres=[thisres;rss_rowval];overallstats=[overallstats;rss_rowval];
+    
 	modelStatisticsSheet=ExcelSheet(nameOfModelStatisticsSheet,thisres)
 	modelsettingsSheet=ExcelSheet(nameOfSettingsSheet,convert(DataFrame,writeAllFieldsToArray(sett)))
 	xlData.sheets=[modelsettingsSheet,modelStatisticsSheet]
