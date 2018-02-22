@@ -803,6 +803,7 @@ struct BoostedTree <: Ensemble
 	iterationmatrix::Array{Float64,2}
 	modelstats::DataFrame #overall model statistics and performance (trn and val), this needs to be a matrix (Any) with a header row NOTE: this is a feature of multiple model types! (tree, boosting, bagging) and we need consistency because of the function run_model_multirow_settings
 	exceldata::ExcelData
+	trnidx_one_zero_full::Array{UInt,1}
 end
 
 struct BaggedTree <: Ensemble
@@ -824,6 +825,7 @@ struct BaggedTree <: Ensemble
 	ScoreToSmoothedEstimate::Array{Float64,1}
 	iterationmatrix::Array{Float64,2}
 	modelstats::DataFrame
+	trnidx_one_zero_full::Array{UInt,1}
 end
 
 mutable struct CVOptions	

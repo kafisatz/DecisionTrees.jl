@@ -211,7 +211,10 @@ end
 	nodesOnly=[x.tree.rootnode for x in vecTreesWErrs]
 	errs=[x.err for x in vecTreesWErrs]
 
-	resultingBaggedTree=BaggedTree(nodesOnly,weightPerTree,errs,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,BoolStartAtMean,MAPPINGSmoothedEstimatePerScore,est_matrix,modelstats)
+	#create trnidx
+	@assert issorted(trnidx)
+	trnidx_one_zero_full_length=map(x->UInt8(length(searchsorted(trnidx,x))),1:length(scores))		
+	resultingBaggedTree=BaggedTree(nodesOnly,weightPerTree,errs,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,BoolStartAtMean,MAPPINGSmoothedEstimatePerScore,est_matrix,modelstats,trnidx_one_zero_full_length)
 		
 #resulting Bagged Tree
 return xlData,estimatedRatio,MatrixOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultingBaggedTree

@@ -451,6 +451,10 @@ weight=dtmtable.weight
 numerator=dtmtable.numerator
 denominator=dtmtable.denominator
 
+#trnidx_one_zero_full_length is added to the output file
+@assert issorted(trnidx)
+trnidx_one_zero_full_length=map(x->length(searchsorted(trnidx,x)),1:length(key))
+
 #define 'version', we store the sha1 hash of the current commit in sett.version
 sett.version=get_sha1()
 
@@ -575,7 +579,7 @@ prnt&&println("---Model Settings------------------------------------------------
          #1-dim Variable Importance
           var_imp1d_str_arr,var_imp2d_str_arr,onedimintvec_unused,twodimintvec_unused=variable_importance(leaves_of_tree,sett.df_name_vector,sett.number_of_num_features)
           nleaves=Int64(size(leaves_of_tree,1))
-		 res=hcat(key,fitted_values_tree)
+		 res=hcat(key,trnidx_one_zero_full_length,fitted_values_tree)
 		#Create output statistics		
 			#this is not done in an efficient manner yet..... we are copying data to get est[trnidx] etc...
 			@time xlData,overallstats=createSingleTreeExcel(trnidx,validx,sett,tree,leaves_of_tree,fitted_values_tree,leaf_number_vector,numerator,denominator,weight)
@@ -692,7 +696,7 @@ prnt&&println("---Model Settings------------------------------------------------
 resulting_model=resultEnsemble
 
 if sett.write_result
-	res=hcat(key,resultEnsemble.scores,estimateUnsmoothed,estimateSmoothed,estimatedRatio)
+	res=hcat(key,trnidx_one_zero_full_length,resultEnsemble.scores,estimateUnsmoothed,estimateSmoothed,estimatedRatio)
 end	
 #save results as *.JLD2 file
 if sett.boolSaveResultAsJLDFile
