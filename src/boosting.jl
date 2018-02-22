@@ -150,8 +150,6 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	
 	estimateUnsmoothed=map_these_values(rawObservedRatioPerScore,scores)
 	estimateSmoothed=map_these_values(MAPPINGSmoothedEstimatePerScore,scores)	
-	# estimateSmoothed=map(x->MAPPINGSmoothedEstimatePerScore[x],scores)	 ; this is less efficient than the version above
-	# estimateUnsmoothed=map(x->rawObservedRatioPerScore[x],scores) ; this is less efficient than the version above
 	
 	estimateFromRelativities = currentRelativity.*trn_meanobservedvalue
 	finalEstimateForCharts = sett.smoothEstimates=="0" ? estimateSmoothed : estimateUnsmoothed

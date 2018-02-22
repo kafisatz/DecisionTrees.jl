@@ -3237,7 +3237,8 @@ fiostream=open(fileloc,"w")
   #write beginning
   #write BOM
 	write(fiostream,global_byte_order_mark)
-    write(fiostream,"/* \r\nSettings: \r\n WARNING: common issues with the SAS code: the data in sas may have leading zeros (categorical columns) which can be lost when exporting and importing!\r\n ")
+	write(fiostream,"/* \r\nSettings: \r\n WARNING: common issues with the SAS code: the data in sas may have leading zeros (categorical columns) which can be lost when exporting and importing!\r\n ")
+	write(fiostream,"\r\n WARNING: common issues with the SAS code: variables are CUT off (at the end) if modified within SAS.\r\n "))
     write(fiostream,settings)
 	write(fiostream,"\r\n*/ \r\n\r\n")	
     write(fiostream,"data sas_tree;format ",leafvarname,";set runmodel;;")
