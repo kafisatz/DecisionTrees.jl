@@ -1934,7 +1934,7 @@ function calc_sum_squares(num_actual,num_estimate,denom)
 	for i=1:sz
 		@inbounds act=num_actual[i]
 		@inbounds den=denom[i]
-		#WE NEED TO MULTIPLY THE NUMERATOR WITH THE DENOMINATOR HERE \ TBD, TODO: SOMEONE NEEDS TO REVIEW THIS
+		#(for boosting) WE NEED TO MULTIPLY THE NUMERATOR WITH THE DENOMINATOR HERE \ TBD, TODO: SOMEONE NEEDS TO REVIEW THIS
 		@inbounds est=num_estimate[i]*den
 		ssres+=abs2(est-act)
 		sstot+=abs2(act-mean_act) #THIS SHOULD BE CACHED (be careful as the training data set may change over time)! todo, tbd
@@ -2005,8 +2005,8 @@ t=tree.rootnode
         giniVal=gini_single_argument(view(nest,validx))        
         #normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) 
         #normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
-        total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(view(numerator,trnidx),view(nest,trnidx),view(denominator,trnidx))
-        total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(view(numerator,validx),view(nest,validx),view(denominator,validx))
+        total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(view(numerator,trnidx),view(est,trnidx),view(denominator,trnidx))
+        total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(view(numerator,validx),view(est,validx),view(denominator,validx))
     else 
     #gini
 		giniTrn=1.0 #normalized_gini(view(numerator,trnidx),view(est,trnidx))  #currently disabled gini takes a LOT of time especially due to sorting
@@ -2014,15 +2014,15 @@ t=tree.rootnode
         total_sum_squares_of_numeratorTrn=residual_sum_squares_of_numeratorTrn=total_sum_squares_of_ratioTrn=residual_sum_squares_of_ratioTrn=1.0
         total_sum_squares_of_numeratorVal=residual_sum_squares_of_numeratorVal=total_sum_squares_of_ratioVal=residual_sum_squares_of_ratioVal=1.0
     end
-    
+    warn("need to review/amend the rsquared and rss which are not correct!")
     r2_of_numeratortrn=1.0-residual_sum_squares_of_numeratorTrn/total_sum_squares_of_numeratorTrn
     r2_of_ratiotrn=1.0-residual_sum_squares_of_ratioTrn/total_sum_squares_of_ratioTrn
     r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
     r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal    
     #attach Gini
-		ginirowtrn=["Gini (Numerator - Normalized & Unweighted) Trn" giniTrn repmat([""],1,size(thisres,2)-2)]
+		ginirowtrn=["Gini Numerator Trn" giniTrn repmat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;ginirowtrn];overallstats=[overallstats;ginirowtrn];
-		ginirowval=["Gini (Numerator - Normalized & Unweighted) Val" giniVal repmat([""],1,size(thisres,2)-2)]
+		ginirowval=["Gini Numerator Val" giniVal repmat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;ginirowval];overallstats=[overallstats;ginirowval];
 	#quadratic weighted kappa
 		qwkappaTrn=tryQWKappa(view(numerator,trnidx),view(est,trnidx))
