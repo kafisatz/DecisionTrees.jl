@@ -1,12 +1,11 @@
-this_dir="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New Repo\\algorithms\\Julia\\Code\\";
+#this_dir="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New Repo\\algorithms\\Julia\\Code\\";
 #this_dir="R:\\TariffWatch New Repo\\algorithms\\Julia\\Code\\dev\\src"
-unshift!(LOAD_PATH,string(this_dir,"\\DTM2_dev\\src"))
-unshift!(LOAD_PATH,string(this_dir,"\\dev\\src"))
+#unshift!(LOAD_PATH,string(this_dir,"\\DTM2_dev\\src"))
+#unshift!(LOAD_PATH,string(this_dir,"\\dev\\src"))
 using Compat
 using BenchmarkTools
 using Revise    
-using DTM2
-using DTM
+using DecisionTrees
 using DataFrames,JLD,HDF5
 using ProfileView
 
