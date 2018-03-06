@@ -17,8 +17,9 @@ module DecisionTrees
 srand(1234)
 export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,updateSettingsMod!,prep_data_from_df_modernized,run_legacy,prep_data_from_df
 
-using OnlineStats, StatsBase, StatsFuns, SQLite, DataFrames, ProgressMeter, PyCall, FileIO, JLD2, PooledArrays # DataArrays is not used anymore
-#using MySQL, # temporarily disabled
+using OnlineStats, StatsBase, StatsFuns, DataFrames, ProgressMeter, PyCall, FileIO, JLD2, PooledArrays # DataArrays is not used anymore
+#using MySQL, # temporarily disabled 
+#using SQLite #disabled as it uses DataFrames 0.11
 
 #include("check_if_python_packages_are_installed.jl")
 include("types.jl")

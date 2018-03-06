@@ -1,17 +1,16 @@
-this_dir="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New Repo\\algorithms\\Julia\\Code\\";
+#this_dir="C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New Repo\\algorithms\\Julia\\Code\\";
 #this_dir="R:\\TariffWatch New Repo\\algorithms\\Julia\\Code\\dev\\src"
-unshift!(LOAD_PATH,string(this_dir,"\\DTM2_dev\\src"))
-unshift!(LOAD_PATH,string(this_dir,"\\dev\\src"))
+#unshift!(LOAD_PATH,string(this_dir,"\\DTM2_dev\\src"))
+#unshift!(LOAD_PATH,string(this_dir,"\\dev\\src"))
 using Compat
 using BenchmarkTools
 using Revise    
-using DTM2
-using DTM
+using DecisionTrees
 using DataFrames,JLD,HDF5
 datafolder="C:\\temp\\";outfilename="C:\\temp\\DTM2Model";dataFilename="c:\\temp\\DTM2Model.jld";outfileStringOnly="DTM2Model";fn=string(datafolder,outfileStringOnly)
 tmpfilei="C:\\temp\\i.csv";isfile(tmpfilei)&&rm(tmpfilei)
 #=
-    include("C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\TariffWatch New Repo\\algorithms\\Julia\\Code\\DTM2_dev\\testing\\define_df_prepped.jl");
+    include("C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl\\testing\\define_df_prepped.jl");
     df_prepped_orig=deepcopy(df_prepped);
     #df_prepped=df_prepped_orig[1:2000,:];
     df_prepped=deepcopy(df_prepped_orig)
