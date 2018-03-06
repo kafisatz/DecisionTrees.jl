@@ -28,11 +28,12 @@ function run_model(ARGS;nrows::Int=-1)
 end
 
 function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
-    denomcol=uppercase(denomcol)
-    keycol=uppercase(keycol)
-    trnvalcol=uppercase(trnvalcol)
-    weightcol=uppercase(weightcol)
-    independent_vars=uppercase.(independent_vars)
+	#denomcol=uppercase(denomcol)
+    #keycol=uppercase(keycol)
+    #trnvalcol=uppercase(trnvalcol)
+    #weightcol=uppercase(weightcol)
+	#independent_vars=uppercase.(independent_vars)
+	#treat_as_categorical_variable=uppercase.(treat_as_categorical_variable)
 
     sz=size(dfin,1)
     dfnames=names(dfin)
@@ -102,7 +103,14 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     end
     n_indep=length(independent_vars)
 
-    @assert issubset(Symbol.(treat_as_categorical_variable),dfnames)
+	for x in Symbol.(treat_as_categorical_variable)		
+		if !in(x,dfnames)
+			@show x
+			@show dfnames
+			error("column $(x) not found in dfnames")			
+		end
+	end 	
+	@assert issubset(Symbol.(treat_as_categorical_variable),dfnames)
     #n_char_features=0
     char_features=Vector{Symbol}()
     num_features=Vector{Symbol}()
@@ -117,7 +125,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
                 dfin[this_name]=string.(dfin[this_name])
                 this_is_a_string=true
             else
-                info("DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed.")
+                #info("DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed.")
             end
         end
 
