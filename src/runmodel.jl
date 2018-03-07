@@ -60,7 +60,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
 
     if trnvalcol==""
         info("Using random choice of Training-Validation column with porportion $(valpct) for validation")
-        trnvalDA=map(x->x<valpct ? 1.0 : 0.0,rand(sz))
+        trnvalDA=map(x->x>valpct ? 1.0 : 0.0,rand(sz))
     else
         @assert in(Symbol(trnvalcol),dfnames) "Training-Validation column not found. We searched for the column $(trnvalcol) in the vector $(string.(dfnames))"
         trnvalDA=dfin[Symbol(trnvalcol)]
