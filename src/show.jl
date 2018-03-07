@@ -1,5 +1,5 @@
 
-function Base.show(io::IO, t::MIME"text/plain",x::Union{Tree,Leaf,Node,BaggedTree,BoostedTree})
+function Base.show(io::IO, t::MIME"text/plain",x::Union{DecisionTrees.Tree,DecisionTrees.Leaf,DecisionTrees.Node,DecisionTrees.BaggedTree,DecisionTrees.BoostedTree})
     elt=string(typeof(x))
     println(io,elt)
     println(io,"")    

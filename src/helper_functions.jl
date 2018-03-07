@@ -1107,7 +1107,7 @@ function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::V
     sumactualVAL=sum(view(actualNumerator,validx))	
 	#[name i mse mrse mae mrae sumrae mseVAL mrseVAL maeVAL mraeVAL sumraeVAL][:]
 	header=["Summation Type" "Iteration" "MSE TRN" "MRSE TRN" "MAE TRN" "MRAE TRN" "Sum MRAE TRN" "MSE VAL" "MRSE VAL" "MAE VAL" "MRAE VAL" "Sum MRAE VAL"]
-	@show size(est_matrix) 
+	
     m1=tariffEstStats(sumactual,actualNumerator,est_matrix,sumactualVAL,trnidx,validx,"Raw Estimates")    
 	m2=tariffEstStats(sumactual,actualNumerator,est_matrixFromScores,sumactualVAL,trnidx,validx,"Estimates from Scores")
 	z1=tariffEstStats(sumactual,actualNumerator,estimateUnsmoothed,sumactualVAL,trnidx,validx,"Final Estimate Unsmoothed",0)
