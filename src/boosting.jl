@@ -186,10 +186,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	xlData.sheets=[modelsettingsSheet,overviewSheet,statsSheet,scoresSheet,predictorsSheet,validationSheet]
 #add boolTariffEstStats if requested
 	if sett.boolTariffEstStats
-		error("tariff est stats are not updated for DTM2")
-		errors_num_estimates=addTariffEstimationStatsAndGraphs!(xlData,
-			actualNumerator,estimateUnsmoothedTrn,estimateSmoothedTrn,estimateFromRelativitiesTrn,est_matrix,est_matrixFromScores,
-			actualNumeratorVAL,estimateUnsmoothedVal,estimateSmoothedVal,view(estimateFromRelativities,validx),est_matrixVAL,est_matrixFromScoresVAL)
+		warn("tariff est stats are not updated for DTM2: this needs review")
+			errors_num_estimates=addTariffEstimationStatsAndGraphs!(xlData,trnidx,validx,actualNumerator,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,est_matrix,est_matrixFromScores)
 		#attach errors per iteration to modelStatistics== statsSheet (Excel file)
 			statsSheetINDEX=findin([x.name for x in xlData.sheets],[nameOfModelStatisticsSheet])
 			@assert length(statsSheetINDEX)==1 "Error no statsheet was found in Excel data (when trying to attach Numerator Errors to Modelstatistics)"

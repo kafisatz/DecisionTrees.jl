@@ -1052,7 +1052,7 @@ function writeAllFieldsToArray(s)
 	return res
 end
 
-function absrel(x::Array{Float64,1},y::Array{Float64,1})
+function absrel(x,y)
 	@assert length(x)==length(y)
 	res=zeros(x)
 	for i=1:length(x)
@@ -1099,19 +1099,20 @@ function errorhistogram(histbins,actualNumerator,estimateUnsmoothedTRN,estimateS
 return errorhist
 end
 
-function addTariffEstimationStatsAndGraphs!(xlData,
-	actualNumerator::Array{Float64,1},estimateUnsmoothedTRN::Array{Float64,1},estimateSmoothedTRN::Array{Float64,1},estimateFromRelativitiesTRN::Array{Float64,1},est_matrix::Array{Float64,2},est_matrixFromScores::Array{Float64,2},
-	actualNumeratorVAL::Array{Float64,1},estimateUnsmoothedVAL::Array{Float64,1},estimateSmoothedVAL::Array{Float64,1},estimateFromRelativitiesVAL::Array{Float64,1},est_matrixVAL::Array{Float64,2},est_matrixFromScoresVAL::Array{Float64,2})
-	niter=size(est_matrixFromScoresVAL,2)-1
-	sumactual=sum(actualNumerator)
-	sumactualVAL=sum(actualNumeratorVAL)
+#errors_num_estimates=addTariffEstimationStatsAndGraphs!(xlData,trnidx,validx,actualNumerator,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,est_matrix,est_matrixFromScores)
+function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::Vector{Int},
+	actualNumerator::Array{Float64,1},estimateUnsmoothed::Array{Float64,1},estimateSmoothed::Array{Float64,1},estimateFromRelativities::Array{Float64,1},est_matrix::Array{Float64,2},est_matrixFromScores::Array{Float64,2})
+	niter=size(est_matrixFromScores,2)-1
+	sumactual=sum(view(actualNumerator,trnidx))
+    sumactualVAL=sum(view(actualNumerator,validx))	
 	#[name i mse mrse mae mrae sumrae mseVAL mrseVAL maeVAL mraeVAL sumraeVAL][:]
 	header=["Summation Type" "Iteration" "MSE TRN" "MRSE TRN" "MAE TRN" "MRAE TRN" "Sum MRAE TRN" "MSE VAL" "MRSE VAL" "MAE VAL" "MRAE VAL" "Sum MRAE VAL"]
-	m1=tariffEstStats(sumactual,actualNumerator,est_matrix,sumactualVAL,actualNumeratorVAL,est_matrixVAL,"Raw Estimates")
-	m2=tariffEstStats(sumactual,actualNumerator,est_matrixFromScores,sumactualVAL,actualNumeratorVAL,est_matrixFromScoresVAL,"Estimates from Scores")
-	z1=tariffEstStats(sumactual,actualNumerator,estimateUnsmoothedTRN,sumactualVAL,actualNumeratorVAL,estimateUnsmoothedVAL,"Final Estimate Unsmoothed",0)
-	z2=tariffEstStats(sumactual,actualNumerator,estimateSmoothedTRN,sumactualVAL,actualNumeratorVAL,estimateSmoothedVAL,"Final Estimate Smoothed",0)
-	z3=tariffEstStats(sumactual,actualNumerator,estimateFromRelativitiesTRN,sumactualVAL,actualNumeratorVAL,estimateFromRelativitiesVAL,"Final Estimate from Relativities",0)
+	@show size(est_matrix) 
+    m1=tariffEstStats(sumactual,actualNumerator,est_matrix,sumactualVAL,trnidx,validx,"Raw Estimates")    
+	m2=tariffEstStats(sumactual,actualNumerator,est_matrixFromScores,sumactualVAL,trnidx,validx,"Estimates from Scores")
+	z1=tariffEstStats(sumactual,actualNumerator,estimateUnsmoothed,sumactualVAL,trnidx,validx,"Final Estimate Unsmoothed",0)
+	z2=tariffEstStats(sumactual,actualNumerator,estimateSmoothed,sumactualVAL,trnidx,validx,"Final Estimate Smoothed",0)
+	z3=tariffEstStats(sumactual,actualNumerator,estimateFromRelativities,sumactualVAL,trnidx,validx,"Final Estimate from Relativities",0)
 
 	result=vcat(header,z1,z2,z3,m1,m2)
 	#define errors_num_estimates (which will be attached to modelstatistics)
@@ -1131,11 +1132,11 @@ function addTariffEstimationStatsAndGraphs!(xlData,
 	#granular up to .2
 		histbins=collect(0.0:0.001:0.2) #steps of 1 per mille
 		histbinsChartRows=length(histbins)
-		errorhist=errorhistogram(histbins,actualNumerator,estimateUnsmoothedTRN,estimateSmoothedTRN,estimateFromRelativitiesTRN,actualNumeratorVAL,estimateUnsmoothedVAL,estimateSmoothedVAL,estimateFromRelativitiesVAL)
+		errorhist=errorhistogram(histbins,view(actualNumerator,trnidx),view(estimateUnsmoothed,trnidx),view(estimateSmoothed,trnidx),view(estimateFromRelativities,trnidx),view(actualNumerator,validx),view(estimateUnsmoothed,validx),view(estimateSmoothed,validx),view(estimateFromRelativities,validx))
 		errorhist=vcat(errorhistheader,errorhist)
 	#granular up to 1
 		histbins=collect(0.0:0.001:1.0) #steps of 1 per mille
-		errorhist2=errorhistogram(histbins,actualNumerator,estimateUnsmoothedTRN,estimateSmoothedTRN,estimateFromRelativitiesTRN,actualNumeratorVAL,estimateUnsmoothedVAL,estimateSmoothedVAL,estimateFromRelativitiesVAL)
+		errorhist2=errorhistogram(histbins,view(actualNumerator,trnidx),view(estimateUnsmoothed,trnidx),view(estimateSmoothed,trnidx),view(estimateFromRelativities,trnidx),view(actualNumerator,validx),view(estimateUnsmoothed,validx),view(estimateSmoothed,validx),view(estimateFromRelativities,validx))
 		errorhist2=vcat(errorhistheader,errorhist2)
 	#add two emtpy rows
 		errorhist=vcat(errorhist,repmat([""],2,size(errorhist,2)))
@@ -1182,25 +1183,23 @@ function addTariffEstimationStatsAndGraphs!(xlData,
 return errors_num_estimates
 end
 
-function tariffEstStats(sumactual::Float64,actual::Array{Float64,1},estimateMat::Array{Float64,2},sumactualVAL::Float64,actualVAL::Array{Float64,1},estimateMatVAL::Array{Float64,2},name::T) where {T <: AbstractString}
-	@assert size(estimateMat,2)==size(estimateMatVAL,2)
-	result=Array{Any}(size(estimateMat,2)-1,12)
-	for i=1:size(estimateMat,2)-1 #NOTE the first column of estimateMat is iteration 0 which is the mean fitted value for all obersvations (which is not interesting at all!)
-		mse,mrse,mae,mrae,sumrae=calcErrors(sumactual,actual,estimateMat[:,i+1])
-		mseVAL,mrseVAL,maeVAL,mraeVAL,sumraeVAL=calcErrors(sumactualVAL,actualVAL,estimateMatVAL[:,i+1])
+function tariffEstStats(sumactual::Float64,actual::Array{Float64,1},estimateMat::Array{Float64,2},sumactualVAL::Float64,trnidx::Vector{Int},validx::Vector{Int},name::T) where {T <: AbstractString}
+	result=Array{Any,2}(size(estimateMat,2)-1,12)
+	for i=1:size(estimateMat,2)-1 #NOTE the first column of estimateMat is iteration 0 which is the mean fitted value for all observations (which is not interesting at all!)
+		mse,mrse,mae,mrae,sumrae=calcErrors(sumactual,view(actual,trnidx),view(estimateMat,trnidx,i+1))        
+		mseVAL,mrseVAL,maeVAL,mraeVAL,sumraeVAL=calcErrors(sumactualVAL,view(actual,validx),view(estimateMat,validx,i+1))
 		result[i,:]=[name i mse mrse mae mrae sumrae mseVAL mrseVAL maeVAL mraeVAL sumraeVAL][:]
 	end
 	return result
 end
 
-function tariffEstStats(sumactual::Float64,actual::Array{Float64,1},estimate::Array{Float64,1},sumactualVAL::Float64,actualVAL::Array{Float64,1},estimateVAL::Array{Float64,1},name::T,count::Int) where {T <: AbstractString}
-	mse,mrse,mae,mrae,sumrae=calcErrors(sumactual,actual,estimate)
-	mseVAL,mrseVAL,maeVAL,mraeVAL,sumraeVAL=calcErrors(sumactualVAL,actualVAL,estimateVAL)
-	res=[name count mse mrse mae mrae sumrae mseVAL mrseVAL maeVAL mraeVAL sumraeVAL]
-	#res=[name count res]
+function tariffEstStats(sumactual::Float64,actual::Array{Float64,1},estimate::Array{Float64,1},sumactualVAL::Float64,trnidx::Vector{Int},validx::Vector{Int},name::T,count::Int) where {T <: AbstractString}
+	mse,mrse,mae,mrae,sumrae=calcErrors(sumactual,view(actual,trnidx),view(estimate,trnidx))
+	mseVAL,mrseVAL,maeVAL,mraeVAL,sumraeVAL=calcErrors(sumactualVAL,view(actual,validx),view(estimate,validx))
+	res=[name count mse mrse mae mrae sumrae mseVAL mrseVAL maeVAL mraeVAL sumraeVAL]	
 end
 
-function calcErrors(sumactual::Float64,actual::Array{Float64,1},estimate::Array{Float64,1})
+function calcErrors(sumactual::Float64,actual,estimate) #::Array{Float64,1},estimate::Array{Float64,1})
 	@assert length(estimate)==length(actual)
 	mae=mrse=mrae=mse=0.0
 	sz=length(actual)
