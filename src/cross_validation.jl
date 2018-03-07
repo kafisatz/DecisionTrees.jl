@@ -37,7 +37,6 @@ intDatahash = Int(.25*hash(2231,s))
  # intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
 srand(intDatahash)
 
-
 #1. sample Data
     size_which_is_sampled=0
     #local cvsampler
