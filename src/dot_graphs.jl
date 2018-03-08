@@ -21,8 +21,6 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int64,df_name_vec
     dot_graph *= "// Number of Nodes: $(number_of_nodes(tree))\n"
     dot_graph *= "// Maximal depth of the tree: $(maxdepth(tree))\n\n\n"
 
-    #orig_id>0 ? label="N|F$(this_id) $(df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][node.subset[end]],5)),Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))" : label="N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in node.subset]],","))],Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))"
-    #edge_to_the_left = orig_id>0 ? "$(df_name_vector[this_id])<=$(signif(candMatWOMaxValues[this_id][node.subset[end]],5))" : "$(df_name_vector[this_id]) in [$(join(mappings[-orig_id][[convert(Int,z) for z in node.subset]],","))]"
     edge_to_the_left = if orig_id>0
          "$(sett.df_name_vector[this_id]) <= $(signif(candMatWOMaxValues[this_id][node.subset[end]],5))"
     else
@@ -74,7 +72,7 @@ end
 function graph(node::Node{T},counter::Int,parentname::String,sett::ModelSettings,edge_from_parent_description::String,mappings,candMatWOMaxValues,total_weight_of_tree::Float64) where T<:Unsigned
     orig_id=node.featid
 	orig_id<0 ? this_id=sett.number_of_num_features-orig_id : this_id=orig_id
-#    label = orig_id>0 ? "N|F$(this_id)  $(sett.df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][node.subset[end]],5)),Fit$(round(fittedratio(node),2)),S$(round(nodesize(node),1)))" : "N|F$(this_id)  $(sett.df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in node.subset]],","))],Fit$(round(fittedratio(node),2)),S$(round(nodesize(node),1)))"
+
     edge_to_the_left = if orig_id>0
          "$(sett.df_name_vector[this_id]) <= $(signif(candMatWOMaxValues[this_id][node.subset[end]],5))"
     else

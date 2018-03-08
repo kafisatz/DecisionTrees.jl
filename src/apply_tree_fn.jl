@@ -132,8 +132,15 @@ function predict(x::BoostedTree,f::DataFrame,boolProduceEstAndLeafMatrices::Bool
 
   #derive scores from raw rels
   scores=map(z->searchsortedfirst(x.maxRawRelativityPerScoreSorted,z),currentRelativity)
+  max_score=length(x.rawObservedRatioPerScore)
+  @inbounds for zz in 1:length(scores)
+    #@inbounds scores[zz]=min(scores[zz],max_score)
+    if scores[zz]>max_score
+      scores[zz]=max_score
+    end
+  end
   #derive estimates
-  update_mapped_estFromScores!(est_UnSmoothedEstFromScores,x.rawObservedRatioPerScore,scores)
+  update_mapped_estFromScores!(est_UnSmoothedEstFromScores,x.rawObservedRatioPerScore,scores)  
   update_mapped_estFromScores!(est_SmoothedEstFromScores,x.ScoreToSmoothedEstimate,scores)
 
   #NOTE: we have three different estimates
@@ -155,8 +162,13 @@ function assert_consistent_features(fp,f::DataFrame)
   #the above condition could also be weakend (as could the loop below) we only need to check the variables that were actually used by the model. 
   for j=1:length(fp)
     if !(fp[j]==f[j].pool)
+      @show names(f)[j]
+      @show fp[j]
+      @show f[j].pool
+      @show f[j].pool.==fp[j]
+      @show f[j].pool.-fp[j]
       @show !(fp[j]==f[j].pool)
-      @show issubset(fp[j],f[j].pool)
+      @show issubset(fp[j],f[j].pool)      
       error("Features do not match model features. Note: this condition could be weakend: the features of the data which is provided only needs to be a subset of the pools used during modelling")      
       error("Abort.")
     end

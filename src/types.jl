@@ -135,8 +135,9 @@ end
 
 Base.size(d::DTMTable) = size(d.features)
 
-function Base.getindex(r::DTMTable,idx)
-    #r=deepcopy(a)
+function Base.getindex(r::DTMTable,idx,compact_features=false)
+    warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")    
+    
     key=r.key[idx]
     one_to_n=collect(1:length(r.weight))
     rows_to_keep=one_to_n[idx]        
@@ -147,19 +148,24 @@ function Base.getindex(r::DTMTable,idx)
     numerator=r.numerator[idx]    
     denominator=r.denominator[idx]    
     weight=r.weight[idx]    
-	tmp_number_of_num_features=sum(map(x->eltype(r.features[x].pool),1:size(r.features,2)).!=String)
 	
-	features=r.features[idx,:]
-	#"compact" features, it is possible that we could do this in a better/faster way
-	for i=tmp_number_of_num_features+1:size(features,2)
-		if eltype(features[i])!=UInt8
-			features[i]=PooledArray(Array(features[i]))
-		end
-	end    
-	mp=deepcopy(map(i->features[i].pool,tmp_number_of_num_features+1:size(features,2)))
-	error("this does not work properly. we NEED to update candmatmaxtrix otherwise we get a modelling error later on....")
+    features=r.features[idx,:]
+    if compact_features 
+        tmp_number_of_num_features=sum(map(x->eltype(r.features[x].pool),1:size(r.features,2)).!=String)	        
+        #"compact" features, it is possible that we could do this in a better/faster way
+        for i=tmp_number_of_num_features+1:size(features,2)
+            if eltype(features[i])!=UInt8
+                features[i]=PooledArray(Array(features[i]))
+            end
+        end    
+	end 
+    
+    mp=deepcopy(r.mappings)
+    #mp=deepcopy(map(i->features[i].pool,tmp_number_of_num_features+1:size(features,2)))
+	warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")
+    #error("this does not work properly. we NEED to update candmatmatrix otherwise we get a modelling error later on....")
     #for now candMatWOMaxValues is left as it was...
-    dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),deepcopy(mp))
+    dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),mp)
     return dt
 end
 
