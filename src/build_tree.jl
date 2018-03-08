@@ -39,7 +39,8 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
 	@assert length(inds)>0 "Error: no features were selected length(num_inds)=$(length(num_inds)), length(char_inds)=$(length(char_inds))"
 	settings.nDepthToStartParallelization=nDepthToStartParallelization #update nDepthToStartParallelization
 	empty_xl_data=ExcelData(Array{ExcelSheet}(0),Array{Chart}(0))
-	resultingTree=Tree(deepcopy(emptyNode),intVarsUsed,candMatWOMaxValues,mappings,inds,settings,deepcopy(empty_xl_data))
+	fp=get_feature_pools(features)
+	resultingTree=Tree(deepcopy(emptyNode),intVarsUsed,candMatWOMaxValues,mappings,inds,settings,deepcopy(empty_xl_data),fp)
 	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath}(0),settings.parallel_tree_construction,myid(),fitted_values)
 	#set Leaf Numbers
 	set_leaf_numbers!(resultingTree)

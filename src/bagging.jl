@@ -214,7 +214,8 @@ end
 	#create trnidx
 	@assert issorted(trnidx)
 	trnidx_one_zero_full_length=map(x->UInt8(length(searchsorted(trnidx,x))),1:length(scores))		
-	resultingBaggedTree=BaggedTree(nodesOnly,weightPerTree,errs,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,BoolStartAtMean,MAPPINGSmoothedEstimatePerScore,est_matrix,modelstats,trnidx_one_zero_full_length)
+	fp=get_feature_pools(features)
+	resultingBaggedTree=BaggedTree(nodesOnly,weightPerTree,errs,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,BoolStartAtMean,MAPPINGSmoothedEstimatePerScore,rawObservedRatioPerScorexx,est_matrix,modelstats,trnidx_one_zero_full_length,fp)
 		
 #resulting Bagged Tree
 return xlData,estimatedRatio,MatrixOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultingBaggedTree

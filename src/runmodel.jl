@@ -415,11 +415,17 @@ local eltypev,dfIndata
 return 	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues
 end
 
+"""
+This is the core modelling function of DecisionTrees
+	
+run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
+"""
 function run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 #this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
 tic() #total modelling time , prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,1))s = $(round(elapsed_until_this_point/60,1))m")
 
 sett=deepcopy(input_setttings)
+@assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
 
 if sett.boolTariffEstStats
 	if !sett.boolProduceEstAndLeafMatrices

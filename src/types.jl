@@ -765,13 +765,14 @@ mutable struct Tree <: DTModel
 	#this is highly inefficient, modelstats should be a Dataframe!
 	modelstats::DataFrame # #overall model statistics and performance (trn and val), this needs to be a matrix (Any) with a header row NOTE: this is a feature of multiple model types! (tree, boosting, bagging) and we need consistency because of the function run_model_multirow_settings
 	exceldata::ExcelData
-	function Tree(rootnode::Union{Leaf,Node{UInt8},Node{UInt16}},intVarsUsed::Array{Array{Int,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},charMappings::Array{Array{String,1},1},inds_considered::Array{Int64,1},settings::ModelSettings,exceldata::ExcelData)
+	featurepools::Array{Union{Array{Float64,1},Array{String,1}},1}
+	function Tree(rootnode::Union{Leaf,Node{UInt8},Node{UInt16}},intVarsUsed::Array{Array{Int,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},charMappings::Array{Array{String,1},1},inds_considered::Array{Int64,1},settings::ModelSettings,exceldata::ExcelData,fp::Array{Union{Array{Float64,1},Array{String,1}},1})
 		nf=settings.number_of_char_features+settings.number_of_num_features
 		@assert length(settings.df_name_vector)==nf
 		variableImp1Dim=zeros(Int,nf)
 		variableImp2Dim=zeros(Int,div(nf*(nf-1),2))
 		ms=Array{Any}(0,0)
-		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata)
+		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata,fp)
 	end
 end
 
@@ -800,10 +801,12 @@ struct BoostedTree <: Ensemble
     meanobserved::Float64
     BoolStartAtMean::Bool
 	ScoreToSmoothedEstimate::Array{Float64,1}
+	rawObservedRatioPerScore::Array{Float64,1}
 	iterationmatrix::Array{Float64,2}
 	modelstats::DataFrame #overall model statistics and performance (trn and val), this needs to be a matrix (Any) with a header row NOTE: this is a feature of multiple model types! (tree, boosting, bagging) and we need consistency because of the function run_model_multirow_settings
 	exceldata::ExcelData
 	trnidx_one_zero_full::Array{UInt,1}
+	featurepools::Array{Union{Array{Float64,1},Array{String,1}},1}
 end
 
 struct BaggedTree <: Ensemble
@@ -823,9 +826,11 @@ struct BaggedTree <: Ensemble
     meanobserved::Float64
     BoolStartAtMean::Bool
 	ScoreToSmoothedEstimate::Array{Float64,1}
+	rawObservedRatioPerScore::Array{Float64,1}
 	iterationmatrix::Array{Float64,2}
 	modelstats::DataFrame
 	trnidx_one_zero_full::Array{UInt,1}
+	featurepools::Array{Union{Array{Float64,1},Array{String,1}},1}
 end
 
 mutable struct CVOptions	

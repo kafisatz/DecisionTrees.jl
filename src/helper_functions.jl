@@ -5281,3 +5281,10 @@ function sendto(ps::Vector{Int}; args...)
   end
 end
 
+function get_feature_pools(f::DataFrame)
+	fp=Vector{Union{Vector{String},Vector{Float64}}}(0)
+	@inbounds for i in 1:size(f,2)
+		push!(fp,deepcopy(f[i].pool))
+	end
+	return fp
+end
