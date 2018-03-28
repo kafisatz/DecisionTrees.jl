@@ -1,4 +1,4 @@
-julia 0.6.1
+julia 0.6.2
 PyCall
 CSV
 Loess
@@ -14,3 +14,6 @@ JLD2
 SQLite
 ProfileView
 Coverage
+FileIO
+Random
+StatsFuns
