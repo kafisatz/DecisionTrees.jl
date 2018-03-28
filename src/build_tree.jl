@@ -28,7 +28,7 @@ function sample_data_and_build_tree!(trnidx::Vector{Int},validx::Vector{Int},fit
 				#todo tbd check this!
 				#thisError=calcErrorStats(fittedPerLeaf,ooBagsumnumerator./ooBagsumdenominator,ooBagsumweight)
 				#thisError=goodnessOfFit(ooBagEstimates,ooBagnum,ooBagdenom,ooBagw,meanobservedvalue,ngroupsInput)
-		thisError=ErrorStats() #Empty/Default Error Stats
+		thisError=ErrorStats() #Empty/Default Error Stats .
 		return thistree
 	end
 end
