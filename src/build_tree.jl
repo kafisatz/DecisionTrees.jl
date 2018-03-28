@@ -277,7 +277,7 @@ elt=eltype(trnfeatures.parent.refs)
 	if (crit_type==DifferenceSplit||crit_type==PoissonDevianceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat=build_listOfMeanResponse(crit,trnidx,validx,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	elseif (crit_type==NormalDevianceSplit)
-		info("in the works...")
+		@info "in the works..."
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass=build_listOfMeanResponse(crit,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	else
 		error("Invalid Splitting criterion $(crit)")

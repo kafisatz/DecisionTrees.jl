@@ -100,7 +100,7 @@ end
 		local fristRowOfThisTable
 	for iter=1:iterations
 		#fit current tree
-			#info("remove this")
+			#@info "remove this"
 			#	print_tree(vecTreesWErrs.tree[iter.rootnode,sett,candMatWOMaxValues,mappings,0)			
 			vectorOfLeafArrays[iter+1]=create_leaves_array(vecTreesWErrs[iter].tree)	
 			#vectorOfRulePathsToLeavesArrays[iter+1]=[x.rule_path for x in vectorOfLeafArrays[iter+1]]			

@@ -44,7 +44,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     numDA=dfin[Symbol(numcol)]
 
     if denomcol==""
-        info("Using constant denominator for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))")
+        @info "Using constant denominator for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))"
         denomDA=ones(sz)
     else
         @assert in(Symbol(denomcol),dfnames) "Denominator column not found. We searched for the column $(denomcol) in the vector $(string.(dfnames))"
@@ -52,7 +52,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     end
 
     if weightcol==""
-        info("Using constant weight for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))")
+        @info "Using constant weight for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))"
         weightDA=ones(sz)
     else
         @assert in(Symbol(weightcol),dfnames) "Weight column not found. We searched for the column $(weightcol) in the vector $(string.(dfnames))"
@@ -60,7 +60,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     end
 
     if trnvalcol==""
-        info("Using random choice of Training-Validation column with porportion $(valpct) for validation")
+        @info "Using random choice of Training-Validation column with porportion $(valpct) for validation"
         trnvalDA=map(x->x>valpct ? 1.0 : 0.0,rand(sz))
     else
         @assert in(Symbol(trnvalcol),dfnames) "Training-Validation column not found. We searched for the column $(trnvalcol) in the vector $(string.(dfnames))"
@@ -76,7 +76,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     end
 
     if keycol==""
-        info("Using canonical choice of indentifier column 1:size(yourIntputDataFrame,1)")
+        @info "Using canonical choice of indentifier column 1:size(yourIntputDataFrame,1)"
         irkeyDA=collect(1:sz)
     else
         @assert in(Symbol(keycol),dfnames) "Identifier column not found. We searched for the column $(keycol) in the vector $(string.(dfnames))"
@@ -121,11 +121,11 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
         if in(this_name,Symbol.(treat_as_categorical_variable))
             #change variable type in original dataframe
             if !is_categorical_column(dfin[this_name])
-                info("DTM: Converting the column $(this_name) from $(eltype(dfin[this_name])) to string.")
+                @info "DTM: Converting the column $(this_name) from $(eltype(dfin[this_name])) to string."
                 dfin[this_name]=string.(dfin[this_name])
                 this_is_a_string=true
             else
-                #info("DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed.")
+                #@info "DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed."
             end
         end
 
@@ -164,7 +164,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
 
     this_sett.df_name_vector=names(dfres)[1+global_const_shift_cols:end]
     updateSettingsMod!(this_sett,number_of_num_features=n_num,number_of_char_features=n_char) #model_type="build_tree",minw=.91,randomw=0,mf=.05,subsampling_features_prop=1.0,niter=10,subsampling_prop=1.00)
-    info("Data initialization finished:")
+    @info "Data initialization finished:"
     @show size(dfres)
     @show n_num,n_char
     @show char_features
@@ -192,18 +192,18 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 		#warn("Experimental: Settings File has more than two rows. Running multiple models")
 		if lowercase(reverse(dataFilename)[1:4])!="dlj."
 			#prep data and create *.jld file #NOTE: the fact that we save the *.jld file to disk is obsolete here (could be improved in the future) todo/tbd
-			info("Prepping data for multirow run")
+			@info "Prepping data for multirow run"
 			settingsArrayTWOROWS=settingsArray[1:2,:]
 			key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArrayTWOROWS,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
 			dataFilename,extp=splitext(dataFilename)
 			dataFilename=string(dataFilename,".jld2")
-			info("this will probably fail with a *.db or mysql  input file/reference")
+			@info "this will probably fail with a *.db or mysql  input file/reference"
 			@assert isfile(dataFilename) "Something went wrong: dataFilename should be a prepped *.jld2 file here"
 		end
 		println("Loading Julia save file: \n $(dataFilename)")
 		dictOfVariables=load(dataFilename);
 		telapsed=toq()
-		info("Time to read data: $(telapsed)")
+		@info "Time to read data: $(telapsed)"
 		return run_model_multirow_settings(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 	end
 
@@ -212,14 +212,14 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 		println("Loading Julia save file: \n $(dataFilename)")
 		dictOfVariables=load(dataFilename);
 		telapsed=toq()
-		info("Time to read data: $(telapsed)")
+		@info "Time to read data: $(telapsed)"
 		return run_model_jld(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 	#non jld file was provided
 	else
 		key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
 		#key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=runmodel_non_jld(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows)
         telapsed=toq()
-        sett.print_details&&(!sett.preppedJLDFileExists)&&info("Time to prepare data: $(telapsed)\n")
+        sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
         return run_model_actual(key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues,dataFilename)
 		#return runmodel_non_jld(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows)
 	end
@@ -232,7 +232,7 @@ function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::D
 	sett=ModelSettings() #default model settings
 	updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
     telapsed=toq()
-    sett.print_details&&(!sett.preppedJLDFileExists)&&info("Time to prepare data: $(telapsed)\n")
+    sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
     return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
 end
 
@@ -339,7 +339,7 @@ tic()
 	pool_lengths=length.(pools)
 	for i=1:length(pool_lengths)
 		if pool_lengths[i]==1
-			info("DTM: Column $(i) = $(sett.df_name_vector[i]) has zero splitting points.")  
+			@info "DTM: Column $(i) = $(sett.df_name_vector[i]) has zero splitting points."
 		end
 	end
 		
@@ -362,12 +362,12 @@ end
 function prepare_non_jld_data(dataFilename::String,settingsArray::Array{String,2},datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int,nrows::Int,number_of_num_features::Int)
 local eltypev,dfIndata
 	if lowercase(dataFilename)[end-2:end]==".db"
-		info("todo: Test *.DB Sqlite functionality.")
-		info("the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')")
+		@info "todo: Test *.DB Sqlite functionality."
+		@info "the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')"
 		warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
 		println("Importing data from SQLiteDB file: \n $(dataFilename)")
 		try
-			info("check if disabling gc speeds this up")
+			@info "check if disabling gc speeds this up"
 			dfIndata=readDFfromSQLiteDB(dataFilename,const_shift_cols)
 		catch sqllitereaderr
 			@show sqllitereaderr
@@ -429,7 +429,7 @@ sett=deepcopy(input_setttings)
 
 if sett.boolTariffEstStats
 	if !sett.boolProduceEstAndLeafMatrices
-		info("DTM: User has requested TariffEstStats (boolTariffEstStats=$(sett.boolTariffEstStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true.")
+		@info "DTM: User has requested TariffEstStats (boolTariffEstStats=$(sett.boolTariffEstStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true.")
 		sett.boolProduceEstAndLeafMatrices=true
 		#@show sett.boolTariffEstStats,sett.boolProduceEstAndLeafMatrices
 	end
@@ -458,11 +458,11 @@ statsfileExcel=string(path_and_fn_wo_extension,".xlsx")
 
 #for now trnindx and validx should always be sorted!
 if !issorted(dtmtable.trnidx) 
-	info("DTM: trnidx was not sorted. Sorting trnindex")
+	@info "DTM: trnidx was not sorted. Sorting trnindex"
 	sort!(dtmtable.trnidx)
 end
 if !issorted(dtmtable.validx) 
-	info("DTM: validx was not sorted. Sorting validx")
+	@info "DTM: validx was not sorted. Sorting validx"
 	sort!(dtmtable.validx)
 end
 
@@ -867,7 +867,7 @@ function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::St
 	@show fld,namestr=splitdir(path_and_fn_wo_extension)
 	filen=string(fld,"multistats.xlsx")
 	if isfile(filen)
-		info("Deleting $(filen).")
+		@info "Deleting $(filen)."
 		rm(filen)
 	end
 

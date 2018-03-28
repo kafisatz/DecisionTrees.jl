@@ -1,5 +1,5 @@
 #=
-	info("""
+	@info ""
 	Splitting Function = NormalDeviance
 	for the normal deviance
 	the concept should be like this

@@ -29,9 +29,9 @@ function run_model_multirow_settings(dataFilename::String,multirowSettingsArray:
 			run_model_multirow_perCore(defaulted_modelstats_df,[1 ii],deepcopy(sett),deepcopy(oldsettings),dataFilenameMOD,multirowSettingsArray,local_data_dict,datafolder,outfilename,outfileStringOnlyOrig,const_shift_cols)
 			,2:nmodels)
 		v0fetched=fetch(v0)		
-		info("Aggregating results...")
+		@info "Aggregating results..."
 		allmodelStats=reduce(vcat, v0fetched, pmapresult)
-		info("Writing output...")
+		@info "Writing output..."
 	#old approach:
 		#models_per_core=calcIterationsPerCore2(size(multirowSettingsArray,1)-1,max(1,nprocs()-1)) #I think we need to submit nprocs()-1 here, or does the main task (=worker1?) also do any work? todo/tbd need to test this.			
 		#allmodelStats = @parallel (vcat) for ii=1:sum(models_per_core[:,1].>0) #only run on the cores where there is actual work to do				
@@ -42,14 +42,14 @@ function run_model_multirow_settings(dataFilename::String,multirowSettingsArray:
 	#write to Excel file 				
 		outf=string(datafolder,"\\",outfileStringOnlyOrig,".allstats.xlsx")
 		multirowSettingsArray2=hcat(["Model Number";collect(1:size(multirowSettingsArray,1)-1)],multirowSettingsArray)
-		info("Writing overall model stats file \n $(outf)") 
+		@info "Writing overall model stats file \n $(outf)"
 			if size(allmodelStats,1)<1048576 #maxrows of Excel 1<<20
 				write_any_array_to_excel_file(allmodelStats,multirowSettingsArray2,outf)
 			else
 				writecsv(string(datafolder,"\\",outfileStringOnlyOrig,".allstats.csv"),allmodelStats)
 				writecsv(string(datafolder,"\\",outfileStringOnlyOrig,".allmodelsettings.csv"),allmodelStats)			
 			end
-		info("Done. Time - $(now())")
+		@info "Done. Time - $(now())
 	return String["true"],"No Model was returned as this was a multirow run" #need to think about what we return here....
 end
 	
@@ -63,7 +63,7 @@ function run_model_multirow_perCore(defaulted_modelstats_df::DataFrame,iteridx::
 			try
 				tic()
 				tic()
-				info("Process: $(myid()) - Running setting entry $(i)")
+				@info "Process: $(myid()) - Running setting entry $(i)"
 				outfileStringOnly=string(outfileStringOnlyOrig,i)
 				outfilename=convert(String,string(datafolder,"\\",outfileStringOnly))
 				settingsArray=deepcopy(multirowSettingsArray[[1,i+1],:])
@@ -94,7 +94,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 	
 	#settingsFilename="A:\\JuliaTestData\\boostmed.settings.csv"
 	settingsArray,number_of_num_features=readSettings(settingsFilename)	
-	info("Loading data....")
+	@info "Loading data...."
 	@time di=load(dataFilename);
 	oldsettings=di["oldsettings"]
 	sett=ModelSettings() #default model settings
@@ -109,7 +109,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 		updateSettingsMod!(snew,minw=this_minw,randomw=this_randomw,mf=this_mf,subsampling_features_prop=this_subsampling_features_prop,smoothEstimates=this_smoothEstimates,niter=this_niter,mf=this_mf,nscores=this_nscores,boolRandomizeOnlySplitAtTopNode=this_boolRandomizeOnlySplitAtTopNode,subsampling_prop=this_subsampling_prop)
 		push!(settlist,deepcopy(snew))
 	end
-	info("Number of models to be run: $(length(settlist)). Time $(now())")	
+	@info "Number of models to be run: $(length(settlist)). Time $(now())"
 	
 	#send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)
 		sendto_module(DTM,workers(),local_data_dict=di)
@@ -128,7 +128,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 		      run_model_grids_single(defaulted_modelstats_df,t0,i,length(settlist),deepcopy(settlist[i]),dataFilename,local_data_dict,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 				,2:length(settlist))				
 	
-	info("Aggregating results...")
+	@info "Aggregating results..."
 		allmodelStats=deepcopy(v0fetched)
 		for x in pmapresult
 			append!(allmodelStats,x)
@@ -146,7 +146,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 			best_model_per_iteration=repmat(Any["-1" "-1"],3)			
 			best10models_idx=[1]
 		end
-	info("Writing output...")
+	@info "Writing output..."
 	#write to Excel file 				
 	outf=string(datafolder,"\\",outfileStringOnly,".allstats.xlsx")
 	multirowSettingsArray=mapfoldl(x->convert(Array,x)[2,:], vcat, settlist)
@@ -155,21 +155,21 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 	#add index column
 		multirowSettingsArray2=hcat(["Model Number";collect(1:size(multirowSettingsArray,1)-1)],multirowSettingsArray)	 
 	if size(allmodelStats,1)<1048576 #maxrows of Excel 1<<20
-		info("Writing overall model stats file \n $(outf)")
+		@info "Writing overall model stats file \n $(outf)"
 		write_any_array_to_excel_file(vcat(transpose([string(x) for x in names(allmodelStats)]),convert(Array,allmodelStats)),multirowSettingsArray2,bestmodels,best_model_per_iteration,outf)
 	else
 		outfc=string(datafolder,"\\",outfileStringOnly,".allstats.csv")
 		rows_to_keep=findin(allmodelStats[1],best10models_idx) #keep only the best performing models
 		unshift!(rows_to_keep,1) #header row must be kept
 		allmodelStats_reduced=allmodelStats[rows_to_keep,:]
-		info("Writing overall model stats file \n $(outf)")
+		@info "Writing overall model stats file \n $(outf)"
 			write_any_array_to_excel_file(vcat(transpose([string(x) for x in names(allmodelStats_reduced)]),convert(Array,allmodelStats_reduced)),multirowSettingsArray2,bestmodels,best_model_per_iteration,outf)
-		info("Writing overall model stats file \n $(outfc)")
+		@info "Writing overall model stats file \n $(outfc)"
 			writecsv(outfc,vcat(transpose([string(x) for x in names(allmodelStats)]),convert(Array,allmodelStats)))
 		writecsv(string(datafolder,"\\",outfileStringOnly,".allmodelsettings.csv"),multirowSettingsArray2)
 		writecsv(string(datafolder,"\\",outfileStringOnly,".bestmodels.csv"),bestmodels)
 	end
-	info("Done. Time - $(now())")			
+	@info "Done. Time - $(now())"
 	return String["true"],"No Model was returned as this was a multirow run" #need to think about what we return here....
 end
 	

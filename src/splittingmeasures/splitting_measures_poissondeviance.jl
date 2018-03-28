@@ -4,8 +4,7 @@ warn("BK: this is in the works...")
 	include("analyze_pw_only_data_init_only.jl")
 
 
-	info("use this function, specifically xlogy")
-	info("""
+	@info "use this function, specifically xlogy"	
 	dres[i] = 2 * (xlogy(yi, yi / μi) - (yi - μi))
 
 	for z in chlid_left

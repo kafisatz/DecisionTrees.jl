@@ -682,7 +682,7 @@ function readDFfromSQLDB()
 	#command = """SELECT * from tmp LIMIT 12;"""
 	command = """SELECT * from tmp;"""
 	try
-		info("TODO: Read performace may be imrpved with: M:\\Non-Life\\Personal\\Bernhard\\Resources\\IT\\Julia\\PackageModifications\\ImproveReadPerformance_MySQL")
+		@info "TODO: Read performace may be imrpved with: M:\\Non-Life\\Personal\\Bernhard\\Resources\\IT\\Julia\\PackageModifications\\ImproveReadPerformance_MySQL"
 		df=mysql_execute_query_DF_wo_NA(con,command);
 	catch err
 		mysql_disconnect(con)
@@ -1678,7 +1678,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 			error("DTM: max_splitting_points_num too large max_splitting_points_num=$(max_splitting_points_num)")
 		end
 	end
-	(length(candlist)==1)&&(info("Numeric column $(i):$(string(thisname)) (numeric) has zero splitting points.")) #throw an error when not splitting point exists, was this intended? does this ever happen?
+	(length(candlist)==1)&&(@info "Numeric column $(i):$(string(thisname)) (numeric) has zero splitting points.") #throw an error when not splitting point exists, was this intended? does this ever happen?
     sort!(candlist,alg=QuickSort) #although it should already be sorted
     mini,maxi=extrema(this_column) #it IS CRUCIAL that the maximum is taken from the whole vector here! (and not only the training part)
 	push!(candMatWOMaxValues,deepcopy(candlist))
@@ -1964,7 +1964,7 @@ t=tree.rootnode
 	nClasses=length(leaves_of_tree)
 	#srt=sortperm(fittedValuesPerLeaf) #srt[1] is the leaf number (canonical leaf numbering according to concatenation of leaves -> see create_leaves_of_tree) with the lowest fitted value
 	leafnrlist=Int[x.id for x in leaves_of_tree]
-	#info("it is important that this list is constructed consistently with the definition of the leaf numbers")
+	#@info "it is important that this list is constructed consistently with the definition of the leaf numbers"
 	srt=sortperm(leafnrlist)
 
 	#trn data
@@ -2733,7 +2733,7 @@ function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{Stri
   #we do not need to loop through all the variables, but only through the ones which are actually used by the tree!
   #"for i=1:used_by_tree, j=1:used_by_tree; if i!=j; i&j used in conjunction? ;end;end;"
   count=0
-  #info("check if this works as intended!")
+  #@info "check if this works as intended!"
   for i=1:sz, j=i+1:sz
       count+=1
 	  if min(onedimcount[j],onedimcount[i])>0 #both variables need to be used in the tree
@@ -3290,7 +3290,7 @@ if (typeof(tree)!=Leaf)  #in an earlier version we had ==Node ; however now node
 else
 	#"Tree is not a node (hence it must be a Leaf). Code to write SAS code for a single leaf is not yet implemented"
 	#@assert typeof(tree)==Leaf
-	info("DTM: Tree was a single leaf. No proper SAS Code was produced.")
+	@info "DTM: Tree was a single leaf. No proper SAS Code was produced."
 	@assert false
 	write(fiostream," /*ERROR; the tree was a single leaf*/")
 	#write_tree_at_each_node!(candMatWOMaxValues,tree,number_of_num_features,indent,fiostream,df_name_vector,mappings,leafvarname,mdf)
@@ -4175,7 +4175,7 @@ function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabl
 					end
 					#maxiterNotReached ? println("Smoothing of estimates finished after $(i) recursions.") :  warn("Smoothing process aborted after $(i) iterations. There were still $(sumrev) reversals.")
 					if print_details&&boolSmoothingEnabled #if smoothing is disabled this will not be of interest to the modeller
-						maxiterNotReached ? nothing :  info("Smoothing stopped after $(i) passes: $(sumrev) reversals remained.")
+						maxiterNotReached ? nothing :  @info "Smoothing stopped after $(i) passes: $(sumrev) reversals remained."
 					end
 					enforce_monotonicity!(estimatedRatioPerScore)
 		end

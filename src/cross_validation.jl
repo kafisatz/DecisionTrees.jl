@@ -5,7 +5,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String)
 end
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
-    info("DTM: (bk) consider the multi threaded verison of this function, dtm_multicore")
+    @info "DTM: (bk) consider the multi threaded verison of this function, dtm_multicore"
 #if folds<0 then we consider n disjoint training sets
 
 #currently we have trhee possible CVs
@@ -48,16 +48,16 @@ srand(intDatahash)
         size_which_is_sampled=trnsize_orig
     end
     if cvo.training_proportion>0
-        info("DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)")
+        @info "DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)"
         sample_size=max(1,round(cvo.training_proportion*size_which_is_sampled))
         cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)
     else
         if cvo.folds<0
-            info("DTM: Performing 'DISJOINT training sets' k-fold cross validation (k=$(cvo.folds))")
+            @info "DTM: Performing 'DISJOINT training sets' k-fold cross validation (k=$(cvo.folds))"
             cvsampler=KfoldDisjoint(size_which_is_sampled,abs(cvo.folds))
         else
             #we have folds>=0
-            info("DTM: Performing k-fold cross validation (disjoint validation sets, k=$(cvo.folds))")
+            @info "DTM: Performing k-fold cross validation (disjoint validation sets, k=$(cvo.folds))"
             cvsampler=Kfold(size_which_is_sampled,cvo.folds)
         end
     end
@@ -131,7 +131,7 @@ srand(intDatahash)
     fld,namestr=splitdir(path_and_fn_wo_extension)
     filen=string(path_and_fn_wo_extension,"_multistats.xlsx")
     if isfile(filen)
-        info("Deleting $(filen).")
+        @info "Deleting $(filen)."
         rm(filen)
     end
     
@@ -159,7 +159,7 @@ srand(intDatahash)
     sh2=ExcelSheet("stats",statsdf)
     xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(0))
     #write data
-    info("DTM: Writing multistats to file:\r\n$(filen)")
+    @info "DTM: Writing multistats to file:\r\n$(filen)"
     try 		
 		@time write_statistics(xld,filen,true,false)		
 	catch e
@@ -219,16 +219,16 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CV
             size_which_is_sampled=trnsize_orig
         end
         if cvo.training_proportion>0
-            info("DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)")
+            @info "DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)"
             sample_size=max(1,round(cvo.training_proportion*size_which_is_sampled))
             cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)
         else
             if cvo.folds<0
-                info("DTM: Performing 'DISJOINT training sets' k-fold cross validation (k=$(cvo.folds))")
+                @info "DTM: Performing 'DISJOINT training sets' k-fold cross validation (k=$(cvo.folds))"
                 cvsampler=KfoldDisjoint(size_which_is_sampled,abs(cvo.folds))
             else
                 #we have folds>=0
-                info("DTM: Performing k-fold cross validation (disjoint validation sets, k=$(cvo.folds))")
+                @info "DTM: Performing k-fold cross validation (disjoint validation sets, k=$(cvo.folds))"
                 cvsampler=Kfold(size_which_is_sampled,cvo.folds)
             end
         end
@@ -290,7 +290,7 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CV
         fld,namestr=splitdir(path_and_fn_wo_extension)
         filen=string(path_and_fn_wo_extension,"_multistats.xlsx")
         if isfile(filen)
-            info("Deleting $(filen).")
+            @info "Deleting $(filen)."
             rm(filen)
         end
         

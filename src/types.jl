@@ -489,7 +489,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 		@assert size(found)==(1,) "Error while updating settings column $(col):$(i) (non  unique match)"
 		colnumber=found[1]
 		#convert string statsByVariables to integer values
-		#info("complete this step") #also add the resulting plots and tables (for the named variables and also the randomly generated groups)
+		#@info "complete this step" #also add the resulting plots and tables (for the named variables and also the randomly generated groups)
 		stringValue=edit_statsByVariables(col,stringValue,s)
 		#if scorebandsstartingpoints is a single integer, define n equally spaced bands
 			if col=="scorebandsstartingpoints"
@@ -525,7 +525,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 			valConverted=convertFromString(oldValue,stringValue)
 			setfield!(s,snames[colnumber],valConverted)
 		catch err
-			info("\n\nUnable to set value $(stringValue) for settings column $(i):$(col)")
+			@info "\n\nUnable to set value $(stringValue) for settings column $(i):$(col)"
 			@show stringValue
 			@show typeof(stringValue)
 			@show valConverted
@@ -581,16 +581,16 @@ function copySettingsToCurrentType(oldSetting)
 	#consider new and dropped fields
 		newfs=setdiff(newfields,oldfields)
 		droppedfs=setdiff(oldfields,newfields)
-	info("DTM: Copied settings to new type.")
+	@info "DTM: Copied settings to new type."
 	if length(newfs)>0
-		info("DTM: New type has the following new fields:")	
+		@info "DTM: New type has the following new fields:")
 		for f in newfs        
 			v=getfield(s,f)
 			@show f,v
 		end
 	end
 	if length(droppedfs)>0
-		info("DTM: Old type had the following fields which were dropped:")	
+		@info "DTM: Old type had the following fields which were dropped:")
 		for f in droppedfs        
 			v=getfield(oldSetting,f)
 			@show f,v
@@ -651,8 +651,8 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 	elseif critfnstr=="roptminrlost"
 		crit=ROptMinRLostSplit()
 	else
-		info("Invalid splitting criterion: $(critfnstr). Currently only the following strings are allowed as input:")
-		info(string(allowedinputstrings))
+		@info "Invalid splitting criterion: $(critfnstr). Currently only the following strings are allowed as input:"
+		@info string(allowedinputstrings)
 		error("Abort due to invalid splitting criterion (see above).")
 	end
 	return crit
@@ -706,7 +706,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
 	  end
 	  if length(s.moderationvector)==1
 		if s.moderationvector[1]!=s.mf && s.model_type=="boosted_tree"
-			info("Replacing moderationvector[1] with the value of mf=$(s.mf)")
+			@info "Replacing moderationvector[1] with the value of mf=$(s.mf)"
 			s.moderationvector[1]=s.mf
 		end
 	  end
