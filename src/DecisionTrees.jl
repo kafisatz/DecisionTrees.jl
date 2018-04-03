@@ -18,6 +18,8 @@ srand(1234)
 export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,updateSettingsMod!,prep_data_from_df_modernized,run_legacy,prep_data_from_df
 
 using Random,OnlineStats, StatsBase, StatsFuns, DataFrames, ProgressMeter, PyCall, JLD2, FileIO,PooledArrays # DataArrays is not used anymore
+#as of March 4, JLD2 is not working due to this https://github.com/bicycle1885/CodecZlib.jl/issues/17
+
 @warn "FileIO and PooledArrays are DIRTY for now (as they were not yet updated on master)"
 
 #using MySQL, # temporarily disabled 
