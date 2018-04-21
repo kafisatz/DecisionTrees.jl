@@ -1,5 +1,5 @@
 __precompile__()
-VERSION >= v"0.6-"
+VERSION >= v"0.7-"
 @info "DTM: BK to add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
 @info "DTM: BK to 'remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)"
 @info "DTM: BK add 'time_finished' to model result (and possibly the time needed for the modelling)"
@@ -14,16 +14,16 @@ VERSION >= v"0.6-"
 
 module DecisionTrees
 
-srand(1234)
 export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,updateSettingsMod!,prep_data_from_df_modernized,run_legacy,prep_data_from_df
 
 using Random,OnlineStats, StatsBase, StatsFuns, DataFrames, ProgressMeter, PyCall, JLD2, FileIO,PooledArrays # DataArrays is not used anymore
 #as of March 4, JLD2 is not working due to this https://github.com/bicycle1885/CodecZlib.jl/issues/17
-
 @warn "FileIO and PooledArrays are DIRTY for now (as they were not yet updated on master)"
 
 #using MySQL, # temporarily disabled 
 #using SQLite #disabled as it uses DataFrames 0.11
+
+srand(1234)
 
 #include("check_if_python_packages_are_installed.jl")
 include("types.jl")

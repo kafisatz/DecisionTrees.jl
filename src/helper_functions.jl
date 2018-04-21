@@ -3128,7 +3128,7 @@ fiostream=open(fileloc,"w")
 #write BOM
 write(fiostream,global_byte_order_mark)
 write(fiostream,"/* \r\nSettings: \r\n",settings,"\r\n*/ \r\n")
-write(fiostream,"/* \r\n Variables used by model: \r\n ",join(utf8ListVarsUsed,' ')," \r\nTODO:\r\n Replace the value for missing character values (default: \'\#\') EVERYWHERE IN THE CODE with \'\' \r\n Remove the value for \"other\" character values (e.g.\~) from the if conditions at the top (do not replace them in the actual model code further down). \r\n Define the lists of known character variables for each character variable. \r\n You can use the SAS macro \%define_known_char_varlist(data=runmodel)\; for this. \r\n Define the macro variable RARE_CHARACTER_VALUE \r\n %let RARE_CHARACTER_VALUE=\'\~\'; \r\n*/\r\n")
+write(fiostream,"/* \r\n Variables used by model: \r\n ",join(utf8ListVarsUsed,' ')," \r\nTODO:\r\n Replace the value for missing character values (default: '#') EVERYWHERE IN THE CODE with \'\' \r\n Remove the value for \"other\" character values (e.g.~) from the if conditions at the top (do not replace them in the actual model code further down). \r\n Define the lists of known character variables for each character variable. \r\n You can use the SAS macro %define_known_char_varlist(data=runmodel); for this. \r\n Define the macro variable RARE_CHARACTER_VALUE \r\n %let RARE_CHARACTER_VALUE=\'~\'; \r\n*/\r\n")
 txtw="""
 %put WARNING: (bk) All character variables need to be in uppercase in the data otherwise SAS will produce wrong results!;
 """
@@ -3154,8 +3154,8 @@ indexOfLastCharVarUsed=0
 		vname=df_name_vector[vid]
 		if boolListVarsUsed[number_of_num_features+i]
 			write(fiostream,"/*Variable $(vname)*/\r\n")
-			write(fiostream,"if ",vname," not in (\&",uppercase(vname),"_VALS.) then do; _u_",vname,"=1;variables_have_unknown_values=1;end;else _u_",vname,"=0;\r\n")
-			write(fiostream,"if ",vname," not in (",quotestr,join(mappings[i],string(quotestr," ",quotestr)),quotestr,") then ",vname,"=\&RARE_CHARACTER_VALUE.;\r\n")
+			write(fiostream,"if ",vname," not in (&",uppercase(vname),"_VALS.) then do; _u_",vname,"=1;variables_have_unknown_values=1;end;else _u_",vname,"=0;\r\n")
+			write(fiostream,"if ",vname," not in (",quotestr,join(mappings[i],string(quotestr," ",quotestr)),quotestr,") then ",vname,"=&RARE_CHARACTER_VALUE.;\r\n")
 		end
 	end
 
@@ -3178,7 +3178,7 @@ if length(mappings)>0&&(sum(boolListVarsUsed[number_of_num_features+1:end])>0)
 		vid=number_of_num_features+i
 		vname=df_name_vector[vid]
 		if boolListVarsUsed[number_of_num_features+i]
-			write(fiostream,"\tifc(",vname,"=\&RARE_CHARACTER_VALUE.,\'",vname,"\',\'\')")
+			write(fiostream,"\tifc(",vname,"=&RARE_CHARACTER_VALUE.,\'",vname,"\',\'\')")
 			if i<indexOfLastCharVarUsed
 				write(fiostream,",\r\n")
 			end
@@ -4334,7 +4334,7 @@ function addPredictorData(listOfValues,colnames,sett::ModelSettings,scores,numer
 end
 
 function csharp_write_pub_str(fiostream::IOStream,name,value)
-	write(fiostream,"public string ",name,'\{'," get ",'{'," return ",DoubleQuote,value,DoubleQuote,"; \} \}\r\n")
+	write(fiostream,"public string ",name,'{'," get ",'{'," return ",DoubleQuote,value,DoubleQuote,"; } }\r\n")
 	return nothing
 end
 
@@ -4380,11 +4380,11 @@ function vba_get_signature(mappings,df_name_vector,number_of_num_features)
 	callString=""
 	for i=1:number_of_num_features
 		thisvarname=df_name_vector[i]		
-		callString=string(callString,thisvarname,"\:\=",thisvarname,", ")		
+		callString=string(callString,thisvarname,":=",thisvarname,", ")		
 	end
 	for i=1:length(mappings)
 		thisvarname=df_name_vector[number_of_num_features+i]		
-		callString=string(callString,thisvarname,"\:\=",thisvarname,", ")
+		callString=string(callString,thisvarname,":=",thisvarname,", ")
 	end	
 	#remove last two chars
 	callString=callString[1:end-2]
@@ -4450,24 +4450,24 @@ boollist=Array{Array{String,1}}(0)
 end
 
 function vba_write_writeIterations(indent::Int,fiostream::IOStream,iteration::Int,bt::BoostedTree,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features)
-	#write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n\{\r\n")
+	#write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n{\r\n")
 	tree=bt.trees[iteration]
 	#orig_id=tree.featid
 	#orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 	#write(fiostream," " ^ indent)
 	#if orig_id>0
-	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n\{\r\n")
+	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n{\r\n")
 	#else
-#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n\{\r\n")
+#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n{\r\n")
 #	end
 			vba_write_writeIterations_recursive(bt.moderationvector[iteration],indent,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 #		write(fiostream," " ^ (indent-1))
-#		write(fiostream," \}\r\nelse\r\n\{\r\n")
+#		write(fiostream," }\r\nelse\r\n{\r\n")
 #			vba_write_writeIterations_recursive(indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings)
 #		write(fiostream," " ^ (indent-1))
-#		write(fiostream,"\}\r\n")
+#		write(fiostream,"}\r\n")
 
-	#write(fiostream,"return dRawscore;\r\n\}\r\n\r\n")
+	#write(fiostream,"return dRawscore;\r\n}\r\n\r\n")
 	return nothing
 end
 
@@ -4480,18 +4480,18 @@ function vba_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream:
 	else
 		write(fiostream,repeat("\t",indent),"If (",join(boolListChar[-orig_id][collect(tree.subset)]," Or "),") Then\r\n")
 	end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n\{") : write(fiostream,'\{')
+		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
 		#write(fiostream,"EndIf\r\n")
 			vba_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.left,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 		#if typeof(tree.left)!=Leaf
 		#	write(fiostream," " ^ (indent-1))
 			write(fiostream,repeat("\t",indent),"Else\r\n")
 		#end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n\{") : write(fiostream,'\{')
+		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
 		#write(fiostream,"\r\n")
 				vba_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 		#if typeof(tree.right)!=Leaf
-#		write(fiostream,"\r\n\{") : write(fiostream,'\{')
+#		write(fiostream,"\r\n{") : write(fiostream,'{')
 		#	write(fiostream," " ^ (indent-1))
 			write(fiostream,repeat("\t",indent),"EndIf\r\n")
 		#end
@@ -4500,7 +4500,7 @@ end
 
 function vba_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream::IOStream,tree::Leaf,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features::Int)
 	val=_moderate(tree.fitted,mdf)	
-	write(fiostream,repeat("\t",indent),"dRawscore = dRawscore * $(val)\r\n") # \}\r\n") #//Leafnumber=$(tree.id)")
+	write(fiostream,repeat("\t",indent),"dRawscore = dRawscore * $(val)\r\n") # }\r\n") #//Leafnumber=$(tree.id)")
 	return nothing
 end
 
@@ -4591,7 +4591,7 @@ function csharp_write_RequiredElementsProvided(fiostream::IOStream,df_name_vecto
 	for i=1:length(df_name_vector)
 		if boolVariablesUsed[i]
 			str=df_name_vector[i]
-			write(fiostream,"if (",str,"_Provided==false) \{ ScoreErrors.Add(new ScoreError(ScoreError.ResponseCode.RequiredValueNotProvided, ",DoubleQuote,str,DoubleQuote,", string.Empty)); \}\r\n")
+			write(fiostream,"if (",str,"_Provided==false) { ScoreErrors.Add(new ScoreError(ScoreError.ResponseCode.RequiredValueNotProvided, ",DoubleQuote,str,DoubleQuote,", string.Empty)); }\r\n")
 		end
 	end
 	endstr=
@@ -4623,10 +4623,10 @@ function vba_write_booleans(fiostream::IOStream,boolListNum::Array{Array{String,
 				str=df_name_vector[i]
 				#write(fiostream,"if (!Double.TryParse(strValue, NumberStyles.Number, numberFormatCulture, out dResult)) return ScoreError.ResponseCode.ValueIsNotAValidNumber;\r\n")
 				write(fiostream,"'initially all LE booleans are set to false <-> all numeric values are infinite\r\n")
-				write(fiostream,"'Note that VBA displays 'x <= 2.0' as 'x <= 2.\#' if x is of type Double\r\n")
+				write(fiostream,"'Note that VBA displays 'x <= 2.0' as 'x <= 2.#' if x is of type Double\r\n")
 				for j=1:length(boolListNum[i])
 					if boolNumVarsUsedByModel[i][j]
-						write(fiostream,"if (",str," <= $(candMatWOMaxValues[i][j])) Then \r\n\t",boolListNum[i][j]," = True \r\n\ EndIf \r\n")						
+						write(fiostream,"if (",str," <= $(candMatWOMaxValues[i][j])) Then \r\n\t",boolListNum[i][j]," = True \r\n EndIf \r\n")						
 					end
 				end
 				
@@ -4638,7 +4638,7 @@ function vba_write_booleans(fiostream::IOStream,boolListNum::Array{Array{String,
 			if boolVariablesUsed[i_index]
 				#str=lowercase(df_name_vector[i])
 				str=df_name_vector[i_index]
-				#write(fiostream,"case ",DoubleQuote,lowercase(str),DoubleQuote,'\:',"\r\n",str,"_Provided=true;\r\n")
+				#write(fiostream,"case ",DoubleQuote,lowercase(str),DoubleQuote,':',"\r\n",str,"_Provided=true;\r\n")
 				#write(fiostream,"if (strValue.Length==0) return ScoreError.ResponseCode.BlankValuesNotValid;\r\n")
 				write(fiostream,"Select Case ",str,"\r\n")
 				for j=1:length(boolListChar[i])
@@ -4673,7 +4673,7 @@ function csharp_write_ScoreErrorResponseCodeCheck(fiostream::IOStream,boolListNu
 			if boolVariablesUsed[i]
 				#str=lowercase(df_name_vector[i])
 				str=df_name_vector[i]
-				write(fiostream,"case ",DoubleQuote,lowercase(str),DoubleQuote,'\:',"\r\n",str,"_Provided=true;\r\n",'\{',"\r\n")
+				write(fiostream,"case ",DoubleQuote,lowercase(str),DoubleQuote,':',"\r\n",str,"_Provided=true;\r\n",'{',"\r\n")
 				write(fiostream,"if (strValue.Length==0) return ScoreError.ResponseCode.BlankValuesNotValid;\r\n double dResult = 0.0d;\r\n")
 				write(fiostream,"if (!Double.TryParse(strValue, NumberStyles.Number, numberFormatCulture, out dResult)) return ScoreError.ResponseCode.ValueIsNotAValidNumber;\r\n")
 				write(fiostream,"//initially all LE booleans are set to false <-> all numeric values are infinite\r\n")
@@ -4683,7 +4683,7 @@ function csharp_write_ScoreErrorResponseCodeCheck(fiostream::IOStream,boolListNu
 					end
 				end
 				#write(fiostream,"// todo/tbd: implement a check: test whether the value is within min and maximum observed values\r\n")
-				write(fiostream,"return ScoreError.ResponseCode.Passed;\r\n\}\r\n")
+				write(fiostream,"return ScoreError.ResponseCode.Passed;\r\n}\r\n")
 				#=
 					if (lResult >= minobserved && lResult <= maxobserved ) return ScoreError.ResponseCode.Passed;
 								if (lResult < minobserved) return ScoreError.ResponseCode.ValueBelowModelBounds;
@@ -4699,15 +4699,15 @@ function csharp_write_ScoreErrorResponseCodeCheck(fiostream::IOStream,boolListNu
 			if boolVariablesUsed[i_index]
 				#str=lowercase(df_name_vector[i])
 				str=df_name_vector[i_index]
-				write(fiostream,"case ",DoubleQuote,lowercase(str),DoubleQuote,'\:',"\r\n",str,"_Provided=true;\r\n")
+				write(fiostream,"case ",DoubleQuote,lowercase(str),DoubleQuote,':',"\r\n",str,"_Provided=true;\r\n")
 				write(fiostream,"if (strValue.Length==0) return ScoreError.ResponseCode.BlankValuesNotValid;\r\n")
-				write(fiostream,"switch(strValue)\r\n\{\r\n")
+				write(fiostream,"switch(strValue)\r\n{\r\n")
 				for j=1:length(boolListChar[i])
 					if boolCharVarsUsedByModel[i][j]
-						write(fiostream,"case ",DoubleQuote,string(mappings[i][j]),DoubleQuote,"\: $(boolListChar[i][j]) = true; return ScoreError.ResponseCode.Passed;\r\n")
+						write(fiostream,"case ",DoubleQuote,string(mappings[i][j]),DoubleQuote,": $(boolListChar[i][j]) = true; return ScoreError.ResponseCode.Passed;\r\n")
 					end
 				end
-				write(fiostream,"default: return ScoreError.ResponseCode.CategoricalValueNotAllowed;\r\n\}\r\n")
+				write(fiostream,"default: return ScoreError.ResponseCode.CategoricalValueNotAllowed;\r\n}\r\n")
 			end
 		end
 	endstr=
@@ -4727,15 +4727,15 @@ function csharp_write_elseif_ScoreMap(fiostream::IOStream,intArray_1_to_n::Array
 	if length(maxRawRelativityPerScoreSorted)>minval
 		middle=fld(length(maxRawRelativityPerScoreSorted),2)
 		middle=max(2,min(length(maxRawRelativityPerScoreSorted)-1,middle))
-		write(fiostream,"if (a_dRawScore <= $(maxRawRelativityPerScoreSorted[middle])d)\r\n\{")
+		write(fiostream,"if (a_dRawScore <= $(maxRawRelativityPerScoreSorted[middle])d)\r\n{")
 			csharp_write_elseif_ScoreMap(fiostream,intArray_1_to_n[1:middle],maxRawRelativityPerScoreSorted[1:middle],estimatesPerScore[1:middle])
-		write(fiostream,"\}\r\nelse\{\r\n")
+		write(fiostream,"}\r\nelse{\r\n")
 			csharp_write_elseif_ScoreMap(fiostream,intArray_1_to_n[middle+1:end],maxRawRelativityPerScoreSorted[middle+1:end],estimatesPerScore[middle+1:end])
-		write(fiostream,"\}\r\n")
+		write(fiostream,"}\r\n")
 	else
-		write(fiostream,"if (a_dRawScore <= $(maxRawRelativityPerScoreSorted[1])d) \{ iScore=$(intArray_1_to_n[1]); dEstimate= $(estimatesPerScore[1])d; \}\r\n")
+		write(fiostream,"if (a_dRawScore <= $(maxRawRelativityPerScoreSorted[1])d) { iScore=$(intArray_1_to_n[1]); dEstimate= $(estimatesPerScore[1])d; }\r\n")
 		for j=2:length(maxRawRelativityPerScoreSorted)
-			write(fiostream,"else if (a_dRawScore <= $(maxRawRelativityPerScoreSorted[j])d) \{ iScore=$(intArray_1_to_n[j]); dEstimate= $(estimatesPerScore[j])d; \}\r\n")
+			write(fiostream,"else if (a_dRawScore <= $(maxRawRelativityPerScoreSorted[j])d) { iScore=$(intArray_1_to_n[j]); dEstimate= $(estimatesPerScore[j])d; }\r\n")
 		end
 		#Last else condition is "special"
 	end
@@ -4937,24 +4937,24 @@ end
 
 
 function csharp_write_writeIterations(indent::Int,fiostream::IOStream,iteration::Int,bt::BoostedTree,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features)
-	write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n\{\r\n")
+	write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n{\r\n")
 	tree=bt.trees[iteration]
 	#orig_id=tree.featid
 	#orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 	#write(fiostream," " ^ indent)
 	#if orig_id>0
-	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n\{\r\n")
+	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n{\r\n")
 	#else
-#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n\{\r\n")
+#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n{\r\n")
 #	end
 			csharp_write_writeIterations_recursive(bt.moderationvector[iteration],indent+1,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 #		write(fiostream," " ^ (indent-1))
-#		write(fiostream," \}\r\nelse\r\n\{\r\n")
+#		write(fiostream," }\r\nelse\r\n{\r\n")
 #			csharp_write_writeIterations_recursive(indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings)
 #		write(fiostream," " ^ (indent-1))
-#		write(fiostream,"\}\r\n")
+#		write(fiostream,"}\r\n")
 
-	write(fiostream,"return dRawscore;\r\n\}\r\n\r\n")
+	write(fiostream,"return dRawscore;\r\n}\r\n\r\n")
 	return nothing
 end
 
@@ -4967,27 +4967,27 @@ function csharp_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostre
 	else
 		write(fiostream,"\r\nif (",join(boolListChar[-orig_id][collect(tree.subset)],"||"),")")
 	end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n\{") : write(fiostream,'\{')
-		write(fiostream,'\{')
+		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
+		write(fiostream,'{')
 			csharp_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.left,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 		#if typeof(tree.left)!=Leaf
 		#	write(fiostream," " ^ (indent-1))
-			write(fiostream," \}\r\nelse")
+			write(fiostream," }\r\nelse")
 		#end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n\{") : write(fiostream,'\{')
-		write(fiostream,'\{')
+		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
+		write(fiostream,'{')
 				csharp_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 		#if typeof(tree.right)!=Leaf
-#		write(fiostream,"\r\n\{") : write(fiostream,'\{')
+#		write(fiostream,"\r\n{") : write(fiostream,'{')
 		#	write(fiostream," " ^ (indent-1))
-			write(fiostream,"\}\r\n")
+			write(fiostream,"}\r\n")
 		#end
 	return nothing
 end
 
 function csharp_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream::IOStream,tree::Leaf,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features::Int)
 	val=_moderate(tree.fitted,mdf)
-	write(fiostream," dRawscore*=$(val)d;") # \}\r\n") #//Leafnumber=$(tree.id)")
+	write(fiostream," dRawscore*=$(val)d;") # }\r\n") #//Leafnumber=$(tree.id)")
 	return nothing
 end
 
@@ -5149,7 +5149,7 @@ function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesP
 		csharp_write_writeIterations(0,fiostream,i,bt,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 	end
 	#write end of the code
-	write(fiostream,"\}\r\n\}\r\n")
+	write(fiostream,"}\r\n}\r\n")
 	close(fiostream)
 end
 

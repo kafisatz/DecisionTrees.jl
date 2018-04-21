@@ -63,13 +63,16 @@ function run_model_multirow_perCore(defaulted_modelstats_df::DataFrame,iteridx::
 			try
 				tic()
 				tic()
-				@info "Process: $(myid()) - Running setting entry $(i)"
+				@info "Process: $(myid()) - Running setting entry $(i)"                 
 				outfileStringOnly=string(outfileStringOnlyOrig,i)
-				outfilename=convert(String,string(datafolder,"\\",outfileStringOnly))
+                
+				outfilename=convert(String,string(datafolder,'\\',outfileStringOnly))
 				settingsArray=deepcopy(multirowSettingsArray[[1,i+1],:])
 				updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))		
-				@assert in(sett.model_type,["build_tree","boosted_tree"]) "Multirow settings are only working for boosting and simple trees (for now)"
-				result_of_runmodel,resulting_model=run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
+                not_used_h=2
+				in(sett.model_type,["build_tree","boosted_tree"])
+                @assert(in(sett.model_type,["build_tree","boosted_tree"]),"Multirow settings are only working for boosting and simple trees")
+                result_of_runmodel,resulting_model=run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
 				#get model statistics
 				thesem=get_model_stats(resulting_model,defaulted_modelstats_df,i)
 			catch

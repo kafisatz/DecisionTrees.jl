@@ -55,7 +55,7 @@ http://www.graphviz.org/content/dot-language
 */
 
 """
-    return string("digraph tree \{",leading_comment,dot_graph,"\n\}")
+    return string("digraph tree {",leading_comment,dot_graph,"\n}")
     return dot_graph
 end
 

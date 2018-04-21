@@ -44,7 +44,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     numDA=dfin[Symbol(numcol)]
 
     if denomcol==""
-        @info "Using constant denominator for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))"
+        @info "Using constant denominator for each row (.==1)" #of the form ones(size(yourIntputDataFrame,1))"
         denomDA=ones(sz)
     else
         @assert in(Symbol(denomcol),dfnames) "Denominator column not found. We searched for the column $(denomcol) in the vector $(string.(dfnames))"
@@ -52,7 +52,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     end
 
     if weightcol==""
-        @info "Using constant weight for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))"
+        @info "Using constant weight for each row (.==1)" #of the form ones(size(yourIntputDataFrame,1))"
         weightDA=ones(sz)
     else
         @assert in(Symbol(weightcol),dfnames) "Weight column not found. We searched for the column $(weightcol) in the vector $(string.(dfnames))"
@@ -60,7 +60,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     end
 
     if trnvalcol==""
-        @info "Using random choice of Training-Validation column with porportion $(valpct) for validation"
+        @info "Using random choice of Training-Validation column with proportion $(valpct) for validation"
         trnvalDA=map(x->x>valpct ? 1.0 : 0.0,rand(sz))
     else
         @assert in(Symbol(trnvalcol),dfnames) "Training-Validation column not found. We searched for the column $(trnvalcol) in the vector $(string.(dfnames))"
@@ -76,7 +76,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     end
 
     if keycol==""
-        @info "Using canonical choice of indentifier column 1:size(yourIntputDataFrame,1)"
+        @info "Using canonical choice of identifier column 1:size(yourIntputDataFrame,1)"
         irkeyDA=collect(1:sz)
     else
         @assert in(Symbol(keycol),dfnames) "Identifier column not found. We searched for the column $(keycol) in the vector $(string.(dfnames))"
@@ -429,7 +429,7 @@ sett=deepcopy(input_setttings)
 
 if sett.boolTariffEstStats
 	if !sett.boolProduceEstAndLeafMatrices
-		@info "DTM: User has requested TariffEstStats (boolTariffEstStats=$(sett.boolTariffEstStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true.")
+		@info "DTM: User has requested TariffEstStats (boolTariffEstStats=$(sett.boolTariffEstStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true."
 		sett.boolProduceEstAndLeafMatrices=true
 		#@show sett.boolTariffEstStats,sett.boolProduceEstAndLeafMatrices
 	end

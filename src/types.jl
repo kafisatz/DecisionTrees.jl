@@ -583,14 +583,14 @@ function copySettingsToCurrentType(oldSetting)
 		droppedfs=setdiff(oldfields,newfields)
 	@info "DTM: Copied settings to new type."
 	if length(newfs)>0
-		@info "DTM: New type has the following new fields:")
+		@info "DTM: New type has the following new fields:"
 		for f in newfs        
 			v=getfield(s,f)
 			@show f,v
 		end
 	end
 	if length(droppedfs)>0
-		@info "DTM: Old type had the following fields which were dropped:")
+		@info "DTM: Old type had the following fields which were dropped:"
 		for f in droppedfs        
 			v=getfield(oldSetting,f)
 			@show f,v
