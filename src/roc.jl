@@ -196,6 +196,9 @@ Base.start(r::Roc) = 1
 Base.done(r::Roc, state) = state>length(r)
 Base.endof(r::Roc) = length(r)
 Base.next(r::Roc, state) = (r[state], state+1)
+@inline iterate(x::Roc) = next(x, start(x))
+@inline iterate(x::Roc, i) = done(x, i) ? done : next(x, i)
+
 function Base.getindex(r::Roc, i::Integer)
     if i == length(r)
         return (r.pfa[i], r.pmiss[i], Inf, r.ch[i], Inf)

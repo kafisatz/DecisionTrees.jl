@@ -32,12 +32,7 @@ function run_model_multirow_settings(dataFilename::String,multirowSettingsArray:
 		@info "Aggregating results..."
 		allmodelStats=reduce(vcat, v0fetched, pmapresult)
 		@info "Writing output..."
-	#old approach:
-		#models_per_core=calcIterationsPerCore2(size(multirowSettingsArray,1)-1,max(1,nprocs()-1)) #I think we need to submit nprocs()-1 here, or does the main task (=worker1?) also do any work? todo/tbd need to test this.			
-		#allmodelStats = @parallel (vcat) for ii=1:sum(models_per_core[:,1].>0) #only run on the cores where there is actual work to do				
-		#	run_model_multirow_perCore([1 ii],deepcopy(sett),deepcopy(oldsettings),
-		#			dataFilenameMOD,multirowSettingsArray,di,datafolder,outfilename,outfileStringOnlyOrig,const_shift_cols)
-		#end
+
 	#note, we may want to reorder allmodelStats.... but maybe it is not necessary
 	#write to Excel file 				
 		outf=string(datafolder,"\\",outfileStringOnlyOrig,".allstats.xlsx")
@@ -49,7 +44,7 @@ function run_model_multirow_settings(dataFilename::String,multirowSettingsArray:
 				writecsv(string(datafolder,"\\",outfileStringOnlyOrig,".allstats.csv"),allmodelStats)
 				writecsv(string(datafolder,"\\",outfileStringOnlyOrig,".allmodelsettings.csv"),allmodelStats)			
 			end
-		@info "Done. Time - $(now())
+		@info "Done. Time - $(now())"
 	return String["true"],"No Model was returned as this was a multirow run" #need to think about what we return here....
 end
 	
@@ -68,15 +63,14 @@ function run_model_multirow_perCore(defaulted_modelstats_df::DataFrame,iteridx::
                 
 				outfilename=convert(String,string(datafolder,'\\',outfileStringOnly))
 				settingsArray=deepcopy(multirowSettingsArray[[1,i+1],:])
-				updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))		
+				updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
                 not_used_h=2
-				in(sett.model_type,["build_tree","boosted_tree"])
-                @assert(in(sett.model_type,["build_tree","boosted_tree"]),"Multirow settings are only working for boosting and simple trees")
-                result_of_runmodel,resulting_model=run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
+                @assert in(sett.model_type,["build_tree","boosted_tree"]) "Multirow settings are only working for boosting and simple trees"
+                result_of_runmodel,resulting_model=run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
 				#get model statistics
 				thesem=get_model_stats(resulting_model,defaulted_modelstats_df,i)
 			catch
-				thesem=deepcopy(defaulted_modelstats_df)		
+				thesem=deepcopy(defaulted_modelstats_df)	
 			end
 		append!(allmodelStats,thesem)
 		end		
@@ -109,7 +103,7 @@ function grid_search(main_ARGS,minw_list,randomw_list,subsampling_features_prop_
 	#NOTE: it is best to have the minw loop at the lowest level because models with a small minw value will require most memory and these model should thus not be run in parallel but rather sequentially
 	for this_randomw in randomw_list,this_subsampling_features_prop in subsampling_features_prop_list,this_smoothEstimates in smoothEstimates_list,this_niter in niter_list,this_mf in mf_list,this_nscores in nscores_list,this_boolRandomizeOnlySplitAtTopNode in boolRandomizeOnlySplitAtTopNode_list,this_subsampling_prop in subsampling_prop_list, this_minw in minw_list
 		snew=deepcopy(sett)
-		updateSettingsMod!(snew,minw=this_minw,randomw=this_randomw,mf=this_mf,subsampling_features_prop=this_subsampling_features_prop,smoothEstimates=this_smoothEstimates,niter=this_niter,mf=this_mf,nscores=this_nscores,boolRandomizeOnlySplitAtTopNode=this_boolRandomizeOnlySplitAtTopNode,subsampling_prop=this_subsampling_prop)
+		updateSettingsMod!(snew,minw=this_minw,randomw=this_randomw,mf=this_mf,subsampling_features_prop=this_subsampling_features_prop,smoothEstimates=this_smoothEstimates,niter=this_niter,nscores=this_nscores,boolRandomizeOnlySplitAtTopNode=this_boolRandomizeOnlySplitAtTopNode,subsampling_prop=this_subsampling_prop)
 		push!(settlist,deepcopy(snew))
 	end
 	@info "Number of models to be run: $(length(settlist)). Time $(now())"

@@ -104,7 +104,7 @@ end
 
 function graph(node::Leaf,counter::Int,parentname::String,sett::ModelSettings,edge_from_parent_description::String,mappings,candMatWOMaxValues,total_weight_of_tree::Float64)
     thisw = nodesize(node)
-	label = "Leaf $(node.id)\nFit $(signif(node.fitted,3))\n Weight $(round(thisw,1)) ($(round(100*thisw/total_weight_of_tree,1))\%)"
+	label = "Leaf $(node.id)\nFit $(signif(node.fitted,3))\n Weight $(round(thisw,1)) ($(round(100*thisw/total_weight_of_tree,1))%)"
     name_of_this_node="N$(counter)"
     dot_graph = """$(name_of_this_node)[label="$(label)"]\n"""
     dot_graph *= """$(parentname)->$(name_of_this_node) [label="$(edge_from_parent_description)"]\n"""

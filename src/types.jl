@@ -90,6 +90,8 @@ abstract type DTSubsets end
 	  state+=one(1)
 	  bit_to_flip,state
 	end
+    @inline iterate(x::MyGrayCodeSubsetsHALF) = next(x, start(x))
+    @inline iterate(x::MyGrayCodeSubsetsHALF, i) = done(x, i) ? done : next(x, i)
 
 	bitflip_graycode_subsetsHALF(xs) = MyGrayCodeSubsetsHALF(length(xs),(1 << (length(xs)-1))-2)
 
@@ -102,6 +104,8 @@ abstract type DTSubsets end
 	length(it::MyIncreasingSubsets)=it.size_of_set
 	start(it::MyIncreasingSubsets)=zero(1) #state = simply count through the subsets
 	done(it::MyIncreasingSubsets,state)=state>=it.size_of_set-1 #we do not need to flip/change the last element (as this would resutl in an empty left child)
+    @inline iterate(x::MyIncreasingSubsets) = next(x, start(x))
+    @inline iterate(x::MyIncreasingSubsets, i) = done(x, i) ? done : next(x, i)
 
 	function next(it::MyIncreasingSubsets,state)
 		state+=one(1)

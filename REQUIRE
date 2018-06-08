@@ -1,6 +1,9 @@
-julia 0.6.2
+julia 0.7-
 PyCall
 CSV
+PooledArrays
+Rmath
+SpecialFunctions
 Loess
 BenchmarkTools
 Compat
