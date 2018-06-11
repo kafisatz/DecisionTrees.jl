@@ -1,5 +1,5 @@
 #consider the functions
-#prepare_dataframe_for_dtm -> prepares an arbitrary df from the dtm models
+#prepare_dataframe_for_dtm_INTERNAL -> prepares an arbitrary df from the dtm models
 #prepare_non_jld_data
 
 function run_model(ARGS;nrows::Int=-1)
@@ -27,7 +27,21 @@ function run_model(ARGS;nrows::Int=-1)
    end
 end
 
-function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String,treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+	@assert isdir(directory)
+	
+	@time (df_prepped,sett)=prepare_dataframe_for_dtm_INTERNAL!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+
+	#set this to false
+		sett.boolSaveJLDFile=false
+		
+	fn=string(directory,"/DTMResult.csv")
+	resDF,sett=prep_data_from_df(df_prepped,sett,fn)
+
+	return resDF,sett
+end
+
+function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 	#denomcol=uppercase(denomcol)
     #keycol=uppercase(keycol)
     #trnvalcol=uppercase(trnvalcol)
@@ -131,9 +145,7 @@ removeUnionTypes!(dfin,independent_vars)
                 #@info "DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed."
             end
         end
-
-        #if this_is_a_string||(eltype(dfin[this_name])<:AbstractString)
-        #if (eltype(dfin[this_name])<:AbstractString)
+        
         if is_categorical_column(dfin[this_name],this_name)
             push!(char_features,this_name)
         else
@@ -142,27 +154,18 @@ removeUnionTypes!(dfin,independent_vars)
 
     end
 
- @assert (length(char_features)+length(num_features)==n_indep) #this should always be the case!
- n_char=length(char_features)
- n_num=length(num_features)
+	@assert (length(char_features)+length(num_features)==n_indep) #this should always be the case!
+	n_char=length(char_features)
+	n_num=length(num_features)
 
- #@show num_features
- #@show char_features
-#warn("this is written in a terrible manner, we should improve this!!. It takes ages for larger data sets")
-    if n_num>0
-        #dfres=hcat(dfres,deepcopy(dfin[num_features]))
+  #warn("this might benefit from optimization. I am not entirely sure, how the code performs for larger data sets")
+    if n_num>0        
         dfres[num_features]=dfin[num_features]
     end
-    if n_char>0
-        #dfres=hcat(dfres,deepcopy(dfin[char_features]))
+    if n_char>0        
         dfres[char_features]=dfin[char_features]
     end
-    #dftmp=DataFrame()
-
-    #sort such that training observations are at the beginning of the file
-    #this is not necessary!
-    #sort!(dfres,cols = [:training_validation_bool, :irkey],rev=true)
-
+    
     this_sett=ModelSettings()
 
     this_sett.df_name_vector=names(dfres)[1+global_const_shift_cols:end]
@@ -195,7 +198,7 @@ return nothing
 end
 
 function is_categorical_column(x,nm)
-warn("BK need to ensure that there are NO union types!, especially we do not want the missing tpiye (for now)!")
+	#warn("BK need to ensure that there are NO union types!, especially we do not want the missing tpiye (for now)!")
     elt=eltype(x)
     typeOfElt=typeof(elt)
     if typeOfElt!=DataType  
