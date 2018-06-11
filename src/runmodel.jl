@@ -30,12 +30,12 @@ end
 function prepare_dataframe_for_dtm!(dfin::DataFrame,directory::String;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 	@assert isdir(directory)
 	
-	@time (df_prepped,sett)=prepare_dataframe_for_dtm_INTERNAL!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+	@time (df_prepped,sett)=prepare_dataframe_for_dtm_INTERNAL!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
 
 	#set this to false
 		sett.boolSaveJLDFile=false
 		
-	fn=string(directory,"/DTMResult.csv")
+	fn=joinpath(directory,"DTMResult.csv")
 	(resDF,sett)=prep_data_from_df(df_prepped,sett,fn)
 
 	return resDF,sett
