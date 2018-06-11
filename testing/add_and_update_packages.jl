@@ -1,7 +1,7 @@
 #this is file is for testing purposes only.
-add CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter Iterators JLD2 ProfileView Coverage FileIO Random StatsFuns
+add CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter JLD2 FileIO StatsFuns
 
-up CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter Iterators JLD2 ProfileView Coverage FileIO Random StatsFuns
+up CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter JLD2 FileIO StatsFuns
 
 #consider (in the Pkg manager)
 add OnlineStats#master
