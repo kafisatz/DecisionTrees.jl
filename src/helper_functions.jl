@@ -1656,7 +1656,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 	thisname=Symbol(sett.df_name_vector[i])	
 	original_data_vector=wholeDF[thisname] 	
 	#thiscol_as_utf8=view(dfIndata,:,colnumber)
-    header=deepcopy(df_name_vector) #[string(x) for x in names(numfeatures)]
+    header=deepcopy(sett.df_name_vector) #[string(x) for x in names(numfeatures)]
     elt=eltype(original_data_vector)
 	@assert (elt<:Number) "Datatype of numeric predictor $(i):$(header[i]) is not numeric in the CSV. Please check the order of the columns in the data, their type and the value of number_of_num_features in the settings!" #the assert is probably not needed here, as we try to convert afterwards anyway
 	cond2=(typeof(original_data_vector)<:AbstractVector{Float64})	 

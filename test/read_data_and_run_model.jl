@@ -6,10 +6,12 @@ using DataFrames,CSV
 using DecisionTrees  
 
 tela = (time_ns()-t0)/1e9
-@show tela
+@show tela #maybe 500-700 seconds on June 11, 2018
 
-@time df_tmp=readtable(string("data\\data1mini.csv")); 
-#@time df_tmp=CSV.read(string("data\\data1mini.csv")); 
+elt=[Int64,	Float64,	Float64,	Float64,	Int64,	String,	String,	String,	Int64,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int64,	Int64,	Int64,	Int64,	String,	Int64,	String,	String,	Int64,	String,	String,	Int64,	String,	String,	Int64,	String,	Int64,	String,	String,	Int64,	Int64,	String,	Int64,	Int64,	String,	Int64,	Int64,	String,	Int64,	String,	String,	String,	Int64,	String,	String,	String,	String,	Int64,	Int64,	Int64,	String,	String,	String,	String,	String,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Float64,	Float64,	Float64,	Float64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64]
+
+#@time df_tmp=readtable(string("data\\data1mini.csv"),eltypes=elt); 
+@time df_tmp=CSV.read(string("data\\data1mini.csv"),allowmissing=:none,categorical=false); 
 
 selected_explanatory_vars=["ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","PLZ_WOHNORT","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 
