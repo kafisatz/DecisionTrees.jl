@@ -22,10 +22,10 @@ uuid = "9e28174c-4ba2-5203-b857-d8d62c4213ee"
 version = "0.8.8"
 
 [[BinaryProvider]]
-deps = ["Compat", "Libdl", "SHA"]
-git-tree-sha1 = "9b40439f35dd21b87a559fccb2833377fc56517d"
+deps = ["Compat", "SHA"]
+git-tree-sha1 = "88f5e40c04b5aac568656d6464576974eb9afce4"
 uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
-version = "0.3.0"
+version = "0.3.2"
 
 [[BufferedStreams]]
 deps = ["Compat", "Pkg", "Test"]
@@ -146,11 +146,9 @@ version = "0.15.0+"
 
 [[FileIO]]
 deps = ["Compat"]
-git-tree-sha1 = "21ec1fc1cb1c87d090453beca646fa55c9600e63"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaIO/FileIO.jl.git"
+git-tree-sha1 = "0a1f9ee5c682ff68287eb30deb381fdf595de762"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
-version = "0.9.0+"
+version = "0.9.0"
 
 [[FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -256,12 +254,6 @@ deps = ["Compat", "StatsBase"]
 git-tree-sha1 = "3c2162fbf99b257907730c5e389df385896654a9"
 uuid = "7f8f8fb0-2700-5f03-b4bd-41f8cfc144b6"
 version = "0.1.6"
-
-[[LegacyStrings]]
-deps = ["Compat"]
-git-tree-sha1 = "c06e053a42518b5509c8db7d014a0fa3410b2f0d"
-uuid = "1b4a561d-cfcb-5daf-8433-43fcf8b4bea3"
-version = "0.3.0"
 
 [[LibCURL]]
 deps = ["BinDeps", "Compat", "Libdl", "WinRPM"]
@@ -409,10 +401,10 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [[Reactive]]
-deps = ["DataStructures"]
-git-tree-sha1 = "29a9473fbe8052a0b62296debcc20a035398c736"
+deps = ["DataStructures", "Test"]
+git-tree-sha1 = "9471cc4f9b88f76c17936b4bcedc0766719a19fe"
 uuid = "a223df75-4e93-5b7c-acf9-bdd599c0f4de"
-version = "0.6.0"
+version = "0.7.0"
 
 [[RecipesBase]]
 git-tree-sha1 = "fbcfab4806fbafbd2badc4cdc804c374caf01523"
@@ -446,12 +438,6 @@ version = "0.0.3"
 
 [[SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
-
-[[SQLite]]
-deps = ["BinDeps", "DataFrames", "DataStreams", "Dates", "Homebrew", "LegacyStrings", "Libdl", "WeakRefStrings", "WinRPM"]
-git-tree-sha1 = "19eb65f96623a0ac263b378d3d6d7b5adce1eb3e"
-uuid = "0aa819cd-b072-5ff4-a722-6bc24af294d9"
-version = "0.5.0"
 
 [[Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
