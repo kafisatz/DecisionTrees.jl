@@ -1,7 +1,7 @@
 #this is file is for testing purposes only.
-add PooledArrays CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter Iterators JLD2 SQLite ProfileView Coverage FileIO Random StatsFuns
+add CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter Iterators JLD2 ProfileView Coverage FileIO Random StatsFuns
 
-up PooledArrays CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter Iterators JLD2 SQLite ProfileView Coverage FileIO Random StatsFuns
+up CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter Iterators JLD2 ProfileView Coverage FileIO Random StatsFuns
 
 using PooledArrays,CSV, Loess, BenchmarkTools, Compat, OnlineStats, StatsBase, Distributions, DataFrames, ProgressMeter, Iterators, JLD2, SQLite, ProfileView, Coverage, FileIO, Random, StatsFuns
 
