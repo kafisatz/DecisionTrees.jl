@@ -3,8 +3,6 @@ add CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFram
 
 up CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter Iterators JLD2 ProfileView Coverage FileIO Random StatsFuns
 
-using PooledArrays,CSV, Loess, BenchmarkTools, Compat, OnlineStats, StatsBase, Distributions, DataFrames, ProgressMeter, Iterators, JLD2, SQLite, ProfileView, Coverage, FileIO, Random, StatsFuns
-
 #consider (in the Pkg manager)
 add OnlineStats#master
 
@@ -17,9 +15,5 @@ using Distributions #needed to Pkg.build("Rmath")  and Pkg.build("SpecialFunctio
 using ProgressMeter
 using Iterators
 using JLD2#does it work on master?
-using SQLite
-using ProfileView
-using Coverage #works on master
 using FileIO
-using Random
 using StatsFuns #works on master
