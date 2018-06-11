@@ -35,13 +35,13 @@ for x in selected_explanatory_vars
     @show x,eltype(df_tmp[Symbol(x)])
 end
 
-@time (df_prepped,sett)=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+#@time (df_prepped,sett)=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
 #temporary disable this (as FileIO does not seem to work properly)
-sett.boolSaveJLDFile=false
+#sett.boolSaveJLDFile=false
 
-res=prep_data_from_df(df_prepped,sett,"C:\\temp\\")
+#res=prep_data_from_df(df_prepped,sett,"C:\\temp\\")
 
-rr=prepare_dataframe_for_dtm!(df_tmp,directory="C:\\temp\\mrx\\",treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+(dtm,sett)=prepare_dataframe_for_dtm!(df_tmp,"C:\\temp\\",treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
 #0
