@@ -10,7 +10,6 @@ add OnlineStats#master
 
 using PyCall #works on master
 using CSV #works on masters
-using PooledArrays
 using Compat
 using OnlineStats #not working on June 7
 using StatsBase
