@@ -3,8 +3,22 @@ cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.
 @warn("You may need to run 'pkg> instantiate' when you first run this. Use ] to enther the package mode.")
 
 using Revise
+
+#these lines are primarly to test the precompliation of the dependency packages
+using FileIO
+using DataFrames
+using PyCall 
+using CSV 
+using Compat
+using OnlineStats 
+using StatsBase
+using Distributions
+using ProgressMeter
+using Iterators
 using JLD2
-using DataFrames,CSV
+using FileIO
+using StatsFuns 
+
 using DecisionTrees  
 
 tela = (time_ns()-t0)/1e9
