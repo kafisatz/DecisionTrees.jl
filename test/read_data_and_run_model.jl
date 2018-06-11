@@ -1,5 +1,6 @@
 t0=time_ns()
-cd("C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl")    
+cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
+@warn("You may need to run 'pkg> instantiate' when you first run this. Use ] to enther the package mode.")
 
 using Revise
 using DataFrames,CSV
