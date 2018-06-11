@@ -1,22 +1,9 @@
 julia 0.7-
 PyCall
-CSV
-PooledArrays
-Rmath
-SpecialFunctions
-Loess
-BenchmarkTools
-Compat
+DataFrames
+JLD2
+FileIO
 OnlineStats
 StatsBase
-Distributions
-DataFrames
-ProgressMeter
-Iterators
-JLD2
-SQLite
-ProfileView
-Coverage
-FileIO
-Random
 StatsFuns
+ProgressMeter

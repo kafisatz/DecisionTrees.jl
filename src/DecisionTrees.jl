@@ -22,9 +22,8 @@ export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!
 include("PooledArraysDTM.jl")
 using .PooledArraysDTM 
 
-using Dates,Random,OnlineStats, StatsBase, StatsFuns, DataFrames, ProgressMeter, PyCall, JLD2, FileIO # DataArrays is not used anymore
-#as of March 4, JLD2 is not working due to this https://github.com/bicycle1885/CodecZlib.jl/issues/17
-@warn "FileIO and PooledArrays are DIRTY for now (as they were not yet updated on master)"
+using Dates,Random
+using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
 
 #using MySQL, # temporarily disabled 
 #using SQLite #disabled as it uses DataFrames 0.11
@@ -50,8 +49,6 @@ include("cross_validation.jl")
 include("show.jl")
 #include("onlineStats_addons.jl")
 #include("sqlite_query.jl")
-
-
 
 global const pyModPandas = PyNULL()
 global const_default_splitdef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0)
