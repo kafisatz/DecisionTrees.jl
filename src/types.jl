@@ -359,7 +359,7 @@ mutable struct ModelSettings
 	nthreads=0 #19
 	dataIdentifier="uninitialized" #20
 	algorithmsFolder="uninitialized" #21
-	starttime=string(Dates.now()) #22
+	starttime=string(now()) #22
 	indata="uninitialized" #23
 	var_dep="uninitialized" #24
 	indepcount=-1 #25

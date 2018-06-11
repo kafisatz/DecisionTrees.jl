@@ -83,6 +83,9 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
         irkeyDA=dfin[Symbol(keycol)]
     end
 
+#remove union types (especially missing if there are any!)
+removeUnionTypes!(dfin,independent_vars)
+    
 #construct resulting DF
 #requirements on the first 5 columns: irkey (=string identifier), numerator, denominator, weight, training_validation_bool (0 or 1)
     #'main' columns
@@ -120,7 +123,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
         @assert in(Symbol(this_name),dfnames) "Error: explanatory column $(this_name) not found in data."
         if in(this_name,Symbol.(treat_as_categorical_variable))
             #change variable type in original dataframe
-            if !is_categorical_column(dfin[this_name])
+            if !is_categorical_column(dfin[this_name],this_name)
                 @info "DTM: Converting the column $(this_name) from $(eltype(dfin[this_name])) to string."
                 dfin[this_name]=string.(dfin[this_name])
                 this_is_a_string=true
@@ -131,7 +134,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
 
         #if this_is_a_string||(eltype(dfin[this_name])<:AbstractString)
         #if (eltype(dfin[this_name])<:AbstractString)
-        if is_categorical_column(dfin[this_name])
+        if is_categorical_column(dfin[this_name],this_name)
             push!(char_features,this_name)
         else
             push!(num_features,this_name)
@@ -172,8 +175,35 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variabl
     return dfres,this_sett
 end
 
-function is_categorical_column(x)
-    return eltype(x) <:AbstractString
+
+"""
+tries to convert all types of Union{Missing,T} to T
+"""
+function removeUnionTypes!(dfin,independent_vars::Vector{String})
+for v in independent_vars
+    vsymb=Symbol(v)
+    col=dfin[vsymb]
+    elt=eltype(col)
+    eltOfelt=eltype(elt)
+    if eltOfelt!=DataType
+        @info "DTM: Eltype of the type of $(v) is not a DataType but $(eltOfelt). The type of $(v) is $(elt)"
+        
+        @info "DTM: Trying to convert to "
+    end
+end
+return nothing 
+end
+
+function is_categorical_column(x,nm)
+warn("BK need to ensure that there are NO union types!, especially we do not want the missing tpiye (for now)!")
+    elt=eltype(x)
+    typeOfElt=typeof(elt)
+    if typeOfElt!=DataType  
+        sz=length(x)    
+        @show x[1:10]
+        error("DTM: The type of variable $(nm) is not of type 'DataType' but '$(typeOfElt)'. The type of the variable is $(elt). Currently only DataTypes are supported.")
+    end
+    return elt <:AbstractString
 end
 
 function run_model_main(settingsFilename::String,dataFilename::String,datafolder::String,outfilename::String,outfileStringOnly::String;nrows::Int=-1)
@@ -883,4 +913,8 @@ function run_legacy(mld::String,fld::String)
     args=[sett_file csv_file string(mld,"_out_")]
     rs=run_model(args)
     return rs
+end
+
+function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String)
+    return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,fn::String)
 end

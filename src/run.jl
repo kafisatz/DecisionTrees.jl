@@ -2,8 +2,8 @@ srand(1234)
 tic() #for total  runtime
 
 tic() #for the time to load all packages
-#using Dates
-println("Julia started - Version is $(VERSION) - Time: $(Dates.now())");
+
+println("Julia started - Version is $(VERSION) - Time: $(now())");
 println("************this is the DEVELOPMENT environment************")
 #Loading Packages and workers
 	pdir=dirname(@__FILE__)	 # pdir=string(dictGlobalSettings["Julia Code Folder"],"\\src") # cd(pdir)
@@ -25,5 +25,5 @@ println("************this is the DEVELOPMENT environment************")
 telapsed=toq()
 println("Total runtime of Julia: $(telapsed/60) minutes")
 
-resbool==true ? println("Julia finished - Time: $(Dates.now())") : println("Julia failed -  Time: $(Dates.now())")    
+resbool==true ? println("Julia finished - Time: $(now())") : println("Julia failed -  Time: $(now())")    
 resbool=isinteractive()||quit() #exit cmd and Julia if it is not run in REPL mode

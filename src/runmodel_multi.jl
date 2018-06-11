@@ -180,7 +180,7 @@ function run_model_grids_single(defaulted_modelstats_df::DataFrame,t0::DateTime,
 		dfModelstats=get_model_stats(resulting_model,defaulted_modelstats_df,i)
 		eta=eta_after(t0,i,nmodels);eta_m=round(eta/60,2)	
 		telapsed=toq();telapsed=round(telapsed/60,1);
-		println("$(now()+Dates.Second(round(eta))) <- ETA -  Id=$(myid()) - Finished #$(i) - ETA: $(round(eta,1))s = $(eta_m)m - Time: $(telapsed)m");
+		println("$(now()+Second(round(eta))) <- ETA -  Id=$(myid()) - Finished #$(i) - ETA: $(round(eta,1))s = $(eta_m)m - Time: $(telapsed)m");
 		return dfModelstats
 	catch eri
 		println(string(eri))

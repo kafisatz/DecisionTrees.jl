@@ -1655,7 +1655,8 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
   for i=1:cols
 	thisname=Symbol(sett.df_name_vector[i])	
 	original_data_vector=wholeDF[thisname] 	
-	#thiscol_as_utf8=view(dfIndata,:,colnumber)header=[string(x) for x in names(numfeatures)]
+	#thiscol_as_utf8=view(dfIndata,:,colnumber)
+    header=deepcopy(df_name_vector) #[string(x) for x in names(numfeatures)]
     elt=eltype(original_data_vector)
 	@assert (elt<:Number) "Datatype of numeric predictor $(i):$(header[i]) is not numeric in the CSV. Please check the order of the columns in the data, their type and the value of number_of_num_features in the settings!" #the assert is probably not needed here, as we try to convert afterwards anyway
 	cond2=(typeof(original_data_vector)<:AbstractVector{Float64})	 
@@ -1673,12 +1674,12 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 	#Generate candidate list
 	candlist=define_candidates(this_column,max_splitting_points_num)
 	if max_splitting_points_num>500
-		warn("max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
+		warn("DTM: max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
 		if max_splitting_points_num>2000
 			error("DTM: max_splitting_points_num too large max_splitting_points_num=$(max_splitting_points_num)")
 		end
 	end
-	(length(candlist)==1)&&(@info "Numeric column $(i):$(string(thisname)) (numeric) has zero splitting points.") #throw an error when not splitting point exists, was this intended? does this ever happen?
+	(length(candlist)==1)&&(@info "DTM: Numeric column $(i):$(string(thisname)) (numeric) has zero splitting points.") #throw an error when not splitting point exists, was this intended? does this ever happen?
     sort!(candlist,alg=QuickSort) #although it should already be sorted
     mini,maxi=extrema(this_column) #it IS CRUCIAL that the maximum is taken from the whole vector here! (and not only the training part)
 	push!(candMatWOMaxValues,deepcopy(candlist))
