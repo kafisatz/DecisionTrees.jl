@@ -6,7 +6,7 @@ function Base.show(io::IO, t::MIME"text/plain",x::Union{DecisionTrees.Tree,Decis
     show(io,t,fieldnames(x))
     println(io,"")
     println(io,"")
-    println(io,"Use the dump() function to see the whole content of the object.")
+    #println(io,"Use the dump() function to see the whole content of the object.")
 end
 
 function Base.show(io::IO,x::Union{DecisionTrees.Tree,DecisionTrees.Leaf,DecisionTrees.Node,DecisionTrees.BaggedTree,DecisionTrees.BoostedTree})
@@ -17,5 +17,5 @@ function Base.show(io::IO,x::Union{DecisionTrees.Tree,DecisionTrees.Leaf,Decisio
     show(io,fieldnames(x))
     println(io,"")
     println(io,"")
-    println(io,"Use the dump() function to see the whole content of the object.")
+    #println(io,"Use the dump() function to see the whole content of the object.")
 end

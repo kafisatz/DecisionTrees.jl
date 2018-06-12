@@ -242,7 +242,7 @@ function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vec
 								#For Character variables: The split can be defined by the subset or its complement, We choose to define it via the subset which defines the smaller child node such that when new values arrive (in out of sample testing) they will "go with the larger child node"
 								if spl.weightl>spl.weightr
 										lvls=unique(view(features[spl.featid_new_positive].refs,trnidx))
-										spl=Splitdef(spl.featid,spl.featid_new_positive,spl.featurename,setdiff(lvls,spl.subset),spl.splitvalue,spl.weightl,spl.weightr)::Splitdef{T}
+										spl=Splitdef(spl.featid,spl.featid_new_positive,spl.featurename,convert(Vector{T},setdiff(lvls,spl.subset)),spl.splitvalue,spl.weightl,spl.weightr)::Splitdef{T}
 								end
 							end #isfinite(best_value_split) && (best[1]<0)
 						end #size(splitlist_sorted,1)>0

@@ -385,6 +385,29 @@ tic()
 		end
 	end
 		
+	#"Check if string pools are valid utf8 characters. This is specifically important when data is read in a 'wrong' manner due to encoding issues. The PyCall functions which write the Excel files will fail in such cases"
+	for i=1:length(pool_lengths)
+	#@show pools		
+		if eltype(pools[i])<:Number
+			#nothing to do, numbers are always valid
+		else 
+			vld=.!(isvalid.(pools[i]))
+			#vld=isvalid.(pools[i])
+			if any(vld)
+				@warn("DTM: The variable $(sett.df_name_vector[i]) contains invalid characters for some values (see below). Please check if your data was read and encoded properly.\r\nDTM will try and remove the invalid characters from the data. You should clean the data prior to invoking DTM.")
+				@show pools[i][vld]
+				for zz=1:length(vld)
+					if vld[zz]
+						before=pools[i][zz]
+						after=cleanString(pools[i][zz])
+						println("DTM: $(before) -> $(after)")
+						pools[i][zz]=after
+					end
+				end
+			end
+		end
+	end
+
 	trnidx,validx=createIntegerIndices(trn_val_idx)
 	dtmtable=DTMTable(key,trnidx,validx,numerator,denominator,weight,features,candMatWOMaxValues,mappings)
 	

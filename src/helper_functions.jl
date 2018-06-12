@@ -5289,3 +5289,19 @@ function get_feature_pools(f::DataFrame)
 	end
 	return fp
 end
+
+
+"""
+removes invalid utf8 characters form a string
+try cleanString("Schr\xe4gheck")
+"""
+function cleanString(x::T) where T<:AbstractString
+	res=convert(typeof(x),"")
+	for j=firstindex(x):lastindex(x)
+		if isvalid(x[j])
+			res=string(res,x[j])
+		end
+	end
+	#@show x,res
+	return res
+end
