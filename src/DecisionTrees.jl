@@ -54,6 +54,7 @@ global const pyModPandas = PyNULL()
 global const_default_splitdef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0)
 global const defaultModelName="dtmresult"
 global const defaultModelNameWtihCSVext=string(defaultModelName,".csv")
+global nLevelsThreshold=2000
 
 function __init__()
 	#we initialize Python here in the beginning, such that Julia would crash (prior to the modelling) in case there is an installation error with python
@@ -70,8 +71,7 @@ function __init__()
 	global const emptyLeaf=Leaf(0,NaN,NaN,NaN,-1,emptyRulepath,NaN,NaN,0)
 	global const emptyNode=Node(0,0,Array{UInt8}(0),deepcopy(emptyLeaf),deepcopy(emptyLeaf),deepcopy(emptyRulepath))
 	global const global_const_shift_cols=5+1-1
-	global const global_pldamod_valid_types=[String,Float64]
-	global nLevelsThreshold=2000
+	global const global_pldamod_valid_types=[String,Float64]	
 
 	global const global_nameOfSettingsSheet="ModelSettings"
 	global const global_nameOfModelStatisticsSheet="ModelStatistics"
