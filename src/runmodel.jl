@@ -36,9 +36,9 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame,directory::String;treat_as_c
 		sett.boolSaveJLDFile=false
 		
 	fn=joinpath(directory,"DTMResult.csv")
-	(resDF,sett)=prep_data_from_df(df_prepped,sett,fn)
+	dtmtable=prep_data_from_df(df_prepped,sett,fn)
 
-	return resDF,sett
+	return dtmtable,sett
 end
 
 function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())

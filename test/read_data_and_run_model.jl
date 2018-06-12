@@ -1,6 +1,6 @@
 t0=time_ns()
 cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
-@warn("You may need to run 'pkg> instantiate' when you first run this. Use ] to enther the package mode.")
+@warn("You may need to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
 using Revise
 
@@ -12,7 +12,7 @@ using CSV
 using Compat
 using OnlineStats 
 using StatsBase
-using Distributions
+#using Distributions
 using ProgressMeter
 using Iterators
 using JLD2
