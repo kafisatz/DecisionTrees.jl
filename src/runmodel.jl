@@ -580,9 +580,9 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	max_levels_uint8=typemax(UInt8)
 	if max(max_c0,max_n0)>max_levels_uint8
 		warn("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")		
-	end
-	@assert max_c0<2000 "A variable has too many levels. You can try and increase this threshold but the algorithm may take quite long for the modelling"
-	@assert max_n0<2000 "A variable has too many levels. You can try and increase this threshold but the algorithm may take quite long for the modelling"
+	end	
+	@assert max_c0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
+	@assert max_n0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
 		if size(sett.moderationvector,1)>1;if (sett.adaptiveLearningRate!=1.0 && sett.adaptiveLearningRate!=0.0);println("######################################## \nWarning: (bk) Adaptive Learning has been disabled as a moderation vector has been provided. \n######################################## ");end;sett.adaptiveLearningRate=1.0;end;
       if prnt
 		  println(stars)

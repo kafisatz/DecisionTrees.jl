@@ -71,6 +71,7 @@ function __init__()
 	global const emptyNode=Node(0,0,Array{UInt8}(0),deepcopy(emptyLeaf),deepcopy(emptyLeaf),deepcopy(emptyRulepath))
 	global const global_const_shift_cols=5+1-1
 	global const global_pldamod_valid_types=[String,Float64]
+	global nLevelsThreshold=2000
 
 	global const global_nameOfSettingsSheet="ModelSettings"
 	global const global_nameOfModelStatisticsSheet="ModelStatistics"
