@@ -3,3 +3,9 @@
 *.jl.mem
 deps/deps.jl
 data/~$eltypes.xlsx
+data/dataFull.xlsb
+data/~$dataFull.xlsb
+data/data1Full.xlsb
+data/~$data1Full.xlsb
+data/data1Medium.csv
+data/data1Full.csv

@@ -187,11 +187,20 @@ for v in independent_vars
     vsymb=Symbol(v)
     col=dfin[vsymb]
     elt=eltype(col)
-    eltOfelt=eltype(elt)
-    if eltOfelt!=DataType
-        @info "DTM: Eltype of the type of $(v) is not a DataType but $(eltOfelt). The type of $(v) is $(elt)"
+    typeOfelt=typeof(elt)
+    if typeOfelt!=DataType
+        @info "DTM: Type of the eltype of $(v) is not a DataType but $(typeOfelt). The type of $(v) is $(elt)"
         
-        @info "DTM: Trying to convert to "
+		@info "DTM: Trying to convert the type..."		
+		try
+			a=elt.a
+			b=elt.b
+			tragetT = ifelse(a==Missing,b,a)
+			dfin[vsymb]=convert(Vector{tragetT},x) 
+			return nothing
+		catch
+		@warn("DTM: Type conversion failed. The model will likely not run as intended.")
+		end
     end
 end
 return nothing 
@@ -547,7 +556,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	max_n0=maximum(num_levels)
 	max_levels_uint8=typemax(UInt8)
 	if max(max_c0,max_n0)>max_levels_uint8
-		warn("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")
+		warn("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")		
 	end
 	@assert max_c0<2000 "A variable has too many levels. You can try and increase this threshold but the algorithm may take quite long for the modelling"
 	@assert max_n0<2000 "A variable has too many levels. You can try and increase this threshold but the algorithm may take quite long for the modelling"
