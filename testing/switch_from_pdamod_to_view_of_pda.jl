@@ -26,7 +26,7 @@ function aggregate_data_diff_new{T<:AbstractArray{String,1}}(f::T,numerator::Arr
 	lvl_mod=findin(levels(f),f.parent.pool)
 	(lo::UInt8, hi::UInt8) = extrema(lvl_mod) #(lo, hi) = extrema(levels(f))
 	#@show size(f.parent)
-	@assert length(f.indexes)==1 #this must hold
+	@assert length(f.indices)==1 #this must hold
 	maho=0.0
 
 	ooo=one(lo)-lo
@@ -37,7 +37,7 @@ function aggregate_data_diff_new{T<:AbstractArray{String,1}}(f::T,numerator::Arr
 	sumweight= zeros(Float64, vecsize)
 
 	warn("BK: need to add inbounds here as soon as things work.... ")
-	for count = 1:length(v) #in f.indexes[1]
+	for count = 1:length(v) #in f.indices[1]
 	#for count=1:length(a)
 		#@inbounds idx=a[count] + ooo
 		idx=f.parent.refs[count] + ooo
@@ -48,7 +48,7 @@ function aggregate_data_diff_new{T<:AbstractArray{String,1}}(f::T,numerator::Arr
     end
   return cnt,sumnumerator,sumdenominator,sumweight
 
-#	for x in f.indexes[1]
+#	for x in f.indices[1]
 		#@show x
 		#@show f.parent.refs[x]
 #		maho+= float(f.parent.refs[x])
@@ -67,7 +67,7 @@ function aggregate_data_diff_new2(f::SubArray{String,1,DataArrays.PooledDataArra
     #hi=UInt8(length(f.parent.pool))
     hi=convert(eltype(f.parent.refs),length(f.parent.pool)) #hi=convert(UInt8,length(f.parent.pool))
 	#@show size(f.parent)
-#	@assert length(f.indexes)==1 #this must hold
+#	@assert length(f.indices)==1 #this must hold
 	maho=0.0
 
 	ooo=one(lo)-lo
@@ -80,7 +80,7 @@ function aggregate_data_diff_new2(f::SubArray{String,1,DataArrays.PooledDataArra
 #	warn("BK: need to add inbounds here as soon as things work.... ")
 	#@inbounds for count::Int64 = 1:length(v) #
     #@inbounds
-    @inbounds for count in f.indexes[1]
+    @inbounds for count in f.indices[1]
 	#for count=1:length(a)
 		#@inbounds idx=a[count] + ooo
 		idx=f.parent.refs[count] + ooo
@@ -101,7 +101,7 @@ function aggregate_data_diff_new32(f::T,numerator::Array{Float64,1},denominator:
     #hi=UInt8(length(f.parent.pool))
     hi=convert(eltype(f.parent.refs),length(f.parent.pool)) #hi=convert(UInt8,length(f.parent.pool))
 	#@show size(f.parent)
-#	@assert length(f.indexes)==1 #this must hold
+#	@assert length(f.indices)==1 #this must hold
 	maho=0.0
 
 	ooo=one(lo)-lo
@@ -114,7 +114,7 @@ function aggregate_data_diff_new32(f::T,numerator::Array{Float64,1},denominator:
 #	warn("BK: need to add inbounds here as soon as things work.... ")
 	#@inbounds for count::Int64 = 1:length(v) #
     #@inbounds
-    @inbounds for count in f.indexes[1]
+    @inbounds for count in f.indices[1]
 	#for count=1:length(a)
 		#@inbounds idx=a[count] + ooo
 		idx=f.parent.refs[count] + ooo
@@ -174,7 +174,7 @@ pda2=PooledDataArray(rint2)
 idx=collect(40:1232)
 unshift!(idx,3)
 v2=view(pda2,idx)
-pda_trn=deepcopy(v2.parent[v2.indexes[1]])
+pda_trn=deepcopy(v2.parent[v2.indices[1]])
 idx_negation=collect(1:length(pda2))
 deleteat!(idx_negation,idx)
 pda_val=deepcopy(v2.parent[idx_negation])

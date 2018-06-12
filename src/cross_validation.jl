@@ -1,6 +1,6 @@
 export dtm,dtm_debug,dtm_multicore
 
-function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
+function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     @info "DTM: (bk) consider the multi threaded verison of this function, dtm_multicore"
 #if folds<0 then we consider n disjoint training sets
 
@@ -171,7 +171,7 @@ srand(intDatahash)
     return statsdf,settsdf    
 end
 
-function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,fn::String,cvo::CVOptions)
+function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     warn("This requires testing especially when nprocs()>2")
     #if folds<0 then we consider n disjoint training sets
     

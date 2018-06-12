@@ -27,7 +27,7 @@ function run_model(ARGS;nrows::Int=-1)
    end
 end
 
-function prepare_dataframe_for_dtm!(dfin::DataFrame,directory::String;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 	@assert isdir(directory)
 	
 	@time (df_prepped,sett)=prepare_dataframe_for_dtm_INTERNAL!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
@@ -469,7 +469,8 @@ if sett.boolTariffEstStats
 end
 
 path_and_fn_wo_extension,ext=splitext(fn)
-if in(lowercase(ext),[".txt",".sas",".jl",".pdf"])
+#check for file extension. This does not seem to be required... (then again we should ensure that the user provides a filename stump and not only a folder name)
+if in(lowercase(ext),["",".csv",".txt",".sas",".jl",".pdf"])
 else
 	@show fn
 	@show path_and_fn_wo_extension,ext
@@ -918,6 +919,6 @@ function run_legacy(mld::String,fld::String)
     return rs
 end
 
-function dtm(dtmtable::DTMTable,sett::ModelSettings,fn::String)
+function dtm(dtmtable::DTMTable,sett::ModelSettings;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,fn::String)
 end

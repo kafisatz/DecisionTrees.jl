@@ -2350,7 +2350,7 @@ function aggregate_data(f::PooledArray,scores,numeratorEst,numerator,denominator
 	sumweight= zeros(Float64, vecsize)
 	sumscores=zeros(eltype(scores),vecsize)		
 			  
-	@inbounds for count in 1:length(f) #f.indexes[1]
+	@inbounds for count in 1:length(f) #f.indices[1]
 		idx=f.refs[count] + ooo
 		cnt[idx] += 1    			
 		sumnumeratorEst[idx] += numeratorEst[count]
@@ -2393,7 +2393,7 @@ function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array
 	sumweight= zeros(Float64, vecsize)
 
 	#warn("BK: need to add inbounds here as soon as things work.... ")
-	 @inbounds for count in f.indexes[1]
+	 @inbounds for count in f.indices[1]
 	#for count=1:length(a)
 		#@inbounds idx=a[count] + ooo
 		idx=f.parent.refs[count] + ooo
@@ -4310,7 +4310,7 @@ function addPredictorData(listOfValues,colnames,sett::ModelSettings,scores,numer
 		try
 			@show f.refs
 		catch
-			f.parent.refs[f.indexes[1]]
+			f.parent.refs[f.indices[1]]
 		end
 		try
 			@show f.pool

@@ -52,6 +52,8 @@ include("show.jl")
 
 global const pyModPandas = PyNULL()
 global const_default_splitdef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0)
+global const defaultModelName="dtmresult"
+global const defaultModelNameWtihCSVext=string(defaultModelName,".csv")
 
 function __init__()
 	#we initialize Python here in the beginning, such that Julia would crash (prior to the modelling) in case there is an installation error with python

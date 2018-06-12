@@ -4,7 +4,7 @@
 function graph(tree::Tree) #tree::Node,number_of_num_features::Int64,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
     #https://en.wikipedia.org/wiki/DOT_(graph_description_language)
     #http://www.webgraphviz.com/
-    #creates a digrpah string in DOT language
+    #creates a digraph string in DOT language
 
     dot_graph=""
     node=tree.rootnode
@@ -48,7 +48,7 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int64,df_name_vec
 leading_comment="""
 
 /*
-This is a representaion of the tree in DOT format see
+This is a representation of the tree in DOT format. See also
 http://www.webgraphviz.com/
 https://en.wikipedia.org/wiki/DOT_(graph_description_language)
 http://www.graphviz.org/content/dot-language
@@ -165,14 +165,14 @@ else
             #run(`$(command2[])`)
             #GOAL: run(`'C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe' 'c:\\temp\\maroxi.dot.txt' -Tpdf -o 'c:\\temp\\mi.pdf'`)
             run(actual_command)
-			println("Graph was visuazlied in the file: \n $(outputfilename)")				
+			println("Graph was visualized in the file: \n $(outputfilename)")				
         catch e
             @show actual_command
             warn("DTM: GraphViz failed to crate a graph.")
             @show e
         end
     else
-        warn("DTM: Inexistant location specified for graph file: $(chosen_dir)")
+        warn("DTM: Inexistent location specified for graph file: $(chosen_dir)")
     end
 
 return nothing

@@ -43,5 +43,5 @@ end
 #res=prep_data_from_df(df_prepped,sett,"C:\\temp\\")
 
 dtmtable,sett=prepare_dataframe_for_dtm!(df_tmp,"C:\\temp\\",treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
-
+sett.minw=-.2
 #0
