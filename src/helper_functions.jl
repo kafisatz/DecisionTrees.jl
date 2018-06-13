@@ -5305,3 +5305,18 @@ function cleanString(x::T) where T<:AbstractString
 	#@show x,res
 	return res
 end
+
+"""
+confusion matrix
+"""
+function confusmat(k::Integer, truth::Vector{T}, pred::Vector{T}) where T<:Int
+    n = length(truth)
+    length(pred) == n || throw(DimensionMismatch("Inconsistent lengths."))
+    R = zeros(Int, k, k)
+    for i = 1:n
+        @inbounds g = truth[i]
+        @inbounds p = pred[i]
+        R[g, p] += 1
+    end
+    return R
+end
