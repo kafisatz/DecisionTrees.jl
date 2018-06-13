@@ -1,4 +1,4 @@
-export resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
+export confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
 
 import Base: append!,mean,length,findin,isless,eltype,resize!,convert
 #import PooledArrays.levels
@@ -5307,7 +5307,8 @@ function cleanString(x::T) where T<:AbstractString
 end
 
 """
-confusion matrix
+confusion matrix\r\n
+confusmat(k::Integer, truth::Vector{T}, pred::Vector{T}) where T<:Int
 """
 function confusmat(k::Integer, truth::Vector{T}, pred::Vector{T}) where T<:Int
     n = length(truth)
@@ -5319,4 +5320,19 @@ function confusmat(k::Integer, truth::Vector{T}, pred::Vector{T}) where T<:Int
         R[g, p] += 1
     end
     return R
+end
+
+function confusmatBinary(truth::Vector{T}, pred::Vector{T}) where T<:Int
+	sz = length(truth)
+	length(pred) == sz || throw(DimensionMismatch("Inconsistent lengths."))
+	R=confusmat(2,truth, pred)
+
+	fp=R[2,1]
+	tn=R[1,1]
+	tp=R[2,2]
+	fn=R[1,2]
+	sz=length(truth)
+	error=(fp+fn)/sz
+	accuracy=(tp+tn)/sz
+	return error,accuracy,R
 end

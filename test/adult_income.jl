@@ -79,6 +79,20 @@ dtm(dtmtableTrain,sett)
 #evaluate confusion matrix
 0
 
+favorite_settings=deepcopy(sett)
+favorite_settings.minw=250
+dt=deepcopy(dtmtableTrain)
+#derive model from all data
+resample_trnvalidx!(dtmtableTrain,.999)
+notUsed,resModel=dtm(dt,sett)
 
+predictionsOnHoldOut,leafnrs=predict(resModel,dtmtableTest.features)
+preds=ifelse.(predictionsOnHoldOut.<.5,1.0,0.0)
+truth=dtmtableTest.numerator
 
+err,accuracy,mat=confusmatBinary(1.+convert(Vector{Int64},truth),1.+convert(Vector{Int64},preds))
+#tp 2281
+#tn 621
+# R[2,1] =FP = 1565 preds.==0 and truth.==1
+#
 # dtm_multicore(dtmtableTrain,settingsVector)
