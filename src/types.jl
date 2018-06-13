@@ -148,7 +148,7 @@ function Base.getindex(r::DTMTable,idx,compact_features=false)
     new_trnidx=indexin(r.trnidx,rows_to_keep)
     new_validx=indexin(r.validx,rows_to_keep)
     filter!(!iszero,new_trnidx)
-    filter!(!iszero,new_validx)        
+    filter!(!iszero,new_validx)
     numerator=r.numerator[idx]    
     denominator=r.denominator[idx]    
     weight=r.weight[idx]    
