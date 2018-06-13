@@ -12,4 +12,4 @@ tela = (time_ns()-t0)/1e9
 #elt=[Int64,	Float64,	Float64,	Float64,	Int64,	String,	String,	String,	Int64,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int64,	Int64,	Int64,	Int64,	String,	Int64,	String,	String,	Int64,	String,	String,	Int64,	String,	String,	Int64,	String,	Int64,	String,	String,	Int64,	Int64,	String,	Int64,	Int64,	String,	Int64,	Int64,	String,	Int64,	String,	String,	String,	Int64,	String,	String,	String,	String,	Int64,	Int64,	Int64,	String,	String,	String,	String,	String,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Float64,	Int64,	Float64,	Float64,	Float64,	Float64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64]
 
 #@time df_tmp=readtable(string("data\\data1mini.csv"),eltypes=elt); 
-@time df_tmp=CSV.read(string("data\\adult\\adult.data"),allowmissing=:none,categorical=false); 
+@time df_tmp=CSV.read(string("data\\adult\\adult.data"),categorical=false); 
