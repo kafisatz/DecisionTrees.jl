@@ -13,4 +13,4 @@ tela = (time_ns()-t0)/1e9
 
 #@time df_tmp=readtable(string("data\\data1mini.csv"),eltypes=elt); 
 @time dftrain=CSV.read(string("data\\adult\\adult.data"),allowmissing=:none,categorical=false,rows=32561);
-@time dftest=CSV.read(string("data\\adult\\adult.test"),allowmissing=:none,categorical=false,rows=32561);
+@time dftest=CSV.read(string("data\\adult\\adult.test"),allowmissing=:none,categorical=false,datarow=2);
