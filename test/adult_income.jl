@@ -21,8 +21,19 @@ dftrain[:trainOrTest]="Train"
 
 #data prep is done for the aggregated data set in order to ensure that the factors are the same
 dfTot=vcat(dftrain,dftest)
+
+#note:the target variable in test and train is not formatted in the same manner! One of the files has a "." at the end
+for i=1:size(dfTot,1)
+    v=dfTot[:target][i]
+    if v==" >50K." || v==" >50K"
+        dfTot[:target][i]=" >50K"
+    else
+        dfTot[:target][i]=" <=50K"
+    end
+end
+
 #create numerical response variable
-dfTot[:response]=ifelse.(dfTot[:target].==" >50K.",1,0)
+dfTot[:response]=ifelse.(dfTot[:target].==" >50K",1,0)
 dfTot[:trnVal]=ifelse.(dfTot[:trainOrTest].=="Test",0,1)
 
 selected_explanatory_vars=header[1:end-1]
@@ -69,3 +80,5 @@ dtm(dtmtableTrain,sett)
 0
 
 
+
+# dtm_multicore(dtmtableTrain,settingsVector)
