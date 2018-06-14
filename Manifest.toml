@@ -128,9 +128,6 @@ git-tree-sha1 = "0a1f9ee5c682ff68287eb30deb381fdf595de762"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "0.9.0"
 
-[[FileWatching]]
-uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
-
 [[FixedPointNumbers]]
 deps = ["Compat"]
 git-tree-sha1 = "471d1141a2e247164c0b2feb6f4ad5dbb8f62031"
@@ -212,14 +209,6 @@ uuid = "de555fa4-b82f-55e7-8b71-53f60bbc027d"
 git-tree-sha1 = "6b5a31f893d8453ce65da5e8c25b9e125d1cdfa5"
 uuid = "a4bce56a-f44e-563f-a45f-5312daf41243"
 version = "0.3.1"
-
-[[JLD2]]
-deps = ["CodecZlib", "Compat", "DataStructures", "FileIO"]
-git-tree-sha1 = "64d3ffd85e557a9e4afa9f256c1944ae7672bc80"
-repo-rev = "master"
-repo-url = "https://github.com/simonster/JLD2.jl.git"
-uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-version = "0.0.5+"
 
 [[JSON]]
 deps = ["Compat", "Nullables", "Sockets", "Unicode"]
@@ -381,14 +370,6 @@ version = "0.3.1"
 git-tree-sha1 = "caba582b2e9ef39b9cfff911aa13c5ca1b9a9896"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "0.1.0"
-
-[[Revise]]
-deps = ["DataStructures", "Distributed", "FileWatching", "REPL", "Random", "Test", "Unicode"]
-git-tree-sha1 = "6298b7d0bfe5f75f298a40c2dda508839bfe2b91"
-repo-rev = "master"
-repo-url = "https://github.com/timholy/Revise.jl.git"
-uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "0.4.0+"
 
 [[Rmath]]
 deps = ["BinDeps", "Compat", "Libdl"]
