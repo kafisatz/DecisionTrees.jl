@@ -82,7 +82,7 @@ performanceMeasure="Average Poisson Error Val"
 
 #createGridSearchSettings
 settV=createGridSearchSettings(sett,    
-    minw=[-0.005,0.01,0.02,0.03,0.05]
+    minw=[-0.005,-0.01,-0.02,-0.03,-0.05]
 )
     #,mf=[0.01,0.005,0.02,0.04],
     #subsampling_features_prop=[1.0,.75,.5,.25],
@@ -91,7 +91,7 @@ settV=createGridSearchSettings(sett,
 #    randomw=0.0
 #	subsampling_prop)
 
-#dtm(dtmtable,settV,"C:\\temp\\1\\dtm")
+#dtm(dtmtable,settV,"C:\\temp\\1\\dtm.CSV")
 @show 0
 
 warn("todo:check best tree with poisson error too!")

@@ -574,6 +574,11 @@ minweighttmp = sett.minw < 0.0 ? sumwtrn*(-max(-1.0,sett.minw)) : sett.minw
 @assert minweighttmp>=0
 sumwtrn>=2*minweighttmp||warn("DTM: Specified minweight is larger than half of the total training weight!! No split is possible!")
 
+someInteger=sumwtrn/minweighttmp
+if someInteger>100000
+	warn("DTM: Total training weight is: $(sumwtrn) and you specified minw=$(minweighttmp). The tree might become very large")
+end
+
 prnt=sett.print_details
 general_settings=convert(String,string("Write tree to txt file: $(sett.bool_write_tree), statsByVariables=$(join(sett.statsByVariables,','))"))
 #general_settings=convert(String,string(general_settings,))
