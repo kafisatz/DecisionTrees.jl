@@ -42,7 +42,7 @@ function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
 	return nothing
 end
 
-function get_stats(model::Tree)
+function get_stats(model::Tree;perfMeasureUnusedArgumentForTree::String="not_applicable_for_singe_tree")
 	#typeof(b)==Tree
 	#fieldnames(b)
 	statsdf=model.exceldata.sheets[2].data
@@ -58,16 +58,37 @@ function get_stats(model::Tree)
 	numbers=float.(stats[:,2])
 	setti=model.exceldata.sheets[1].data[:,2]
 	setti_desc=string.(model.exceldata.sheets[1].data[:,1])
-	return desc,numbers,setti_desc,setti
+	return desc,numbers,setti_desc,setti,perfMeasureUnusedArgumentForTree
 end
 
-function get_stats(model::Union{BoostedTree,BaggedTree})
-	numbers=Array{Float64,2}(model.modelstats[end,:])[:]
+function get_stats(model::Union{BoostedTree,BaggedTree};prefMeasure::String="Lift Val"::String)
+    if in(prefMeasure,GLOBALperfMeasursesWhereMaxIsBest)
+        minOrmax="max"
+    else
+        minOrmax="min"
+	end
+    #@assert minOrmax=="min"||minOrmax=="max"
+    #last iteration
+    numbersLastIteration=convert(Array{Float64,2},model.modelstats[end,:])[:]    
 	desc=names(model.modelstats)
+    
+    #best iteration
+    #look for min or max
+    @assert in(Symbol(prefMeasure),desc) "DTM: invalid performance measure specified. $(prefMeasure) was not found in $(desc)"
+    perfCol=model.modelstats[Symbol(prefMeasure)]
+    #@show minimum(perfCol)
+    if minOrmax=="min"
+        bestValue,bestRow=findmin(perfCol)
+    else
+        bestValue,bestRow=findmax(perfCol)
+    end
+    #@show bestRow,bestValue
+    numbersBestIteration=convert(Array{Float64,2},model.modelstats[bestRow,:])[:]        
+    
 	settdf=convert(DataFrame,writeAllFieldsToArray(model.settings))
 	setti_desc=string.(settdf[:,1])
 	setti=settdf[:,2]
-	return desc,numbers,setti_desc,setti
+	return desc,numbersBestIteration,setti_desc,setti,prefMeasure
 end
 
 function try_convert(T,x)

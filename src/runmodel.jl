@@ -906,7 +906,7 @@ function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::St
 		path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
 		fnmod=string(path_and_fn_wo_extension_mod,ext)
 		somestrings,model=run_model_actual(dtmtable,sett,fnmod)
-		desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)
+		desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)
 		if i==1
 			header=deepcopy(desc)
 			header_settings=deepcopy(desc_settingsvec)

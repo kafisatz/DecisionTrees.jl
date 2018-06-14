@@ -327,6 +327,7 @@ mutable struct ModelSettings
 	write_dot_graph::Bool
 	boolCalculateGini::Bool #whether or not to calculate the gini (which requires sorting of the data (which takes time!))
 	boolCalculatePoissonError::Bool
+    performanceMeasure::String
 
 	#the following are treated specially
 	ncolsdfIndata::Int64
@@ -415,6 +416,7 @@ mutable struct ModelSettings
 	write_dot_graph=false
 	boolCalculateGini=false
 	boolCalculatePoissonError=false
+    performanceMeasure="Lift Val"
 
 	#the following are treated specially
 	ncolsdfIndata=-1 #
@@ -424,7 +426,7 @@ mutable struct ModelSettings
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
 
-	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini,boolCalculatePoissonError
+	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini,boolCalculatePoissonError,performanceMeasure
 	 ,ncolsdfIndata,ishift,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
   end  # ModelSettings()
 
@@ -459,6 +461,12 @@ end
 return stringValue
 end
 
+"""
+updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int64,const_shift_cols::Int64,columnnames::Array{String,1})
+
+this is NOT the user facing function of updatedSettings!
+consider updateSettingsMod! instead
+"""
 function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int64,const_shift_cols::Int64,columnnames::Array{String,1})
 	dataisJLD=lowercase(dataFilename[end-3:end])==".jld2"
 	s.ncolsdfIndata=ncolsdfIndata
@@ -605,6 +613,13 @@ function copySettingsToCurrentType(oldSetting)
     return s
 end
 
+"""
+updateSettingsMod!(s::ModelSettings;args...)
+use this function to update the model settings 
+try for instance:
+
+updateSettingsMod!(sett,minw=-0.3,niter=30)
+"""
 function updateSettingsMod!(s::ModelSettings;args...)
 	seen=[]
 	for (smember,v) in args
@@ -758,6 +773,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
 		@show length(s.df_name_vector),s.number_of_char_features,s.number_of_num_features
 		@assert length(s.df_name_vector)==(s.number_of_char_features+s.number_of_num_features)
 	end
+    @assert in(s.performanceMeasure,global_statsperiter_header)
 
      return nothing
 end

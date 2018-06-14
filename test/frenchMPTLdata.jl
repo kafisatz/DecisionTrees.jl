@@ -59,6 +59,19 @@ sum(errs[dtmtable.validx])/length(dtmtable.validx)
 0
 
 #=
+#test grid search
+
+sett2=deepcopy(sett)
+sett3=deepcopy(sett)
+sett4=deepcopy(sett)
+sett2.minw=sett.minw/2
+sett3.minw=sett.minw/6
+sett4.niter=sett.niter*2
+
+setts=vcat(sett,sett2,sett3,sett4)
+=#
+
+#=
 favorite_settings=deepcopy(sett)
 favorite_settings.minw=250
 dt=deepcopy(dtmtableTrain)
