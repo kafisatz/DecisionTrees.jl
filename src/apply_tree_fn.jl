@@ -81,7 +81,7 @@ function predict(x::Tree,f::DataFrame)
   return apply_tree_by_leaf(x.rootnode,f)
 end
 
-function predict(x::BoostedTree,f::DataFrame,boolProduceEstAndLeafMatrices::Bool=false)
+function predict(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool=false)
   #warn("need to ensure, data is consistent with the data used to derive the tree!")
   @assert assert_consistent_features(x.featurepools,f)
   

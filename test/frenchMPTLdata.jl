@@ -34,10 +34,11 @@ datafile=string("data\\freMTPL2\\freMTPL2.csv")
     fullData[:AreaInteger]=AreaInteger
 
 #correct for unreasonable observations
-    dat$ClaimNb <- pmin(dat$ClaimNb, 4)   # correct for unreasonable observations (that might be data error)
-    dat$Exposure <- pmin(dat$Exposure, 1) # correct for unreasonable observations (that might be data error)
+for i=1:size(fullData,1)
+    fullData[:ClaimNb][i]=min(4,fullData[:ClaimNb][i])
+    fullData[:Exposure][i]=min(1.0,fullData[:Exposure][i])
+end
     
-
 #set independent variables
 selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","BonusMalus","VehBrand","VehGas","Density","Region"]
 #note: we refrain from using the exposure as explanatory variable, as this is not meaningful in practical applications
@@ -126,12 +127,55 @@ updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.025,s
 #resM is the resulting Model
 someStrings,resM=dtm(dtmtable,sett)
 #consider the resulting Excel file for a descritipon of the model 
+
+############################################################
+#Investigate the predictions (fitted values)
+############################################################
+
+#DecisionTrees Boosting Models provide a number of different estimates
+#1. Fitted values based on the "raw relativities"
+#this is simply the combination of all decision trees
+
+#2. Smoothed fitted values per Score. 
+#the user can specify the number of scores for the output (see sett.nscores which defaults to 1000)
+#DecisionTrees runs a moving average over the observed data to smooth the noise
+
+#We will show the different fitted values in the following
+
+#1. Fitted values based on the "raw relativities"
+#for the fitted values, consider:
 fitted=resM.meanobserved.*resM.rawrelativities
+#resM.meanobserved is the mean observed value of the training data
+#rawrelativities is the estimated relative deviation from the mean for each observation
+#Note:as for the input data the fitted vector corresponds to all the data.
+#dtmtable.validx determines which observations correspond to the validation data
 
+#Let us calculate the Poisson Error for these estimates
 errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
-sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
-sum(errs[dtmtable.validx])/length(dtmtable.validx)
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #should be around 0.32
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around 0.32
 
+#2. Smoothed fitted values per Score. 
+scores=resM.scores
+fittedThroughScores=zeros(Float64,length(scores))
+for i=1:length(scores)
+    @inbounds sc=scores[i]
+    @inbounds fittedThroughScores[i]=resM.ScoreToSmoothedEstimate[sc]
+end
+
+fitted=fittedThroughScores
+#notably for these fitted values we have less unique values
+@show unique(fitted)
+#this should correspond to sett.nscores
+errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx)
+
+
+
+#for any out of sample data, which MUST have exactly the same structure as dtmtable.features! 
+#you can also use the predict function
+estimatedFrequencieForFirst20Obs=predict(resM,dtmtable.features[1:20,:])
 
 ############################################################
 #Prepare a grid search over the parameter space
@@ -141,7 +185,6 @@ sum(errs[dtmtable.validx])/length(dtmtable.validx)
 updateSettingsMod!(sett,
 niter=100,
 model_type="boosted_tree",
-max_splitting_points_num=250	,
 nscores="1000",
 write_statistics="true",
 write_sas_code="false",
@@ -197,7 +240,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 @info "Starting grid search..."
 
 tt0=time_ns()
-#dtm(dtmtable,settV,fn="R:\\temp\\2\\dtm.CSV")
+#dtm(dtmtable,settV,fn="R:\\temp\\1\\dtm.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 
