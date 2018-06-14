@@ -1,6 +1,13 @@
+############################################################
+#Boosting Model for the French MTPL Data
+############################################################
+
+##############################
+#Load packages
+##############################
 t0=time_ns()
 cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
-@warn("You may need to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
+#@info("You may want to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
 @everywhere using Revise
 @everywhere using CSV,DataFrames
@@ -8,20 +15,30 @@ cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.
 @everywhere using DecisionTrees  
 
 tela = (time_ns()-t0)/1e9
-@show tela #maybe 500-700 seconds on June 11, 2018
+@show tela #precompilating can take considerable time under Julia 0.7alpha (up to 15 minutes in some cases (as ofJune 11, 2018)), this should improve soon though 
 
-#elt=[Int64,	Float64,	Float64,	Float64,	Int64,	String,	String,	String,	Int64,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int64,	Int64,	Int64,	Int64,	String,	Int64,	String,	String,	Int64,	String,	String,	Int64,	String,	String,	Int64,	String,	Int64,	String,	String,	Int64,	Int64,	String,	Int64,	Int64,	String,	Int64,	Int64,	String,	Int64,	String,	String,	String,	Int64,	String,	String,	String,	String,	Int64,	Int64,	Int64,	String,	String,	String,	String,	String,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Float64,	Int64,	Float64,	Float64,	Float64,	Float64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64]
-#header=["age","workclass","fnlwgt","education","education-num","marital-status","occupation","relationship","race","sex","capital-gain","capital-loss","hours-per-week","native-country","target"]
-#@time df_tmp=readtable(string("data\\data1mini.csv"),eltypes=elt); 
-@time fullData=CSV.read(string("data\\freMTPL2\\freMTPL2.csv"),rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
-#add AreaInteger as new variable, being A:F -> 1:6 (as suggested in the paper of Wüthrich)
-areasSorted=sort(unique(fullData[:Area]))
-AreaInteger=map(x->findall((in)([x]),areasSorted)[1],fullData[:Area])
-fullData[:AreaInteger]=AreaInteger
+##############################
+#Read the data
+##############################
+datafile=string("data\\freMTPL2\\freMTPL2.csv"))
+@assert isfile(datafile);
+@time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
+#the data is described in the R package CASdatasets
+#also the Noll, Salzmann, Wüthrich Paper has some descriptive graphs of the data.
+
+#add AreaInteger as new variable, i.e. A:F -> 1:6 (as suggested in the paper of Wüthrich, Noll, Salzmann)
+    areasSorted=sort(unique(fullData[:Area]))
+    AreaInteger=map(x->findall((in)([x]),areasSorted)[1],fullData[:Area])
+    fullData[:AreaInteger]=AreaInteger
+
+#set independent variables
 selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","BonusMalus","VehBrand","VehGas","Density","Region"]
-#view coltypes
+#note: we refrain from using the exposure as explanatory variable, as this is not meaningful in practical applications
+#where one aims to predict the claim frequency of a given policy (without knowing how long that policy will remain within a certain portfolio)
+
+#check type of each column
 for x in selected_explanatory_vars
     println(x)
     println(eltype(fullData[Symbol(x)]))
@@ -30,24 +47,72 @@ for x in selected_explanatory_vars
     println("")
 end
 
-dtmtable,sett=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",directory="C:\\temp\\",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
+#prepare the data
+#dtmtable::DTMTable is a custom data format for DecisionTrees
+#sett are the model settings
+#dfprepped is an intermediary dataframe which is generally not needed
+dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
+#consider 
+fieldnames(dtmtable)
+dtmtable.key #an identifier (String type), ideally it is a unique identifier for each row
+dtmtable.numerator #a vector
+dtmtable.denominator #a vector
+dtmtable.weights #a vector
+#each of the above have the same length
 
+dtmtable.trnidx #an index vector for the training data. This is an integer vector
+#therefore we generally have
+length(dtmtable.trnidx)<length(dtmtable.numerator)
+#dtmtable.validx is the corresponding validation data
+#we trnidx and validx should generally be a partition of 1:n (where n==length(dtmtable.weights))
+
+dtmtable.features #explanatory variables
+#note that the data is generally stored in a compressed format
+#for numerical variables, the algorithm considers sett.max_splitting_points_num  (default 250) splitting points which are uniformly spaced
+#you can increase this number and re-prepare the data if you want
+#=
+    sett.max_splitting_points_num=100
+    dtmtable=prep_data_from_df(df_prepped,sett,fn)
+=#
+#we realize that it may be sutiable to define the splitting in a different manner (than uniformly spaced).
+#this feature might be added at a later time. You can consider the function add_coded_numdata!(...) to see how splitting points are chosen
+
+#keep a copy of the original definition of train and test
 originalTrnValIndex=deepcopy(fullData[:trnTest])    
 
-#redefine trn and val data sets
-resample_trnvalidx!(dtmtable,.7)
+#Redefine trn and val data sets
+#if you prefer train on X% of the data, you can use this function to adjust the training set. By default it is sampled randomly
+#resample_trnvalidx!(dtmtable,.85)
 
-#define model settings
+##############################
+#Define model SETTINGS
+##############################
 
-sett.minw=-.03
-sett.model_type="boosted_tree"
-sett.niter=10
-sett.mf=0.08
-sett.subsampling_features_prop=.7
-sett.boolCalculatePoissonError=true
+#the minimum weight of each individual tree shall be 3% of the exposure per leaf
+#You can set minw to any positive value, e.g. sett.minw=20000
+#if minw is set to a value in [-1,0] its absolute value is interpreted as a precentage
+#thus with sett.minw=-0.03 we define the min weight of each leaf as 3% of the training data
 
-#run model
-unused,resM=dtm(dtmtable,sett)
+#model_type: currently only "build_tree" and "boosted_tree" are supported
+#we might add the implementaiotn of bagging at a later stage
+
+#niter is the nubmer of trees
+
+#mf is the moderation factor which is also know as shirnkage or learning rate
+
+#subsampling_features_prop must be between 0 and 1 and defines the subsampling probabliy of the predictors for each tree 
+#i.e. with subsampling_features_prop=0.5 each tree will only use half of the predictors
+
+#boolCalculatePoissonError, is a boolean which we need to enable here in order for output to show the poisson error of the estimates
+updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.025,subsampling_features_prop=.7,boolCalculatePoissonError=true)
+
+##############################
+#Run single Boosting Model
+##############################
+
+#resM is the resulting Model
+someStrings,resM=dtm(dtmtable,sett)
+#consider the resulting Excel file for a descritipon of the model 
 fitted=resM.meanobserved.*resM.rawrelativities
 
 errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
@@ -55,11 +120,13 @@ sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
 sum(errs[dtmtable.validx])/length(dtmtable.validx)
 
 
-#grid search
+############################################################
+#Preprae a grid search over the parrameter space
+############################################################
 
-#sett core settings
+#set some default settings
 updateSettingsMod!(sett,
-niter=200,
+niter=100,
 model_type="boosted_tree",
 max_splitting_points_num=250	,
 nscores="1000",
@@ -80,24 +147,45 @@ boolCalculatePoissonError="true",
 performanceMeasure="Average Poisson Error Val"
 )
 
-#createGridSearchSettings
-settV=createGridSearchSettings(sett,    
-    minw=[-0.005,-0.01,-0.02,-0.03,-0.05]
-    ,mf=[0.01,0.005,0.02,0.04],
-    subsampling_features_prop=[1.0,.75,.5,.25],
-    smoothEstimates=["0","1"])
-#
-#    randomw=0.0
-#	subsampling_prop)
+#performanceMeasure will determine which metric is considered for the output summary 
+#performanceMeasure must be in DecisionTrees.GLOBALperfMeasursesWhereMaxIsBest
+#you may want to consider the Excel file of any boosting to get an idea of the available options for performanceMeasure 
+#consider the first row of the sheet ModelStatistics of the Excel file which lists all measures
+#We note that some missing (or constant) measures are either not fully implemented yet, or were not calculated (e.g. because a boolean in the settings was set to false)
+@show sett.performanceMeasure
+@assert in(sett.performanceMeasure,DecisionTrees.GLOBALperfMeasursesWhereMaxIsBest)
 
-@info "starting grid search"
-@info "starting grid search"
-@info "....."
-@show tt0=time_ns()
+#create a vector of ModelSettings
+#note, we can provide an arbitrary number of vectors over which we want to loop
+#the function createGridSearchSettings will copy the 'input' settings X times into a vector of settings
+#X is the size of the cartesian product of all parameter vectors over which we want to loop.
+
+settV=createGridSearchSettings(sett,    
+    minw=[-0.2,-0.1,-0.05]
+    ,mf=[0.01,0.02,0.03],
+    subsampling_features_prop=[1.0,.5],
+    smoothEstimates=["0","1"])
+
+#consider the length(settV) which is the number of models that will be run
+length(settV)
+
+#depending on the size of settV, you may want to restart julia with addtional workers for parallelization, i.e. 
+#shell> julia -p 8 
+#to start julia with 8 workers. Depending on your CPU you may want to choose a different number
+
+Sys.CPU_CORES #might be give you an indication of the number of workers() you could use
+
+############################################################
+#Run grid search
+############################################################
+
+@warn "This may take quiete some time depending on length(settV)=$(length(settV))"
+@info "Starting grid search..."
+
+tt0=time_ns()
 dtm(dtmtable,settV,fn="R:\\temp\\1\\dtm.CSV")
 @show ela=(-tt0+time_ns())/1e9
-@info ".....DONE"
-@show 0
+@info ".....done"
 
 warn("todo:check best tree with poisson error too!")
     #crit::SplittingCriterion # fn version of 4

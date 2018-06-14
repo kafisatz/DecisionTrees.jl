@@ -26,6 +26,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};fn::String
             dummySett.print_details=false;dummySett.bool_write_tree=false;dummySett.write_sas_code=false;dummySett.write_iteration_matrix=false;dummySett.write_result=false;dummySett.write_statistics=false;dummySett.boolCreateZipFile=false;dummySett.write_csharp_code=false;dummySett.write_vba_code=false;dummySett.boolSaveJLDFile=false;dummySett.boolSaveResultAsJLDFile=false;dummySett.showProgressBar_time=false;dummySett.boolProduceEstAndLeafMatrices=false;dummySett.write_dot_graph=false;
             path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_0")
             fnmod=string(path_and_fn_wo_extension_mod,ext)
+            dummySett.niter=min(10,dummySett.niter) #is this a good idea? I think we should be fine.
             somestrings,model=run_model_actual(dtmtable,dummySett,fnmod)
             desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=settingsVector[1].performanceMeasure)
             #add first column
