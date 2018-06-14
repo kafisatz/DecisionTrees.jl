@@ -1,7 +1,7 @@
-export dtm,dtm_debug,dtm_multicore
+export dtm,dtm_debug,dtm_single_threaded
 
-function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
-    @info "DTM: (bk) consider the multi threaded verison of this function, dtm_multicore"
+function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
+    @info "DTM: (bk) You may want to consider the multi threaded verison of this function"
 #if folds<0 then we consider n disjoint training sets
 
 #currently we have trhee possible CVs
