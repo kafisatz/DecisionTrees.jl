@@ -214,14 +214,13 @@ estimatedFrequencieForFirst20Obs=predict(resM,dtmtable.features[1:20,:])
 #whole data set and then discrard possible hold out observations  (or mark as validation through validx)
 
 
-
 ############################################################
 #Additional options
 ############################################################
 
-#You can modify the settings directly
+#You can modify the settings directly, but should generally not do so.
 sett.niter=4
-#however it is preferred to use the update function to avoid creating an 'invalid' setting (such as a negative number of iterations)
+#It is preferred to use the update function to avoid creating an 'invalid' setting (such as a negative number of iterations)
 updateSettingsMod!(sett,niter=-3) #e.g. this will throw an error (whereas sett.niter=-3 does not)
 
 

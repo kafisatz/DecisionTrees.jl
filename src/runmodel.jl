@@ -499,6 +499,11 @@ tic() #total modelling time , prnt&&println("Modelling finished. Time: $(now()) 
 sett=deepcopy(input_setttings)
 @assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
 
+x=checkIfSettingsAreValid(input_setttings)
+if !(x==nothing)
+	@warn "DTM: You may have provided invalid or inconsistent model settings. The model run may fail."
+end
+
 if sett.boolTariffEstStats
 	if !sett.boolProduceEstAndLeafMatrices
 		@info "DTM: User has requested TariffEstStats (boolTariffEstStats=$(sett.boolTariffEstStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true."
