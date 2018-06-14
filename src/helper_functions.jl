@@ -42,7 +42,7 @@ function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
 	return nothing
 end
 
-function get_stats(model::Tree;perfMeasureUnusedArgumentForTree::String="not_applicable_for_singe_tree")
+function get_stats(model::Tree;perfMeasure::String="not_applicable_for_singe_tree")
 	#typeof(b)==Tree
 	#fieldnames(b)
 	statsdf=model.exceldata.sheets[2].data
@@ -61,7 +61,7 @@ function get_stats(model::Tree;perfMeasureUnusedArgumentForTree::String="not_app
 	return desc,numbers,setti_desc,setti,perfMeasureUnusedArgumentForTree
 end
 
-function get_stats(model::Union{BoostedTree,BaggedTree};prefMeasure::String="Lift Val"::String)
+function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lift Val"::String)
     if in(prefMeasure,GLOBALperfMeasursesWhereMaxIsBest)
         minOrmax="max"
     else

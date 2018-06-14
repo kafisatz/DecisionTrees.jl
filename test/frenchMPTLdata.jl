@@ -91,7 +91,7 @@ settV=createGridSearchSettings(sett,
 #    randomw=0.0
 #	subsampling_prop)
 
-#dtm(dtmtable,settV,"C:\\temp\\1\\)
+#dtm(dtmtable,settV,"C:\\temp\\1\\dtm")
 @show 0
 
 warn("todo:check best tree with poisson error too!")
