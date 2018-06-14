@@ -1,5 +1,4 @@
-#
-
+#for testing purposes only
 
 function createGridSearchSettings(sett::ModelSettings;args...)
     settingsVector=[sett]
@@ -31,7 +30,7 @@ function createGridSearchSettings(sett::ModelSettings;args...)
                     else
                         setfield!(s,smember,v)
                     end		
-                    res=DecisionTrees.checkIfSettingsAreValid(s)
+                    res=checkIfSettingsAreValid(s)
                     @assert res==nothing "DTM: Some settings are invalid! Abort."
                 end
                 if i==1
@@ -50,11 +49,3 @@ function createGridSearchSettings(sett::ModelSettings;args...)
     return settingsVector
 end
 
-
-#=
-valuelist=rand(9)
-sz=size(valuelist)
-length(sz)
-sz[1]
-size(22)[1]
-=#
