@@ -33,14 +33,6 @@ git-tree-sha1 = "260922227fa4affdce57c59063fabf33a324d50e"
 uuid = "e1450e63-4bb3-523b-b2a4-4ffa8c0fd77d"
 version = "0.4.0"
 
-[[CSTParser]]
-deps = ["Test", "Tokenize"]
-git-tree-sha1 = "08ec5aa47cea8e218ee078152195c07767b02bc6"
-repo-rev = "v0.7compat"
-repo-url = "https://github.com/ZacLN/CSTParser.jl.git"
-uuid = "00ebfdb7-1f24-5e51-bd34-a7502290713f"
-version = "0.3.5+"
-
 [[CSV]]
 deps = ["CategoricalArrays", "Compat", "DataFrames", "DataStreams", "Dates", "InternedStrings", "Missings", "Test", "WeakRefStrings"]
 git-tree-sha1 = "9d62d3d577895a1e0b0bacd211a788be70127165"
@@ -236,8 +228,8 @@ uuid = "a4bce56a-f44e-563f-a45f-5312daf41243"
 version = "0.3.1"
 
 [[JLD2]]
-deps = ["CodecZlib", "Compat", "DataStructures", "FileIO", "Mmap"]
-git-tree-sha1 = "685975adc02c04670ef34c597018d8e5132f9a20"
+deps = ["CodecZlib", "Compat", "DataStructures", "FileIO"]
+git-tree-sha1 = "64d3ffd85e557a9e4afa9f256c1944ae7672bc80"
 repo-rev = "master"
 repo-url = "https://github.com/simonster/JLD2.jl.git"
 uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
@@ -417,12 +409,12 @@ uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "0.1.0"
 
 [[Revise]]
-deps = ["Compat", "DataStructures", "Distributed", "FileWatching", "Test", "Unicode"]
-git-tree-sha1 = "10e43d84594d618f2e7548e84640f14b3ab0f7f7"
+deps = ["DataStructures", "Distributed", "FileWatching", "REPL", "Random", "Test", "Unicode"]
+git-tree-sha1 = "6298b7d0bfe5f75f298a40c2dda508839bfe2b91"
 repo-rev = "master"
 repo-url = "https://github.com/timholy/Revise.jl.git"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "0.3.0+"
+version = "0.4.0+"
 
 [[Rmath]]
 deps = ["BinDeps", "Compat", "Libdl"]
@@ -487,12 +479,6 @@ version = "0.1.0"
 
 [[Test]]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-
-[[Tokenize]]
-deps = ["Printf", "Test"]
-git-tree-sha1 = "b3ebedc9c38793c8f0919c853aea23154288f3c2"
-uuid = "0796e94c-ce3b-5d07-9a54-7f471281c624"
-version = "0.5.0"
 
 [[TranscodingStreams]]
 deps = ["Compat", "Random", "Test"]
