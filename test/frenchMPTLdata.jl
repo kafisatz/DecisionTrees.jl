@@ -53,7 +53,39 @@ for x in 1:size(fullData,2)
     @show size(unique(fullData[:,x]))
 end
 
-dtmtable,sett=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",directory="C:\\temp\\",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
+
+##############################
+#Prepare the data
+##############################
+
+#dtmtable::DTMTable is a custom data format for DecisionTrees
+#sett are the model settings
+#dfprepped is an intermediary dataframe which is generally not needed
+dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
+#consider 
+fieldnames(dtmtable)
+dtmtable.key #an identifier (String type), ideally it is a unique identifier for each row
+dtmtable.numerator #a vector
+dtmtable.denominator #a vector
+dtmtable.weights #a vector
+#each of the above have the same length
+
+dtmtable.trnidx #an index vector for the training data. This is an integer vector
+#therefore we generally have
+length(dtmtable.trnidx)<length(dtmtable.numerator)
+#dtmtable.validx is the corresponding validation data
+#we trnidx and validx should generally be a partition of 1:n (where n==length(dtmtable.weights))
+
+dtmtable.features #explanatory variables
+#note that the data is generally stored in a compressed format
+#for numerical variables, the algorithm considers sett.max_splitting_points_num  (default 250) splitting points which are uniformly spaced
+#you can increase this number and re-prepare the data if you want
+#=
+    sett.max_splitting_points_num=100
+    dtmtable=prep_data_from_df(df_prepped,sett,fn)
+=#
+#we realize that it may be sutiable to define the splitting in a different manner (than uniformly spaced).
+#this feature might be added at a later time. You can consider the function add_coded_numdata!(...) to see how splitting points are chosen
 
 originalTrnValIndex=deepcopy(fullData[:trnTest])    
 
@@ -98,7 +130,7 @@ sum(errs[dtmtable.validx])/length(dtmtable.validx)
 
 
 ############################################################
-#Preprae a grid search over the parrameter space
+#Prepare a grid search over the parameter space
 ############################################################
 
 #set some default settings
