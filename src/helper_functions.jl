@@ -5454,6 +5454,6 @@ function createGridSearchSettings(sett::ModelSettings;args...)
             throw("DTM: unable to create settings vector.")
         end
 	end
-	@assert length(unique(permeasures=map(x->x.performanceMeasure,settingsVector)))==1 "DTM: Perf measure must be the same for the entire settings Vector"
+	@assert length(unique(map(x->x.performanceMeasure,settingsVector)))==1 "DTM: Perf measure must be the same for the entire settings Vector"
     return settingsVector
 end
