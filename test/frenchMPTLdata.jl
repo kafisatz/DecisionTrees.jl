@@ -59,7 +59,7 @@ sum(errs[dtmtable.validx])/length(dtmtable.validx)
 
 #sett core settings
 updateSettingsMod!(sett,
-niter=5,
+niter=200,
 model_type="boosted_tree",
 max_splitting_points_num=250	,
 nscores="1000",
@@ -90,8 +90,13 @@ settV=createGridSearchSettings(sett,
 #    randomw=0.0
 #	subsampling_prop)
 
+@info "starting grid search"
+@info "starting grid search"
+@info "....."
+@show tt0=time_ns()
 dtm(dtmtable,settV,fn="R:\\temp\\1\\dtm.CSV")
-
+@show ela=(-tt0+time_ns())/1e9
+@info ".....DONE"
 @show 0
 
 warn("todo:check best tree with poisson error too!")
