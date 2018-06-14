@@ -39,9 +39,11 @@ version = "0.8.1"
 
 [[DataFrames]]
 deps = ["CategoricalArrays", "CodecZlib", "Compat", "DataStreams", "Missings", "Reexport", "SortingAlgorithms", "StatsBase", "TranscodingStreams", "WeakRefStrings"]
-git-tree-sha1 = "be4d979564837fbb6be9eb4872ab7352bbc32e71"
+git-tree-sha1 = "2b33bbe41c37b847339d13ee9a05b7d9a99bbe8b"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaData/DataFrames.jl.git"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "0.11.6"
+version = "0.11.6+"
 
 [[DataStreams]]
 deps = ["Compat", "Missings", "NamedTuples", "WeakRefStrings"]
@@ -75,6 +77,12 @@ uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
 [[IterativeEigensolvers]]
 uuid = "de555fa4-b82f-55e7-8b71-53f60bbc027d"
+
+[[JLD2]]
+deps = ["CodecZlib", "Compat", "DataStructures", "FileIO"]
+git-tree-sha1 = "64d3ffd85e557a9e4afa9f256c1944ae7672bc80"
+uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+version = "0.0.6"
 
 [[JSON]]
 deps = ["Compat", "Nullables", "Sockets", "Unicode"]
