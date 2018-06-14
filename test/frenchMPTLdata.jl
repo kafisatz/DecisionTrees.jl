@@ -35,37 +35,19 @@ dtmtable,sett=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",directory=
 originalTrnValIndex=deepcopy(fullData[:trnTest])    
 
 #redefine trn and val data sets
-resample_trnvalidx!(dtmtableTrain,.7)
+resample_trnvalidx!(dtmtable,.7)
 
 #define model settings
 
 sett.minw=-.03
 sett.model_type="boosted_tree"
-sett.niter=50
-sett.mf=0.02
+sett.niter=10
+sett.mf=0.08
 sett.subsampling_features_prop=.7
 
 #run model
 unused,resM=dtm(dtmtable,sett)
 fitted=resM.meanobserved.*resM.rawrelativities
-
-function poissonError(truth,exposure,estimatedFrequency)
-    n=length(truth)
-    @assert n==length(exposure)==length(estimatedFrequency)
-    res=zeros(Float64,n)
-    for i=1:n
-        @inbounds t=truth[i]
-        @inbounds estf=estimatedFrequency[i]
-        @inbounds expo=exposure[i]
-        if truth[i]==0
-            res[i]=2*estf*expo
-        else 
-            tmp=estf*expo/t
-            res[i]=2*t*(tmp-1.0-log(tmp))
-        end
-    end
-    return res
-end
 
 errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
 sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
@@ -75,6 +57,7 @@ sum(errs[dtmtable.validx])/length(dtmtable.validx)
 #evaluate confusion matrix
 0
 
+#=
 favorite_settings=deepcopy(sett)
 favorite_settings.minw=250
 dt=deepcopy(dtmtableTrain)
@@ -87,8 +70,4 @@ preds=ifelse.(predictionsOnHoldOut.<.5,1.0,0.0)
 truth=dtmtableTest.numerator
 
 err,accuracy,mat=confusmatBinary(1.+convert(Vector{Int64},truth),1.+convert(Vector{Int64},preds))
-#tp 2281
-#tn 621
-# R[2,1] =FP = 1565 preds.==0 and truth.==1
-#
-# dtm_multicore(dtmtableTrain,settingsVector)
+=#

@@ -1,4 +1,4 @@
-export confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
+export poissonError,confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
 
 import Base: append!,mean,length,findin,isless,eltype,resize!,convert
 #import PooledArrays.levels
@@ -2042,7 +2042,20 @@ t=tree.rootnode
 		thisres=[thisres;rss_rowtrn];overallstats=[overallstats;rss_rowtrn];
 		rss_rowval=["RSS of Numerator Val" residual_sum_squares_of_numeratorVal repmat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;rss_rowval];overallstats=[overallstats;rss_rowval];
-    
+	#attach poisson error (for frequency models)
+		if sett.boolCalculatePoissonError
+			poissonErrors=poissonError(dtmtable.numerator,dtmtable.weight,fitted)::Vector{Float64}
+		else
+			poissonErrors=zeros(Float64,2)::Vector{Float64}
+		end		
+		poissonErrTrn=sum(poissonErrors[trnidx])/length(trnidx)
+		poissonErrVal=sum(poissonErrors[validx])/length(validx)
+		poiErr_rowtrn=["Average Poisson Error Trn" poissonErrTrn repmat([""],1,size(thisres,2)-2)]
+		thisres=[thisres;poiErr_rowtrn];overallstats=[overallstats;poiErr_rowtrn];
+		poiErr_rowval=["Average Poisson Error Val" poissonErrVal repmat([""],1,size(thisres,2)-2)]
+		thisres=[thisres;poiErr_rowval];overallstats=[overallstats;poiErr_rowval];
+
+
 	modelStatisticsSheet=ExcelSheet(nameOfModelStatisticsSheet,thisres)
 	modelsettingsSheet=ExcelSheet(nameOfSettingsSheet,convert(DataFrame,writeAllFieldsToArray(sett)))
 	xlData.sheets=[modelsettingsSheet,modelStatisticsSheet]
@@ -5335,4 +5348,28 @@ function confusmatBinary(truth::Vector{T}, pred::Vector{T}) where T<:Int
 	error=(fp+fn)/sz
 	accuracy=(tp+tn)/sz
 	return error,accuracy,R
+end
+
+
+function poissonError(trueNumerator,exposure,estimatedFrequency)
+    n=length(trueNumerator)
+    @assert n==length(exposure)==length(estimatedFrequency)
+    res=zeros(Float64,n)
+    for i=1:n
+        @inbounds t=trueNumerator[i]
+        @inbounds estf=estimatedFrequency[i]
+        @inbounds expo=exposure[i]
+        if iszero(t)
+            @inbounds res[i]=2.0*estf*expo
+        else 
+            tmp=estf*expo/t
+            #this will fail for tmp<0
+            @inbounds res[i]=2.0*t*(tmp-1.0-log(tmp))
+        end
+    end
+    return res
+    #consider
+    #errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
+    #sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
+    #sum(errs[dtmtable.validx])/length(dtmtable.validx)
 end

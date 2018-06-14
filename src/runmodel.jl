@@ -329,9 +329,13 @@ tic()
 	if any(numerator.<0)
 		warn("There are negative observed ratios!")
 		warn(strNegativeRatioWarning)
-    if typeof(sett.crit) == PoissonDevianceSplit
-      error("DTM: Negative numerator values are not allowed for Poisson Deviance!. Abort. \n Crit = $(sett.critt)")
-    end
+		if sett.boolCalculatePoissonError
+			warn("DTM: Setting boolCalculatePoissonError to false!")
+			sett.boolCalculatePoissonError=false
+		end		
+		if typeof(sett.crit) == PoissonDevianceSplit
+		error("DTM: Negative numerator values are not allowed for Poisson Deviance!. Abort. \n Crit = $(sett.critt)")
+		end
 	end
 
 	df_names=sett.df_name_vector #names(dfIndata)

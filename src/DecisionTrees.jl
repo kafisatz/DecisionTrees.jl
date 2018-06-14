@@ -2,6 +2,8 @@ __precompile__()
 VERSION >= v"0.7-"
 #note on v0.7 alpha a 'using' statement takes about 1050 seconds....
 
+@warn "BK: DTM currently has a performance regression of a factor 5 in Julia 0.7alpha versus 0.6.3. I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
+
 @info "DTM: BK to add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
 @info "DTM: BK to 'remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)"
 @info "DTM: BK add 'time_finished' to model result (and possibly the time needed for the modelling)"
