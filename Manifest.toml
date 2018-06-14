@@ -47,12 +47,6 @@ git-tree-sha1 = "0dbb02f2d0330bdad5a792ea5619899f90516880"
 uuid = "159f3aea-2a34-519c-b102-8c37f9878175"
 version = "0.5.2"
 
-[[Calculus]]
-deps = ["Compat"]
-git-tree-sha1 = "2573aaad07cbbe21526e055bea3e995abc9e7c99"
-uuid = "49dc2e85-a5d0-5ad3-a950-438e2897f1b9"
-version = "0.4.0"
-
 [[CategoricalArrays]]
 deps = ["Compat", "JSON", "Missings", "Printf", "Reexport"]
 git-tree-sha1 = "8ff661f67c4dd799626bfd4fdf6241923c792af5"
@@ -127,14 +121,6 @@ version = "0.6.0"
 
 [[Distributed]]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
-
-[[Distributions]]
-deps = ["Calculus", "Compat", "PDMats", "QuadGK", "SpecialFunctions", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "79022d156a60d7396701112bf44b590330d2141b"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaStats/Distributions.jl.git"
-uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.15.0+"
 
 [[FileIO]]
 deps = ["Compat"]
@@ -342,12 +328,6 @@ git-tree-sha1 = "fcf6f5c7e596a62c9888ecdc5ee8f34101b7bae6"
 uuid = "925886fa-5bf2-5e8e-b522-a9147a512338"
 version = "0.7.0"
 
-[[PDMats]]
-deps = ["Compat", "IterativeEigensolvers", "LinearAlgebra", "SparseArrays", "SuiteSparse", "Test"]
-git-tree-sha1 = "75a96d706fe759ed114f05c284b02a9abe1bb956"
-uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
-version = "0.9.1"
-
 [[PenaltyFunctions]]
 deps = ["LearnBase", "RecipesBase"]
 git-tree-sha1 = "998fb9e0cd0291e40f0423dcf044485511ad50f5"
@@ -379,12 +359,6 @@ repo-rev = "master"
 repo-url = "https://github.com/JuliaPy/PyCall.jl.git"
 uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 version = "1.16.1+"
-
-[[QuadGK]]
-deps = ["Compat", "DataStructures"]
-git-tree-sha1 = "50556973bf81b325584f8a92cfd57cbfa73cb303"
-uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
-version = "0.2.1"
 
 [[REPL]]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
