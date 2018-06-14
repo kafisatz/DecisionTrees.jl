@@ -33,6 +33,7 @@ datafile=string("data\\freMTPL2\\freMTPL2.csv"))
     AreaInteger=map(x->findall((in)([x]),areasSorted)[1],fullData[:Area])
     fullData[:AreaInteger]=AreaInteger
 
+    dat$ClaimNb <- pmin(dat$ClaimNb, 4)   # correct for unreasonable observations (that might be data error)
 #set independent variables
 selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","BonusMalus","VehBrand","VehGas","Density","Region"]
 #note: we refrain from using the exposure as explanatory variable, as this is not meaningful in practical applications
