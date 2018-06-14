@@ -1,5 +1,5 @@
 
-function dtm_multicore(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
+function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     warn("This requires testing especially when nprocs()>2")
     
     #set rnd state to make this function reporducible (irrespective of trn/val idx)
@@ -27,7 +27,7 @@ function dtm_multicore(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};
             path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_0")
             fnmod=string(path_and_fn_wo_extension_mod,ext)
             somestrings,model=run_model_actual(dtmtable,dummySett,fnmod)
-            desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)
+            desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)
             #add first column
                 unshift!(numbrs,i)
                 unshift!(settingsvec,string(i))
@@ -133,7 +133,7 @@ function singleRunDtm(i::Int,local_data_dict::Dict)
             fnmod=string(path_and_fn_wo_extension_mod,ext)
         #run model
             somestrings,model=run_model_actual(dtmtable,sett,fnmod)            
-            desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)                
+            desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)
         #add index as first column        
             unshift!(numbrs,i)
             unshift!(settingsvec,string(i))

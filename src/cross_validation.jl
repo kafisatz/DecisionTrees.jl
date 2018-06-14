@@ -90,7 +90,7 @@ srand(intDatahash)
         path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
         fnmod=string(path_and_fn_wo_extension_mod,ext)
         somestrings,model=run_model_actual(dtmtable,sett,fnmod)        
-        desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)        
+        desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)
         
         #add index as first column        
             unshift!(numbrs,i)
@@ -171,7 +171,7 @@ srand(intDatahash)
     return statsdf,settsdf    
 end
 
-function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
+function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     warn("This requires testing especially when nprocs()>2")
     #if folds<0 then we consider n disjoint training sets
     
@@ -243,7 +243,7 @@ function dtm_multicore(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn:
             path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_0")
             fnmod=string(path_and_fn_wo_extension_mod,ext)
             somestrings,model=run_model_actual(dtmtable,dummySett,fnmod)
-            desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)
+            desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)
             #add first column
                 unshift!(numbrs,i)
                 unshift!(settingsvec,string(i))
@@ -346,7 +346,7 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
         cvo=di["cvo"]
         dtmtable=di["dtmtable"]
         path_and_fn_wo_extension=di["path_and_fn_wo_extension"]
-        
+                
         #find ith sample
             jj=1
             local this_sample
@@ -378,7 +378,7 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
             fnmod=string(path_and_fn_wo_extension_mod,ext)
         #run model
             somestrings,model=run_model_actual(dtmtable,sett,fnmod)            
-        desc,numbrs,desc_settingsvec,settingsvec=get_stats(model)                
+            desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)        
         #add index as first column        
             unshift!(numbrs,i)
             unshift!(settingsvec,string(i))

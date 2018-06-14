@@ -95,4 +95,4 @@ err,accuracy,mat=confusmatBinary(1.+convert(Vector{Int64},truth),1.+convert(Vect
 #tn 621
 # R[2,1] =FP = 1565 preds.==0 and truth.==1
 #
-# dtm_multicore(dtmtableTrain,settingsVector)
+# dtm(dtmtableTrain,settingsVector)
