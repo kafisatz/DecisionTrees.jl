@@ -125,8 +125,17 @@ updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.025,s
 ##############################
 
 #resM is the resulting Model
-someStrings,resM=dtm(dtmtable,sett)
+resultingFiles,resM=dtm(dtmtable,sett)
 #consider the resulting Excel file for a descritipon of the model 
+#it should be located here:
+@show resultingFiles[2]
+
+#if you prefer to analyze the data in Julia instead of excel, consider
+sheetnames=map(x->x.name,resM.exceldata.sheets)
+#the following is the ModelStatistics sheets as a Dataframe 
+resM.exceldata.sheets[3].data
+#this is the lift in the training data for each iteration of the boosting model
+resM.exceldata.sheets[3].data[:x6]
 
 ############################################################
 #Investigate the predictions (fitted values)
@@ -140,6 +149,15 @@ someStrings,resM=dtm(dtmtable,sett)
 #the user can specify the number of scores for the output (see sett.nscores which defaults to 1000)
 #DecisionTrees runs a moving average over the observed data to smooth the noise
 
+#3. Unsmoothed fitted values per Score. 
+#As the score is merely an aggregation of the resulting 'relativities' (i.e. the spread of the fitted frequencies by the ensbemble)
+#one can calculate the observed frequency for each score. Here, no smoothing is performed
+
+
+#If you want, you can consider the function below to get the fitted value
+# rawFittedValues,smoothedFittedValuesPerScore,unsmoothedFittedValuesPerScore=getFittedValues(reM)
+#in the following lines we derive the fitted values from the resM struct 
+
 #We will show the different fitted values in the following
 
 #1. Fitted values based on the "raw relativities"
@@ -152,8 +170,8 @@ fitted=resM.meanobserved.*resM.rawrelativities
 
 #Let us calculate the Poisson Error for these estimates
 errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
-trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #should be around 0.32
-valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around 0.32
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #should be around 0.30939804739941096
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around 0.31950570163159764
 
 #2. Smoothed fitted values per Score. 
 scores=resM.scores
@@ -168,8 +186,8 @@ fitted=fittedThroughScores
 @show unique(fitted)
 #this should correspond to sett.nscores
 errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
-trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
-valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx)
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.3087311765403276
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.31904324177240373
 
 #3. (raw) Observed frequency per Score
 #As the score is merely an aggregation of the resulting 'relativities' (i.e. the spread of the fitted frequencies by the ensbemble)
@@ -184,16 +202,35 @@ end
 #Again, let us consider the Poisson Error
 fitted=rawFittedThroughScores
 errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
-trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
-valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx)
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.30466923428172205
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.3192841010476779
 
 
-#New data
+#Unseen data
 #Note: For any out of sample data (which MUST have exactly the same structure as dtmtable.features!)
 #you can also use the predict function
 estimatedFrequencieForFirst20Obs=predict(resM,dtmtable.features[1:20,:])
 #getting new/unseen data into the right format is not trivial at the moment. It is easiset to use prepare_dataframe_for_dtm! to the 
 #whole data set and then discrard possible hold out observations  (or mark as validation through validx)
+
+
+
+############################################################
+#Additional options
+############################################################
+
+#You can modify the settings directly
+sett.niter=4
+#however it is preferred to use the update function to avoid creating an 'invalid' setting (such as a negative number of iterations)
+updateSettingsMod!(sett,niter=-3) #e.g. this will throw an error (whereas sett.niter=-3 does not)
+
+
+#SOME COMMENT ON MANY UNUSED AND EXPERMIANTAL options
+#if you want to use the resutling tree in a different programming language you may want to
+#consider these options which give you the core structure of the model in other languages
+# updateSettingsMod!(sett,write_csharp_code="true",write_vba_code="true",write_sas_code="true")
+
+#mention DOT graph
 
 ############################################################
 #Prepare a grid search over the parameter space

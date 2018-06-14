@@ -1,4 +1,4 @@
-export createGridSearchSettings,poissonError,confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
+export getFittedValues, createGridSearchSettings,poissonError,confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
 
 import Base: append!,mean,length,findin,isless,eltype,resize!,convert
 #import PooledArrays.levels
@@ -5456,4 +5456,23 @@ function createGridSearchSettings(sett::ModelSettings;args...)
 	end
 	@assert length(unique(map(x->x.performanceMeasure,settingsVector)))==1 "DTM: Perf measure must be the same for the entire settings Vector"
     return settingsVector
+end
+
+"""
+ rawFittedValues,smoothedFittedValuesPerScore,unsmoothedFittedValuesPerScore=getFittedValues(bt::BoostedTree)
+ returns three different fitted vectors for a boosting model
+"""
+function getFittedValues(bt::BoostedTree)
+
+    f1=bt.meanobserved.*bt.rawrelativities
+
+    scores=bt.scores
+    f2=zeros(Float64,length(scores))
+    f3=zeros(Float64,length(scores))
+    for i=1:length(scores)
+        @inbounds sc=scores[i]
+        @inbounds f2[i]=bt.ScoreToSmoothedEstimate[sc]
+        @inbounds f3[i]=bt.rawObservedRatioPerScore[sc]
+    end
+  return f1,f2,f3
 end
