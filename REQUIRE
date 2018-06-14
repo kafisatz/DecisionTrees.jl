@@ -1,10 +1,16 @@
-julia 0.7-
-CSV
+julia 0.6.1
 PyCall
-DataFrames
-JLD2
-FileIO
+CSV
+Loess
+BenchmarkTools
+Compat
 OnlineStats
 StatsBase
-StatsFuns
+Distributions
+DataFrames
 ProgressMeter
+Iterators
+JLD2
+SQLite
+ProfileView
+Coverage
