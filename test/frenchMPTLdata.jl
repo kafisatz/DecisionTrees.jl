@@ -53,37 +53,45 @@ fitted=resM.meanobserved.*resM.rawrelativities
 errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
 sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
 sum(errs[dtmtable.validx])/length(dtmtable.validx)
+
+
 #grid search
 
-#evaluate confusion matrix
-0
+#sett core settings
+updateSettingsMod!(sett,
+niter=5,
+model_type="boosted_tree",
+max_splitting_points_num=250	,
+nscores="1000",
+write_statistics="true",
+write_sas_code="false",
+write_iteration_matrix="false",
+write_result="false",
+write_csharp_code="false",
+write_vba_code="false",
+boolSaveJLDFile="false",
+boolSaveResultAsJLDFile="false",
+
+showProgressBar_time="true",
+boolProduceEstAndLeafMatrices="false",
+write_dot_graph="false",
+
+boolCalculatePoissonError="true",
+performanceMeasure="Average Poisson Error Val"
+)
+
 #createGridSearchSettings
-createGridSearchSettings
+settV=createGridSearchSettings(sett,    
+	minw=[-0.005,0.01,0.02,0.03,0.05],
+    mf=[0.01,0.005,0.02,0.04],
+    subsampling_features_prop=[1.0,.75,.5,.25],
+    smoothEstimates=["0","1"]
+#
+#    randomw=0.0
+#	subsampling_prop
+)
 
-#=
-#test grid search
+@show 0
 
-sett2=deepcopy(sett)
-sett3=deepcopy(sett)
-sett4=deepcopy(sett)
-sett2.minw=sett.minw/2
-sett3.minw=sett.minw/6
-sett4.niter=sett.niter*2
-
-setts=vcat(sett,sett2,sett3,sett4)
-=#
-
-#=
-favorite_settings=deepcopy(sett)
-favorite_settings.minw=250
-dt=deepcopy(dtmtableTrain)
-#derive model from all data
-resample_trnvalidx!(dtmtableTrain,.999)
-notUsed,resModel=dtm(dt,sett)
-
-predictionsOnHoldOut,leafnrs=predict(resModel,dtmtableTest.features)
-preds=ifelse.(predictionsOnHoldOut.<.5,1.0,0.0)
-truth=dtmtableTest.numerator
-
-err,accuracy,mat=confusmatBinary(1.+convert(Vector{Int64},truth),1.+convert(Vector{Int64},preds))
-=#
+warn("todo:check best tree with poisson error too!")
+    #crit::SplittingCriterion # fn version of 4
