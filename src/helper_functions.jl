@@ -840,7 +840,7 @@ for intVarname in integerVarlist
 			@assert all(v9.==v9b)
 			@assert all(v10.==v10b)
 		=#
-		statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,-1,sett.scorebandsstartingpoints,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,sett.boolCalculateGini)
+		statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,-1,sett.scorebandsstartingpoints,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,sett)
 		statsThisIteration[1,1]="Scoreband" #this cell has the value "Cumulative Stats n=-1" by default which is not useful here.
 		statsThisIteration=hcat(statsThisIteration[:,1],vcat([strVarname],repmat([strthresh],size(statsThisIteration,1)-1,1)),statsThisIteration[:,2:end])
 		outMatrix=vcat(deepcopy(outMatrix),deepcopy(statsThisIteration))
@@ -1882,11 +1882,11 @@ end
 
 function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstartingpoints::Array{Int64,1}
 ,numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn
-,numeratorval,denominatorval,weightval,numeratorEstval,scoresval,boolCalculateGini::Bool)
+,numeratorval,denominatorval,weightval,numeratorEstval,scoresval,sett::ModelSettings)
 		nClasses=length(scorebandsstartingpoints)		
 		sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn=aggregateScores(numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn,scorebandsstartingpoints)
 		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,numeratorEstval,scoresval,scorebandsstartingpoints)		
-		if boolCalculateGini
+		if sett.boolCalculateGini
 			#these statistics are optinally disabled as the gini takes a LOT of time especially due to sorting			
 			#NOTE: we currently have two different gini values which we calculate, one approach takes only one argument (the estimator) while the other appraoch considers the truth and the estimator
 			#it seems that the single_agrument_gini is more common (it should correspond to the gini in library(reldist) in R).
@@ -1907,8 +1907,18 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_numeratortrn=1.0-residual_sum_squares_of_numeratorTrn/total_sum_squares_of_numeratorTrn
 		r2_of_ratiotrn=1.0-residual_sum_squares_of_ratioTrn/total_sum_squares_of_ratioTrn
 		r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
-		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal
-
+		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
+        #poisson error (for frequency models)	        
+		if sett.boolCalculatePoissonError
+			poissonErrortrn=poissonError(numeratortrn,weighttrn,numeratorEsttrn.*denominatortrn)::Vector{Float64}
+            poissonErrorval=poissonError(numeratorval,weightval,numeratorEstval.*denominatorval)::Vector{Float64}
+		else
+			poissonErrortrn=zeros(Float64,2)
+            poissonErrorval=zeros(Float64,2)
+		end		
+		poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
+		poissonErrVal=sum(poissonErrorval)/length(weightval)
+		        
 		qwkappaTrn=tryQWKappa(numeratortrn,numeratorEsttrn)
 		qwkappaVal=tryQWKappa(numeratorval,numeratorEstval)
 		observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
@@ -1917,7 +1927,7 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		header=["Cumulative Stats n=$(iter)" "Weight Trn" "Weight Val" "Numerator Trn" "Numerator Val" "Denominator Trn" "Denominator Val" "Observed Ratio Trn" "Observed Ratio Val" "Numerator Est Trn" "Numerator Est Val" "Fitted Ratio Trn" "Fitted Ratio Val" reltrntitle "Relativity Val (Observed)"]
 		columnOfRelativityTrn=findin(header,[reltrntitle])[1]
 		cumulativeStatsMatrix=vcat(header,cumulativeStatsMatrix)
-		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal gini_single_argtrn gini_single_argval r2_of_ratiotrn r2_of_ratioval r2_of_numeratortrn r2_of_numeratorval residual_sum_squares_of_ratioTrn residual_sum_squares_of_ratioVal residual_sum_squares_of_numeratorTrn residual_sum_squares_of_numeratorVal]
+		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal gini_single_argtrn gini_single_argval r2_of_ratiotrn r2_of_ratioval r2_of_numeratortrn r2_of_numeratorval residual_sum_squares_of_ratioTrn residual_sum_squares_of_ratioVal residual_sum_squares_of_numeratorTrn residual_sum_squares_of_numeratorVal poissonErrTrn poissonErrVal]
 return cumulativeStatsMatrix,singleRowWithKeyMetrics,columnOfRelativityTrn
 end
 
