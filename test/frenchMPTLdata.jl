@@ -171,11 +171,29 @@ errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
 trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
 valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx)
 
+#3. (raw) Observed frequency per Score
+#As the score is merely an aggregation of the resulting 'relativities' (i.e. the spread of the fitted frequencies by the ensbemble)
+#one can calculate the observed frequency for each score. Here, no smoothing is performed
+scores=resM.scores
+rawFittedThroughScores=zeros(Float64,length(scores))
+for i=1:length(scores)
+    @inbounds sc=scores[i]
+    @inbounds rawFittedThroughScores[i]=resM.rawObservedRatioPerScore[sc]
+end
+
+#Again, let us consider the Poisson Error
+fitted=rawFittedThroughScores
+errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx)
 
 
-#for any out of sample data, which MUST have exactly the same structure as dtmtable.features! 
+#New data
+#Note: For any out of sample data (which MUST have exactly the same structure as dtmtable.features!)
 #you can also use the predict function
 estimatedFrequencieForFirst20Obs=predict(resM,dtmtable.features[1:20,:])
+#getting new/unseen data into the right format is not trivial at the moment. It is easiset to use prepare_dataframe_for_dtm! to the 
+#whole data set and then discrard possible hold out observations  (or mark as validation through validx)
 
 ############################################################
 #Prepare a grid search over the parameter space
