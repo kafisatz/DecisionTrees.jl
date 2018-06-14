@@ -13,6 +13,12 @@ git-tree-sha1 = "88f5e40c04b5aac568656d6464576974eb9afce4"
 uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 version = "0.3.2"
 
+[[CSV]]
+deps = ["CategoricalArrays", "Compat", "DataFrames", "DataStreams", "Dates", "InternedStrings", "Missings", "Test", "WeakRefStrings"]
+git-tree-sha1 = "9d62d3d577895a1e0b0bacd211a788be70127165"
+uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+version = "0.2.5"
+
 [[CategoricalArrays]]
 deps = ["Compat", "JSON", "Missings", "Printf", "Reexport"]
 git-tree-sha1 = "8ff661f67c4dd799626bfd4fdf6241923c792af5"
@@ -77,6 +83,12 @@ uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 
 [[InteractiveUtils]]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+
+[[InternedStrings]]
+deps = ["Compat", "Random", "Test"]
+git-tree-sha1 = "ea877c3608e8468aebd899a6d610cba401186d73"
+uuid = "7d512f48-7fb1-5a58-b986-67e6dc259f01"
+version = "0.6.2"
 
 [[IterativeEigensolvers]]
 uuid = "de555fa4-b82f-55e7-8b71-53f60bbc027d"
