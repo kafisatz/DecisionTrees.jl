@@ -2076,11 +2076,13 @@ t=tree.rootnode
 	#attach poisson error (for frequency models)	
 		if sett.boolCalculatePoissonError
 			poissonErrors=poissonError(dtmtable.numerator,dtmtable.weight,fitted)::Vector{Float64}
+            poissonErrTrn=sum(poissonErrors[trnidx])/length(trnidx)
+            poissonErrVal=sum(poissonErrors[validx])/length(validx)		
 		else
 			poissonErrors=zeros(Float64,2)::Vector{Float64}
+            poissonErrTrn=0.0
+            poissonErrVal=0.0
 		end		
-		@show poissonErrTrn=sum(poissonErrors[trnidx])/length(trnidx)
-		@show poissonErrVal=sum(poissonErrors[validx])/length(validx)
 		poiErr_rowtrn=["Average Poisson Error Trn" poissonErrTrn repmat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;poiErr_rowtrn];overallstats=[overallstats;poiErr_rowtrn];
 		poiErr_rowval=["Average Poisson Error Val" poissonErrVal repmat([""],1,size(thisres,2)-2)]
