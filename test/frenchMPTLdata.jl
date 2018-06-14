@@ -2,10 +2,10 @@ t0=time_ns()
 cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 @warn("You may need to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
-using Revise
-using CSV,DataFrames
+@everywhere using Revise
+@everywhere using CSV,DataFrames
 
-using DecisionTrees  
+@everywhere using DecisionTrees  
 
 tela = (time_ns()-t0)/1e9
 @show tela #maybe 500-700 seconds on June 11, 2018
