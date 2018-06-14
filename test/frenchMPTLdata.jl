@@ -44,6 +44,7 @@ sett.model_type="boosted_tree"
 sett.niter=10
 sett.mf=0.08
 sett.subsampling_features_prop=.7
+sett.boolCalculatePoissonError=true
 
 #run model
 unused,resM=dtm(dtmtable,sett)
