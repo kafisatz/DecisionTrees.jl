@@ -57,6 +57,8 @@ sum(errs[dtmtable.validx])/length(dtmtable.validx)
 
 #evaluate confusion matrix
 0
+#createGridSearchSettings
+createGridSearchSettings
 
 #=
 #test grid search

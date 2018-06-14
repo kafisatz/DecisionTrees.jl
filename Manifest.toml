@@ -72,6 +72,9 @@ git-tree-sha1 = "0a1f9ee5c682ff68287eb30deb381fdf595de762"
 uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 version = "0.9.0"
 
+[[FileWatching]]
+uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
+
 [[InteractiveUtils]]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
@@ -195,6 +198,12 @@ version = "0.3.1"
 git-tree-sha1 = "caba582b2e9ef39b9cfff911aa13c5ca1b9a9896"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "0.1.0"
+
+[[Revise]]
+deps = ["DataStructures", "Distributed", "FileWatching", "Pkg", "REPL", "Random", "Test", "Unicode"]
+git-tree-sha1 = "6298b7d0bfe5f75f298a40c2dda508839bfe2b91"
+uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
+version = "0.4.1"
 
 [[Rmath]]
 deps = ["BinDeps", "Compat", "Libdl"]
