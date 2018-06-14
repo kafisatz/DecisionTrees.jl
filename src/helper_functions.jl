@@ -62,7 +62,7 @@ function get_stats(model::Tree;perfMeasure::String="not_applicable_for_singe_tre
 end
 
 function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lift Val"::String)
-    if in(prefMeasure,GLOBALperfMeasursesWhereMaxIsBest)
+    if in(perfMeasure,GLOBALperfMeasursesWhereMaxIsBest)
         minOrmax="max"
     else
         minOrmax="min"
@@ -74,8 +74,8 @@ function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lif
     
     #best iteration
     #look for min or max
-    @assert in(Symbol(prefMeasure),desc) "DTM: invalid performance measure specified. $(prefMeasure) was not found in $(desc)"
-    perfCol=model.modelstats[Symbol(prefMeasure)]
+    @assert in(Symbol(perfMeasure),desc) "DTM: invalid performance measure specified. $(perfMeasure) was not found in $(desc)"
+    perfCol=model.modelstats[Symbol(perfMeasure)]
     #@show minimum(perfCol)
     if minOrmax=="min"
         bestValue,bestRow=findmin(perfCol)
@@ -88,7 +88,7 @@ function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lif
 	settdf=convert(DataFrame,writeAllFieldsToArray(model.settings))
 	setti_desc=string.(settdf[:,1])
 	setti=settdf[:,2]
-	return desc,numbersBestIteration,setti_desc,setti,prefMeasure
+	return desc,numbersBestIteration,setti_desc,setti,perfMeasure
 end
 
 function try_convert(T,x)
