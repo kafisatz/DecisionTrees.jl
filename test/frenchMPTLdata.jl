@@ -53,7 +53,6 @@ for x in 1:size(fullData,2)
     @show size(unique(fullData[:,x]))
 end
 
-
 ##############################
 #Prepare the data
 ##############################
