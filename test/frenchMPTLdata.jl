@@ -47,6 +47,7 @@ for x in selected_explanatory_vars
     println("")
 end
 
+#consider unique elements for each variable
 for x in 1:size(fullData,2)
     println(x)
     @show size(unique(fullData[:,x]))
