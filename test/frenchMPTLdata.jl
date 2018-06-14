@@ -21,7 +21,7 @@ tela = (time_ns()-t0)/1e9
 ##############################
 #Read the data
 ##############################
-datafile=string("data\\freMTPL2\\freMTPL2.csv"))
+datafile=string("data\\freMTPL2\\freMTPL2.csv")
 @assert isfile(datafile);
 @time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
@@ -174,10 +174,11 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.2,-0.1,-0.05]
-    ,mf=[0.01,0.02,0.03],
+    minw=[-0.2,-0.1,-0.05,-0.025,-0.01]
+    ,mf=[0.01,0.05,0.1],
     subsampling_features_prop=[1.0,.5],
-    smoothEstimates=["0","1"])
+    subsampling_prop=[1.0,.5],
+    smoothEstimates=["0"]);
 
 #consider the length(settV) which is the number of models that will be run
 length(settV)
@@ -196,7 +197,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 @info "Starting grid search..."
 
 tt0=time_ns()
-dtm(dtmtable,settV,fn="R:\\temp\\2\\dtm.CSV")
+#dtm(dtmtable,settV,fn="R:\\temp\\2\\dtm.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 
