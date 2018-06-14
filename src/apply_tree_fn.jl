@@ -34,7 +34,7 @@ end
 
 function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::DataFrame,fit::Vector{Float64},leaf::Vector{Int}) where T<:Unsigned
 	 if length(idx)==0
-       #@info "DTM: No data (an empty index) was provided to apply tree function"
+       #info("DTM: No data (an empty index) was provided to apply tree function")
        return nothing
 	 end
 	 featid=t.featid

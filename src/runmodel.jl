@@ -1,5 +1,5 @@
 #consider the functions
-#prepare_dataframe_for_dtm_INTERNAL -> prepares an arbitrary df from the dtm models
+#prepare_dataframe_for_dtm -> prepares an arbitrary df from the dtm models
 #prepare_non_jld_data
 
 function run_model(ARGS;nrows::Int=-1)
@@ -27,21 +27,7 @@ function run_model(ARGS;nrows::Int=-1)
    end
 end
 
-function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
-	@assert isdir(directory)
-	
-	@time (df_prepped,sett)=prepare_dataframe_for_dtm_INTERNAL!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
-
-	#set this to false
-		sett.boolSaveJLDFile=false
-		
-	fn=joinpath(directory,"DTMResult.csv")
-	dtmtable=prep_data_from_df(df_prepped,sett,fn)
-
-	return dtmtable,sett
-end
-
-function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+function prepare_dataframe_for_dtm!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 	#denomcol=uppercase(denomcol)
     #keycol=uppercase(keycol)
     #trnvalcol=uppercase(trnvalcol)
@@ -58,7 +44,7 @@ function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorica
     numDA=dfin[Symbol(numcol)]
 
     if denomcol==""
-        @info "Using constant denominator for each row (.==1)" #of the form ones(size(yourIntputDataFrame,1))"
+        info("Using constant denominator for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))")
         denomDA=ones(sz)
     else
         @assert in(Symbol(denomcol),dfnames) "Denominator column not found. We searched for the column $(denomcol) in the vector $(string.(dfnames))"
@@ -66,7 +52,7 @@ function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorica
     end
 
     if weightcol==""
-        @info "Using constant weight for each row (.==1)" #of the form ones(size(yourIntputDataFrame,1))"
+        info("Using constant weight for each row (.==1)") #of the form ones(size(yourIntputDataFrame,1))")
         weightDA=ones(sz)
     else
         @assert in(Symbol(weightcol),dfnames) "Weight column not found. We searched for the column $(weightcol) in the vector $(string.(dfnames))"
@@ -74,7 +60,7 @@ function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorica
     end
 
     if trnvalcol==""
-        @info "Using random choice of Training-Validation column with proportion $(valpct) for validation"
+        info("Using random choice of Training-Validation column with porportion $(valpct) for validation")
         trnvalDA=map(x->x>valpct ? 1.0 : 0.0,rand(sz))
     else
         @assert in(Symbol(trnvalcol),dfnames) "Training-Validation column not found. We searched for the column $(trnvalcol) in the vector $(string.(dfnames))"
@@ -90,16 +76,13 @@ function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorica
     end
 
     if keycol==""
-        @info "Using canonical choice of identifier column 1:size(yourIntputDataFrame,1)"
+        info("Using canonical choice of indentifier column 1:size(yourIntputDataFrame,1)")
         irkeyDA=collect(1:sz)
     else
         @assert in(Symbol(keycol),dfnames) "Identifier column not found. We searched for the column $(keycol) in the vector $(string.(dfnames))"
         irkeyDA=dfin[Symbol(keycol)]
     end
 
-#remove union types (especially missing if there are any!)
-removeUnionTypes!(dfin,independent_vars)
-    
 #construct resulting DF
 #requirements on the first 5 columns: irkey (=string identifier), numerator, denominator, weight, training_validation_bool (0 or 1)
     #'main' columns
@@ -137,16 +120,18 @@ removeUnionTypes!(dfin,independent_vars)
         @assert in(Symbol(this_name),dfnames) "Error: explanatory column $(this_name) not found in data."
         if in(this_name,Symbol.(treat_as_categorical_variable))
             #change variable type in original dataframe
-            if !is_categorical_column(dfin[this_name],this_name)
-                @info "DTM: Converting the column $(this_name) from $(eltype(dfin[this_name])) to string."
+            if !is_categorical_column(dfin[this_name])
+                info("DTM: Converting the column $(this_name) from $(eltype(dfin[this_name])) to string.")
                 dfin[this_name]=string.(dfin[this_name])
                 this_is_a_string=true
             else
-                #@info "DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed."
+                #info("DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed.")
             end
         end
-        
-        if is_categorical_column(dfin[this_name],this_name)
+
+        #if this_is_a_string||(eltype(dfin[this_name])<:AbstractString)
+        #if (eltype(dfin[this_name])<:AbstractString)
+        if is_categorical_column(dfin[this_name])
             push!(char_features,this_name)
         else
             push!(num_features,this_name)
@@ -154,23 +139,32 @@ removeUnionTypes!(dfin,independent_vars)
 
     end
 
-	@assert (length(char_features)+length(num_features)==n_indep) #this should always be the case!
-	n_char=length(char_features)
-	n_num=length(num_features)
+ @assert (length(char_features)+length(num_features)==n_indep) #this should always be the case!
+ n_char=length(char_features)
+ n_num=length(num_features)
 
-  #warn("this might benefit from optimization. I am not entirely sure, how the code performs for larger data sets")
-    if n_num>0        
+ #@show num_features
+ #@show char_features
+#warn("this is written in a terrible manner, we should improve this!!. It takes ages for larger data sets")
+    if n_num>0
+        #dfres=hcat(dfres,deepcopy(dfin[num_features]))
         dfres[num_features]=dfin[num_features]
     end
-    if n_char>0        
+    if n_char>0
+        #dfres=hcat(dfres,deepcopy(dfin[char_features]))
         dfres[char_features]=dfin[char_features]
     end
-    
+    #dftmp=DataFrame()
+
+    #sort such that training observations are at the beginning of the file
+    #this is not necessary!
+    #sort!(dfres,cols = [:training_validation_bool, :irkey],rev=true)
+
     this_sett=ModelSettings()
 
     this_sett.df_name_vector=names(dfres)[1+global_const_shift_cols:end]
     updateSettingsMod!(this_sett,number_of_num_features=n_num,number_of_char_features=n_char) #model_type="build_tree",minw=.91,randomw=0,mf=.05,subsampling_features_prop=1.0,niter=10,subsampling_prop=1.00)
-    @info "Data initialization finished:"
+    info("Data initialization finished:")
     @show size(dfres)
     @show n_num,n_char
     @show char_features
@@ -178,44 +172,8 @@ removeUnionTypes!(dfin,independent_vars)
     return dfres,this_sett
 end
 
-
-"""
-tries to convert all types of Union{Missing,T} to T
-"""
-function removeUnionTypes!(dfin,independent_vars::Vector{String})
-for v in independent_vars
-    vsymb=Symbol(v)
-    col=dfin[vsymb]
-    elt=eltype(col)
-    typeOfelt=typeof(elt)
-    if typeOfelt!=DataType
-        @info "DTM: Type of the eltype of $(v) is not a DataType but $(typeOfelt). The type of $(v) is $(elt)"
-        
-		@info "DTM: Trying to convert the type..."		
-		try
-			a=elt.a
-			b=elt.b
-			tragetT = ifelse(a==Missing,b,a)
-			dfin[vsymb]=convert(Vector{tragetT},x) 
-			return nothing
-		catch
-		@warn("DTM: Type conversion failed. The model will likely not run as intended.")
-		end
-    end
-end
-return nothing 
-end
-
-function is_categorical_column(x,nm)
-	#warn("BK need to ensure that there are NO union types!, especially we do not want the missing tpiye (for now)!")
-    elt=eltype(x)
-    typeOfElt=typeof(elt)
-    if typeOfElt!=DataType  
-        sz=length(x)    
-        @show x[1:10]
-        error("DTM: The type of variable $(nm) is not of type 'DataType' but '$(typeOfElt)'. The type of the variable is $(elt). Currently only DataTypes are supported.")
-    end
-    return elt <:AbstractString
+function is_categorical_column(x)
+    return eltype(x) <:AbstractString
 end
 
 function run_model_main(settingsFilename::String,dataFilename::String,datafolder::String,outfilename::String,outfileStringOnly::String;nrows::Int=-1)
@@ -234,18 +192,18 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 		#warn("Experimental: Settings File has more than two rows. Running multiple models")
 		if lowercase(reverse(dataFilename)[1:4])!="dlj."
 			#prep data and create *.jld file #NOTE: the fact that we save the *.jld file to disk is obsolete here (could be improved in the future) todo/tbd
-			@info "Prepping data for multirow run"
+			info("Prepping data for multirow run")
 			settingsArrayTWOROWS=settingsArray[1:2,:]
 			key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArrayTWOROWS,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
 			dataFilename,extp=splitext(dataFilename)
 			dataFilename=string(dataFilename,".jld2")
-			@info "this will probably fail with a *.db or mysql  input file/reference"
+			info("this will probably fail with a *.db or mysql  input file/reference")
 			@assert isfile(dataFilename) "Something went wrong: dataFilename should be a prepped *.jld2 file here"
 		end
 		println("Loading Julia save file: \n $(dataFilename)")
 		dictOfVariables=load(dataFilename);
 		telapsed=toq()
-		@info "Time to read data: $(telapsed)"
+		info("Time to read data: $(telapsed)")
 		return run_model_multirow_settings(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 	end
 
@@ -254,14 +212,14 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 		println("Loading Julia save file: \n $(dataFilename)")
 		dictOfVariables=load(dataFilename);
 		telapsed=toq()
-		@info "Time to read data: $(telapsed)"
+		info("Time to read data: $(telapsed)")
 		return run_model_jld(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 	#non jld file was provided
 	else
 		key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
 		#key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=runmodel_non_jld(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows)
         telapsed=toq()
-        sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
+        sett.print_details&&(!sett.preppedJLDFileExists)&&info("Time to prepare data: $(telapsed)\n")
         return run_model_actual(key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues,dataFilename)
 		#return runmodel_non_jld(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows)
 	end
@@ -274,7 +232,7 @@ function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::D
 	sett=ModelSettings() #default model settings
 	updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
     telapsed=toq()
-    sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
+    sett.print_details&&(!sett.preppedJLDFileExists)&&info("Time to prepare data: $(telapsed)\n")
     return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
 end
 
@@ -329,13 +287,9 @@ tic()
 	if any(numerator.<0)
 		warn("There are negative observed ratios!")
 		warn(strNegativeRatioWarning)
-		if sett.boolCalculatePoissonError
-			warn("DTM: Setting boolCalculatePoissonError to false!")
-			sett.boolCalculatePoissonError=false
-		end		
-		if typeof(sett.crit) == PoissonDevianceSplit
-		error("DTM: Negative numerator values are not allowed for Poisson Deviance!. Abort. \n Crit = $(sett.critt)")
-		end
+    if typeof(sett.crit) == PoissonDevianceSplit
+      error("DTM: Negative numerator values are not allowed for Poisson Deviance!. Abort. \n Crit = $(sett.critt)")
+    end
 	end
 
 	df_names=sett.df_name_vector #names(dfIndata)
@@ -385,33 +339,10 @@ tic()
 	pool_lengths=length.(pools)
 	for i=1:length(pool_lengths)
 		if pool_lengths[i]==1
-			@info "DTM: Column $(i) = $(sett.df_name_vector[i]) has zero splitting points."
+			info("DTM: Column $(i) = $(sett.df_name_vector[i]) has zero splitting points.")  
 		end
 	end
 		
-	#"Check if string pools are valid utf8 characters. This is specifically important when data is read in a 'wrong' manner due to encoding issues. The PyCall functions which write the Excel files will fail in such cases"
-	for i=1:length(pool_lengths)
-	#@show pools		
-		if eltype(pools[i])<:Number
-			#nothing to do, numbers are always valid
-		else 
-			vld=.!(isvalid.(pools[i]))
-			#vld=isvalid.(pools[i])
-			if any(vld)
-				@warn("DTM: The variable $(sett.df_name_vector[i]) contains invalid characters for some values (see below). Please check if your data was read and encoded properly.\r\nDTM will try and remove the invalid characters from the data. You should clean the data prior to invoking DTM.")
-				@show pools[i][vld]
-				for zz=1:length(vld)
-					if vld[zz]
-						before=pools[i][zz]
-						after=cleanString(pools[i][zz])
-						println("DTM: $(before) -> $(after)")
-						pools[i][zz]=after
-					end
-				end
-			end
-		end
-	end
-
 	trnidx,validx=createIntegerIndices(trn_val_idx)
 	dtmtable=DTMTable(key,trnidx,validx,numerator,denominator,weight,features,candMatWOMaxValues,mappings)
 	
@@ -431,12 +362,12 @@ end
 function prepare_non_jld_data(dataFilename::String,settingsArray::Array{String,2},datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int,nrows::Int,number_of_num_features::Int)
 local eltypev,dfIndata
 	if lowercase(dataFilename)[end-2:end]==".db"
-		@info "todo: Test *.DB Sqlite functionality."
-		@info "the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')"
+		info("todo: Test *.DB Sqlite functionality.")
+		info("the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')")
 		warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
 		println("Importing data from SQLiteDB file: \n $(dataFilename)")
 		try
-			@info "check if disabling gc speeds this up"
+			info("check if disabling gc speeds this up")
 			dfIndata=readDFfromSQLiteDB(dataFilename,const_shift_cols)
 		catch sqllitereaderr
 			@show sqllitereaderr
@@ -498,15 +429,14 @@ sett=deepcopy(input_setttings)
 
 if sett.boolTariffEstStats
 	if !sett.boolProduceEstAndLeafMatrices
-		@info "DTM: User has requested TariffEstStats (boolTariffEstStats=$(sett.boolTariffEstStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true."
+		info("DTM: User has requested TariffEstStats (boolTariffEstStats=$(sett.boolTariffEstStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true.")
 		sett.boolProduceEstAndLeafMatrices=true
 		#@show sett.boolTariffEstStats,sett.boolProduceEstAndLeafMatrices
 	end
 end
 
 path_and_fn_wo_extension,ext=splitext(fn)
-#check for file extension. This does not seem to be required... (then again we should ensure that the user provides a filename stump and not only a folder name)
-if in(lowercase(ext),["",".csv",".txt",".sas",".jl",".pdf"])
+if in(lowercase(ext),[".txt",".sas",".jl",".pdf",".csv"])
 else
 	@show fn
 	@show path_and_fn_wo_extension,ext
@@ -528,11 +458,11 @@ statsfileExcel=string(path_and_fn_wo_extension,".xlsx")
 
 #for now trnindx and validx should always be sorted!
 if !issorted(dtmtable.trnidx) 
-	@info "DTM: trnidx was not sorted. Sorting trnindex"
+	info("DTM: trnidx was not sorted. Sorting trnindex")
 	sort!(dtmtable.trnidx)
 end
 if !issorted(dtmtable.validx) 
-	@info "DTM: validx was not sorted. Sorting validx"
+	info("DTM: validx was not sorted. Sorting validx")
 	sort!(dtmtable.validx)
 end
 
@@ -583,10 +513,10 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	max_n0=maximum(num_levels)
 	max_levels_uint8=typemax(UInt8)
 	if max(max_c0,max_n0)>max_levels_uint8
-		warn("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")		
-	end	
-	@assert max_c0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
-	@assert max_n0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
+		warn("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")
+	end
+	@assert max_c0<2000 "A variable has too many levels. You can try and increase this threshold but the algorithm may take quite long for the modelling"
+	@assert max_n0<2000 "A variable has too many levels. You can try and increase this threshold but the algorithm may take quite long for the modelling"
 		if size(sett.moderationvector,1)>1;if (sett.adaptiveLearningRate!=1.0 && sett.adaptiveLearningRate!=0.0);println("######################################## \nWarning: (bk) Adaptive Learning has been disabled as a moderation vector has been provided. \n######################################## ");end;sett.adaptiveLearningRate=1.0;end;
       if prnt
 		  println(stars)
@@ -937,7 +867,7 @@ function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::St
 	@show fld,namestr=splitdir(path_and_fn_wo_extension)
 	filen=string(fld,"multistats.xlsx")
 	if isfile(filen)
-		@info "Deleting $(filen)."
+		info("Deleting $(filen).")
 		rm(filen)
 	end
 
@@ -953,8 +883,4 @@ function run_legacy(mld::String,fld::String)
     args=[sett_file csv_file string(mld,"_out_")]
     rs=run_model(args)
     return rs
-end
-
-function dtm(dtmtable::DTMTable,sett::ModelSettings;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
-    return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,fn::String)
 end

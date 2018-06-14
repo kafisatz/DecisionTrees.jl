@@ -242,7 +242,7 @@ function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vec
 								#For Character variables: The split can be defined by the subset or its complement, We choose to define it via the subset which defines the smaller child node such that when new values arrive (in out of sample testing) they will "go with the larger child node"
 								if spl.weightl>spl.weightr
 										lvls=unique(view(features[spl.featid_new_positive].refs,trnidx))
-										spl=Splitdef(spl.featid,spl.featid_new_positive,spl.featurename,convert(Vector{T},setdiff(lvls,spl.subset)),spl.splitvalue,spl.weightl,spl.weightr)::Splitdef{T}
+										spl=Splitdef(spl.featid,spl.featid_new_positive,spl.featurename,setdiff(lvls,spl.subset),spl.splitvalue,spl.weightl,spl.weightr)::Splitdef{T}
 								end
 							end #isfinite(best_value_split) && (best[1]<0)
 						end #size(splitlist_sorted,1)>0
@@ -277,7 +277,7 @@ elt=eltype(trnfeatures.parent.refs)
 	if (crit_type==DifferenceSplit||crit_type==PoissonDevianceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat=build_listOfMeanResponse(crit,trnidx,validx,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	elseif (crit_type==NormalDevianceSplit)
-		@info "in the works..."
+		info("in the works...")
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass=build_listOfMeanResponse(crit,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	else
 		error("Invalid Splitting criterion $(crit)")

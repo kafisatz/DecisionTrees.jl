@@ -90,7 +90,7 @@ function test_module_on_workers()
 			@show sum(booleans)			
 			error("something did not work")
 		else
-			@info "Decision Tree Module loaded on all workers"
+			info("Decision Tree Module loaded on all workers")
 		end
 		return true
 	catch eri
@@ -117,7 +117,7 @@ function startlistening(folder_list_file,julia_code_folder)
 			end #loopdir loop
 		catch err #an error can occur when new folders are created or renamed, thus we have a try/catch loop here
 			@show err
-			@info "Error. See above. Listenting will continue in $(secs)s"
+			info("Error. See above. Listenting will continue in $(secs)s")
 			sleep(secs)
 		end
 	end
@@ -249,7 +249,7 @@ function run_these_files(settingsf,dataf,logFilename,julia_code_folder)
 			# @async 
 				remote_reference=run_julia_algorithm(process,logFilename,juliaProgram,harg,arguments)
 			printover("Model is running. Check the log file for the status...")			
-			#@info "Model run finished."
+			#info("Model run finished.")
 		end
 	else 
 		return nothing	
@@ -270,7 +270,7 @@ end
 
 function invoke_worker_process(rr,process,logFilename,juliaProgram,harg,arguments)	
 	println("")
-	@info "$(now()). Started: $(logFilename)"
+	info("$(now()). Started: $(logFilename)")
 	if nprocs()==1
 			rr = this_runs_on_worker(process,logFilename,juliaProgram,harg,arguments)
 	else
@@ -312,7 +312,7 @@ end
 function zipit(this_result::Array{T,1},arguments,logFilename) where {T <: AbstractString}
 	dataf=arguments[2]
 	outFilename=arguments[3]	
-	@info "Zipping model results..."
+	info("Zipping model results...")
 	zipFilename=convert(String,string(dirname(dataf),'\\',outFilename,".7z"))
 	#@show this_result
 	if !isfile(logFilename)

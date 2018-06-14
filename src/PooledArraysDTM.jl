@@ -172,10 +172,10 @@ function Base.permute!!{T<:Integer}(x::PooledArray, p::AbstractVector{T})
     x
 end
 
-function Base.invpermute!{T<:Integer}(x::PooledArray, p::AbstractVector{T})
-    Base.invpermute!(x.refs, p)
-    x
-end
+#function Base.invpermute!{T<:Integer}(x::PooledArray, p::AbstractVector{T})
+#    Base.invpermute!(x.refs, p)
+#    x
+#end
 
 function Base.similar{T,R}(pa::PooledArray{T,R}, S::Type, dims::Dims)
     PooledArray(RefArray(zeros(R, dims)), S[])

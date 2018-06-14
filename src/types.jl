@@ -90,8 +90,6 @@ abstract type DTSubsets end
 	  state+=one(1)
 	  bit_to_flip,state
 	end
-    @inline iterate(x::MyGrayCodeSubsetsHALF) = next(x, start(x))
-    @inline iterate(x::MyGrayCodeSubsetsHALF, i) = done(x, i) ? done : next(x, i)
 
 	bitflip_graycode_subsetsHALF(xs) = MyGrayCodeSubsetsHALF(length(xs),(1 << (length(xs)-1))-2)
 
@@ -104,8 +102,6 @@ abstract type DTSubsets end
 	length(it::MyIncreasingSubsets)=it.size_of_set
 	start(it::MyIncreasingSubsets)=zero(1) #state = simply count through the subsets
 	done(it::MyIncreasingSubsets,state)=state>=it.size_of_set-1 #we do not need to flip/change the last element (as this would resutl in an empty left child)
-    @inline iterate(x::MyIncreasingSubsets) = next(x, start(x))
-    @inline iterate(x::MyIncreasingSubsets, i) = done(x, i) ? done : next(x, i)
 
 	function next(it::MyIncreasingSubsets,state)
 		state+=one(1)
@@ -148,7 +144,7 @@ function Base.getindex(r::DTMTable,idx,compact_features=false)
     new_trnidx=indexin(r.trnidx,rows_to_keep)
     new_validx=indexin(r.validx,rows_to_keep)
     filter!(!iszero,new_trnidx)
-    filter!(!iszero,new_validx)
+    filter!(!iszero,new_validx)        
     numerator=r.numerator[idx]    
     denominator=r.denominator[idx]    
     weight=r.weight[idx]    
@@ -326,7 +322,6 @@ mutable struct ModelSettings
 	boolProduceEstAndLeafMatrices::Bool
 	write_dot_graph::Bool
 	boolCalculateGini::Bool #whether or not to calculate the gini (which requires sorting of the data (which takes time!))
-	boolCalculatePoissonError::Bool
 
 	#the following are treated specially
 	ncolsdfIndata::Int64
@@ -360,7 +355,7 @@ mutable struct ModelSettings
 	nthreads=0 #19
 	dataIdentifier="uninitialized" #20
 	algorithmsFolder="uninitialized" #21
-	starttime=string(now()) #22
+	starttime=string(Dates.now()) #22
 	indata="uninitialized" #23
 	var_dep="uninitialized" #24
 	indepcount=-1 #25
@@ -414,7 +409,6 @@ mutable struct ModelSettings
 	boolProduceEstAndLeafMatrices=false
 	write_dot_graph=false
 	boolCalculateGini=false
-	boolCalculatePoissonError=false
 
 	#the following are treated specially
 	ncolsdfIndata=-1 #
@@ -424,7 +418,7 @@ mutable struct ModelSettings
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
 
-	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini,boolCalculatePoissonError
+	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolTariffEstStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini
 	 ,ncolsdfIndata,ishift,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
   end  # ModelSettings()
 
@@ -495,7 +489,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 		@assert size(found)==(1,) "Error while updating settings column $(col):$(i) (non  unique match)"
 		colnumber=found[1]
 		#convert string statsByVariables to integer values
-		#@info "complete this step" #also add the resulting plots and tables (for the named variables and also the randomly generated groups)
+		#info("complete this step") #also add the resulting plots and tables (for the named variables and also the randomly generated groups)
 		stringValue=edit_statsByVariables(col,stringValue,s)
 		#if scorebandsstartingpoints is a single integer, define n equally spaced bands
 			if col=="scorebandsstartingpoints"
@@ -531,7 +525,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 			valConverted=convertFromString(oldValue,stringValue)
 			setfield!(s,snames[colnumber],valConverted)
 		catch err
-			@info "\n\nUnable to set value $(stringValue) for settings column $(i):$(col)"
+			info("\n\nUnable to set value $(stringValue) for settings column $(i):$(col)")
 			@show stringValue
 			@show typeof(stringValue)
 			@show valConverted
@@ -587,16 +581,16 @@ function copySettingsToCurrentType(oldSetting)
 	#consider new and dropped fields
 		newfs=setdiff(newfields,oldfields)
 		droppedfs=setdiff(oldfields,newfields)
-	@info "DTM: Copied settings to new type."
+	info("DTM: Copied settings to new type.")
 	if length(newfs)>0
-		@info "DTM: New type has the following new fields:"
+		info("DTM: New type has the following new fields:")	
 		for f in newfs        
 			v=getfield(s,f)
 			@show f,v
 		end
 	end
 	if length(droppedfs)>0
-		@info "DTM: Old type had the following fields which were dropped:"
+		info("DTM: Old type had the following fields which were dropped:")	
 		for f in droppedfs        
 			v=getfield(oldSetting,f)
 			@show f,v
@@ -657,8 +651,8 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 	elseif critfnstr=="roptminrlost"
 		crit=ROptMinRLostSplit()
 	else
-		@info "Invalid splitting criterion: $(critfnstr). Currently only the following strings are allowed as input:"
-		@info string(allowedinputstrings)
+		info("Invalid splitting criterion: $(critfnstr). Currently only the following strings are allowed as input:")
+		info(string(allowedinputstrings))
 		error("Abort due to invalid splitting criterion (see above).")
 	end
 	return crit
@@ -712,7 +706,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
 	  end
 	  if length(s.moderationvector)==1
 		if s.moderationvector[1]!=s.mf && s.model_type=="boosted_tree"
-			@info "Replacing moderationvector[1] with the value of mf=$(s.mf)"
+			info("Replacing moderationvector[1] with the value of mf=$(s.mf)")
 			s.moderationvector[1]=s.mf
 		end
 	  end

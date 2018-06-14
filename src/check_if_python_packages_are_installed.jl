@@ -7,12 +7,12 @@ try
     	PyCall.pywrap(PyCall.pyimport(x))         
      end
  catch
-    	@info "One of the required python packages was not found on your system:"
+    	info("One of the required python packages was not found on your system:")
     	println(required_python_packages)
       for x in required_python_packages
         println(x)
       end
-    	@info "Trying to install those packages..."
+    	info("Trying to install those packages...")
     		# Use eventual proxy info
     		proxy_arg=Array{AbstractString}(0)
     		if haskey(ENV, "http_proxy")
@@ -36,5 +36,5 @@ try
     		run(`$(PyCall.python) $(proxy_arg) -m pip install --user --upgrade pip`)
     		run(`$(PyCall.python) $(proxy_arg) -m pip install --user $(required_python_packages)`)
 
-    	@info "installation of python packages finished."
+    	info("installation of python packages finished.")
 end

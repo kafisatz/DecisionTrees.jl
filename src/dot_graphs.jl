@@ -4,7 +4,7 @@
 function graph(tree::Tree) #tree::Node,number_of_num_features::Int64,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
     #https://en.wikipedia.org/wiki/DOT_(graph_description_language)
     #http://www.webgraphviz.com/
-    #creates a digraph string in DOT language
+    #creates a digrpah string in DOT language
 
     dot_graph=""
     node=tree.rootnode
@@ -48,14 +48,14 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int64,df_name_vec
 leading_comment="""
 
 /*
-This is a representation of the tree in DOT format. See also
+This is a representaion of the tree in DOT format see
 http://www.webgraphviz.com/
 https://en.wikipedia.org/wiki/DOT_(graph_description_language)
 http://www.graphviz.org/content/dot-language
 */
 
 """
-    return string("digraph tree {",leading_comment,dot_graph,"\n}")
+    return string("digraph tree \{",leading_comment,dot_graph,"\n\}")
     return dot_graph
 end
 
@@ -104,7 +104,7 @@ end
 
 function graph(node::Leaf,counter::Int,parentname::String,sett::ModelSettings,edge_from_parent_description::String,mappings,candMatWOMaxValues,total_weight_of_tree::Float64)
     thisw = nodesize(node)
-	label = "Leaf $(node.id)\nFit $(signif(node.fitted,3))\n Weight $(round(thisw,1)) ($(round(100*thisw/total_weight_of_tree,1))%)"
+	label = "Leaf $(node.id)\nFit $(signif(node.fitted,3))\n Weight $(round(thisw,1)) ($(round(100*thisw/total_weight_of_tree,1))\%)"
     name_of_this_node="N$(counter)"
     dot_graph = """$(name_of_this_node)[label="$(label)"]\n"""
     dot_graph *= """$(parentname)->$(name_of_this_node) [label="$(edge_from_parent_description)"]\n"""
@@ -165,14 +165,14 @@ else
             #run(`$(command2[])`)
             #GOAL: run(`'C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe' 'c:\\temp\\maroxi.dot.txt' -Tpdf -o 'c:\\temp\\mi.pdf'`)
             run(actual_command)
-			println("Graph was visualized in the file: \n $(outputfilename)")				
+			println("Graph was visuazlied in the file: \n $(outputfilename)")				
         catch e
             @show actual_command
             warn("DTM: GraphViz failed to crate a graph.")
             @show e
         end
     else
-        warn("DTM: Inexistent location specified for graph file: $(chosen_dir)")
+        warn("DTM: Inexistant location specified for graph file: $(chosen_dir)")
     end
 
 return nothing
