@@ -27,7 +27,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};fn::String
             path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_0")
             fnmod=string(path_and_fn_wo_extension_mod,ext)
             somestrings,model=run_model_actual(dtmtable,dummySett,fnmod)
-            desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)
+            desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=settingsVector[1].performanceMeasure)
             #add first column
                 unshift!(numbrs,i)
                 unshift!(settingsvec,string(i))
