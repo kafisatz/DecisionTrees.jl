@@ -27,6 +27,9 @@ function run_model(ARGS;nrows::Int=-1)
    end
 end
 
+"""
+prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+"""
 function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 	@assert isdir(directory)
 	
@@ -38,7 +41,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
 	fn=joinpath(directory,"DTMResult.csv")
 	dtmtable=prep_data_from_df(df_prepped,sett,fn)
 
-	return dtmtable,sett
+	return dtmtable,sett,df_prepped
 end
 
 function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
