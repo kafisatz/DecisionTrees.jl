@@ -1,5 +1,5 @@
 #=
-	@info ""
+	info("""
 	Splitting Function = NormalDeviance
 	for the normal deviance
 	the concept should be like this
@@ -14,7 +14,7 @@
 	loc="C:\\jdata\\datafolder\\mortgage\\"
 	ARGS=[string(loc,"jmortgage.settings.csv") string(loc,"jmortgage.CSV") string("out_jmortgage")];
 	ARGS=[string(loc,"jmortgage.settings_profiling.csv") string(loc,"jmortgage.CSV") string("out_jmortgage")];
-	resbool=DecisionTrees.run_model(ARGS) #small version to compile functions
+	resbool=run_model(ARGS) #small version to compile functions
 
 	using Iterators
 	using DTM
