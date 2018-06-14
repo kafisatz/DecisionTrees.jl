@@ -15,7 +15,7 @@ cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.
 @everywhere using DecisionTrees  
 
 tela = (time_ns()-t0)/1e9
-@show tela #precompilating can take considerable time under Julia 0.7alpha (up to 15 minutes in some cases (as ofJune 11, 2018)), this should improve soon though 
+@show tela #precompilationcan take considerable time under Julia 0.7alpha (up to 15 minutes in some cases (as ofJune 11, 2018)), this should improve soon though 
 
 
 ##############################
@@ -98,17 +98,17 @@ originalTrnValIndex=deepcopy(fullData[:trnTest])
 
 #the minimum weight of each individual tree shall be 3% of the exposure per leaf
 #You can set minw to any positive value, e.g. sett.minw=20000
-#if minw is set to a value in [-1,0] its absolute value is interpreted as a precentage
+#if minw is set to a value in [-1,0] its absolute value is interpreted as a percentage
 #thus with sett.minw=-0.03 we define the min weight of each leaf as 3% of the training data
 
 #model_type: currently only "build_tree" and "boosted_tree" are supported
-#we might add the implementaiotn of bagging at a later stage
+#we might add the implementation of bagging at a later stage
 
-#niter is the nubmer of trees
+#niter is the number of trees
 
-#mf is the moderation factor which is also know as shirnkage or learning rate
+#mf is the moderation factor which is also know as shrinkage or learning rate
 
-#subsampling_features_prop must be between 0 and 1 and defines the subsampling probabliy of the predictors for each tree 
+#subsampling_features_prop must be between 0 and 1 and defines the subsampling probability of the predictors for each tree 
 #i.e. with subsampling_features_prop=0.5 each tree will only use half of the predictors
 
 #boolCalculatePoissonError, is a boolean which we need to enable here in order for output to show the poisson error of the estimates
@@ -177,7 +177,7 @@ settV=createGridSearchSettings(sett,
 #consider the length(settV) which is the number of models that will be run
 length(settV)
 
-#depending on the size of settV, you may want to restart julia with addtional workers for parallelization, i.e. 
+#depending on the size of settV, you may want to restart Julia with additional workers for parallelization, i.e. 
 #shell> julia -p 8 
 #to start julia with 8 workers. Depending on your CPU you may want to choose a different number
 
@@ -187,7 +187,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 #Run grid search
 ############################################################
 
-@warn "This may take quiete some time depending on length(settV)=$(length(settV))"
+@warn "This may take quiet some time depending on length(settV)=$(length(settV))"
 @info "Starting grid search..."
 
 tt0=time_ns()
