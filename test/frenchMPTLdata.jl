@@ -30,6 +30,11 @@ for x in selected_explanatory_vars
     println("")
 end
 
+for x in 1:size(fullData,2)
+    println(x)
+    @show size(unique(fullData[:,x]))
+end
+
 dtmtable,sett=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",directory="C:\\temp\\",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 
 originalTrnValIndex=deepcopy(fullData[:trnTest])    
