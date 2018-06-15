@@ -1,5 +1,6 @@
 using Revise
 using Profile
+using JLD2
 using CSV,DataFrames
 using DecisionTrees  
 
@@ -32,7 +33,7 @@ resultingFiles,resM=dtm(dtmtable,sett)
 
 
 li, lidict = Profile.retrieve()
-using JLD2
+
 profile_loc="R:\\temp\\profile.jlprof"
 dd=splitdir(profile_loc)[1]
 if isdir(dd)
