@@ -735,20 +735,20 @@ prnt&&println("---Model Settings------------------------------------------------
 					write(f,model_setting_string)
 					write(f,"\n\n",dot_graph,"\n\n")
 				close(f);
-				@time write_tree(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,var_imp1d_str_arr,var_imp2d_str_arr,0,tree_file,sett.df_name_vector,dtmtable.mappings)
+				write_tree(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,var_imp1d_str_arr,var_imp2d_str_arr,0,tree_file,sett.df_name_vector,dtmtable.mappings)
 				push!(filelistWithFilesToBeZipped,tree_file)			
             end
 			if sett.write_sas_code
 				#write SAS Code
 				println("Writing SAS Code: \n $(sas_code_file)")
 				isfile(sas_code_file)&&rm(sas_code_file)
-				@time write_sas_code(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings,1.0)
+				write_sas_code(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings,1.0)
 				push!(filelistWithFilesToBeZipped,sas_code_file)
 			end		
 			if sett.write_result
 				println("Exporting Data: \n $(this_outfile)")
 				isfile(this_outfile)&&rm(this_outfile)
-				@time writecsv(this_outfile,res)
+				writecsv(this_outfile,res)
 				push!(filelistWithFilesToBeZipped,this_outfile)
             end
 	#end build tree
@@ -778,20 +778,20 @@ prnt&&println("---Model Settings------------------------------------------------
 				if sett.roptForcedPremIncr
 					error("this does currently not work")
 				else
-					@time write_sas_code(estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings)
+					write_sas_code(estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings)
 				end
 				push!(filelistWithFilesToBeZipped,sas_code_file)
 			end
 			if sett.write_csharp_code				
 				println("Writing C# Code: \n $(csharp_code_file)")
 				isfile(csharp_code_file)&&rm(csharp_code_file)				
-				@time write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
+				write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,csharp_code_file)
 			end 
 			if sett.write_vba_code
 				println("Writing VBA Code: \n $(vba_code_file)")
 				isfile(vba_code_file)&&rm(vba_code_file)
-				@time write_vba_code(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
+				write_vba_code(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,vba_code_file)
 			end
 		#end #boosting
@@ -829,7 +829,7 @@ end
 				println("Writing tree structure to file: \n $(tree_file)")
 				isfile(tree_file)&&rm(tree_file)
 				f=open(tree_file,"w");write(f,model_setting_string);close(f);
-				@time write_tree(dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,0,tree_file,sett.df_name_vector,dtmtable.mappings)
+				write_tree(dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,0,tree_file,sett.df_name_vector,dtmtable.mappings)
 				push!(filelistWithFilesToBeZipped,tree_file)
 	end
 	#Write statistics
@@ -840,7 +840,7 @@ end
 		if sett.write_result
 			println("Exporting Data: \n $(this_outfile)")
 			isfile(this_outfile)&&rm(this_outfile)
-			@time writecsv(this_outfile,res)
+			writecsv(this_outfile,res)
 			push!(filelistWithFilesToBeZipped,this_outfile)
 		end
 	#write estimates matrix
@@ -858,14 +858,14 @@ end
 				vectorOfLeafNumbersMOD=hcat(key,vectorOfLeafNumbers[:,2:end])
 				println("Exporting LeafNumber Matrix: \n $(leafnrfile)")
 					isfile(leafnrfile)&&rm(leafnrfile)
-					@time writecsv(leafnrfile,vectorOfLeafNumbersMOD)
+					writecsv(leafnrfile,vectorOfLeafNumbersMOD)
 					push!(filelistWithFilesToBeZipped,leafnrfile)
 				#MATRIX 1
 					estmat_outile2=string(path_and_fn_wo_extension,"_iteration_matrixFromScores.csv")
 					res_estmatrixFromScores=hcat(key,est_matrixFromScores)
 					println("Exporting Estimates Matrix (based on Scores): \n $(estmat_outile2)")
 					isfile(estmat_outile2)&&rm(estmat_outile2)
-					@time writecsv(estmat_outile2,res_estmatrixFromScores)
+					writecsv(estmat_outile2,res_estmatrixFromScores)
 					push!(filelistWithFilesToBeZipped,estmat_outile2)
 				#MATRIX 2
 					estmat_outile=string(path_and_fn_wo_extension,"_iteration_matrix.csv")
@@ -874,7 +874,7 @@ end
 						#println("Saving iteration matrix to jld file; this is only a backup in case the CSV export does not work (which sometimes happens with very large files)")
 						#@time save(string(estmat_outile,".jld"),"res_estmatrix",res_estmatrix)
 					isfile(estmat_outile)&&rm(estmat_outile)
-					@time writecsv(estmat_outile,res_estmatrix)
+					writecsv(estmat_outile,res_estmatrix)
 					push!(filelistWithFilesToBeZipped,estmat_outile)
 			end
 		end

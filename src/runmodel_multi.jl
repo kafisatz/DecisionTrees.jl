@@ -1,7 +1,5 @@
 
-function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
-    warn("This requires testing especially when nprocs()>2")
-    
+function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))    
     #set rnd state to make this function reporducible (irrespective of trn/val idx)
     #srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
     nSettings=length(settingsVector)
@@ -16,7 +14,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};fn::String
     
    #initialize variables
         path_and_fn_wo_extension="some"
-        path_and_fn_wo_extension,ext=splitext(fn)
+        path_and_fn_wo_extension,ext=splitext(file)
         header=Vector{String}(1)
         header_settings=Vector{String}(1)
         i=1        

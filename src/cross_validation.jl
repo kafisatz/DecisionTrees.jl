@@ -1,6 +1,6 @@
 export dtm,dtm_debug,dtm_single_threaded
 
-function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
+function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     @info "DTM: (bk) You may want to consider the multi threaded verison of this function"
 #if folds<0 then we consider n disjoint training sets
 
@@ -60,7 +60,7 @@ srand(intDatahash)
 
     #initialize variables
             path_and_fn_wo_extension="some"
-            path_and_fn_wo_extension,ext=splitext(fn)
+            path_and_fn_wo_extension,ext=splitext(file)
             header=Vector{String}(1)
             header_settings=Vector{String}(1)
             allstats=Array{Float64,2}
@@ -171,7 +171,7 @@ srand(intDatahash)
     return statsdf,settsdf    
 end
 
-function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
+function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     warn("This requires testing especially when nprocs()>2")
     #if folds<0 then we consider n disjoint training sets
     
@@ -231,7 +231,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;fn::String=jo
     
         #initialize variables
         path_and_fn_wo_extension="some"
-        path_and_fn_wo_extension,ext=splitext(fn)
+        path_and_fn_wo_extension,ext=splitext(file)
         header=Vector{String}(1)
         header_settings=Vector{String}(1)
         i=1
