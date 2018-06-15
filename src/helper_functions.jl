@@ -5437,6 +5437,7 @@ function createGridSearchSettings(sett::ModelSettings;args...)
         end
 	end
 	@assert length(unique(map(x->x.performanceMeasure,settingsVector)))==1 "DTM: Perf measure must be the same for the entire settings Vector"
+	println("DTM: Size of settings vector is $(length(settingsVector))")
     return settingsVector
 end
 
