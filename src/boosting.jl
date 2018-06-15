@@ -9,6 +9,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	mappings=dtmtable.mappings
 	candMatWOMaxValues=dtmtable.candMatWOMaxValues
 	obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,boolProduceEstAndLeafMatrices=initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominator,sett)
+	#trn_meanobservedvalue is the mean observed RATIO, i.e. sum(numerator)/sum(denominator) for the training data
 	obs=obstrn+obsval
 	current_error=0.0
     moderationfactor=moderationvector[1]
@@ -26,7 +27,9 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	else
 		error("DTM: This is currently not working: please set BoolStartAtMean=true)")
 	end
-
+	
+	estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
+	
 	indicatedRelativityForApplyTree_reused=zeros(obs)
 	reused_fitted_leafnr_vector=zeros(Int,obs)
     sortvec_reused_trn_only=zeros(Int,length(trnidx))
@@ -78,10 +81,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
         @timeConditional(showTimeUsedByEachIteration, begin
 		#Build Iteration iter
 			#showTimeUsedByEachIteration&&println("Calculating iteration $(iter). Time: $(now())")
-			current_mdf=moderationvector[min(iter,size(moderationvector,1))] #mdf remains constant if a vector of size 1 was provided (instead of a vector of size iterations)
-			estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
-			#@show estimatedNumerator[1:10]
-			#@show mean(estimatedNumerator),sum(estimatedNumerator),mean(estimatedRatio),sum(estimatedRatio)
+			current_mdf=moderationvector[min(iter,size(moderationvector,1))] #mdf remains constant if a vector of size 1 was provided (instead of a vector of size iterations)			
+			
 			if showTimeUsedByEachIteration
 			#todo tbd: this can be done more efficiently: We can avoid the tmpTree object (also we do not need to call "sometreesettings" every time!, improve this
 				@time 	tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
@@ -115,6 +116,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 				write_column!(est_matrix,iter+1,estimatedRatio)
 			end
 			update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)
+			#update estimatedNumerator
+			estimatedNumerator=estimatedRatio.*denominator
 		#Derive Scores for this iteration #NOTE (tbd/todo: keep in mind) For large datasets (>5m rows) the sorting in construct scores may become a dominant part of the algorithm
 			maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nscoresPotentiallyReduced=constructANDderiveScores!(trnidx,validx,sortvec_reused_trn_only,estimatedRatio,currentRelativity,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett)
 			update_and_derive_scores!(scores,maxRawRelativityPerScoreSorted,currentRelativity)
@@ -125,18 +128,21 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		#Define estimated Numerator		
 			sett.smoothEstimates=="0" ? referenceForNumEstimates=rawObservedRatioPerScore : referenceForNumEstimates=MAPPINGSmoothedEstimatePerScore
 			update_mapped_estFromScores!(estFromScores,referenceForNumEstimates,scores)			
+			#@show estFromScores 
+			#@show sett.smoothEstimates
 			#estFromScores=map(x->referenceForNumEstimates[x],scores)	
 			if boolProduceEstAndLeafMatrices
 				write_column!(est_matrixFromScores,iter+1,estFromScores)
 			end
 		#Derive Cumulative Statistics
 			 #todo tbd there is potential for optimization here			 
-			 #["rawRelativities","unsmoothedPerScore","smoothedPerScore"]	
-			if sett.fitForStatsAndCharts=="rawRelativities"
-				selectedEstimateForStats=currentRelativity::Vector{Float64}.*trn_meanobservedvalue::Float64
+			 #["rawRelativities","unsmoothedPerScore","smoothedPerScore"]				
+			if sett.fitForStatsAndCharts=="rawRelativities"				
+				selectedEstimateForStats=currentRelativity.*trn_meanobservedvalue
 			else 
 				selectedEstimateForStats=estFromScores::Vector{Float64} #smooth or unsmooth has been defined/"selected" above already
 			end
+			
 			statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,iter,sett.scorebandsstartingpoints,view(actualNumerator,trnidx),view(denominator,trnidx),view(weight,trnidx),view(selectedEstimateForStats,trnidx),view(scores,trnidx),view(actualNumerator,validx),view(denominator,validx),view(weight,validx),view(selectedEstimateForStats,validx),view(scores,validx),sett)			
 			statsPerIteration=vcat(statsPerIteration,singleRowWithKeyMetrics)
 			if iter==1
@@ -158,22 +164,22 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	gc_enable(true)	
 	#todo/tbd: note that we have at least three different estimates should we add all of them to the output?
 	
-	estimateUnsmoothed=map_these_values(rawObservedRatioPerScore,scores)
+	#one of these vectors is acutally identical to estFromScores and would not need to be recalculated
+	estimateUnsmoothed=map_these_values(rawObservedRatioPerScore,scores)	
 	estimateSmoothed=map_these_values(MAPPINGSmoothedEstimatePerScore,scores)	
+	estimateFromRelativities = currentRelativity.*trn_meanobservedvalue		
 	
-	estimateFromRelativities = currentRelativity.*trn_meanobservedvalue
-	#finalEstimateForCharts = sett.smoothEstimates=="0" ? estimateSmoothed : estimateUnsmoothed	
-	#["rawRelativities","unsmoothedPerScore","smoothedPerScore"]	
-	if sett.fitForStatsAndCharts=="rawRelativities"
-		finalEstimateForCharts=estimateFromRelativities	
+	#fitForStatsAndCharts is an element of ["rawRelativities","unsmoothedPerScore","smoothedPerScore"]	
+	if sett.fitForStatsAndCharts=="rawRelativities"		
+		selectedEstimateForStats =estimateFromRelativities
 	end
 	if sett.fitForStatsAndCharts=="unsmoothedPerScore"
-		finalEstimateForCharts=estimateUnsmoothed
+		selectedEstimateForStats =estimateUnsmoothed
 	end
 	if sett.fitForStatsAndCharts=="smoothedPerScore"
-		finalEstimateForCharts=estimateSmoothed
-	end
-	
+		selectedEstimateForStats =estimateSmoothed
+	end	
+		
 	#add empty lines
 	statsPerIteration=vcat(statsPerIteration,repmat([""],empty_rows_after_iteration_stats,size(statsPerIteration,2)))
 	#Add Charts which show stats for all iterations
@@ -188,7 +194,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	thischart=defineScoreChart(nameOfScoresSheet,nameOfScoresSheet,"B6",size(scoreMatrix,1)-1,1,3,7,8)
 	push!(xlData.charts,deepcopy(thischart))
 #Create univariate graphs
-		predictorsData,predictorCharts=createPredictorData(trnidx,nameOfpredictorsSheet,mappings,candMatWOMaxValues,sett,scores,actualNumerator,denominator,weight,finalEstimateForCharts,features)
+		predictorsData,predictorCharts=createPredictorData(trnidx,nameOfpredictorsSheet,mappings,candMatWOMaxValues,sett,scores,actualNumerator,denominator,weight,selectedEstimateForStats ,features)
 	#push predictorCharts into Excelobject
 		push!(xlData.charts,predictorCharts...)
 		predictorsSheet=ExcelSheet(nameOfpredictorsSheet,convert(DataFrame,predictorsData))
@@ -199,7 +205,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		scoresSheet=ExcelSheet(nameOfScoresSheet,scoreMatrixDF)
 		modelsettingsSheet=ExcelSheet(nameOfSettingsSheet,convert(DataFrame,writeAllFieldsToArray(sett)))
 #Create two way validation charts
-	twoWayValidation,validationCharts=createTwoWayValidationCharts(trnidx,validx,nameOfValidationSheet,scoreBandLabels,mappings,candMatWOMaxValues,sett,scores,actualNumerator,denominator,weight,finalEstimateForCharts,features)
+	twoWayValidation,validationCharts=createTwoWayValidationCharts(trnidx,validx,nameOfValidationSheet,scoreBandLabels,mappings,candMatWOMaxValues,sett,scores,actualNumerator,denominator,weight,selectedEstimateForStats ,features)
 	validationSheet=ExcelSheet(nameOfValidationSheet,convert(DataFrame,twoWayValidation))
 	push!(xlData.charts,validationCharts...)
 #Define Excel

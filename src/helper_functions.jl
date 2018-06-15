@@ -824,19 +824,6 @@ for intVarname in integerVarlist
 		#trn_matched=(view(feat,trnidx).==thresh)	
 		#val_matched=(view(feat,validx).==thresh)
 		update_matched_vectors!(trnidx,validx,trnMatched,valMatched,feat,thresh)
-				
-		#=
-		v1=view(view(actualNumerator,trnidx),trn_matched)
-		v2=view(view(denominator,trnidx),trn_matched)
-		v3=view(view(weight,trnidx),trn_matched)
-		v4=view(view(finalEstimateForCharts,trnidx),trn_matched)
-		v5=view(view(scores,trnidx),trn_matched)
-		v6=view(view(actualNumerator,validx),val_matched)
-		v7=view(view(denominator,validx),val_matched)
-		v8=view(view(weight,validx),val_matched)
-		v9=view(view(finalEstimateForCharts,validx),val_matched)
-		v10=view(view(scores,validx),val_matched)
-		=#
 
 		v1=view(actualNumerator,trnMatched)
 		v2=view(denominator,trnMatched)
@@ -849,18 +836,6 @@ for intVarname in integerVarlist
 		v9=view(finalEstimateForCharts,valMatched)
 		v10=view(scores,valMatched)
 		
-		#=
-			@assert all(v1.==v1b)
-			@assert all(v2.==v2b)
-			@assert all(v3.==v3b)
-			@assert all(v4.==v4b)
-			@assert all(v5.==v5b)
-			@assert all(v6.==v6b)
-			@assert all(v7.==v7b)
-			@assert all(v8.==v8b)
-			@assert all(v9.==v9b)
-			@assert all(v10.==v10b)
-		=#
 		statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,-1,sett.scorebandsstartingpoints,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,sett)
 		statsThisIteration[1,1]="Scoreband" #this cell has the value "Cumulative Stats n=-1" by default which is not useful here.
 		statsThisIteration=hcat(statsThisIteration[:,1],vcat([strVarname],repmat([strthresh],size(statsThisIteration,1)-1,1)),statsThisIteration[:,2:end])
@@ -1934,21 +1909,15 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
 		if sett.boolCalculatePoissonError
-			@show numeratortrn
-			@show weighttrn
-			@show denominatortrn
-			@show numeratorEsttrn
-			@show eps(eltype(numeratorEsttrn))
-			@show minimum(numeratorEsttrn)			
-			@show numeratorEsttrn.*denominatortrn
-			@show poissonErrortrn=poissonError(numeratortrn,weighttrn,numeratorEsttrn.*denominatortrn)::Vector{Float64}
-            poissonErrorval=poissonError(numeratorval,weightval,numeratorEstval.*denominatorval)::Vector{Float64}
+			poissonErrortrn=poissonError(numeratortrn,weighttrn,numeratorEsttrn./denominatortrn)::Vector{Float64}			
+            poissonErrorval=poissonError(numeratorval,weightval,numeratorEstval./denominatorval)::Vector{Float64}
 		else
 			poissonErrortrn=zeros(Float64,2)
             poissonErrorval=zeros(Float64,2)
 		end		
-		@show poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
+		poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
 		poissonErrVal=sum(poissonErrorval)/length(weightval)
+		true||@show(poissonErrTrn)
 		        
 		qwkappaTrn=tryQWKappa(numeratortrn,numeratorEsttrn)
 		qwkappaVal=tryQWKappa(numeratorval,numeratorEstval)
@@ -5393,7 +5362,8 @@ function confusmatBinary(truth::Vector{T}, pred::Vector{T}) where T<:Int
 	return error,accuracy,R
 end
 
-
+"""
+"""
 function poissonError(trueNumerator,exposure,estimatedFrequency)
     n=length(trueNumerator)
     @assert n==length(exposure)==length(estimatedFrequency)

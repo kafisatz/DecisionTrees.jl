@@ -9,7 +9,7 @@ selected_explanatory_vars=["ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND"
 #end
 
 df_tmp_orig=deepcopy(df_tmp)
-df_tmp=df_tmp_orig[1:20,:]
+df_tmp=df_tmp_orig[1:end,:]
 
 dtmtable,sett=prepare_dataframe_for_dtm!(df_tmp,weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 sett.minw=-.2
@@ -22,3 +22,8 @@ strs,resM=dtm(dtmtable,sett)
 sett.model_type="boosted_tree"
 sett.niter=4
 strs,resM=dtm(dtmtable,sett)
+
+fitted=resM.meanobserved.*resM.rawrelativities
+errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) 
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) 
