@@ -37,7 +37,7 @@ li, lidict = Profile.retrieve()
 profile_loc="R:\\temp\\profile.jlprof"
 dd=splitdir(profile_loc)[1]
 if isdir(dd)
-    @save profile_loc li lidict
+    @save "mi.jlddd" li lidict
 else
     @warn("Folder $(dd) not found!")
 end
