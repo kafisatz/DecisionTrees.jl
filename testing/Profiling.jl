@@ -37,10 +37,14 @@ li, lidict = Profile.retrieve()
 profile_loc="R:\\temp\\profile.jlprof"
 dd=splitdir(profile_loc)[1]
 if isdir(dd)
-    @save "mi.jlddd" li lidict
+    warn("This is currently failing with JLD2. I do no want to install JLD as it causes some compatibility issues (for now)")
+#    @save "mi.jlddd" li lidict
 else
     @warn("Folder $(dd) not found!")
 end
+
+#consider
+Profile.print(noisefloor=2.0,sortedby=:count)
 
 #open("C:\\temp\\logs\\profile.txt", "w") do s
 #    Profile.print(IOContext(s, :displaysize => (24, 500)))
