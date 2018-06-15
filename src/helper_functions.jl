@@ -2249,19 +2249,6 @@ function print_graycode(m)
 #usage: print_graycode(15)
 end
 
-function crit_string_to_type(str)
-  if str=="_difference"
-    return DifferenceSplit()
-  end
-  if str=="_mse"
-    return MSESplit()
-  end
-  if str=="_RankOpt"
-    return RankOptSplit()
-  end
-  @assert false "Unknown split criterion $(str). ABORT."
-end
-
 function countsort(a::Array{T,1}) where {T <: Integer}
     (lo, hi) = extrema(a)
     b = zeros(T, length(a))
