@@ -221,21 +221,21 @@ estimatedFrequencieForFirst20Obs=predict(resM,dtmtable.features[1:20,:])
 #You can modify the settings directly, but should generally not do so.
 sett.niter=4
 #It is preferred to use the update function to avoid creating an 'invalid' setting (such as a negative number of iterations)
-updateSettingsMod!(sett,niter=-3) #e.g. this will throw an error (whereas sett.niter=-3 does not)
+#e.g. this will throw an error (whereas sett.niter=-3 does not)
+# updateSettingsMod!(sett,niter=-3) 
 
 #you can modify the number of scores which are derived
 updateSettingsMod!(sett,nscores=10000) 
 updateSettingsMod!(sett,nscores=100) 
+#let us set it back to 1000
+updateSettingsMod!(sett,nscores=1000) 
 #The resulting Excel ouput shows a number of graphs per score band
 #if you are interested in the tails of the data, you many want to pick more granular score bands
 #the default is this
-sett.scorebands
-#try
-updateSettingsMod!(sett,scorebands=50) 
-sett.scorebands
-#or set them manually by defining the 'start' of each band
-updateSettingsMod!(sett,scorebands=[1,25,50,75,100,300,500,800,900,825,950,975])
-sett.scorebands
+sett.scorebandsstartingpoints
+#you can set them manually by defining the 'start' of each band
+updateSettingsMod!(sett,scorebandsstartingpoints=[1,25,50,75,100,300,500,800,900,925,950,975])
+sett.scorebandsstartingpoints
 #at the moment you will need to re run the hwole model if you amend nscores or scorebands
 updateSettingsMod!(sett,niter=20)
 resultingFiles,resM=dtm(dtmtable,sett)
@@ -287,9 +287,9 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.2,-0.1,-0.05,-0.025,-0.01]
-    ,mf=[0.01,0.05,0.1],
-    subsampling_features_prop=[1.0,.5],
+    minw=[-0.5,-0.2,-0.1,-0.05,-0.025,-0.01]
+    ,mf=[0.01,0.02,0.05,0.1],
+    subsampling_features_prop=[1.0,.5,.7],
     subsampling_prop=[1.0,.5],
     smoothEstimates=["0"]);
 

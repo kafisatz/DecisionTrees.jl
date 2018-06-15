@@ -1908,18 +1908,7 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
-		@show mean(ratioEsttrn)
-		@show mean(numeratortrn)
 		if sett.boolCalculatePoissonError
-			if false
-				@show mean(numeratortrn)
-				@show mean(weighttrn)
-				@show mean(ratioEsttrn./denominatortrn)
-				@show mean(ratioEsttrn)
-				@show mean(denominatortrn)
-				@show denominatortrn
-				@show ratioEsttrn
-			end 
 			poissonErrortrn=poissonError(numeratortrn,weighttrn,ratioEsttrn)::Vector{Float64}			
             poissonErrorval=poissonError(numeratorval,weightval,ratioEstval)::Vector{Float64}
 		else
@@ -1928,9 +1917,6 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		end		
 		poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
 		poissonErrVal=sum(poissonErrorval)/length(weightval)		
-		if false
-			@show poissonErrTrn
-		end
 		        
 		qwkappaTrn=tryQWKappa(numeratortrn,ratioEsttrn)
 		qwkappaVal=tryQWKappa(numeratorval,ratioEstval)

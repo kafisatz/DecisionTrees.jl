@@ -128,9 +128,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		#Define estimated Numerator		
 			sett.smoothEstimates=="0" ? referenceForNumEstimates=rawObservedRatioPerScore : referenceForNumEstimates=MAPPINGSmoothedEstimatePerScore
 			update_mapped_estFromScores!(estFromScores,referenceForNumEstimates,scores)			
-			#@show estFromScores 
-			#@show sett.smoothEstimates
-			#estFromScores=map(x->referenceForNumEstimates[x],scores)	
+			
 			if boolProduceEstAndLeafMatrices
 				write_column!(est_matrixFromScores,iter+1,estFromScores)
 			end
@@ -169,11 +167,6 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	estimatedRatioUnsmoothed=map_these_values(rawObservedRatioPerScore,scores)	
 	estimatedRatioSmoothed=map_these_values(MAPPINGSmoothedEstimatePerScore,scores)	
 	estimateRatioFromRelativities = currentRelativity.*trn_meanobservedvalue		
-	
-	@show "mean estimtaed ratios" 
-	println(mean(estimatedRatioUnsmoothed),mean(estimatedRatioSmoothed),mean(estimateRatioFromRelativities))
-	@show "mean estimated  numerators" 
-	println(mean(estimatedRatioUnsmoothed.*denominator),mean(estimatedRatioSmoothed.*denominator),mean(estimateRatioFromRelativities.*denominator))
 	
 	#fitForStatsAndCharts is an element of ["rawRelativities","unsmoothedPerScore","smoothedPerScore"]	
 	if sett.fitForStatsAndCharts=="rawRelativities"		
