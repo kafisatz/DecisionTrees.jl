@@ -968,6 +968,6 @@ function run_legacy(mld::String,fld::String)
     return rs
 end
 
-function dtm(dtmtable::DTMTable,sett::ModelSettings;fn::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
+function dtm(dtmtable::DTMTable,sett::ModelSettings;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,fn::String)
 end
