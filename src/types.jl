@@ -864,6 +864,37 @@ struct BaggedTree <: Ensemble
 	featurepools::Array{Union{Array{Float64,1},Array{String,1}},1}
 end
 
+
+"""
+cvo=CVOptions(folds, training_proportion, use_all_data)
+
+folds is an integer. If folds<0 then we consider n disjoint training sets
+
+use_all_data::Bool #if set to false, the CVOptions will never use the 'original' validation rows in the data
+
+training_proportion::Float64 #size of trn data. The value must be >0 and <1
+
+More precisely the evaluation is as follows
+
+if cvo.training_proportion>0
+
+\t   training_proportion > 0 provided. Performing random sampling without replacement 'cvo.folds' samples)
+
+else   
+
+\t if cvo.folds<0
+
+\t DTM: Performing 'DISJOINT training sets' k-fold cross validation 'k=cvo.folds'
+
+\t else
+
+\t\t #we have folds>=0
+\t\t Performing k-fold cross validation (disjoint validation sets, 'k=cvo.folds')
+
+\t end     
+
+end
+"""
 mutable struct CVOptions	
 	folds::Int #number of cv models
 	#if folds<0 then we consider n disjoint training sets
