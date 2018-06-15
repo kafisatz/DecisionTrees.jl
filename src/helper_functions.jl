@@ -1847,20 +1847,20 @@ function firstmatch(x::Array{T,1},y::T) where {T}
 end
 
 #function aggregateScores(num::Array{Float64,1},denom::Array{Float64,1},weight::Array{Float64,1},est::Array{Float64,1},scores::Array{Int64,1},scorebandsstartingpoints::Array{Int64,1})
-function aggregateScores(num,denom,weight,est,scores,scorebandsstartingpoints)
+function aggregateScores(num,denom,weight,estRatio,scores,scorebandsstartingpoints)
 	nClasses=length(scorebandsstartingpoints)
 	sumnumer = zeros(Float64, nClasses)
 	sumdenom = zeros(Float64, nClasses)
 	sumweight = zeros(Float64, nClasses)
 	sumnumeratorEst = zeros(Float64, nClasses)
-	@assert length(num)==length(denom)==length(weight)==length(est)==length(scores)	
+	@assert length(num)==length(denom)==length(weight)==length(estRatio)==length(scores)	
 	@inbounds for i=1:length(weight)
 	#todo, check if @inbounds makes this faster! It should be the case
 		class=searchsortedlast(scorebandsstartingpoints,scores[i])
 		sumnumer[class]+=num[i]
 		sumdenom[class]+=denom[i]
 		sumweight[class]+=weight[i]
-		sumnumeratorEst[class]+=denom[i]*est[i]
+		sumnumeratorEst[class]+=denom[i]*estRatio[i]
 	end
 	return sumnumer,sumdenom,sumweight,sumnumeratorEst
 end
@@ -1880,21 +1880,21 @@ function createScorebandsUTF8List(scorebandsstartingpoints,nscores::Int;addtotal
 end
 
 function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstartingpoints::Array{Int64,1}
-,numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn
-,numeratorval,denominatorval,weightval,numeratorEstval,scoresval,sett::ModelSettings)
+,numeratortrn,denominatortrn,weighttrn,ratioEsttrn,scorestrn
+,numeratorval,denominatorval,weightval,ratioEstval,scoresval,sett::ModelSettings)
 		nClasses=length(scorebandsstartingpoints)		
-		sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn=aggregateScores(numeratortrn,denominatortrn,weighttrn,numeratorEsttrn,scorestrn,scorebandsstartingpoints)
-		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,numeratorEstval,scoresval,scorebandsstartingpoints)		
+		sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn=aggregateScores(numeratortrn,denominatortrn,weighttrn,ratioEsttrn,scorestrn,scorebandsstartingpoints)
+		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,ratioEstval,scoresval,scorebandsstartingpoints)		
 		if sett.boolCalculateGini
 			#these statistics are optinally disabled as the gini takes a LOT of time especially due to sorting			
 			#NOTE: we currently have two different gini values which we calculate, one approach takes only one argument (the estimator) while the other appraoch considers the truth and the estimator
 			#it seems that the single_agrument_gini is more common (it should correspond to the gini in library(reldist) in R).
-			gini_single_argtrn=gini_single_argument(numeratorEsttrn.*denominatortrn)
-			gini_single_argval=gini_single_argument(numeratorEstval.*denominatorval)			
-			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) 
-			normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
-			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,numeratorEsttrn,denominatortrn)
-			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,numeratorEstval,denominatorval)		
+			gini_single_argtrn=gini_single_argument(ratioEsttrn.*denominatortrn)
+			gini_single_argval=gini_single_argument(ratioEstval.*denominatorval)			
+			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,ratioEsttrn) 
+			normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,ratioEstval)
+			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,ratioEsttrn,denominatortrn)
+			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,ratioEstval,denominatorval)		
 		else
 			gini_single_argtrn=1.0
 			gini_single_argval=1.0
@@ -1908,19 +1908,32 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
+		@show mean(ratioEsttrn)
+		@show mean(numeratortrn)
 		if sett.boolCalculatePoissonError
-			poissonErrortrn=poissonError(numeratortrn,weighttrn,numeratorEsttrn./denominatortrn)::Vector{Float64}			
-            poissonErrorval=poissonError(numeratorval,weightval,numeratorEstval./denominatorval)::Vector{Float64}
+			if false
+				@show mean(numeratortrn)
+				@show mean(weighttrn)
+				@show mean(ratioEsttrn./denominatortrn)
+				@show mean(ratioEsttrn)
+				@show mean(denominatortrn)
+				@show denominatortrn
+				@show ratioEsttrn
+			end 
+			poissonErrortrn=poissonError(numeratortrn,weighttrn,ratioEsttrn)::Vector{Float64}			
+            poissonErrorval=poissonError(numeratorval,weightval,ratioEstval)::Vector{Float64}
 		else
 			poissonErrortrn=zeros(Float64,2)
             poissonErrorval=zeros(Float64,2)
 		end		
 		poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
-		poissonErrVal=sum(poissonErrorval)/length(weightval)
-		true||@show(poissonErrTrn)
+		poissonErrVal=sum(poissonErrorval)/length(weightval)		
+		if false
+			@show poissonErrTrn
+		end
 		        
-		qwkappaTrn=tryQWKappa(numeratortrn,numeratorEsttrn)
-		qwkappaVal=tryQWKappa(numeratorval,numeratorEstval)
+		qwkappaTrn=tryQWKappa(numeratortrn,ratioEsttrn)
+		qwkappaVal=tryQWKappa(numeratorval,ratioEstval)
 		observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
 		cumulativeStatsMatrix=[description sumweighttrn sumweightval sumnumeratortrn sumnumeratorval sumdenominatortrn sumdenominatorval observedratiotrn observedratioval sumnumeratorEstimatetrn sumnumeratorEstimateval fittedratiotrn fittedratioval relativitytrn relativityval]
 		reltrntitle="Relativity Trn (Observed)" #this is used for the charts
