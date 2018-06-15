@@ -200,7 +200,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
 end
 
 function get_poisson_deviances(current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
-  #for the poisson deviance consider google, the reacfin paper or the master thesis of 'axa'
+    #for the poisson deviance consider the derivative of the poisson loss (or google, the reacfin paper or the 'axa' master thesis)
 	#this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
 	#most of the time is spent here, if we can improve the for loop below, that would improve performance greatly!
