@@ -226,7 +226,6 @@ sett.niter=4
 
 #you can modify the number of scores which are derived
 updateSettingsMod!(sett,nscores=10000) 
-updateSettingsMod!(sett,nscores=100) 
 #let us set it back to 1000
 updateSettingsMod!(sett,nscores=1000) 
 #The resulting Excel ouput shows a number of graphs per score band
@@ -287,7 +286,7 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.3,-0.2,-0.1,-0.05,-0.025,-0.01]
+    minw=[-0.4,-0.2,-0.1,-0.05,-0.025,-0.01]
     ,mf=[0.01,0.02,0.05,0.1],
     subsampling_features_prop=[1.0,.5,.7],
     subsampling_prop=[1.0,.5],
@@ -310,7 +309,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 @info "Starting grid search..."
 
 tt0=time_ns()
-#dtm(dtmtable,settV,fn="R:\\temp\\1\\dtm.CSV")
+#dtm(dtmtable,settV,fn="R:\\temp\\4\\dtm.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 
