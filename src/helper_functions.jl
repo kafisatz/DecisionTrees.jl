@@ -58,7 +58,7 @@ function get_stats(model::Tree;perfMeasure::String="not_applicable_for_singe_tre
 	numbers=float.(stats[:,2])
 	setti=model.exceldata.sheets[1].data[:,2]
 	setti_desc=string.(model.exceldata.sheets[1].data[:,1])
-	return desc,numbers,setti_desc,setti,perfMeasureUnusedArgumentForTree
+	return desc,numbers,setti_desc,setti,perfMeasure
 end
 
 function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lift Val"::String)
