@@ -311,6 +311,9 @@ CVresult=dtm_single_threaded(dtmtable,sett,CVOptions(20,0.7,true))
 #That is to say, we can go once over the data and sum up the numerator and denominator for each bucket (in linear time)
 #then, to evaluate each of the possible M splits, we only need to do M-1 comparisons for numerical variables (for categorical variables the case is more complex)
 
+#For now the only possible impurity functions are
+#poissondeviance and difference
+
 #Let us consider the poisson error
 #to evaluate the poisson error for a given split, we need the mean estimated frequency in the left and right node
 #to obtain these means, we need a pass over the data
