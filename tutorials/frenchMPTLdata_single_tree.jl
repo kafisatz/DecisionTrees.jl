@@ -197,7 +197,8 @@ performanceMeasure="Average Poisson Error Val"
 #the function createGridSearchSettings will copy the 'input' settings X times into a vector of settings
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
-minweight_list=-collect(range(0.001,stop=0.5,length=20))
+#Let us consider different stopping criteria (minimum weight per leaf)
+minweight_list=-collect(range(0.0001,stop=0.1,length=25))
 
 settV=createGridSearchSettings(sett,    
     minw=minweight_list
@@ -205,6 +206,11 @@ settV=createGridSearchSettings(sett,
 
 #consider the length(settV) which is the number of models that will be run
 length(settV)
+
+#notably all these models will be constructed independently of each other#
+#if we are only varying the minimum weight this could of course be improved (by pruning a granular tree)
+#however, the functionality is much more flexible (see the boosting example). Therefore make no assmptions on the
+#relationship between settV[1] and settV[2], etc.
 
 #depending on the size of settV (and the size of the data set!), you may want to restart Julia with additional workers for parallelization, i.e. 
 #shell> julia -p 8 
@@ -217,7 +223,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 ############################################################
 
 tt0=time_ns()
-dtm(dtmtable,settV,fn="R:\\temp\\1\\dtm.CSV")
+dtm(dtmtable,settV,fn="R:\\temp\\1\\MTPLsingleTree.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 
