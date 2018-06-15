@@ -313,7 +313,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 @info "Starting grid search..."
 
 tt0=time_ns()
-dtm(dtmtable,settV,fn="R:\\temp\\3\\dtm.CSV")
+#dtm(dtmtable,settV,fn="R:\\temp\\3\\dtm.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 
