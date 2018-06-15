@@ -2,6 +2,11 @@
 #Boosting Model for the French MTPL Data
 ############################################################
 
+# If you do not yet have a suitable editor for Julia, you may want to consider VS Code.
+# Consider this link
+# https://github.com/JuliaEditorSupport/julia-vscode
+# We note that there are various alternative editors for Julia.
+
 ##############################
 #Load packages
 ##############################
