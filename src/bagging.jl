@@ -99,6 +99,7 @@ end
 		cumulativeWeight=0.0
 		local fristRowOfThisTable
 	for iter=1:iterations
+	error("BK: TODO, need to port the functionality regarding sett.fitForStatsAndCharts to bagging")
 		#fit current tree
 			#@info "remove this"
 			#	print_tree(vecTreesWErrs.tree[iter.rootnode,sett,candMatWOMaxValues,mappings,0)			

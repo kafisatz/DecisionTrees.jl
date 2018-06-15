@@ -1129,8 +1129,11 @@ function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::V
 	#[name i mse mrse mae mrae sumrae mseVAL mrseVAL maeVAL mraeVAL sumraeVAL][:]
 	header=["Summation Type" "Iteration" "MSE TRN" "MRSE TRN" "MAE TRN" "MRAE TRN" "Sum MRAE TRN" "MSE VAL" "MRSE VAL" "MAE VAL" "MRAE VAL" "Sum MRAE VAL"]
 	
-    m1=tariffEstStats(sumactual,actualNumerator,est_matrix,sumactualVAL,trnidx,validx,"Raw Estimates")    
+    
+	#these two calls have a matrix as third argument
+	m1=tariffEstStats(sumactual,actualNumerator,est_matrix,sumactualVAL,trnidx,validx,"Raw Estimates")    
 	m2=tariffEstStats(sumactual,actualNumerator,est_matrixFromScores,sumactualVAL,trnidx,validx,"Estimates from Scores")
+	#these three calls have a vector as third argument
 	z1=tariffEstStats(sumactual,actualNumerator,estimateUnsmoothed,sumactualVAL,trnidx,validx,"Final Estimate Unsmoothed",0)
 	z2=tariffEstStats(sumactual,actualNumerator,estimateSmoothed,sumactualVAL,trnidx,validx,"Final Estimate Smoothed",0)
 	z3=tariffEstStats(sumactual,actualNumerator,estimateFromRelativities,sumactualVAL,trnidx,validx,"Final Estimate from Relativities",0)
@@ -1931,13 +1934,20 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
 		if sett.boolCalculatePoissonError
-			poissonErrortrn=poissonError(numeratortrn,weighttrn,numeratorEsttrn.*denominatortrn)::Vector{Float64}
+			@show numeratortrn
+			@show weighttrn
+			@show denominatortrn
+			@show numeratorEsttrn
+			@show eps(eltype(numeratorEsttrn))
+			@show minimum(numeratorEsttrn)			
+			@show numeratorEsttrn.*denominatortrn
+			@show poissonErrortrn=poissonError(numeratortrn,weighttrn,numeratorEsttrn.*denominatortrn)::Vector{Float64}
             poissonErrorval=poissonError(numeratorval,weightval,numeratorEstval.*denominatorval)::Vector{Float64}
 		else
 			poissonErrortrn=zeros(Float64,2)
             poissonErrorval=zeros(Float64,2)
 		end		
-		poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
+		@show poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
 		poissonErrVal=sum(poissonErrorval)/length(weightval)
 		        
 		qwkappaTrn=tryQWKappa(numeratortrn,numeratorEsttrn)
@@ -5475,4 +5485,20 @@ function getFittedValues(bt::BoostedTree)
         @inbounds f3[i]=bt.rawObservedRatioPerScore[sc]
     end
   return f1,f2,f3
+end
+
+function correctSmallNegativeValues!(x)
+	if any(x.<0)
+		epsilon=eps(eltype(x))
+		zr=zero(eltype(x))
+		for i in eachindex(x)
+			@inbounds xi=x[i]
+			if xi<0
+				if abs(xi)<2*epsilon
+					x[i]=zr
+				end
+			end			
+		end
+	end
+	return nothing
 end

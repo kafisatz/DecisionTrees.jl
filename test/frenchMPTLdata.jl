@@ -72,7 +72,7 @@ fieldnames(dtmtable)
 dtmtable.key #an identifier (String type), ideally it is a unique identifier for each row
 dtmtable.numerator #a vector
 dtmtable.denominator #a vector
-dtmtable.weights #a vector
+dtmtable.weight #a vector
 #each of the above have the same length
 
 dtmtable.trnidx #an index vector for the training data. This is an integer vector
@@ -223,6 +223,22 @@ sett.niter=4
 #It is preferred to use the update function to avoid creating an 'invalid' setting (such as a negative number of iterations)
 updateSettingsMod!(sett,niter=-3) #e.g. this will throw an error (whereas sett.niter=-3 does not)
 
+#you can modify the number of scores which are derived
+updateSettingsMod!(sett,nscores=10000) 
+updateSettingsMod!(sett,nscores=100) 
+#The resulting Excel ouput shows a number of graphs per score band
+#if you are interested in the tails of the data, you many want to pick more granular score bands
+#the default is this
+sett.scorebands
+#try
+updateSettingsMod!(sett,scorebands=50) 
+sett.scorebands
+#or set them manually by defining the 'start' of each band
+updateSettingsMod!(sett,scorebands=[1,25,50,75,100,300,500,800,900,825,950,975])
+sett.scorebands
+#at the moment you will need to re run the hwole model if you amend nscores or scorebands
+updateSettingsMod!(sett,niter=20)
+resultingFiles,resM=dtm(dtmtable,sett)
 
 #SOME COMMENT ON MANY UNUSED AND EXPERMIANTAL options
 #if you want to use the resutling tree in a different programming language you may want to
@@ -258,12 +274,12 @@ performanceMeasure="Average Poisson Error Val"
 )
 
 #performanceMeasure will determine which metric is considered for the output summary 
-#performanceMeasure must be in DecisionTrees.GLOBALperfMeasursesWhereMaxIsBest
+#performanceMeasure must be in DecisionTrees.global_statsperiter_header
 #you may want to consider the Excel file of any boosting to get an idea of the available options for performanceMeasure 
 #consider the first row of the sheet ModelStatistics of the Excel file which lists all measures
 #We note that some missing (or constant) measures are either not fully implemented yet, or were not calculated (e.g. because a boolean in the settings was set to false)
 @show sett.performanceMeasure
-@assert in(sett.performanceMeasure,DecisionTrees.GLOBALperfMeasursesWhereMaxIsBest)
+@assert in(sett.performanceMeasure,DecisionTrees.global_statsperiter_header)
 
 #create a vector of ModelSettings
 #note, we can provide an arbitrary number of vectors over which we want to loop

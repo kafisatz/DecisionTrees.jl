@@ -1,92 +1,5 @@
 warn("BK: DTM: This is currently experimental and may need review.")
 
-#=
-	include("analyze_pw_only_data_init_only.jl")
-
-
-	@info "use this function, specifically xlogy"	
-	dres[i] = 2 * (xlogy(yi, yi / μi) - (yi - μi))
-
-	for z in chlid_left
-		# yi = 'number of claims for observation i'
-		#\mu_i = mean number of claims in left child #<- determined in the first pass over the data
-		deviance_left += (xlogy(yi, yi / μi) - (yi - μi))
-	end
-	deviance_left * = 2
-
-	#when considering different splits -> consider the grey code 'shuffeling'
-
-	# let us say we have 255 possible splits
-	# this yields a vector mean_left of length 255 and a vector mean_right of length 255
-	# for each mean left and mean right loop over the data and calculate deviance_left and deviance_right (which will also be both vectors of length 255!)
-	# then we will have PAIRs deviance_left[43] and deviance_left[43] for the potential split number '43' (whatever that might be)
-	# one of these pairs will correspond to the optimal split!
-
-	#it might be that aggregate_data_pois_deviance does most (if not all) of the work by calculating deviance_left and deviance_right for each possible split!
-
-	""")
-
- # import DTM: DTSubsets, PoissonDevianceSplit, countsort!,build_listOfMeanResponse,sortlists!,increasing_subsets,bitflip_graycode_subsetsHALF
-
-		numerator=numeratortrn
-		denominator=denominatortrn
-		weight=weighttrn
-		feature_column_id=-5
-		features=trn_charfeatures_PDA[-feature_column_id]
-		minweight=sett.minw
-		randomweight=sett.randomw
-		catSortByThreshold=sett.catSortByThreshold
-		catSortBy=sett.catSortBy
-		labellist_sorted=levels(features)
-
-		crit=sett.crit
-		#numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::pdaMod,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int64,randomweight::Float64,catSortByThreshold::Int64,catSortBy::SortBy)
-		crit_type=typeof(crit)
-
-		crit_type=typeof(crit)
-		#This function is now for numeric and character variables!
-		#feature_column_id is negative in case of character variables
-		best_value=-Inf
-		best_thresh=best_wl=best_wr=NaN
-		best_subset=Array{UInt8}(0)
-		#if randomweight>0;this_splitlist=Array{Splitdef}(0);end;
-		labellist_sorted=levels(features)
-
-
-		  countsort!(labellist_sorted)
-			#here I am (somewhat) misusing multiple dispatch since I was too lazy to parametrize this at the moment (todo/tbd in the future)
-
-				labellist,sumnumerator,sumdenominator,sumweight,countlistfloat=build_listOfMeanResponse(crit,numerator,denominator,weight,features,labellist_sorted,minweight)
-			#@show feature_column_id
-		  #todo/tbd
-		  #here we can introduce the possiblity to sort the labellist (e.g. by meanobserved or median (to be calculated)).
-		  #then we could only loop through the "increasing list" of sorted labels (instead of doing the 2^ncategories exhaustive search (bitflip_graycode_subsets))
-		  if feature_column_id>0 #id>0 -> we are working on a numeric column
-			#only consider to split at the candidate split points
-			 subs=increasing_subsets(labellist)
-		  else #id<0 -> we are working on a character column
-			#distinguish between exhaustive and "increasing" search for split point
-			if size(labellist_sorted,1)>catSortByThreshold
-				if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
-					sortlists!(catSortBy,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) #catSortBy::SortBy=SORTBYMEAN
-				elseif (crit_type==NormalDevianceSplit)
-					sortlists!(catSortBy,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass)
-				end
-				subs=increasing_subsets(labellist)
-			else
-			#perform exhaustive search
-				subs=bitflip_graycode_subsetsHALF(labellist)
-			end
-		  end
-		  if randomweight==0.0
-			if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
-				tmp_result=calculateSplitValue(crit,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs)
-			elseif (crit_type==NormalDevianceSplit)
-
-=#
-
-
-#function calculateSplitValue(a::DifferxxxxenceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets) where T<:Unsigned
 function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features) where T<:Unsigned
 #  warn("xlogy will fail terribly if one of the arguments is zero! we need to amend the code to handle that case properly!")
   #here randomweight==0
@@ -297,13 +210,11 @@ function get_poisson_deviances(current_meanl::Float64,current_meanr::Float64,lo,
 	dr=0.0
 	dl=0.0
 	#note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
-	#warn("need to add inbounds here!")
-	#warn("need to treat ni == 0.0 specially....?")
-	#warn("negative ni are impossible for poisson! -> DomainError")
 	for count in 1:length(f)	
 		@inbounds idx=f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-		@inbounds wi = weight[count]
+    @inbounds wi = weight[count]
+    #todo see if ifelse is more efficient here!
 		if elementsInLeftChildBV[idx]
 			dl += (xlogy(ni, ni / (wi*current_meanl)) - (ni - wi*current_meanl))
 		else

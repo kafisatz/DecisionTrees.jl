@@ -503,12 +503,20 @@ x=checkIfSettingsAreValid(input_setttings)
 if !(x==nothing)
 	@warn "DTM: You may have provided invalid or inconsistent model settings. The model run may fail."
 end
-
-if sett.boolTariffEstStats
+if (sett.fitForStatsAndCharts=="smoothedPerScore")&&(sett.smoothEstimates!="1")
+	@info("DTM: setting sett.smoothEstimates to 1, because sett.fitForStatsAndCharts=$(sett.fitForStatsAndCharts)")	
+	sett.smoothEstimates="1"
+end
+if sett.write_iteration_matrix
 	if !sett.boolProduceEstAndLeafMatrices
-		@info "DTM: User has requested TariffEstStats (boolTariffEstStats=$(sett.boolTariffEstStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true."
+		@info "DTM: write_iteration_matrix=$(sett.write_iteration_matrix). The estimate matrices are required for this. Setting sett.boolProduceEstAndLeafMatrices to true."
+	end
+end
+if sett.boolNumeratorStats
+	if !sett.boolProduceEstAndLeafMatrices
+		@info "DTM: User has requested NumeratorStats (boolNumeratorStats=$(sett.boolNumeratorStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true."
 		sett.boolProduceEstAndLeafMatrices=true
-		#@show sett.boolTariffEstStats,sett.boolProduceEstAndLeafMatrices
+		#@show sett.boolNumeratorStats,sett.boolProduceEstAndLeafMatrices
 	end
 end
 
@@ -521,6 +529,7 @@ else
 	error("DTM: Unexpected file extension $(ext)")	
 end
 datafolder,outfileStringOnly=splitdir(path_and_fn_wo_extension)
+@assert isdir(datafolder) "DTM: The specified output folder $(datafolder) does not exist. Abort."
 
 filelistWithFilesToBeZipped=String[]
 csharp_code_file=string(path_and_fn_wo_extension,".cs")
@@ -835,33 +844,39 @@ end
 			push!(filelistWithFilesToBeZipped,this_outfile)
 		end
 	#write estimates matrix
-		if sett.write_iteration_matrix
-			#Matrix with Leaf Numbers
-			#currently we only have the training mat
-			leafnrfile=string(path_and_fn_wo_extension,".leafnumbers.csv")
-			#the first column is 0 until here
-			#we now fill it with the irkeys
-			vectorOfLeafNumbersTrnMOD=hcat(key,vectorOfLeafNumbersTrn[:,2:end])
-			println("Exporting LeafNumber Matrix: \n $(leafnrfile)")
-				isfile(leafnrfile)&&rm(leafnrfile)
-				@time writecsv(leafnrfile,vectorOfLeafNumbersTrnMOD)
-				push!(filelistWithFilesToBeZipped,leafnrfile)
-			#MATRIX 1
-				estmat_outile2=string(path_and_fn_wo_extension,"_iteration_matrixFromScores.csv")
-				res_estmatrixFromScores=hcat(vcat(key,keyval),vcat(est_matrixFromScores,est_matrixFromScoresVAL))
-				println("Exporting Estimates Matrix (based on Scores): \n $(estmat_outile2)")
-				isfile(estmat_outile2)&&rm(estmat_outile2)
-				@time writecsv(estmat_outile2,res_estmatrixFromScores)
-				push!(filelistWithFilesToBeZipped,estmat_outile2)
-			#MATRIX 2
-				estmat_outile=string(path_and_fn_wo_extension,"_iteration_matrix.csv")
-				res_estmatrix=hcat(vcat(key,keyval),vcat(resultEnsemble.iterationmatrix,est_matrix_val))
-				println("Exporting Estimates Matrix: \n $(estmat_outile)")
-					#println("Saving iteration matrix to jld file; this is only a backup in case the CSV export does not work (which sometimes happens with very large files)")
-					#@time save(string(estmat_outile,".jld"),"res_estmatrix",res_estmatrix)
-				isfile(estmat_outile)&&rm(estmat_outile)
-				@time writecsv(estmat_outile,res_estmatrix)
-				push!(filelistWithFilesToBeZipped,estmat_outile)
+		if sett.write_iteration_matrix	&&(length(vectorOfLeafNumbers)<length(key))
+			@warn "DTM: The iteration matrices wil not be written to file. length(key)=$(length(key)), but length(vectorOfLeafNumbers)=$(length(vectorOfLeafNumbers)). \r\n"
+			@warn "DTM: Please check the values of sett.write_iteration_matrix and sett.boolProduceEstAndLeafMatrices"
+			sett.boolProduceEstAndLeafMatrices||@warn("DTM: You may want to set sett.boolProduceEstAndLeafMatrices to true")
+		else
+			if sett.write_iteration_matrix		
+				#Matrix with Leaf Numbers
+				#currently we only have the training mat
+				leafnrfile=string(path_and_fn_wo_extension,".leafnumbers.csv")
+				#the first column is 0 until here
+				#we now fill it with the irkeys
+				vectorOfLeafNumbersMOD=hcat(key,vectorOfLeafNumbers[:,2:end])
+				println("Exporting LeafNumber Matrix: \n $(leafnrfile)")
+					isfile(leafnrfile)&&rm(leafnrfile)
+					@time writecsv(leafnrfile,vectorOfLeafNumbersMOD)
+					push!(filelistWithFilesToBeZipped,leafnrfile)
+				#MATRIX 1
+					estmat_outile2=string(path_and_fn_wo_extension,"_iteration_matrixFromScores.csv")
+					res_estmatrixFromScores=hcat(key,est_matrixFromScores)
+					println("Exporting Estimates Matrix (based on Scores): \n $(estmat_outile2)")
+					isfile(estmat_outile2)&&rm(estmat_outile2)
+					@time writecsv(estmat_outile2,res_estmatrixFromScores)
+					push!(filelistWithFilesToBeZipped,estmat_outile2)
+				#MATRIX 2
+					estmat_outile=string(path_and_fn_wo_extension,"_iteration_matrix.csv")
+					res_estmatrix=hcat(key,resultEnsemble.iterationmatrix)
+					println("Exporting Estimates Matrix: \n $(estmat_outile)")
+						#println("Saving iteration matrix to jld file; this is only a backup in case the CSV export does not work (which sometimes happens with very large files)")
+						#@time save(string(estmat_outile,".jld"),"res_estmatrix",res_estmatrix)
+					isfile(estmat_outile)&&rm(estmat_outile)
+					@time writecsv(estmat_outile,res_estmatrix)
+					push!(filelistWithFilesToBeZipped,estmat_outile)
+			end
 		end
 else
 	error("Unknown Model Type: $(sett.model_type)")

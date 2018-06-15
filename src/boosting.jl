@@ -117,17 +117,27 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)
 		#Derive Scores for this iteration #NOTE (tbd/todo: keep in mind) For large datasets (>5m rows) the sorting in construct scores may become a dominant part of the algorithm
 			maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nscoresPotentiallyReduced=constructANDderiveScores!(trnidx,validx,sortvec_reused_trn_only,estimatedRatio,currentRelativity,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett)
-			update_and_derive_scores!(scores,maxRawRelativityPerScoreSorted,currentRelativity)			
+			update_and_derive_scores!(scores,maxRawRelativityPerScoreSorted,currentRelativity)
+			#todo, this could probably be improved
+			#if we avoid creating small negative values in the function constructANDderiveScores altogether, then the following two function calls are obsolete
+			correctSmallNegativeValues!(MAPPINGSmoothedEstimatePerScore)
+			correctSmallNegativeValues!(rawObservedRatioPerScore)
 		#Define estimated Numerator		
 			sett.smoothEstimates=="0" ? referenceForNumEstimates=rawObservedRatioPerScore : referenceForNumEstimates=MAPPINGSmoothedEstimatePerScore
-			update_mapped_estFromScores!(estFromScores,referenceForNumEstimates,scores)
+			update_mapped_estFromScores!(estFromScores,referenceForNumEstimates,scores)			
 			#estFromScores=map(x->referenceForNumEstimates[x],scores)	
 			if boolProduceEstAndLeafMatrices
 				write_column!(est_matrixFromScores,iter+1,estFromScores)
 			end
 		#Derive Cumulative Statistics
 			 #todo tbd there is potential for optimization here			 
-			statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,iter,sett.scorebandsstartingpoints,view(actualNumerator,trnidx),view(denominator,trnidx),view(weight,trnidx),view(estFromScores,trnidx),view(scores,trnidx),view(actualNumerator,validx),view(denominator,validx),view(weight,validx),view(estFromScores,validx),view(scores,validx),sett)			
+			 #["rawRelativities","unsmoothedPerScore","smoothedPerScore"]	
+			if sett.fitForStatsAndCharts=="rawRelativities"
+				selectedEstimateForStats=currentRelativity::Vector{Float64}.*trn_meanobservedvalue::Float64
+			else 
+				selectedEstimateForStats=estFromScores::Vector{Float64} #smooth or unsmooth has been defined/"selected" above already
+			end
+			statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,iter,sett.scorebandsstartingpoints,view(actualNumerator,trnidx),view(denominator,trnidx),view(weight,trnidx),view(selectedEstimateForStats,trnidx),view(scores,trnidx),view(actualNumerator,validx),view(denominator,validx),view(weight,validx),view(selectedEstimateForStats,validx),view(scores,validx),sett)			
 			statsPerIteration=vcat(statsPerIteration,singleRowWithKeyMetrics)
 			if iter==1
 				fristRowOfThisTable=sett.niter+2+empty_rows_after_iteration_stats
@@ -152,7 +162,17 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	estimateSmoothed=map_these_values(MAPPINGSmoothedEstimatePerScore,scores)	
 	
 	estimateFromRelativities = currentRelativity.*trn_meanobservedvalue
-	finalEstimateForCharts = sett.smoothEstimates=="0" ? estimateSmoothed : estimateUnsmoothed
+	#finalEstimateForCharts = sett.smoothEstimates=="0" ? estimateSmoothed : estimateUnsmoothed	
+	#["rawRelativities","unsmoothedPerScore","smoothedPerScore"]	
+	if sett.fitForStatsAndCharts=="rawRelativities"
+		finalEstimateForCharts=estimateFromRelativities	
+	end
+	if sett.fitForStatsAndCharts=="unsmoothedPerScore"
+		finalEstimateForCharts=estimateUnsmoothed
+	end
+	if sett.fitForStatsAndCharts=="smoothedPerScore"
+		finalEstimateForCharts=estimateSmoothed
+	end
 	
 	#add empty lines
 	statsPerIteration=vcat(statsPerIteration,repmat([""],empty_rows_after_iteration_stats,size(statsPerIteration,2)))
@@ -184,8 +204,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	push!(xlData.charts,validationCharts...)
 #Define Excel
 	xlData.sheets=[modelsettingsSheet,overviewSheet,statsSheet,scoresSheet,predictorsSheet,validationSheet]
-#add boolTariffEstStats if requested
-	if sett.boolTariffEstStats
+#add boolNumeratorStats if requested
+	if sett.boolNumeratorStats
 		warn("tariff est stats are not updated for DTM2: this needs review")
 			errors_num_estimates=addTariffEstimationStatsAndGraphs!(xlData,trnidx,validx,actualNumerator,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,est_matrix,est_matrixFromScores)
 		#attach errors per iteration to modelStatistics== statsSheet (Excel file)
