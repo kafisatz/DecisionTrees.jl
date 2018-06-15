@@ -1,7 +1,6 @@
 warn("BK: DTM: This is currently experimental and may need review.")
 
 function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features) where T<:Unsigned
-#  warn("xlogy will fail terribly if one of the arguments is zero! we need to amend the code to handle that case properly!")
   #here randomweight==0
   #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -106,10 +105,11 @@ end
 
 #function calculateSplitValue(a::DifferenxxxxceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int64) where T<:Unsigned
 function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features,feature_column_id::Int64)  where T<:Unsigned
+#this is not yet supported:
   error("need to add fname and the other unused argument")
   #here randomweight>0
-#warn("xlogy will fail terribly if one of the arguments is zero! we need to amend the code to handle that case properly!")
-  #here randomweight==0
+
+
   #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
 
@@ -200,18 +200,18 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
 end
 
 function get_poisson_deviances(current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
-	#consider the reacfin paper or the master thesis of 'axa'
+  #for the poisson deviance consider google, the reacfin paper or the master thesis of 'axa'
 	#this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
 	#most of the time is spent here, if we can improve the for loop below, that would improve performance greatly!
-	#one possibility would be to introduce parallelization here (which is not straightforward, I think....)
+	#one possibility would be to introduce parallelization here (which is not straightforward, though
 	
 	#dr and dl are 'reused' by each iteration
 	dr=0.0
 	dl=0.0
 	#note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
 	for count in 1:length(f)	
-		@inbounds idx=f.parent.refs[count] + ooo		
+		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
     @inbounds wi = weight[count]
     #todo see if ifelse is more efficient here!
