@@ -2053,7 +2053,7 @@ t=tree.rootnode
 		thisres=[thisres;rss_rowval];overallstats=[overallstats;rss_rowval];
 	#attach poisson error (for frequency models)	
 		if sett.boolCalculatePoissonError
-			poissonErrors=poissonError(dtmtable.numerator,dtmtable.weight,fitted)::Vector{Float64}
+			poissonErrors=poissonError(numerator,weight,est)::Vector{Float64}
             poissonErrTrn=sum(poissonErrors[trnidx])/length(trnidx)
             poissonErrVal=sum(poissonErrors[validx])/length(validx)		
 		else
