@@ -3762,7 +3762,10 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
   @assert span>0.0
   #warn("it matters if we start at the bottom or top end! which ones is better?")
   nscores=size(estimatedRatioPerScore,1)
-  @assert nscores>2 #for 2 or less scores smoothing is not meaningful
+  if (nscores<=2) #for 2 or less scores smoothing is not meaningful
+	@warn("DTM: nscores was less than 3. No smoothing performed")
+	return nothing
+  end
   intSpan=convert(Int,ceil((nscores)*span))
   intSpan=max(intSpan,2) #span should be at least two
   smoothed=intercept=slope=0.0
