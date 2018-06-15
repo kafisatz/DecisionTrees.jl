@@ -428,7 +428,7 @@ function add_iteration_charts!(xlData::ExcelData,settings::ModelSettings,startro
 	currentChartRow+=chartRowStep
 	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,20,21,1)
 	push!(xlData.charts,deepcopy(thischart))
-	#Feb 2018 
+	
 	#add charts for RSquared of Numerator
 	currentChartRow+=chartRowStep
 	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,26,27,1)
@@ -437,5 +437,10 @@ function add_iteration_charts!(xlData::ExcelData,settings::ModelSettings,startro
 	currentChartRow+=chartRowStep
 	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,30,31,1)
 	push!(xlData.charts,deepcopy(thischart))		
+	#add chart for Poisson Error
+	currentChartRow+=chartRowStep
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,32,33,1)
+	push!(xlData.charts,deepcopy(thischart))		
+	
 return nothing
 end
