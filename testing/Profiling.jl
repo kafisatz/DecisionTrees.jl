@@ -3,7 +3,7 @@ using Profile
 using CSV,DataFrames
 using DecisionTrees  
 
-include("test\\runtests.jl")
+include(joinpath("..","test\\runtests.jl"))
 
 datafile=string("data\\freMTPL2\\freMTPL2.csv")
 @assert isfile(datafile);
@@ -33,7 +33,13 @@ resultingFiles,resM=dtm(dtmtable,sett)
 
 li, lidict = Profile.retrieve()
 using JLD2
-@save "/tmp/foo.jlprof" li lidict
+profile_loc="R:\\temp\\profile.jlprof"
+dd=splitdir(profile_loc)[1]
+if isdir(dd)
+    @save profile_loc li lidict
+else
+    @warn("Folder $(dd) not found!")
+end
 
 #open("C:\\temp\\logs\\profile.txt", "w") do s
 #    Profile.print(IOContext(s, :displaysize => (24, 500)))
