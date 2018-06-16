@@ -3,8 +3,8 @@
 #########  GLM, Regression Trees and Boosting
 #########  Author: Mario Wuthrich
 #########  Version May 6, 2018
+#########  See also: https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3164764
 ###############################################
-
 
 ###############################################
 #########  load packages and data
@@ -62,9 +62,7 @@ str(dat2)
 #########  choosing learning and test sample
 ###############################################
 
-set.seed(310)
 set.seed(100)
-ll <- sample(c(1:nrow(dat2)), round(0.7*nrow(dat2)), replace = FALSE) #test larger validation set
 ll <- sample(c(1:nrow(dat2)), round(0.9*nrow(dat2)), replace = FALSE)
 learn <- dat2[ll,]
 test <- dat2[-ll,]
@@ -87,6 +85,11 @@ learn$fitGLM <- fitted(d.glm1)
 test$fitGLM <- predict(d.glm1, newdata=test, type="response")
 
 glmfit_alldata<-c(as.vector(learn$fitGLM),as.vector(test$fitGLM))
+ids<-c(learn$IDpol,test$IDpol)
+srtperm<-order(ids)
+ids[srtperm]
+is.unsorted(ids[srtperm])
+
 
 # in-sample and out-of-sample losses (in 10^(-2))
 (insampleGLM <- 100*Poisson.Deviance(learn$fitGLM, learn$ClaimNb))
