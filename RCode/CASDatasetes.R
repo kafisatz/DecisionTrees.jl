@@ -11,13 +11,13 @@ test <- freMTPL2freq [-ll ,]
 data(freMTPL2freq)
 
 oneToN<-c(1: nrow ( freMTPL2freq ))
-myVectors <- sapply(1:length(myList), function(i) any(myList[[i]] == myValue))
 
 matched<-match(oneToN,ll)
 matched[is.na(matched)]=0
 matched[matched>0]=1
 
-freMTPL2freq$trnTest=matched
+#matched is the train test identifier with entries 0/1
+
 
 ###############################################
 #The following code is copied from code used for the Noll, Salzmann, Wüthrich paper
@@ -121,7 +121,8 @@ getOption("digits")
 100*Poisson.Deviance(test$fitGLM, test$ClaimNb)
 #32.171234111851014
 
-#add GLM prediction to the data
+#add train test index vector and GLM prediction to the data
+freMTPL2freq$trnTest=matched
 
 freMTPL2freq$GLMfitted=glmfit_alldata[srtperm]
 
