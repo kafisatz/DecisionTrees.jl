@@ -71,7 +71,7 @@ end
 #dtmtable::DTMTable is a custom data format for DecisionTrees
 #sett are the model settings
 #dfprepped is an intermediary dataframe which is generally not needed
-dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
+dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 #consider 
 fieldnames(dtmtable)
 dtmtable.key #an identifier (String type), ideally it is a unique identifier for each row
@@ -174,7 +174,7 @@ fitted=resM.meanobserved.*resM.rawrelativities
 #dtmtable.validx determines which observations correspond to the validation data
 
 #Let us calculate the Poisson Error for these estimates
-errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
+errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
 trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #should be around 0.30939804739941096
 valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around 0.31950570163159764
 
@@ -190,7 +190,7 @@ fitted=fittedThroughScores
 #notably for these fitted values we have less unique values
 @show unique(fitted)
 #this should correspond to sett.nscores
-errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
+errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
 trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.3087311765403276
 valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.31904324177240373
 
@@ -206,7 +206,7 @@ end
 
 #Again, let us consider the Poisson Error
 fitted=rawFittedThroughScores
-errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
+errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
 trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.30466923428172205
 valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.3192841010476779
 
@@ -257,7 +257,7 @@ resultingFiles,resM=dtm(dtmtable,sett)
 
 #set some default settings
 updateSettingsMod!(sett,
-niter=200,
+niter=100,
 model_type="boosted_tree",
 nscores="1000",
 write_statistics="true",
@@ -291,9 +291,9 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.01,-0.005,-0.0125]
-    ,mf=[0.125,0.1,0.075],
-    subsampling_features_prop=[1.0,.5,.7])
+    minw=[-0.01,-0.005,-0.0025]
+    ,mf=[0.1],
+    subsampling_features_prop=[1.0,.7])
     #,   subsampling_prop=[1.0,.5,.7]);
 
 #consider the length(settV) which is the number of models that will be run
@@ -313,7 +313,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 @info "Starting grid search..."
 
 tt0=time_ns()
-#dtm(dtmtable,settV,file="R:\\temp\\3\\dtm.CSV")
+dtm(dtmtable,settV,file="R:\\temp\\3\\dtm.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 

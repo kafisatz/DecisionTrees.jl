@@ -10,7 +10,7 @@ struct Splitdef{T<:Unsigned} #Splitdef(feature_column_id,feature_column_id2,fnam
 	featid_new_positive::Int64
     featurename::Symbol
     subset::Array{T,1}
-    splitvalue::Float64 #Depends on the criterion function used (e.g. _difference)
+    splitvalue::Float64 #Depends on the criterion function used (e.g. difference)
     weightl::Float64
     weightr::Float64
 end

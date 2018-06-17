@@ -1909,8 +1909,8 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
 		if sett.boolCalculatePoissonError
-			poissonErrortrn=poissonError(numeratortrn,weighttrn,ratioEsttrn)::Vector{Float64}			
-            poissonErrorval=poissonError(numeratorval,weightval,ratioEstval)::Vector{Float64}
+			poissonErrortrn=poissonError(numeratortrn,ratioEsttrn.*denominatortrn)::Vector{Float64}			
+            poissonErrorval=poissonError(numeratorval,ratioEstval.*denominatorval)::Vector{Float64}
 		else
 			poissonErrortrn=zeros(Float64,2)
             poissonErrorval=zeros(Float64,2)
@@ -2008,10 +2008,10 @@ t=tree.rootnode
 
 	header=["Segment" "Weight" "Relative Weight" "Numerator" "Denominator" "Observed Ratio" "Numerator Estimate" "Fitted Ratio" "Relativity"]
 	thisres,overallstats=buildStatistics(header,segmentlist,sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
-	if sett.boolCalculateGini
-        nest=denominator.*est
-        giniTrn=gini_single_argument(view(nest,trnidx))			
-        giniVal=gini_single_argument(view(nest,validx))        
+    numeratorEst=est.*denominator
+    if sett.boolCalculateGini
+        giniTrn=gini_single_argument(view(numeratorEst,trnidx))			
+        giniVal=gini_single_argument(view(numeratorEst,validx))        
         #normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) 
         #normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
         total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(view(numerator,trnidx),view(est,trnidx),view(denominator,trnidx))
@@ -2053,7 +2053,7 @@ t=tree.rootnode
 		thisres=[thisres;rss_rowval];overallstats=[overallstats;rss_rowval];
 	#attach poisson error (for frequency models)	
 		if sett.boolCalculatePoissonError
-			poissonErrors=poissonError(numerator,weight,est)::Vector{Float64}
+			poissonErrors=poissonError(numerator,numeratorEst)::Vector{Float64}
             poissonErrTrn=sum(poissonErrors[trnidx])/length(trnidx)
             poissonErrVal=sum(poissonErrors[validx])/length(validx)		
 		else
@@ -2247,19 +2247,6 @@ function print_graycode(m)
     current=current$x
   end
 #usage: print_graycode(15)
-end
-
-function crit_string_to_type(str)
-  if str=="_difference"
-    return DifferenceSplit()
-  end
-  if str=="_mse"
-    return MSESplit()
-  end
-  if str=="_RankOpt"
-    return RankOptSplit()
-  end
-  @assert false "Unknown split criterion $(str). ABORT."
 end
 
 function countsort(a::Array{T,1}) where {T <: Integer}
@@ -3048,7 +3035,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,nu
   srt2=sortperm(twodimintvec_avg,rev=true,alg=QuickSort)
 
   #f=open(fileloc,"a+")
-    write(f,"\r\n\r\nOverall predictor importance of boosted tree: \r\n")
+    write(f,"\r\n\r\nOverall predictor 'frequency' of boosted tree: \r\n")
     my_write(f,res1dim[srt,:])
     my_write(f,res2dim[srt2,:])
   #bagging only
@@ -3074,9 +3061,9 @@ end
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
 #function in the special case where the whole tree is in fact a single leaf
 	#version which uses f::IOStream as input
-	write(f,"\r\n1 dimensional predictor importance:")
+	write(f,"\r\n1 dimensional predictor 'frequency':")
 	my_write(f,var_imp1d_str_arr);
-	write(f,"\r\n2 dimensional predictor importance:")
+	write(f,"\r\n2 dimensional predictor 'frequency':")
 	my_write(f,var_imp2d_str_arr);
 	write(f,"Number of observations in this tree: $(nodesize(tree))");write(f,"\r\n");
     write(f,"Number of leaves: $(size(create_leaves_array(tree),1))");write(f,"\r\n");
@@ -3092,9 +3079,9 @@ end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where T<:Unsigned 
 	#version which uses f::IOStream as input
-	write(f,"\r\n1 dimensional predictor importance:")
+	write(f,"\r\n1 dimensional predictor 'frequency':")
 	my_write(f,var_imp1d_str_arr);
-	write(f,"\r\n2 dimensional predictor importance:")
+	write(f,"\r\n2 dimensional predictor 'frequency':")
 	my_write(f,var_imp2d_str_arr);
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
@@ -5365,28 +5352,26 @@ function confusmatBinary(truth::Vector{T}, pred::Vector{T}) where T<:Int
 end
 
 """
+poissonError(trueNumerator,estimatedNumerator)
+trueNumerator is the count variable (e.g. claim count)
+estimatedNumerator is the estimated Numerator
 """
-function poissonError(trueNumerator,exposure,estimatedFrequency)
+function poissonError(trueNumerator,estimatedNumerator)
     n=length(trueNumerator)
-    @assert n==length(exposure)==length(estimatedFrequency)
+    @assert n==length(estimatedNumerator)
     res=zeros(Float64,n)
     for i=1:n
         @inbounds t=trueNumerator[i]
-        @inbounds estf=estimatedFrequency[i]
-        @inbounds expo=exposure[i]
-        if iszero(t)
-            @inbounds res[i]=2.0*estf*expo
-        else 
-            tmp=estf*expo/t
-            #this will fail for tmp<0
-            @inbounds res[i]=2.0*t*(tmp-1.0-log(tmp))
+		@inbounds estf=estimatedNumerator[i]
+		#@inbounds res[i]=2*(estf-t+xlogy(t,t/estf))
+        tmp=estf-t
+		if iszero(t)
+			@inbounds res[i]=2.0*tmp
+		else 
+            @inbounds res[i]=2.0*(tmp+t*log(t/estf))
         end
     end
     return res
-    #consider
-    #errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
-    #sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
-    #sum(errs[dtmtable.validx])/length(dtmtable.validx)
 end
 
 

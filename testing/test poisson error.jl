@@ -28,6 +28,6 @@ fitted=resM.meanobserved.*resM.rawrelativities
 mean(fitted[dtmtable.trnidx]) #0.8405367103402663
 mean(dtmtable.numerator[dtmtable.trnidx]) 
 mean(dtmtable.weight[dtmtable.trnidx])
-errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
+errs=poissonError(dtmtable.numerator,dtmtable.denominator.*fitted);
 trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #10055.619876087196
 valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) 

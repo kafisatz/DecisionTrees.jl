@@ -179,7 +179,7 @@ struct Splitdef{T<:Unsigned} #Splitdef(feature_column_id,feature_column_id2,fnam
 	featid_new_positive::Int64
     featurename::Symbol
     subset::Array{T,1}
-    splitvalue::Float64 #Depends on the criterion function used (e.g. _difference)
+    splitvalue::Float64 #Depends on the criterion function used (e.g. difference)
     weightl::Float64
     weightr::Float64
 end
@@ -653,21 +653,21 @@ function convertFromString(oldvalue::T,val) where {T <: SortBy}
 	return SortByMean()  #currently only mean is possible here
 end
 function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion}
-	local allowedinputstrings=[lowercase(x) for x in ["_poissondeviance" "_difference" "_maxvalue" "_maxabsvalue" "_maxminusvalue" "ROptMinRLost" "ROptMinRLostPct"]]
+	local allowedinputstrings=[lowercase(x) for x in ["poissondeviance" "difference" "maxvalue" "maxabsvalue" "maxminusvalue" "ROptMinRLost" "ROptMinRLostPct"]]
 	critfnstr=lowercase(critfnstr)
-	if critfnstr=="_difference"
+	if critfnstr=="difference"
 		crit=DifferenceSplit()
-	elseif (critfnstr=="_normaldeviance" || critfnstr=="_gaussiandeviance" || critfnstr=="_rss")
+	elseif (critfnstr=="normaldeviance" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
 		crit=NormalDevianceSplit()
-	elseif critfnstr=="_poissondeviance"
+	elseif critfnstr=="poissondeviance"
 		crit=PoissonDevianceSplit()
-	elseif critfnstr=="_gammadeviance"
+	elseif critfnstr=="gammadeviance"
 		crit=GammaDevianceSplit()
-	elseif critfnstr=="_maxvalue"
+	elseif critfnstr=="maxvalue"
 		crit=MaxValueSplit()
-	elseif critfnstr=="_maxabsvalue"
+	elseif critfnstr=="maxabsvalue"
 		crit=MaxAbsValueSplit()
-	elseif critfnstr=="_maxminusvalue"
+	elseif critfnstr=="maxminusvalue"
 		crit=MaxMinusValueSplit()
 	elseif critfnstr=="roptminrlostpct"
 		crit=ROptMinRLostPctSplit()

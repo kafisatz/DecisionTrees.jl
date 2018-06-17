@@ -15,7 +15,6 @@ data/adult/adult.test
 data/adult/adult.names
 data/adult/adult.data
 data/adult/Index
-src/XGBoost_example_in_R.R
 data/adult/Beginners Tutorial on XGBoost and Parameter Tuning in R Tutorials & Notes _ Machine Learning _ HackerEarth.pdf
 data/adult/~$adult.data.xlsb
 data/adult/adult.data.xlsb
@@ -23,4 +22,3 @@ data/adult/~$adult.test.xlsb
 data/adult/adult.test.xlsb
 data/adult/adult.test_orig
 data/freMTPL2/freMTPL2.csv
-src/CASDatasetes.R
