@@ -6,13 +6,13 @@ fi="data1medium.csv"
 fi="data1small.csv"
 @time df_tmp=CSV.read(joinpath(datadir,fi),allowmissing=:none,types=elt,categorical=false,rows_for_type_detect=10000);
 
-selected_explanatory_vars=["ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
+selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 
 #for x in selected_explanatory_vars
 #    @show x,eltype(df_tmp[Symbol(x)])
 #end
 
-dtmtable,sett=prepare_dataframe_for_dtm!(df_tmp,weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 sett.minw=-.2
 #0
 
@@ -31,3 +31,8 @@ dtm(dtmtable,sett)
 sett.model_type="bagged_tree"
 #dtm(dtmtable,sett)
 #@test 1==1
+
+sett.max_splitting_points_num=300
+dtmtable=prep_data_from_df(df_prepped,sett,joinpath(mktempdir(),"dtmsmoketest.csv"))
+@test eltype(dtmtable.features[:PLZ_WOHNORT].pool)==UInt16
+@test 1==1
