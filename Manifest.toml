@@ -45,8 +45,8 @@ version = "0.8.1"
 
 [[DataFrames]]
 deps = ["CategoricalArrays", "CodecZlib", "Compat", "DataStreams", "Missings", "Reexport", "SortingAlgorithms", "StatsBase", "TranscodingStreams", "WeakRefStrings"]
-git-tree-sha1 = "be4d979564837fbb6be9eb4872ab7352bbc32e71"
-repo-rev = "3b762a29b4f2541f3468a471a386b34bb6b6ec78"
+git-tree-sha1 = "2b33bbe41c37b847339d13ee9a05b7d9a99bbe8b"
+repo-rev = "master"
 repo-url = "https://github.com/JuliaData/DataFrames.jl.git"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 version = "0.11.6+"
@@ -156,9 +156,9 @@ uuid = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
 version = "0.0.5"
 
 [[OnlineStats]]
-deps = ["Compat", "LossFunctions", "NamedTuples", "OnlineStatsBase", "PenaltyFunctions", "RecipesBase", "Reexport", "SweepOperator"]
-git-tree-sha1 = "8fb2a5737ab2beef542a1534e6a304674ec19563"
-repo-rev = "2c61f6ba670054b1bb9b8f70807197044163a5a3"
+deps = ["Compat", "DataStructures", "LearnBase", "LossFunctions", "NamedTuples", "OnlineStatsBase", "PenaltyFunctions", "RecipesBase", "Reexport", "StatsBase", "SweepOperator"]
+git-tree-sha1 = "3f588b524fd51c464b67d15dada216a6ec12ab66"
+repo-rev = "master"
 repo-url = "https://github.com/joshday/OnlineStats.jl.git"
 uuid = "a15396b6-48d5-5d58-9928-6d29437db91e"
 version = "0.17.4+"
@@ -189,11 +189,11 @@ version = "0.5.5"
 
 [[PyCall]]
 deps = ["Compat", "Conda", "MacroTools", "VersionParsing"]
-git-tree-sha1 = "7e4f20f5964ce845a48f92f4492276ade2997da0"
-repo-rev = "7164f25488ed0fc8bd05353a14c941927cb1a39f"
+git-tree-sha1 = "10fad53b6ec0614cac8e8d57dcfe48add8649b44"
+repo-rev = "master"
 repo-url = "https://github.com/JuliaPy/PyCall.jl.git"
 uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
-version = "1.17.0+"
+version = "1.16.1+"
 
 [[REPL]]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -232,12 +232,6 @@ uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 [[SharedArrays]]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 
-[[SnoopCompile]]
-deps = ["Compat"]
-git-tree-sha1 = "9b151bbc87f9a64985269e47bbc8566599bfb07b"
-uuid = "aa65fe97-06da-5843-b5b1-d5d13cad87d2"
-version = "0.2.0"
-
 [[Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
@@ -252,9 +246,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpecialFunctions]]
 deps = ["BinDeps", "Compat", "Libdl"]
-git-tree-sha1 = "56a9cf89d6d8f463370131a0345035bcadc1b7df"
+git-tree-sha1 = "a674e75798a737de67d6860b29a9e56a13d7639f"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "0.5.0"
+version = "0.4.0"
 
 [[StatsBase]]
 deps = ["Compat", "DataStructures", "LinearAlgebra", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Test"]
@@ -265,7 +259,7 @@ version = "0.23.0"
 [[StatsFuns]]
 deps = ["Compat", "Rmath", "SpecialFunctions"]
 git-tree-sha1 = "52449ae9cc029f70b80eb5293b7894bc110a6c42"
-repo-rev = "e66dd973650c375bc1739c820e5b96bb5bd000a8"
+repo-rev = "master"
 repo-url = "https://github.com/JuliaStats/StatsFuns.jl.git"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.6.0+"
