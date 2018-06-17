@@ -39,16 +39,16 @@ end
 #this is a good check to ensure that the data is the same (train/test split, fitted GLM values are the same as in R)
 
 glmFit=fullData[:GLMfitted]
-errs=poissonError(fullData[:ClaimNb],fullData[:GLMfitted])
+errsGLM=poissonError(fullData[:ClaimNb],fullData[:GLMfitted])
 
 inSampleErrorR=31.26737970992647  #see R Code
 outOfSampleErrorR=32.171234111851014 #see R Code
 valBitArrayIdx=fullData[:trnTest].==0;
 trnBitArrayIdx=fullData[:trnTest].==1;
-trnAvgError=sum(errs[trnBitArrayIdx])/sum(trnBitArrayIdx)
-valAvgError=sum(errs[valBitArrayIdx])/sum(valBitArrayIdx)
-trnAvgError-inSampleErrorR/100 #should be zero
-valAvgError-outOfSampleErrorR/100 #should be zero
+trnAvgErrorGLM=sum(errsGLM[trnBitArrayIdx])/sum(trnBitArrayIdx)
+valAvgErrorGLM=sum(errsGLM[valBitArrayIdx])/sum(valBitArrayIdx)
+trnAvgErrorGLM-inSampleErrorR/100 #should be zero
+valAvgErrorGLM-outOfSampleErrorR/100 #should be zero
 
 originalTrnValIndex=deepcopy(fullData[:trnTest])    
 
@@ -61,6 +61,8 @@ selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","B
 
 #Let us now model the RESIDUAL of the GLM.
 #thus we model observed/glmfitted, if we can model that ratio successfully, our model will improve.
+#we have numerator=ClaimNb, denominator=GLMfitted
+#thus a residual of 1.5 would mean that the GLM fit is 50% too low
 #dfprepped is an intermediary dataframe which is generally not needed
 dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="GLMfitted",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 
@@ -69,10 +71,30 @@ dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnva
 ##############################
 
 #let us consider a larger validation data (say 30%) set for the following
-resample_trnvalidx!(dtmtable,.7)
+#resample_trnvalidx!(dtmtable,.7)
 
 updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=20,mf=0.01,subsampling_features_prop=.7,boolCalculatePoissonError=false)
-sett.scorebandsstartingpoints=[1,50,100,150,200,300,400,500,600,700,850,900,950]
+#sett.scorebandsstartingpoints=[1,50,100,150,200,300,400,500,600,700,850,900,950]
+
+#resM is the resulting Model
+resultingFiles,resM=dtm(dtmtable,sett)
+
+predDF=predict(resM,dtmtable.features)
+
+estimatedResiduals=predDF[:SmoothedEstimate];
+
+#let us see if this improved the error
+#we will simply multiply the GLM fit, with the fitted residual
+glmFitImprovedByBoosting=fullData[:GLMfitted].*estimatedResiduals
+
+errsGLMBoosted=poissonError(fullData[:ClaimNb],glmFitImprovedByBoosting)
+trnAvgErrorGLMBoosted=sum(errsGLMBoosted[trnBitArrayIdx])/sum(trnBitArrayIdx)
+valAvgErrorGLMBoosted=sum(errsGLMBoosted[valBitArrayIdx])/sum(valBitArrayIdx)
+
+valAvgErrorGLMBoosted-valAvgErrorGLM
+
+#let us change the score bands a little bit as there is not enough differentiation 
+sett.scorebandsstartingpoints=[1,100,250,500,750,900]
 
 #resM is the resulting Model
 resultingFiles,resM=dtm(dtmtable,sett)
