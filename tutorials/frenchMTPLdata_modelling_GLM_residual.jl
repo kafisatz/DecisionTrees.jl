@@ -49,6 +49,18 @@ valAvgErrorGLM=sum(errsGLM[valBitArrayIdx])/sum(valBitArrayIdx)
 trnAvgErrorGLM-inSampleErrorR/100 #should be zero
 valAvgErrorGLM-outOfSampleErrorR/100 #should be zero
 
+
+#consider average model
+_avgfit=sum(fullData[:ClaimNb][trnBitArrayIdx])/sum(fullData[:Exposure][trnBitArrayIdx])
+avgfit=ones(size(fullData,1)).*_avgfit.*fullData[:Exposure]
+errsAVGFit=poissonError(fullData[:ClaimNb],avgfit)
+trnAvgErrAVGFit=sum(errsAVGFit[trnBitArrayIdx])/sum(trnBitArrayIdx)
+valAvgErrAVGFit=sum(errsAVGFit[valBitArrayIdx])/sum(valBitArrayIdx)
+
+#Just to get a 'feeling' of the size of the error: the GLM is 5% better (relative) than the average model.
+1/trnAvgErrAVGFit*trnAvgErrorGLM
+1/valAvgErrAVGFit*valAvgErrorGLM
+
 originalTrnValIndex=deepcopy(fullData[:trnTest])    
 
 ##############################
