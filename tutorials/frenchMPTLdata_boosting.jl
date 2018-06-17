@@ -291,7 +291,7 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.01,-0.005,-0.0025]
+    minw=[-0.02,-0.01,-0.005,-0.0025]
     ,mf=[0.1],
     subsampling_features_prop=[1.0,.7])
     #,   subsampling_prop=[1.0,.5,.7]);
