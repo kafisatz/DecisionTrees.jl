@@ -53,19 +53,18 @@ include("show.jl")
 #include("sqlite_query.jl")
 
 global const pyModPandas = PyNULL()
+global const pyModxlsxwriter = PyNULL()
+
 global const_default_splitdef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0)
 global const defaultModelName="dtmresult"
 global const defaultModelNameWtihCSVext=string(defaultModelName,".csv")
 global nLevelsThreshold=2000
 
 function __init__()
-	#we initialize Python here in the beginning, such that Julia would crash (prior to the modelling) in case there is an installation error with python
-	#InitPython.initializePython() #todo/tbd check if and when this line is needed
 	global const juliaStartedat=now() 
-	#unshift!(PyVector(pyimport("sys")["path"]), "") #By default, PyCall doesn't include the current directory in the Python search path. If you want to do that (in order to load a Python module from the current directory) we need to run this
-	#unshift!(PyVector(pyimport("sys")["path"]),"C:\\Anaconda3\\Lib\\site-packages")
-	#global const pyModPandas=pywrap(pyimport("pandas")) #this line should be equivalent to  @pyimport pandas as pyModPandas
-    copy!(pyModPandas, pyimport_conda("pandas","pandas"))
+	#the following lines may trigger the installation of the respective python packages
+	copy!(pyModPandas, pyimport_conda("pandas","pandas"))
+	copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"))
 
 	global const global_number_of_num_f_warning_mandatory_field="Abort. Settings do not contain any value for number_of_num_features (which is mandatory)."
 	global const stars="*******************************************************************************"

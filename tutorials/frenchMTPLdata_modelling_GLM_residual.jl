@@ -73,7 +73,7 @@ dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnva
 #let us consider a larger validation data (say 30%) set for the following
 #resample_trnvalidx!(dtmtable,.7)
 
-updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=20,mf=0.01,subsampling_features_prop=.7,boolCalculatePoissonError=false)
+updateSettingsMod!(sett,minw=-0.02,model_type="boosted_tree",niter=10,mf=0.05,subsampling_features_prop=.7,boolCalculatePoissonError=false)
 #sett.scorebandsstartingpoints=[1,50,100,150,200,300,400,500,600,700,850,900,950]
 
 #resM is the resulting Model
@@ -91,7 +91,8 @@ errsGLMBoosted=poissonError(fullData[:ClaimNb],glmFitImprovedByBoosting)
 trnAvgErrorGLMBoosted=sum(errsGLMBoosted[trnBitArrayIdx])/sum(trnBitArrayIdx)
 valAvgErrorGLMBoosted=sum(errsGLMBoosted[valBitArrayIdx])/sum(valBitArrayIdx)
 
-valAvgErrorGLMBoosted-valAvgErrorGLM
+valAvgErrorGLM-valAvgErrorGLMBoosted
+trnAvgErrorGLM-trnAvgErrorGLMBoosted
 
 #let us change the score bands a little bit as there is not enough differentiation 
 sett.scorebandsstartingpoints=[1,100,250,500,750,900]
