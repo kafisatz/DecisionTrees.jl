@@ -72,6 +72,7 @@ dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnva
 resample_trnvalidx!(dtmtable,.7)
 
 updateSettingsMod!(sett,minw=-0.01,model_type="boosted_tree",niter=100,mf=0.01,subsampling_features_prop=.7,boolCalculatePoissonError=false)
+sett.scorebandsstartingpoints=[1,50,100,150,200,300,400,500,600,700,850,900,950]
 
 #resM is the resulting Model
 resultingFiles,resM=dtm(dtmtable,sett)
