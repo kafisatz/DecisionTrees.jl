@@ -71,7 +71,7 @@ end
 #dtmtable::DTMTable is a custom data format for DecisionTrees
 #sett are the model settings
 #dfprepped is an intermediary dataframe which is generally not needed
-dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
+dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 #consider 
 fieldnames(dtmtable)
 dtmtable.key #an identifier (String type), ideally it is a unique identifier for each row
@@ -291,7 +291,7 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.01,-0.005,-0.0125]
+    minw=[-0.01,-0.005,-0.0025]
     ,mf=[0.1],
     subsampling_features_prop=[1.0,.7])
     #,   subsampling_prop=[1.0,.5,.7]);
@@ -313,7 +313,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 @info "Starting grid search..."
 
 tt0=time_ns()
-#dtm(dtmtable,settV,file="R:\\temp\\3\\dtm.CSV")
+dtm(dtmtable,settV,file="R:\\temp\\3\\dtm.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 

@@ -31,12 +31,15 @@ for i=1:size(fullData,1)
     fullData[:Exposure][i]=min(1.0,fullData[:Exposure][i])
 end
 
+##############################
+#Some Checks
+##############################
+
 #check poisson error versus errors reported in R
 #this is a good check to ensure that the data is the same (train/test split, fitted GLM values are the same as in R)
 
 glmFit=fullData[:GLMfitted]
 errs=poissonError(fullData[:ClaimNb],fullData[:GLMfitted])
-@benchmark errs=poissonError($(fullData[:ClaimNb]),$(fullData[:GLMfitted]))
 
 inSampleErrorR=31.26737970992647  #see R Code
 outOfSampleErrorR=32.171234111851014 #see R Code
@@ -46,3 +49,31 @@ trnAvgError=sum(errs[trnBitArrayIdx])/sum(trnBitArrayIdx)
 valAvgError=sum(errs[valBitArrayIdx])/sum(valBitArrayIdx)
 trnAvgError-inSampleErrorR/100 #should be zero
 valAvgError-outOfSampleErrorR/100 #should be zero
+
+originalTrnValIndex=deepcopy(fullData[:trnTest])    
+
+##############################
+#Prepare the data
+##############################
+
+#set independent variables
+selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","BonusMalus","VehBrand","VehGas","Density","Region"]
+
+#Let us now model the RESIDUAL of the GLM.
+#thus we model observed/glmfitted, if we can model that ratio successfully, our model will improve.
+#dfprepped is an intermediary dataframe which is generally not needed
+dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="GLMfitted",weightcol="Exposure",independent_vars=selected_explanatory_vars);
+
+##############################
+#Define model SETTINGS
+##############################
+
+#let us consider a larger validation data (say 30%) set for the following
+resample_trnvalidx!(dtmtable,.7)
+
+updateSettingsMod!(sett,minw=-0.01,model_type="boosted_tree",niter=100,mf=0.01,subsampling_features_prop=.7,boolCalculatePoissonError=false)
+
+#resM is the resulting Model
+resultingFiles,resM=dtm(dtmtable,sett)
+
+

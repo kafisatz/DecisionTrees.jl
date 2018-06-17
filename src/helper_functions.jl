@@ -3035,7 +3035,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,nu
   srt2=sortperm(twodimintvec_avg,rev=true,alg=QuickSort)
 
   #f=open(fileloc,"a+")
-    write(f,"\r\n\r\nOverall predictor importance of boosted tree: \r\n")
+    write(f,"\r\n\r\nOverall predictor 'frequency' of boosted tree: \r\n")
     my_write(f,res1dim[srt,:])
     my_write(f,res2dim[srt2,:])
   #bagging only
@@ -3061,9 +3061,9 @@ end
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
 #function in the special case where the whole tree is in fact a single leaf
 	#version which uses f::IOStream as input
-	write(f,"\r\n1 dimensional predictor importance:")
+	write(f,"\r\n1 dimensional predictor 'frequency':")
 	my_write(f,var_imp1d_str_arr);
-	write(f,"\r\n2 dimensional predictor importance:")
+	write(f,"\r\n2 dimensional predictor 'frequency':")
 	my_write(f,var_imp2d_str_arr);
 	write(f,"Number of observations in this tree: $(nodesize(tree))");write(f,"\r\n");
     write(f,"Number of leaves: $(size(create_leaves_array(tree),1))");write(f,"\r\n");
@@ -3079,9 +3079,9 @@ end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where T<:Unsigned 
 	#version which uses f::IOStream as input
-	write(f,"\r\n1 dimensional predictor importance:")
+	write(f,"\r\n1 dimensional predictor 'frequency':")
 	my_write(f,var_imp1d_str_arr);
-	write(f,"\r\n2 dimensional predictor importance:")
+	write(f,"\r\n2 dimensional predictor 'frequency':")
 	my_write(f,var_imp2d_str_arr);
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id

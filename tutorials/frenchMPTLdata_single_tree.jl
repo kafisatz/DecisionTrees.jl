@@ -71,7 +71,7 @@ end
 #dtmtable::DTMTable is a custom data format for DecisionTrees
 #sett are the model settings
 #dfprepped is an intermediary dataframe which is generally not needed
-dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
+dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 #consider 
 fieldnames(dtmtable)
 dtmtable.key #an identifier (String type), ideally it is a unique identifier for each row
