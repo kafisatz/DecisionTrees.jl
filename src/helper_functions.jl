@@ -1909,8 +1909,8 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
 		if sett.boolCalculatePoissonError
-			poissonErrortrn=poissonError(numeratortrn,weighttrn,ratioEsttrn)::Vector{Float64}			
-            poissonErrorval=poissonError(numeratorval,weightval,ratioEstval)::Vector{Float64}
+			poissonErrortrn=poissonError(numeratortrn,ratioEsttrn.*denominatortrn)::Vector{Float64}			
+            poissonErrorval=poissonError(numeratorval,ratioEstval.*denominatorval)::Vector{Float64}
 		else
 			poissonErrortrn=zeros(Float64,2)
             poissonErrorval=zeros(Float64,2)
@@ -2008,10 +2008,10 @@ t=tree.rootnode
 
 	header=["Segment" "Weight" "Relative Weight" "Numerator" "Denominator" "Observed Ratio" "Numerator Estimate" "Fitted Ratio" "Relativity"]
 	thisres,overallstats=buildStatistics(header,segmentlist,sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
-	if sett.boolCalculateGini
-        nest=denominator.*est
-        giniTrn=gini_single_argument(view(nest,trnidx))			
-        giniVal=gini_single_argument(view(nest,validx))        
+    numeratorEst=est.*denominator
+    if sett.boolCalculateGini
+        giniTrn=gini_single_argument(view(numeratorEst,trnidx))			
+        giniVal=gini_single_argument(view(numeratorEst,validx))        
         #normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) 
         #normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
         total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(view(numerator,trnidx),view(est,trnidx),view(denominator,trnidx))
@@ -2053,7 +2053,7 @@ t=tree.rootnode
 		thisres=[thisres;rss_rowval];overallstats=[overallstats;rss_rowval];
 	#attach poisson error (for frequency models)	
 		if sett.boolCalculatePoissonError
-			poissonErrors=poissonError(numerator,weight,est)::Vector{Float64}
+			poissonErrors=poissonError(numerator,numeratorEst)::Vector{Float64}
             poissonErrTrn=sum(poissonErrors[trnidx])/length(trnidx)
             poissonErrVal=sum(poissonErrors[validx])/length(validx)		
 		else
@@ -5352,28 +5352,26 @@ function confusmatBinary(truth::Vector{T}, pred::Vector{T}) where T<:Int
 end
 
 """
+poissonError(trueNumerator,estimatedNumerator)
+trueNumerator is the count variable (e.g. claim count)
+estimatedNumerator is the estimated Numerator
 """
-function poissonError(trueNumerator,exposure,estimatedFrequency)
+function poissonError(trueNumerator,estimatedNumerator)
     n=length(trueNumerator)
-    @assert n==length(exposure)==length(estimatedFrequency)
+    @assert n==length(estimatedNumerator)
     res=zeros(Float64,n)
     for i=1:n
         @inbounds t=trueNumerator[i]
-        @inbounds estf=estimatedFrequency[i]
-        @inbounds expo=exposure[i]
-        if iszero(t)
-            @inbounds res[i]=2.0*estf*expo
-        else 
-            tmp=estf*expo/t
-            #this will fail for tmp<0
-            @inbounds res[i]=2.0*t*(tmp-1.0-log(tmp))
+		@inbounds estf=estimatedNumerator[i]
+		#@inbounds res[i]=2*(estf-t+xlogy(t,t/estf))
+        tmp=estf-t
+		if iszero(t)
+			@inbounds res[i]=2.0*tmp
+		else 
+            @inbounds res[i]=2.0*(tmp+t*log(t/estf))
         end
     end
     return res
-    #consider
-    #errs=poissonError(dtmtable.numerator,dtmtable.weight,fitted);
-    #sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
-    #sum(errs[dtmtable.validx])/length(dtmtable.validx)
 end
 
 

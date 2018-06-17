@@ -215,6 +215,7 @@ function get_poisson_deviances(current_meanl::Float64,current_meanr::Float64,lo,
 		@inbounds ni = numerator[count]
     @inbounds wi = weight[count]
     #todo see if ifelse is more efficient here!
+   #possibly an explicit if (to avoid an undefined log) is faster than xlogy here! 
 		if elementsInLeftChildBV[idx]
 			dl += (xlogy(ni, ni / (wi*current_meanl)) - (ni - wi*current_meanl))
 		else
