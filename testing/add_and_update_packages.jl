@@ -1,19 +1,16 @@
-#this is file is for testing purposes only.
-add CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter JLD2 FileIO StatsFuns
+#this is file is only a helper file to add and update packages
+add PyCall CSV BenchmarkTools OnlineStats StatsBase DataFrames ProgressMeter JLD2 FileIO StatsFuns
 
-up CSV Loess BenchmarkTools Compat OnlineStats StatsBase Distributions DataFrames ProgressMeter JLD2 FileIO StatsFuns
+up PyCall CSV BenchmarkTools OnlineStats StatsBase DataFrames ProgressMeter JLD2 FileIO StatsFuns
 
 #consider (in the Pkg manager)
 add OnlineStats#master
 
 using PyCall #works on master
 using CSV #works on masters
-using Compat
 using OnlineStats #not working on June 7
 using StatsBase
-using Distributions #needed to Pkg.build("Rmath")  and Pkg.build("SpecialFunctions") by hand using DataFrames
 using ProgressMeter
-using Iterators
 using JLD2#does it work on master?
 using FileIO
 using StatsFuns #works on master

@@ -1,1 +1,0 @@
-ssreadcsv("C:\\temp\\eraw_rel.csv",
