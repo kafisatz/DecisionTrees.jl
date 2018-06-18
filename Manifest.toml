@@ -232,6 +232,18 @@ uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 [[SharedArrays]]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 
+[[SnoopCompile]]
+git-tree-sha1 = "0bdeecea4a2b7c0b779453e579979c7971d3ea3c"
+repo-rev = "73c9c3f078b4bb3529e61470cb9a289ed5d921ea"
+repo-url = "https://github.com/timholy/SnoopCompile.jl.git"
+uuid = "aa65fe97-06da-5843-b5b1-d5d13cad87d2"
+version = "0.2.0+"
+
+    [SnoopCompile.deps]
+    Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
+    Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+    Nullables = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
+
 [[Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
