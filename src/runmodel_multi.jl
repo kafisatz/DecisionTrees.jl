@@ -36,13 +36,16 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
             header_settings=deepcopy(desc_settingsvec)
             allstats=Array{Float64,2}(length(numbrs),nSettings)			
             allsettings=Array{Any,2}(length(settingsvec),nSettings)
+            allmodels=Vector{Any}(nSettings)
         #define default stats if the model fails
             defaulted_stats=deepcopy(numbrs)
             defaulted_settings=deepcopy(settingsvec)
+            #emptyModel=emptyModel(model)
+            emptyModel=deepcopy(EmtpyDTModel())
             fill!(defaulted_stats,0.0)
 
         #create a dictionary which contains all data
-            di=Dict("ext"=>ext,"defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"intDatahash"=>intDatahash,"settingsVector"=>deepcopy(settingsVector),"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
+            di=Dict("ext"=>ext,"emptyModel"=>emptyModel,"defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"intDatahash"=>intDatahash,"settingsVector"=>deepcopy(settingsVector),"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
         #send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)
         #sendto(workers(),local_data_dict=deepcopy(di))
         sendto_module(DecisionTrees,workers(),local_data_dict=deepcopy(di))
@@ -56,9 +59,11 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
             numbrs=pmap_entry[1]
             settingsvec=pmap_entry[2]
             i=pmap_entry[3]
+            mdl=pmap_entry[4]
             #append stats 
                 allstats[:,i].=deepcopy(numbrs)
                 allsettings[:,i].=deepcopy(settingsvec)
+                allmodels[i]=mdl
         end
     
         #3. aggregate some statistics
@@ -105,14 +110,15 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
             warn("DTM: Failed to create Excel Statistics file. \r\n $(filen)")
         end                
         
-        return statsdf,settsdf    
+        return statsdf,settsdf,allmodels
     end
     
         
 function singleRunDtm(i::Int,local_data_dict::Dict)	
     di=local_data_dict
     defaulted_settings=di["defaulted_settings"]
-    defaulted_stats=di["defaulted_stats"]        
+    defaulted_stats=di["defaulted_stats"]      
+    emptyModel=di["emptyModel"]  
     
     try         
         ext=di["ext"]
@@ -149,11 +155,11 @@ function singleRunDtm(i::Int,local_data_dict::Dict)
                 @show desc_settingsvec
                 @show header_settings
             end            
-        return numbrs,settingsvec,i
+        return numbrs,settingsvec,i,model
     catch eri
         warn("DTM: Model $(i) failed.")
         println(eri)
-        return defaulted_stats,defaulted_settings,i
+        return defaulted_stats,defaulted_settings,i,emptyModel
     end
 
     return nothing

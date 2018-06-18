@@ -52,7 +52,13 @@ end
 
 mutable struct ExcelData
 	sheets::Array{ExcelSheet,1}
-	charts::Array{Chart,1}
+    charts::Array{Chart,1}
+    function ExcelData()
+        return new(Array{ExcelSheet}(0),Array{Chart}(0))
+    end
+    function ExcelData(a,b)
+        return  new(a,b)
+    end
 end
 
 #errorStats
@@ -198,10 +204,17 @@ function hash(x::Splitdef,h::UInt64)
 end
 
 struct Rulepath{T<:Unsigned}
-  featid::Int64
-  subset::Vector{T}
-  isLeftChild::Bool
+    featid::Int64
+    subset::Vector{T}
+    isLeftChild::Bool
+    function Rulepath{T}() where T<:Unsigned
+      return new(0,UInt8[],false)
+    end
+    function Rulepath{T}(a,b::Vector{T},c)  where T<:Unsigned
+      return new(a,b,c)
+    end
 end
+  
 ==(x::Rulepath,y::Rulepath)= (x.featid==y.featid) && (x.isLeftChild==y.isLeftChild) && (x.subset==y.subset)
 hash(x::Rulepath)=hash(x,UInt64(9))
 function hash(x::Rulepath,h::UInt64)
@@ -223,7 +236,14 @@ mutable struct Leaf #leafs are mutable, since we determine the number of the lea
     rule_path::Array{Rulepath,1}
 	sumnumerator::Float64
 	sumdenominator::Float64
-	id::Int #a number 1<=id<=#number of leaves in the tree
+    id::Int #a number 1<=id<=#number of leaves in the tree
+    function Leaf()        
+        rp=Vector{Rulepath{UInt8}()}
+        return new(0,0.0,0.0,0.0,0,rp,0.0,0.0,0)
+    end
+    function Leaf(rowc,me,fi,sz,depth,rp,sumn,sumd,id)
+        return new(rowc,me,fi,sz,depth,rp,sumn,sumd,id)
+    end
 end
 ==(x::Leaf,y::Leaf)= (x.rowcount==y.rowcount) && (x.mean==y.mean) && (x.fitted==y.fitted)  && (x.size==y.size)  && (x.depth==y.depth)  && (x.rule_path==y.rule_path)  && (x.sumnumerator==y.sumnumerator)  && (x.sumdenominator==y.sumdenominator) && (x.id==y.id)
 hash(x::Leaf)=hash(x,UInt64(9))
@@ -784,16 +804,13 @@ end
 abstract type DTModel end
 mutable struct Tree <: DTModel
 	rootnode::Union{Leaf,Node{UInt8},Node{UInt16}}
-	intVarsUsed::Array{Array{Int,1},1}
-	#intCharVarsUsed::Array{Array{Int,1},1}
+	intVarsUsed::Array{Array{Int,1},1}	
 	candMatWOMaxValues::Array{Array{Float64,1},1}
 	charMappings::Array{Array{String,1},1}
-	inds_considered::Array{Int64,1}
-	#num_inds_considered::Array{Int64,1}
+	inds_considered::Array{Int64,1}	
 	settings::ModelSettings
 	variableImp1Dim::Array{Int,1}
-	variableImp2Dim::Array{Int,1}
-	#this is highly inefficient, modelstats should be a Dataframe!
+	variableImp2Dim::Array{Int,1}	
 	modelstats::DataFrame # #overall model statistics and performance (trn and val), this needs to be a matrix (Any) with a header row NOTE: this is a feature of multiple model types! (tree, boosting, bagging) and we need consistency because of the function run_model_multirow_settings
 	exceldata::ExcelData
 	featurepools::Array{Union{Array{Float64,1},Array{String,1}},1}
@@ -803,6 +820,20 @@ mutable struct Tree <: DTModel
 		variableImp1Dim=zeros(Int,nf)
 		variableImp2Dim=zeros(Int,div(nf*(nf-1),2))
 		ms=Array{Any}(0,0)
+		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata,fp)
+	end
+	function Tree()		
+        rootnode=Leaf()
+        intVarsUsed=Int[]
+        candMatWOMaxValues=[Float64[]]
+        charMappings=[String[]]
+        inds_considered=Int[]
+        settings=ModelSettings()
+        variableImp1Dim=Int[]
+        variableImp2Dim=Int[]
+        ms=DataFrame()
+        exceldata=ExcelData()
+        fp=[Float64[]]
 		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata,fp)
 	end
 end
@@ -815,6 +846,21 @@ mutable struct TreeWithErrorStats
 end
 
 abstract type Ensemble <: DTModel end
+
+struct EmtpyDTModel <:DTModel
+    modelstats::DataFrame #this might not be needed  
+    function EmtpyDTModel()
+        return new(DataFrame())
+    end
+end
+
+#This is currently only used if multi run fails (as a return value of an 'empty' model)
+struct EmptyEnsemble <: Ensemble      
+    modelstats::DataFrame #this might not be needed  
+    function EmptyEnsemble()
+        return new(DataFrame())
+    end
+end
 
 struct BoostedTree <: Ensemble
     trees::Vector{Union{Leaf,Node{UInt8},Node{UInt16}}} #todo tbd make this to trees!

@@ -5460,3 +5460,11 @@ function correctSmallNegativeValues!(x)
 	end
 	return nothing
 end
+
+function emptyModel(m::T) where T<:DTModel
+    if typeof(emptyModel)==Tree
+        return Tree()
+    else        
+        return EmptyEnsemble()
+    end    
+end

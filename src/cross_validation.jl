@@ -101,7 +101,8 @@ srand(intDatahash)
             header=deepcopy(desc)
             header_settings=deepcopy(desc_settingsvec)
             allstats=Array{Float64,2}(length(numbrs),n_folds)			
-            allsettings=Array{Any,2}(length(settingsvec),n_folds)			
+            allsettings=Array{Any,2}(length(settingsvec),n_folds)
+            allmodels=Vector{Any}(nSettings)
         else			
             if !all(header[2:end].==desc[2:end])
                 warn("Model run $(i) returned an unexpected results vector:")
@@ -115,7 +116,8 @@ srand(intDatahash)
             end
         end
         allstats[:,i].=deepcopy(numbrs)
-        allsettings[:,i].=deepcopy(settingsvec)        
+        allsettings[:,i].=deepcopy(settingsvec)
+        allmodels[i]=model      
         i+=1
     end # this_sample in cvsampler
 
@@ -168,7 +170,7 @@ srand(intDatahash)
     sett.minw=deepcopy(minw_orig)
     sett.seed = seed_orig 
     
-    return statsdf,settsdf    
+    return statsdf,settsdf,allmodels 
 end
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
