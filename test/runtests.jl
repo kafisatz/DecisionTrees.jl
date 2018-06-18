@@ -1,6 +1,10 @@
+t0=time_ns()
+
 using CSV
 using Test 
 using DecisionTrees 
+
+@show tela = (time_ns()-t0)/1e9
 
 #set directories
 pkgdir=""
@@ -26,3 +30,5 @@ datadir=joinpath(pkgdir,"data/")
 
     println("DTM: Testing finished.")
 end
+
+@show telaTotal = (time_ns()-t0)/1e9

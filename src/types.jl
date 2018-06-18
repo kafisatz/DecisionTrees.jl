@@ -212,7 +212,7 @@ struct Rulepath{T<:Unsigned}
     end
     function Rulepath{T}(a,b::Vector{T},c)  where T<:Unsigned
       return new(a,b,c)
-    end
+    end    
 end
   
 ==(x::Rulepath,y::Rulepath)= (x.featid==y.featid) && (x.isLeftChild==y.isLeftChild) && (x.subset==y.subset)
