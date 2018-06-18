@@ -189,11 +189,11 @@ version = "0.5.5"
 
 [[PyCall]]
 deps = ["Compat", "Conda", "MacroTools", "VersionParsing"]
-git-tree-sha1 = "10fad53b6ec0614cac8e8d57dcfe48add8649b44"
-repo-rev = "master"
+git-tree-sha1 = "7e4f20f5964ce845a48f92f4492276ade2997da0"
+repo-rev = "7164f25488ed0fc8bd05353a14c941927cb1a39f"
 repo-url = "https://github.com/JuliaPy/PyCall.jl.git"
 uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
-version = "1.16.1+"
+version = "1.17.0+"
 
 [[REPL]]
 uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -246,9 +246,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpecialFunctions]]
 deps = ["BinDeps", "Compat", "Libdl"]
-git-tree-sha1 = "a674e75798a737de67d6860b29a9e56a13d7639f"
+git-tree-sha1 = "56a9cf89d6d8f463370131a0345035bcadc1b7df"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "0.4.0"
+version = "0.5.0"
 
 [[StatsBase]]
 deps = ["Compat", "DataStructures", "LinearAlgebra", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Test"]
