@@ -11,7 +11,7 @@
 #Load packages
 ##############################
 t0=time_ns()
-cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
+cd(joinpath(GLOBAL_julia_code_folder,"DecisionTrees.jl"))
 #@info("You may want to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
 @everywhere using Revise
