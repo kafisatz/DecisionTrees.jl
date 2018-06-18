@@ -1,7 +1,7 @@
 __precompile__()
 VERSION >= v"0.7-"
-#note on v0.7 alpha a 'using' statement takes about 1050 seconds....
-
+#note on v0.7 alpha precompilation through 'using' (i.e. when the code was not precomipled before) takes about 800 seconds
+#once precompilation is done, the using statement might need around 500 seconds. 
 @warn "BK: DTM currently has a performance regression of 50% in Julia 0.7alpha versus 0.6.3. \nYou should start julia with --depwarn=no option (in case there are still unfixed deprecations), otherwise the algorithms might be further slowed down. I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
 
 @info "DTM: BK to add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."

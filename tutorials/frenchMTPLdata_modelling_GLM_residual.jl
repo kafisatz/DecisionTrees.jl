@@ -58,6 +58,8 @@ trnAvgErrAVGFit=sum(errsAVGFit[trnBitArrayIdx])/sum(trnBitArrayIdx)
 valAvgErrAVGFit=sum(errsAVGFit[valBitArrayIdx])/sum(valBitArrayIdx)
 
 #Just to get a 'feeling' of the size of the error: the GLM is 5% better (relative) than the average model.
+trnAvgErrAVGFit-trnAvgErrorGLM #about 0.017
+valAvgErrAVGFit-valAvgErrorGLM #about 0.017
 1/trnAvgErrAVGFit*trnAvgErrorGLM
 1/valAvgErrAVGFit*valAvgErrorGLM
 
