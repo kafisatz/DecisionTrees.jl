@@ -232,12 +232,6 @@ uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
 [[SharedArrays]]
 uuid = "1a1011a3-84de-559e-8e89-a11a2f7dc383"
 
-[[SnoopCompile]]
-deps = ["Compat"]
-git-tree-sha1 = "9b151bbc87f9a64985269e47bbc8566599bfb07b"
-uuid = "aa65fe97-06da-5843-b5b1-d5d13cad87d2"
-version = "0.2.0"
-
 [[Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
