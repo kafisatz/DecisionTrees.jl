@@ -110,4 +110,7 @@ function get_sha1()
 	return sha1_of_dt
 end
 
+#Precompile files
+	include("precompile.jl")
+	
 end #end Module DTM
