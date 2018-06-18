@@ -2,7 +2,7 @@
 
 precompFiles=readdir("precompile")
 for thisf in precompFiles
-    @show thisf
+    #@show thisf
     include(joinpath("precompile",thisf))
     _precompile_()
 end
