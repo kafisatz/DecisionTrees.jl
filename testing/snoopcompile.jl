@@ -6,8 +6,8 @@ using SnoopCompile
 # This only needs to be run once (to generate "/tmp/images_compiles.csv")
 
 
-
-SnoopCompile.@snoop "dtm_compiles.csv" begin
+snoopfile="C:\\temp\\_snoop_dtm_compiles.csv"
+SnoopCompile.@snoop snoopfile begin
     fn=joinpath(dirname(@__FILE__),"..","test","runtests.jl")
     #fn=Pkg.dir("DecisionTrees", "test","runtests.jl")
     @assert isfile(fn)
@@ -17,7 +17,7 @@ end
 ### Parse the compiles and generate precompilation scripts
 # This can be run repeatedly to tweak the scripts
 
-data = SnoopCompile.read("dtm_compiles.csv")
+data = SnoopCompile.read(snoopfile)
 
 pc = SnoopCompile.parcel(reverse!(data[2]))
-SnoopCompile.write("precompile", pc)
+SnoopCompile.write("c:\\temp\\precompile", pc)
