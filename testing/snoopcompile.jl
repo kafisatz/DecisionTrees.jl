@@ -5,8 +5,13 @@ using SnoopCompile
 ### Log the compiles
 # This only needs to be run once (to generate "/tmp/images_compiles.csv")
 
+
+
 SnoopCompile.@snoop "dtm_compiles.csv" begin
-    include(Pkg.dir("DecisionTrees", "test","runtests.jl"))
+    fn=joinpath(dirname(@__FILE__),"..","test","runtests.jl")
+    #fn=Pkg.dir("DecisionTrees", "test","runtests.jl")
+    @assert isfile(fn)
+    include(fn)
 end
 
 ### Parse the compiles and generate precompilation scripts
