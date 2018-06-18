@@ -26,6 +26,9 @@ using .PooledArraysDTM
 
 using Dates,Random
 using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
+ 
+#for precompile files, we need some additional packages
+using DataStreams
 
 #using MySQL, # temporarily disabled 
 #using SQLite #disabled as it uses DataFrames 0.11
@@ -49,8 +52,6 @@ include("dot_graphs.jl")
 include("roc.jl")
 include("cross_validation.jl")
 include("show.jl")
-#include("onlineStats_addons.jl")
-#include("sqlite_query.jl")
 
 global const pyModPandas = PyNULL()
 global const pyModxlsxwriter = PyNULL()
@@ -103,8 +104,7 @@ function get_sha1()
 	dtpath=splitdir(splitext(string(which_res.file))[1])[1][1:end-4]
 	current_path=pwd()
 	cd(dtpath)
-	cmd=`git rev-parse HEAD`
-	#txa=run(cmd)
+	cmd=`git rev-parse HEAD`	
 	sha1_of_dt=readstring(cmd)[1:end-1] #need to discard \n at the end
 	cd(current_path)
 	return sha1_of_dt

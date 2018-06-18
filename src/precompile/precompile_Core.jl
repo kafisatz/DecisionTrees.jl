@@ -2,7 +2,7 @@ function _precompile_()
     ccall(:jl_generating_output, Cint, ()) == 1 || return nothing
     precompile(Tuple{typeof((Core.Compiler).getindex), Type{Any}, Int, QuoteNode, (Core.Compiler).Argument, Core.SSAValue})
     precompile(Tuple{typeof((Core.Compiler).getindex), Type{Any}, Int, Expr, Core.SSAValue})
-    precompile(Tuple{getfield(Core, Symbol("#kw#Type")), NamedTuple{(:allowmissing, :types, :categorical, :rows_for_type_detect), Tuple{Symbol, Array{DataType, 1}, Bool, Int64}}, Type{CSV.TransposedSource{I, D} where D where I}, String})
+    
     precompile(Tuple{typeof((Core.Compiler).getindex), Type{Any}, Int, (Core.Compiler).Argument, Core.SSAValue, Core.SSAValue, Int})
     precompile(Tuple{typeof((Core.Compiler).getindex), Type{Any}, Int, Bool, Core.SSAValue})
     precompile(Tuple{typeof((Core.Compiler).getindex), Type{Any}, Int, Core.SSAValue, String, Int64, Int})
@@ -22,7 +22,7 @@ function _precompile_()
     precompile(Tuple{typeof((Core.Compiler).getindex), Type{Any}, Int, Core.SSAValue, (Core.Compiler).Argument, (Core.Compiler).Argument, Int})
     precompile(Tuple{typeof((Core.Compiler).getindex), Type{Any}, Int, JLD2.OnDiskRepresentation{(0, 8, 16, 24, 32, 40, 48, 56, 64), Tuple{Array{String, 1}, Array{Int64, 1}, Array{Int64, 1}, Array{Float64, 1}, Array{Float64, 1}, Array{Float64, 1}, DataFrames.DataFrame, Array{Array{Float64, 1}, 1}, Array{Array{String, 1}, 1}}, Tuple{JLD2.RelOffset, JLD2.RelOffset, JLD2.RelOffset, JLD2.RelOffset, JLD2.RelOffset, JLD2.RelOffset, JLD2.RelOffset, JLD2.RelOffset, JLD2.RelOffset}}})
     precompile(Tuple{typeof((Core.Compiler).getindex), Type{Any}, Int, Expr, (Core.Compiler).Argument, Core.SSAValue})
-    precompile(Tuple{getfield(Core, Symbol("#kw#Type")), NamedTuple{(:allowmissing, :types, :categorical, :rows_for_type_detect), Tuple{Symbol, Array{DataType, 1}, Bool, Int64}}, Type{CSV.Source{I, D} where D where I}, String})
+    
     precompile(Tuple{typeof(Core.Compiler.getindex), Tuple{Float32, Int64}, Int64})
     precompile(Tuple{getfield(Core, Symbol("#kw#Type")), NamedTuple{(:sinkindex, :sortindex, :col), Tuple{Int64, Nothing, Int64}}, Type{DataStreams.Data.QueryColumn{code, T, sourceindex, sinkindex, name, sort, args} where args where sort where name where sinkindex where sourceindex where T where code}, Int64, Array{Any, 1}, Array{String, 1}})
     precompile(Tuple{typeof(Core.Compiler.getindex), Tuple{Float64, Int64}, Int64})
