@@ -1683,7 +1683,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
     mini,maxi=extrema(this_column) #it IS CRUCIAL that the maximum is taken from the whole vector here! (and not only the training part)
 	push!(candMatWOMaxValues,deepcopy(candlist))
     candlist[end]=max(candlist[end],maxi) #set the last value of candlist to the largest observed training (and validation) element -> all datapoints which are larger than the former maximum(candlist) will be identified with the maxi
-    @assert length(candlist)<255 "Currently at most 254 splitting points are supported. Please choose less splitting points for numeric column $(i):$(header[i])" #see note below
+    #@assert length(candlist)<255 "Currently at most 254 splitting points are supported. Please choose less splitting points for numeric column $(i):$(header[i])" #see note below
 	#prepare trn data	
 	compressed_vector=map_numdata_to_candidates(this_column,candlist)
 	features[thisname]=PooledArray(compressed_vector)
