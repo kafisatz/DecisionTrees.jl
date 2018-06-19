@@ -32,10 +32,10 @@ uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.4.3"
 
 [[Compat]]
-deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "IterativeEigensolvers", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "SuiteSparse", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "4049fa166ff47bf2b9190eb4be0de478088fe0c9"
+deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Test", "UUIDs", "Unicode"]
+git-tree-sha1 = "f3e87ca1e2df8e1e4f82ea504fddf0b9b0894f61"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "0.68.0"
+version = "0.69.0"
 
 [[Conda]]
 deps = ["BinDeps", "Compat", "JSON", "Libdl", "VersionParsing"]
@@ -89,9 +89,6 @@ deps = ["Compat", "Random", "Test"]
 git-tree-sha1 = "ea877c3608e8468aebd899a6d610cba401186d73"
 uuid = "7d512f48-7fb1-5a58-b986-67e6dc259f01"
 version = "0.6.2"
-
-[[IterativeEigensolvers]]
-uuid = "de555fa4-b82f-55e7-8b71-53f60bbc027d"
 
 [[JLD2]]
 deps = ["CodecZlib", "Compat", "DataStructures", "FileIO"]
@@ -157,11 +154,11 @@ version = "0.0.5"
 
 [[OnlineStats]]
 deps = ["Compat", "DataStructures", "LearnBase", "LossFunctions", "NamedTuples", "OnlineStatsBase", "PenaltyFunctions", "RecipesBase", "Reexport", "StatsBase", "SweepOperator"]
-git-tree-sha1 = "3f588b524fd51c464b67d15dada216a6ec12ab66"
-repo-rev = "master"
+git-tree-sha1 = "26e1c8512751a8e7936e9a090028661db8cd0e2f"
+repo-rev = "8b4a3630edcea01eba85e3ae18167ab74f69dc0f"
 repo-url = "https://github.com/joshday/OnlineStats.jl.git"
 uuid = "a15396b6-48d5-5d58-9928-6d29437db91e"
-version = "0.17.4+"
+version = "0.17.5+"
 
 [[OnlineStatsBase]]
 deps = ["Compat", "LearnBase"]
@@ -212,10 +209,12 @@ uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "0.1.0"
 
 [[Revise]]
-deps = ["DataStructures", "Distributed", "FileWatching", "Pkg", "REPL", "Random", "Test", "Unicode"]
-git-tree-sha1 = "6298b7d0bfe5f75f298a40c2dda508839bfe2b91"
+deps = ["DataStructures", "Distributed", "FileWatching", "REPL", "Random", "Test", "Unicode"]
+git-tree-sha1 = "ff2c8c196139678aede389470042c9947e5dcd67"
+repo-rev = "1a118cd518fc0a4d3547751356c1b7a15a0aa865"
+repo-url = "https://github.com/timholy/Revise.jl.git"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "0.4.1"
+version = "0.4.2+"
 
 [[Rmath]]
 deps = ["BinDeps", "Compat", "Libdl"]
@@ -263,9 +262,6 @@ repo-rev = "master"
 repo-url = "https://github.com/JuliaStats/StatsFuns.jl.git"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.6.0+"
-
-[[SuiteSparse]]
-uuid = "4607b0f0-06f3-5cda-b6b1-a6196a1729e9"
 
 [[SweepOperator]]
 git-tree-sha1 = "3de8b7b1764431aea93f1dda464a4669879088d5"
