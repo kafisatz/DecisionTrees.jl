@@ -256,9 +256,11 @@ version = "0.3.3"
 
 [[StatsBase]]
 deps = ["Compat", "DataStructures", "LinearAlgebra", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Test"]
-git-tree-sha1 = "53ae4232e9f1d7ffda8c38f80437136baed595bd"
+git-tree-sha1 = "f4129d2e4c9636cc91b876c93e4483e51c5f4c60"
+repo-rev = "d28d8269c8f104bcf90db75e74e901533fe22595"
+repo-url = "https://github.com/JuliaStats/StatsBase.jl.git"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.23.0"
+version = "0.23.0+"
 
 [[StatsFuns]]
 deps = ["Compat", "Rmath", "SpecialFunctions"]
