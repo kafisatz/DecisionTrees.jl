@@ -256,7 +256,7 @@ resultingFiles,resM=dtm(dtmtable,sett)
 
 #set some default settings
 updateSettingsMod!(sett,
-niter=100,
+niter=150,
 model_type="boosted_tree",
 nscores="1000",
 write_statistics="true",
@@ -290,9 +290,9 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.05,-0.03,-0.02,-0.01]
-    ,mf=[0.1,0.05],
-    subsampling_features_prop=[1.0,.7])
+    minw=[-0.01,0.005,0.0025]
+    ,mf=[0.1],
+    subsampling_features_prop=[.7])
     #,   subsampling_prop=[1.0,.5,.7]);
 
 #consider the length(settV) which is the number of models that will be run
