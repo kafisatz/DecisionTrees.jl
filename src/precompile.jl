@@ -7,7 +7,7 @@ precompFiles=readdir(joinpath("src","precompile"))
 #for now we only include a few of the files 
 
 #notably it is unclear if the files which do not belong to this package have any impact at all
-only_run_these=["precompile_DecisionTrees.jl","precompile_Base.jl","precompile_StatsBase.jl","precompile_PyCall.jl","precompile_Random.jl","precompile_Core.jl"]
+only_run_these=["precompile_DecisionTrees.jl"] #,"precompile_Base.jl","precompile_StatsBase.jl","precompile_PyCall.jl","precompile_Random.jl","precompile_Core.jl"]
 
 #@show size(precompFiles)
 ijxt=0
