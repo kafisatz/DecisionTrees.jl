@@ -256,7 +256,7 @@ resultingFiles,resM=dtm(dtmtable,sett)
 
 #set some default settings
 updateSettingsMod!(sett,
-niter=150,
+niter=250,
 model_type="boosted_tree",
 nscores="1000",
 write_statistics="true",
@@ -290,9 +290,10 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.01,0.005,0.0025]
-    ,mf=[0.1],
-    subsampling_features_prop=[.7])
+    minw=[-0.03,-0.01,-0.005,-0.0025]
+    ,mf=[0.1,0.05],
+    subsampling_features_prop=[.5,.7,1.0],
+    crit=["poissondeviance" "difference"]
     #,   subsampling_prop=[1.0,.5,.7]);
 
 #consider the length(settV) which is the number of models that will be run
@@ -312,7 +313,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 @info "Starting grid search..."
 
 tt0=time_ns()
-dtm(dtmtable,settV,file="R:\\temp\\3\\dtm.CSV")
+statsdf,settsdf,allmodels=dtm(dtmtable,settV,file="R:\\temp\\2\\dtm_n.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 
