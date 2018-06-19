@@ -102,6 +102,12 @@ git-tree-sha1 = "e2f6776e8bfd310b2ade13fba1faf99d8967d58f"
 uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.17.2"
 
+[[LearnBase]]
+deps = ["Compat", "StatsBase"]
+git-tree-sha1 = "3c2162fbf99b257907730c5e389df385896654a9"
+uuid = "7f8f8fb0-2700-5f03-b4bd-41f8cfc144b6"
+version = "0.1.6"
+
 [[LibGit2]]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 
@@ -110,6 +116,12 @@ uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
 
 [[LinearAlgebra]]
 uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[[LossFunctions]]
+deps = ["LearnBase", "RecipesBase", "StatsBase"]
+git-tree-sha1 = "49411b43c080d41a29119ce0b536b126eb59c9b0"
+uuid = "30fc2ffe-d236-52d8-8643-a9d8f7c094a7"
+version = "0.2.0"
 
 [[MacroTools]]
 deps = ["Compat"]
@@ -140,6 +152,26 @@ git-tree-sha1 = "23258f849603ad4fed3ce7dbcb8c0658920fa5ef"
 uuid = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
 version = "0.0.5"
 
+[[OnlineStats]]
+deps = ["Compat", "DataStructures", "LearnBase", "LossFunctions", "NamedTuples", "OnlineStatsBase", "PenaltyFunctions", "RecipesBase", "Reexport", "StatsBase", "SweepOperator"]
+git-tree-sha1 = "26e1c8512751a8e7936e9a090028661db8cd0e2f"
+repo-rev = "master"
+repo-url = "https://github.com/joshday/OnlineStats.jl.git"
+uuid = "a15396b6-48d5-5d58-9928-6d29437db91e"
+version = "0.17.5+"
+
+[[OnlineStatsBase]]
+deps = ["Compat", "LearnBase"]
+git-tree-sha1 = "fcf6f5c7e596a62c9888ecdc5ee8f34101b7bae6"
+uuid = "925886fa-5bf2-5e8e-b522-a9147a512338"
+version = "0.7.0"
+
+[[PenaltyFunctions]]
+deps = ["LearnBase", "RecipesBase"]
+git-tree-sha1 = "998fb9e0cd0291e40f0423dcf044485511ad50f5"
+uuid = "06bb1623-fdd5-5ca2-a01c-88eae3ea319e"
+version = "0.0.2"
+
 [[Pkg]]
 uuid = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 
@@ -165,6 +197,11 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 
 [[Random]]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[[RecipesBase]]
+git-tree-sha1 = "fbcfab4806fbafbd2badc4cdc804c374caf01523"
+uuid = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+version = "0.3.1"
 
 [[Reexport]]
 git-tree-sha1 = "caba582b2e9ef39b9cfff911aa13c5ca1b9a9896"
@@ -225,6 +262,11 @@ repo-rev = "master"
 repo-url = "https://github.com/JuliaStats/StatsFuns.jl.git"
 uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
 version = "0.6.0+"
+
+[[SweepOperator]]
+git-tree-sha1 = "3de8b7b1764431aea93f1dda464a4669879088d5"
+uuid = "7522ee7d-7047-56d0-94d9-4bc626e7058d"
+version = "0.1.0"
 
 [[Test]]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
