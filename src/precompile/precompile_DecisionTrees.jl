@@ -19,7 +19,7 @@ function _precompile_()
     precompile(Tuple{typeof(DecisionTrees.find_max_type), DataFrames.DataFrame})
     precompile(Tuple{typeof(DecisionTrees.gini_single_argument), Base.SubArray{Float64, 1, Array{Float64, 1}, Tuple{Array{Int64, 1}}, false}})
     precompile(Tuple{typeof(DecisionTrees.vba_write_elseif_ScoreMap), Base.IOStream, Int64, Array{Int64, 1}, Array{Float64, 1}, Array{Float64, 1}})
-    precompile(Tuple{getfield(DecisionTrees, Symbol("##prepare_dataframe_for_dtm_INTERNAL!#91")), Array{String, 1}, String, String, String, String, Float64, String, Array{String, 1}, typeof(DecisionTrees.prepare_dataframe_for_dtm_INTERNAL!), DataFrames.DataFrame})
+    
     precompile(Tuple{typeof(DecisionTrees.randint), Int64})
     precompile(Tuple{typeof(DecisionTrees.defineTwoWayCharts), String, String, String, String, Int64, Int64, Int64, Int64, Int64, String, String, String})
     precompile(Tuple{typeof(DecisionTrees.createTwoWayValidationCharts), Array{Int64, 1}, Array{Int64, 1}, Int, Array{String, 1}, Array{Array{String, 1}, 1}, Array{Array{Float64, 1}, 1}, DecisionTrees.ModelSettings, Array{Int64, 1}, Array{Float64, 1}, Array{Float64, 1}, Array{Float64, 1}, Array{Float64, 1}, DataFrames.DataFrame})

@@ -42,21 +42,3 @@ function frequencyRel(x)
     return d,srt
 end
 
-
-function getCounts(x;infreq::Float64=-0.01)
-    d=countmap(x);    
-    vals=collect(values(d));
-    sumk=sum(vals);
-    if sumk==length(x)
-        #ok
-    else
-       @warn("DTM: Totals do not match. sumv=$(sumk) but length(x)=$(length(x))") 
-    end    
-    srt=sortperm(vals,rev=true);
-    vals=vals[srt];
-    valsp=vals./sumk;
-    ks=collect(keys(d))[srt];
-    return vals,valsp,ks
-end
-a,b,c=getCounts(v)
-0

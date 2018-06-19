@@ -1,5 +1,5 @@
 #consider the functions
-#prepare_dataframe_for_dtm_INTERNAL -> prepares an arbitrary df from the dtm models
+#prepareDF -> prepares an arbitrary df from the dtm models
 #prepare_non_jld_data
 
 function run_model(ARGS;nrows::Int=-1)
@@ -33,7 +33,7 @@ prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_a
 function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 	@assert isdir(directory)
 	
-	@time (df_prepped,sett)=prepare_dataframe_for_dtm_INTERNAL!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
+	@time (df_prepped,sett)=prepareDF!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
 
 	#set this to false
 		sett.boolSaveJLDFile=false
@@ -44,7 +44,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
 	return dtmtable,sett,df_prepped
 end
 
-function prepare_dataframe_for_dtm_INTERNAL!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 	#denomcol=uppercase(denomcol)
     #keycol=uppercase(keycol)
     #trnvalcol=uppercase(trnvalcol)

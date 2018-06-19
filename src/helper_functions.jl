@@ -1,4 +1,4 @@
-export getFittedValues, createGridSearchSettings,poissonError,confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
+export mapToOther!,getCounts, getFittedValues, createGridSearchSettings,poissonError,confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
 
 import Base: append!,mean,length,findin,isless,eltype,resize!,convert
 #import PooledArrays.levels
@@ -5468,3 +5468,72 @@ function emptyModel(m::T) where T<:DTModel
         return EmptyEnsemble()
     end    
 end
+
+
+"""
+getCounts(x;threshold::T=-0.01) where T<:Number
+return counts,freqs,vals,keep
+
+counts,freqs and vals are sorted in descending order
+
+counts are the frequency counts of the unique values of x
+freqs is counts./length(x)
+vals are the values
+keep are the values which occur more often than abs(threshold) for threshold<0.0
+keep are the largest floor(threshold) values for threshold>0
+"""
+
+function getCounts(x;threshold::T=-0.01) where T<:Number
+    if threshold<0
+        @assert abs(threshold)<1 "DTM: abs(threshold) must be <1 (or positive and integer)"
+    end    
+    d=countmap(x);    
+    vals=collect(values(d));
+    sumk=sum(vals);
+    if sumk==length(x)
+        #ok
+    else
+       @warn("DTM: Totals do not match. sumv=$(sumk) but length(x)=$(length(x))") 
+    end    
+    srt=sortperm(vals,rev=true);
+    vals=vals[srt];
+    valsp=vals./sumk;
+    ks=collect(keys(d))[srt];    
+    if threshold<0
+        keep1=ks[valsp.>=abs(threshold)]
+        if length(keep1)<1
+            #keep at least 5 values as threshold was set too small?
+            keep1=ks[1:5]
+            @warn("DTM: threshold=$(threshold) was larger than the proportion of any value. DTM kept the largest 5 values instead.")
+        end
+    else
+        nkeep=floor(Int,threshold)
+        @assert nkeep<length(vals)
+        keep1=ks[1:nkeep]
+    end
+    nkept=length(keep1)
+    return vals,valsp,ks,keep1
+    #v= [randstring(1) for x in 1:20000]
+    #counts,freqs,vals,keep=getCounts(v)
+end
+
+
+"""
+mapToOther(v,keepvals::Vector{String},newValue::String)
+overwrites all values in v that are not in keepvals with newValue
+"""
+function mapToOther!(v,keepvals::Vector{T},newValue::T) where T
+    for i in eachindex(v)
+        @inbounds vi=v[i]
+        if in(vi,keepvals)
+            #ok
+        else
+            @inbounds v[i]=newValue
+        end
+    end  
+    return nothing
+    #counts,freqs,vals,keep=getCounts(v)
+    #vnew=deepcopy(v)
+    #mapToOther!(vnew,keep,"rare_value")
+end
+
