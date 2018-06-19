@@ -207,14 +207,10 @@ struct Rulepath{T<:Unsigned}
     featid::Int64
     subset::Vector{T}
     isLeftChild::Bool
-    function Rulepath{T}() where T<:Unsigned
-      return new(0,UInt8[],false)
-    end
-    function Rulepath{T}(a,b::Vector{T},c)  where T<:Unsigned
-      return new(a,b,c)
-    end    
 end
-  
+
+Rulepath{T}() where {T<:Unsigned} = Rulepath(0,T[],false)
+
 ==(x::Rulepath,y::Rulepath)= (x.featid==y.featid) && (x.isLeftChild==y.isLeftChild) && (x.subset==y.subset)
 hash(x::Rulepath)=hash(x,UInt64(9))
 function hash(x::Rulepath,h::UInt64)
