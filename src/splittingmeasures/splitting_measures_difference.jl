@@ -16,20 +16,20 @@ chosen_sumwl=NaN
   for i in subs
   #@show "vv=$(i)" #should be the element which switches
   #i is an index, it indicates which element of labellist will flip sides for the next calculation
-  if elementsInLeftChildBV[i]
+  @inbounds if elementsInLeftChildBV[i]
   #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-  elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
+  @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
     #move class from left to right side
-    sumnl-=sumnumerator[i]
-	sumdl-=sumdenominator[i]
-	sumwl-=sumweight[i]    
+    @inbounds sumnl-=sumnumerator[i]
+	@inbounds sumdl-=sumdenominator[i]
+	@inbounds sumwl-=sumweight[i]    
   else
   #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-  elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
+  @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
       #move class from right to left side    
-    sumnl+=sumnumerator[i]
-	sumdl+=sumdenominator[i]
-	sumwl+=sumweight[i]    	
+      @inbounds sumnl+=sumnumerator[i]
+      @inbounds sumdl+=sumdenominator[i]
+      @inbounds sumwl+=sumweight[i]    	
   end
     if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
 	  #vold=valnew
@@ -69,20 +69,20 @@ this_splitlist=Array{Splitdef}(0)
 
 for i in subs
     #i is an index, it indicates which element of labellist will flip sides for the next calculation
- if elementsInLeftChildBV[i]
+    @inbounds if elementsInLeftChildBV[i]
   #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-  elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
+  @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
     #move class from left to right side
-    sumnl-=sumnumerator[i]
-	sumdl-=sumdenominator[i]
-	sumwl-=sumweight[i]  
+    @inbounds sumnl-=sumnumerator[i]
+	@inbounds sumdl-=sumdenominator[i]
+	@inbounds sumwl-=sumweight[i]  
   else
   #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-  elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
+  @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
       #move class from right to left side    
-    sumnl+=sumnumerator[i]
-	sumdl+=sumdenominator[i]
-	sumwl+=sumweight[i]
+      @inbounds sumnl+=sumnumerator[i]
+      @inbounds sumdl+=sumdenominator[i]
+      @inbounds sumwl+=sumweight[i]
   end
     if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
       valnew=abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))	  

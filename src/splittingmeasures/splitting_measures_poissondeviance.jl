@@ -20,7 +20,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
 
   #pass on over the data:
   #get mean of left chlid and right child for each possible split
-  #warn("find out if we need/want freq or claimcount here!")
+  #warn("find out if we need/want freq or claimcount here!") #currently we are using the frequencies which are then multiplied with the exposure -> poisson deviance is evaluated on the number of claims  n_i~poisson(lambda_i * exposure_i)
   meansl=zeros(subs_size) #mean (frequency or possibly claim count) of the left node in case we go for split 'number' i
   meansr=zeros(subs_size) #same for right child
   #same for weights
@@ -33,26 +33,26 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   for i in subs
     #@show "vv=$(i)" #should be the element which switches
     #i is an index, it indicates which element of labellist will flip sides for the next calculation
-    if elementsInLeftChildBV[i]
+    @inbounds if elementsInLeftChildBV[i]
     #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-      elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
+    @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
       #move class from left to right side
-      sumnl-=sumnumerator[i]
-      sumdl-=sumdenominator[i]
-      sumwl-=sumweight[i]
+      @inbounds sumnl-=sumnumerator[i]
+      @inbounds sumdl-=sumdenominator[i]
+      @inbounds sumwl-=sumweight[i]
     else
     #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-      elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
+    @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
         #move class from right to left side
-      sumnl+=sumnumerator[i]
-      sumdl+=sumdenominator[i]
-      sumwl+=sumweight[i]
+        @inbounds sumnl+=sumnumerator[i]
+        @inbounds sumdl+=sumdenominator[i]
+        @inbounds sumwl+=sumweight[i]
     end
     #save mean values (or should we save the frequency?)
-    weightsl[counter]=sumwl
-    weightsr[counter]=weighttot-sumwl
-    meansl[counter]=sumnl/sumdl
-    meansr[counter]=(numtot-sumnl)/(denomtot-sumdl)
+    @inbounds weightsl[counter]=sumwl
+    @inbounds weightsr[counter]=weighttot-sumwl
+    @inbounds meansl[counter]=sumnl/sumdl
+    @inbounds meansr[counter]=(numtot-sumnl)/(denomtot-sumdl)
     counter+=1
   end
   #reset bitvector
@@ -74,12 +74,12 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   counter=1
   for i in subs
       #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-      elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
+      @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
       #calc deviances for the given split (which is defined by elementsInLeftChildBV)
       sumwl=weightsl[counter]
       #we can skip the calculation of the deviance, if we know that the leaves will be "too small"
       if (sumwl>minweight)&&(weighttot_minw>sumwl)        
-        deviancel,deviancer=get_poisson_deviances(meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
+        @inbounds deviancel,deviancer=get_poisson_deviances(meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
       #end
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        
         valnew = -(deviancel+deviancer) #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
@@ -142,26 +142,26 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   for i in subs
     #@show "vv=$(i)" #should be the element which switches
     #i is an index, it indicates which element of labellist will flip sides for the next calculation
-    if elementsInLeftChildBV[i]
+    @inbounds if elementsInLeftChildBV[i]
     #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-      elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
+    @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
       #move class from left to right side
-      sumnl-=sumnumerator[i]
-      sumdl-=sumdenominator[i]
-      sumwl-=sumweight[i]
+      @inbounds sumnl-=sumnumerator[i]
+      @inbounds sumdl-=sumdenominator[i]
+      @inbounds sumwl-=sumweight[i]
     else
     #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-      elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
+    @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
         #move class from right to left side
-      sumnl+=sumnumerator[i]
-      sumdl+=sumdenominator[i]
-      sumwl+=sumweight[i]
+        @inbounds sumnl+=sumnumerator[i]
+        @inbounds sumdl+=sumdenominator[i]
+        @inbounds sumwl+=sumweight[i]
     end
     #save mean values (or should we save the frequency?)
-    weightsl[counter]=sumwl # this is the exposure in an claim frequency model
-    weightsr[counter]=weighttot-sumwl
-    meansl[counter]=sumnl/sumdl #in a claim frequency model denominator is the exposure (i.e. euqual to weight)
-    meansr[counter]=(numtot-sumnl)/(denomtot-sumdl)
+    @inbounds weightsl[counter]=sumwl # this is the exposure in an claim frequency model
+    @inbounds weightsr[counter]=weighttot-sumwl
+    @inbounds meansl[counter]=sumnl/sumdl #in a claim frequency model denominator is the exposure (i.e. euqual to weight)
+    @inbounds meansr[counter]=(numtot-sumnl)/(denomtot-sumdl)
     counter+=1
   end
   #reset bitvector
@@ -180,12 +180,12 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   counter=1
   for i in subs
       #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-      elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
+      @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
       #calc deviances for the given split (which is defined by elementsInLeftChildBV)
-      sumwl=weightsl[counter]
+      @inbounds sumwl=weightsl[counter]
       #we can skip the calculation of the deviance, if we know that the leaves will be "too small"
       if (sumwl>minweight)&&(weighttot_minw>sumwl)        
-        deviancel,deviancer=get_poisson_deviances(meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
+        @inbounds deviancel,deviancer=get_poisson_deviances(meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
       #end
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        				
         valnew = -(deviancel+deviancer) #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
@@ -213,9 +213,9 @@ function get_poisson_deviances(current_meanl::Float64,current_meanr::Float64,lo,
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-    @inbounds wi = weight[count]
-    #todo see if ifelse is more efficient here!
-   #possibly an explicit if (to avoid an undefined log) is faster than xlogy here! 
+        @inbounds wi = weight[count]
+        #todo see if ifelse is more efficient here!
+        #possibly an explicit if (to avoid an undefined log) is faster than xlogy here! 
 		if elementsInLeftChildBV[idx]
 			dl += (xlogy(ni, ni / (wi*current_meanl)) - (ni - wi*current_meanl))
 		else
