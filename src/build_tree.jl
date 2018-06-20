@@ -206,14 +206,14 @@ function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vec
 	#This function selects the maximal possible split defined by crit (thus depending on the impurity function, we need to put a minus sign in front of it)
 		tmpsz::Int=0
 		if sum(view(weight,trnidx))<2*minweight;
-			return const_default_splitdef::Splitdef{T};
+			return const_default_splitdef;
 		end
 		tmp_splitlist=Vector{Splitdef{T}}(0)
 		for i in inds
 			#ATTENTION: for char variables we pass the variable i with a negative sing!!
 			#this allows us to distinguish whether we are working on a char or num variable later on
 			modified_i = eltype(features[i])<:AbstractString ? number_of_num_features - i  :  i 
-			tmplist::Vector{Splitdef{T}}=_split_feature(val_of_some_UInt_type,number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef{T}}
+			tmplist=_split_feature(val_of_some_UInt_type,number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)
 			append!(tmp_splitlist,tmplist)
 		end
 
@@ -327,11 +327,14 @@ elt=eltype(trnfeatures.parent.refs)
 	elseif (crit_type==PoissonDevianceSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures,feature_column_id)
 		#error("PoissonDevianceSplit is not yet implemented for randomw>0")
-	end
-	if eltype(tmpres.subset)==T
+    end
+    if length(tmpres)<1
+        return tmpres
+    end
+	if eltype(tmpres[1].subset)==T
 		return tmpres
 	else
-		return Splitdef{T}(tmpres)
+		return convert(Vector{Splitdef{T}},tmpres)
 	end
   end
 end

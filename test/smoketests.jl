@@ -105,7 +105,7 @@ write_result="true",
 write_csharp_code="true",
 write_vba_code="true",
 boolSaveJLDFile="true",
-boolSaveResultAsJLDFile="true",
+boolSaveResultAsJLDFile="false",
 
 showProgressBar_time="true",
 boolProduceEstAndLeafMatrices="true",
