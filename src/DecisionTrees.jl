@@ -110,7 +110,7 @@ function get_sha1()
 		cmd=`git rev-parse HEAD`
 		sha1_of_dt=readstring(cmd)[1:end-1] #need to discard \n at the end
 	catch 
-		
+		sha1_of_dt="unable to determine version. Git invocation possibly failed"
 	end 
 	cd(current_path)
 	return sha1_of_dt

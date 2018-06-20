@@ -48,7 +48,7 @@ function get_stats(model::Tree;perfMeasure::String="not_applicable_for_singe_tre
 	statsdf=model.exceldata.sheets[2].data
 	#find the last rows of the results sheet
 	str="Correlation"
-	rows=findin(statsdf[:,1],[str])
+	rows=findall(in([str]), statsdf[:,1])
 	if length(rows)!=1
 		@show rows
 		error("Multiple rows with 'name' Correlation found. This is not expected")
@@ -301,7 +301,7 @@ function best_model_per_iter(allmodelStats,metric)
 	narows=isna(metric_col)
 	itercol=convert(Array{Int,1},allmodelStats[2])
 	modelnrcol=allmodelStats[1]
-	narows2=find(narows)
+	narows2=findall(narows)
 	sort!(narows2)
 	if size(narows2,1)>0
 		deleteat!(itercol,narows2)
@@ -353,14 +353,14 @@ function readSettings(settingsFilename)
 	local settingsArray,number_of_num_features
 	try
 		println("Importing Settings CSV: \r\n $(settingsFilename)")
-		settingsArray=readcsv(settingsFilename,String) #it is read as String because otherwise some values are parsed as floats (which I want to suppress here)
+		settingsArray=readdlm(settingsFilename,String) #it is read as String because otherwise some values are parsed as floats (which I want to suppress here)
 	catch readerror
 		@show readerror
 		error("Unable to read file $(settingsFilename)")
 	end
 	try
 		settingsArray=removeBOM(settingsArray)
-		coln=findin([lowercase(x) for x in settingsArray[1,:]],["number_of_num_features"])
+		coln=findall(in(["number_of_num_features"]), [lowercase(x) for x in settingsArray[1,:]])
 		@assert size(coln)==(1,) global_number_of_num_f_warning_mandatory_field
 		@assert size(settingsArray,1)>1 "SettingsArray must have more than 1 row. Abort"
 		coln2=coln[1]
@@ -1410,7 +1410,7 @@ function calcIterationsPerCore2(ntot::Int,ncores::Int)
 
 		col2=deepcopy(res)
 		incrementalToCumulative!(col2)
-		unshift!(col2,0)
+		pushfirst!(col2,0)
 		pop!(col2)
 		@assert sum(res)==ntot
 		res2=hcat(res,col2.+1)
@@ -1705,7 +1705,7 @@ end
 
 function define_candidates(feature_column,max_splitting_points_num::Int64)
 	#step 1: get quantiles of data
-	domain_i = unique(quantile(feature_column, linspace(0.5/Float64(max_splitting_points_num), 1.0-0.5/Float64(max_splitting_points_num),max_splitting_points_num)))
+	domain_i = unique(quantile(feature_column, range(0.5/Float64(max_splitting_points_num), stop=1.0-0.5/Float64(max_splitting_points_num), length=max_splitting_points_num)))
 	@assert size(domain_i,1)<=max_splitting_points_num #that should not happen
 
 	#step 2 ensure each element of domain_i corresponds to an observation
@@ -1790,7 +1790,7 @@ end
 fileending(f)=splitext(f)[2]	
 
 function printover(s::AbstractString)
-	printover(STDOUT,s,:green)
+	printover(stdout,s,:green)
 end
 
 function printover(io::IO, s::AbstractString, color::Symbol = :green)
@@ -1924,7 +1924,7 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		cumulativeStatsMatrix=[description sumweighttrn sumweightval sumnumeratortrn sumnumeratorval sumdenominatortrn sumdenominatorval observedratiotrn observedratioval sumnumeratorEstimatetrn sumnumeratorEstimateval fittedratiotrn fittedratioval relativitytrn relativityval]
 		reltrntitle="Relativity Trn (Observed)" #this is used for the charts
 		header=["Cumulative Stats n=$(iter)" "Weight Trn" "Weight Val" "Numerator Trn" "Numerator Val" "Denominator Trn" "Denominator Val" "Observed Ratio Trn" "Observed Ratio Val" "Numerator Est Trn" "Numerator Est Val" "Fitted Ratio Trn" "Fitted Ratio Val" reltrntitle "Relativity Val (Observed)"]
-		columnOfRelativityTrn=findin(header,[reltrntitle])[1]
+		columnOfRelativityTrn=findall(in([reltrntitle]), header)[1]
 		cumulativeStatsMatrix=vcat(header,cumulativeStatsMatrix)
 		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal gini_single_argtrn gini_single_argval r2_of_ratiotrn r2_of_ratioval r2_of_numeratortrn r2_of_numeratorval residual_sum_squares_of_ratioTrn residual_sum_squares_of_ratioVal residual_sum_squares_of_numeratorTrn residual_sum_squares_of_numeratorVal poissonErrTrn poissonErrVal]
 return cumulativeStatsMatrix,singleRowWithKeyMetrics,columnOfRelativityTrn
@@ -2463,7 +2463,7 @@ function build_listOfMeanResponse(crit::MaxValueSplit,numerator::Array{Float64,1
   countlist,sumnumerator,sumdenominator,sumweight=aggregate_data_diff(features,numerator,denominator,weight)
   if length(countlist)!=ncategories
   #there are gaps with no data between min(features.ids),max(features.ids)
-     zeroidx=findin(countlist,0)	 #@show length(zeroidx)
+     zeroidx=findall(in(0), countlist)	 #@show length(zeroidx)
      deleteat!(countlist,zeroidx)
 	 deleteat!(sumnumerator,zeroidx)
 	 deleteat!(sumdenominator,zeroidx)
@@ -2481,7 +2481,7 @@ function build_listOfMeanResponse(crit::MaxMinusValueSplit,numerator::Array{Floa
   countlist,sumnumerator,sumdenominator,sumweight=aggregate_data_diff(features,numerator,denominator,weight)
   if length(countlist)!=ncategories
   #there are gaps with no data between min(features.ids),max(features.ids)
-     zeroidx=findin(countlist,0)	 #@show length(zeroidx)
+     zeroidx=findall(in(0), countlist)	 #@show length(zeroidx)
      deleteat!(countlist,zeroidx)
 	 deleteat!(sumnumerator,zeroidx)
 	 deleteat!(sumdenominator,zeroidx)
@@ -2499,7 +2499,7 @@ function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Flo
   countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(features,numerator,denominator,weight)
   if length(countlist)!=ncategories
   #there are gaps with no data between min(features.ids),max(features.ids)
-     zeroidx=findin(countlist,0)	 #@show length(zeroidx)
+     zeroidx=findall(in(0), countlist)	 #@show length(zeroidx)
      deleteat!(countlist,zeroidx)
 	 deleteat!(sumnumerator,zeroidx)
 	 deleteat!(sumdenominator,zeroidx)
@@ -2521,7 +2521,7 @@ function build_listOfMeanResponse(crit::DifferenceSplit,trnidx::Vector{Int},vali
   countlist,sumnumerator,sumdenominator,sumweight=aggregate_data_diff(features,numerator,denominator,weight)
   if length(countlist)!=ncategories
   #there are gaps with no data between min(features.ids),max(features.ids)
-     zeroidx=findin(countlist,0)	 #@show length(zeroidx)
+     zeroidx=findall(in(0), countlist)	 #@show length(zeroidx)
      deleteat!(countlist,zeroidx)
 	 deleteat!(sumnumerator,zeroidx)
 	 deleteat!(sumdenominator,zeroidx)
@@ -2928,7 +2928,7 @@ function BitArrayIndexMatchingSubset(a::Array{String,1},leftsubset::Array{String
   #tbd / todo: improve splitting of PDAs
   res=BitArray(length(a))
   fill!(res,false)
-  match = findin(a, leftsubset)
+  match = findall(in(leftsubset), a)
   for i in 1:length(match)
     res[match[i]]=true
   end
@@ -2939,7 +2939,7 @@ end
   #this function is incredibly inefficient but the alternative below is not yet working
   #tbd / todo: improve splitting of PDAs
   res=BitArray(length(a))
-  match = findin(a.pool, leftsubset)
+  match = findall(in(leftsubset), a.pool)
   for i in 1:length(a)
     res[i]=(a.refs[i] in match)
   end
@@ -2970,7 +2970,7 @@ end
 
 #print Tree Fn
 function print_tree(tree::Leaf,sett::ModelSettings,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},indent::Int64)
-    println("L|S$(round(nodesize(tree),1)),Fit$(round(tree.fitted,2)),D$(tree.depth)")
+    println("L|S$(round(nodesize(tree), digits=1)),Fit$(round(tree.fitted, digits=2)),D$(tree.depth)")
 end
 
 function print_tree(tree::Node{T},sett::ModelSettings,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},indent::Int64=0) where T<:Unsigned 
@@ -2978,7 +2978,7 @@ function print_tree(tree::Node{T},sett::ModelSettings,candMatWOMaxValues::Array{
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
-	orig_id>0 ? println("N|F$(this_id) $(df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][tree.subset[end]],5)),Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))") : println("N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))")
+	orig_id>0 ? println("N|F$(this_id) $(df_name_vector[this_id]),T$(round(candMatWOMaxValues[this_id][tree.subset[end]], sigdigits=5)),Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))") : println("N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))")
 	#orig_id>0 ? println("N|F$(this_id),T$(round(need_to_use_candidate_matrix_here,2)),Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))") : println("N|F$(this_id),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(fittedratio(tree)),S$(round(nodesize(tree),1)))")
 	print(" " ^ indent * "L=")
 	print_tree(tree.left,sett,candMatWOMaxValues,mappings,indent + 1)
@@ -3092,7 +3092,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},
     write(f,"\r\n")
     write(f,"\r\n")
 
-    orig_id>0 ? write(f,"N|F$(this_id) $(df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][tree.subset[end]],5)),Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))")
+    orig_id>0 ? write(f,"N|F$(this_id) $(df_name_vector[this_id]),T$(round(candMatWOMaxValues[this_id][tree.subset[end]], sigdigits=5)),Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))")
     write(f,"\r\n")
     write(f," " ^ indent * "L=")
     write_tree(candMatWOMaxValues,tree.left,number_of_num_features, indent + 1,f,df_name_vector,mappings)
@@ -3110,13 +3110,13 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,num
 end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
-    write(f,"L|S$(round(nodesize(tree),1)),Fit$(round(tree.fitted,2)),D$(tree.depth)\r\n")
+    write(f,"L|S$(round(nodesize(tree), digits=1)),Fit$(round(tree.fitted, digits=2)),D$(tree.depth)\r\n")
 end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64, indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
-    orig_id>0 ? write(f,"N|F$(this_id)  $(df_name_vector[this_id]),T$(signif(candMatWOMaxValues[this_id][tree.subset[end]],5)),Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree),2)),S$(round(nodesize(tree),1)))")
+    orig_id>0 ? write(f,"N|F$(this_id)  $(df_name_vector[this_id]),T$(round(candMatWOMaxValues[this_id][tree.subset[end]], sigdigits=5)),Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))")
     write(f,"\r\n")
     write(f," " ^ indent * "L=")
     write_tree(candMatWOMaxValues,tree.left, number_of_num_features,indent + 1,f,df_name_vector,mappings)
@@ -3347,7 +3347,7 @@ end
 function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,indent::Int64,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0)
 	writecomments=false
   if writecomments
-    add=" *Nodesize: $(round(nodesize(tree),1)), Fitted Value: $(round(tree.fitted,2)), Depth: $(tree.depth);\r\n"
+    add=" *Nodesize: $(round(nodesize(tree), digits=1)), Fitted Value: $(round(tree.fitted, digits=2)), Depth: $(tree.depth);\r\n"
   else
     add="\r\n"
   end
@@ -3522,11 +3522,11 @@ end
 function char_rule(subset::Array{String,1},symbol_column::Symbol,b::Bool)
    if size(subset,1)==1
         #b ? (return (:($(parse(string(symbol_column))).==$(subset[1])))) : (return (:($(parse(string(symbol_column))).!=$(subset[1]))))
-        b ? (return (:($(parse("dataframename[:$(symbol_column)]")).==$(subset[1])))) : (return (:($(parse("dataframename[:$(symbol_column)]")).!=$(subset[1]))))
+        b ? (return (:($(Meta.parse("dataframename[:$(symbol_column)]")).==$(subset[1])))) : (return (:($(Meta.parse("dataframename[:$(symbol_column)]")).!=$(subset[1]))))
     else
-        r=:($(parse("dataframename[:$(symbol_column)]")).==$(subset[1]))
+        r=:($(Meta.parse("dataframename[:$(symbol_column)]")).==$(subset[1]))
         for i=2:size(subset,1)
-            rtmp=:($(parse("dataframename[:$(symbol_column)]")).==$(subset[i]))
+            rtmp=:($(Meta.parse("dataframename[:$(symbol_column)]")).==$(subset[i]))
             r=:($(rtmp) | $(r))
         end
         b ? (return r) : (:(!($(r))))
@@ -3593,7 +3593,7 @@ function index_vector_from_rulepath(rpArray::Array{Rulepath,1},numfeatures::Arra
 end
 
 function df_column_has_na(df::DataFrame,colindex::Int64)
-  size(findin(isna(df[colindex]), true),1)
+  size(findall(in(true), isna(df[colindex])),1)
 end
 
 function defineleftrightPDA(left::BitVector,right::BitVector,mat_charfeatures::Array{String,2})
@@ -3614,7 +3614,7 @@ end
 	  if ii!=const_shift_cols
       if any(ismissing,dfIndata[ii])
 		idx=ismissing(dfIndata[ii])
-		narows=find(idx)
+		narows=findall(idx)
 		@assert length(narows)>0 "this should not have happend" #narows should be >0 by definition
 		warn("Missing values detected. Rows= $(narows[1]), Column=$(ii):$(namevec[ii])")
         error("ABORT.")
@@ -3632,7 +3632,7 @@ function check_for_missing_data(mat::Array{Any,2},const_shift_cols::Int64,header
       col=view(mat,:,ii)
 	    miss=col.==""
 	    if sum(miss)>0
-		  missingentries=findin(miss,[true])
+		  missingentries=findall(in([true]), miss)
 		  missingentries=copy(missingentries[1:min(length(missingentries),5)])
         error("Column $(ii):$(header[ii]) contains missing values. Consider for instance these row numbers: $(join(missingentries,","))! Missing data is currently not supported. ABORT.")
         return false
@@ -3769,7 +3769,7 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
     push!(thisRange,estimatedRatioPerScore[thispoint+intSpan-1])
     push!(x,x[end]+1.0)
     newweight=1.0.-((x[1]-thispoint)/intSpan)^2
-    unshift!(w,newweight)
+    pushfirst!(w,newweight)
     intercept,slope=mylinreg(x,thisRange,w)
 	smoothed=float(thispoint)*slope+intercept
 	estimatedRatioPerScore[thispoint]=smoothed

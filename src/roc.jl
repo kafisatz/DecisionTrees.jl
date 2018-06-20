@@ -85,7 +85,7 @@ end
 ## bins scores that are the same into aggredated score counts
 function binscores(xo::Vector{T},tc::Vector{Int}) where {T <: Real}
     nc = 1 - tc
-    changes = find([true; diff(xo) .!= 0; true]) # points where threshold change
+    changes = findall([true; diff(xo) .!= 0; true]) # points where threshold change
     theta = xo                                       # threshold
     keep = trues(length(tc))
     @inbounds for i=1:length(changes)-1
@@ -181,7 +181,7 @@ function rochull(pfa::Vector{T}, pmiss::Vector{T}) where {T <: Real}
         end
         push!(stack, i)
     end
-    unshift!(stack, minmax)
+    pushfirst!(stack, minmax)
     stack
 end
 

@@ -458,7 +458,7 @@ if col=="statsbyvariables"&&length(stringValue)>0
 	end
 	try
 	chosenvars=[lowercase(x) for x in split(stringValue,' ')]
-	integerindices=findin([lowercase(x) for x in s.df_name_vector],chosenvars)
+	integerindices=findall(in(chosenvars), [lowercase(x) for x in s.df_name_vector])
 	if length(integerindices)!=length(chosenvars)
 		warn("some variables of statsbyvariables were not found in the data")
 		@show s.df_name_vector
@@ -516,7 +516,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 		end
 		@assert col!="moderationvector" "Moderationvector is currently disabled."
 		#@assert col!="chosen_apply_tree_fn" "You are not allowed to modify the setting chosen_apply_tree_fn"
-		found=findin(snamesStringLowercase,[col])
+		found=findall(in([col]), snamesStringLowercase)
 		@assert length(found)>0 "Invalid or unknown setting: $(col) (Value: $(stringValue) Column $(i))"
 		@assert size(found)==(1,) "Error while updating settings column $(col):$(i) (non  unique match)"
 		colnumber=found[1]
@@ -530,7 +530,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 					stringValue
 					nscorebands=parse(Int,stringValue)
 					#read nscores from settingscsv if provided
-					ff=findin(headerLowercase,["nscores"])
+					ff=findall(in(["nscores"]), headerLowercase)
 					if length(ff)>0
 						@assert length(values[ff])==1
 						try

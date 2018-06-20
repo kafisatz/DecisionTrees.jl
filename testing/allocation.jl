@@ -20,11 +20,11 @@ tmpfilei="C:\\temp\\i.csv";isfile(tmpfilei)&&rm(tmpfilei)
 di9=load("C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\data_tmp\\prepped_dtm2table.jld");dtmtable=di9["dtmtable"];this_dt2msett=di9["this_dt2msett"];
 
 settstr="""model_type="boosted_tree",write_iteration_matrix="false",bool_write_tree="false",write_sas_code="false",write_statistics="false",write_iteration_matrix="false",minw=-.1,randomw=0.0,mf=.1,subsampling_features_prop=1,niter=2,subsampling_prop=1.00,graphvizexecutable="C:\\\\Program Files (x86)\\\\Graphviz2.38\\\\bin\\\\dot.exe",write_result=false"""
-eval(parse(string("DTM2.updateSettingsMod!(this_dt2msett,",settstr,")")))
+eval(Meta.parse(string("DTM2.updateSettingsMod!(this_dt2msett,",settstr,")")))
 @time st2,dtm2model=DTM2.run_model_actual(dtmtable,this_dt2msett,fn);
 
 settstr="""model_type="boosted_tree",boolProduceEstAndLeafMatrices=false,niter=50,bool_write_tree="false",write_sas_code="false",write_statistics="false",write_iteration_matrix="false",minw=-.08,randomw=0.0,mf=.1,subsampling_features_prop=1,subsampling_prop=1.00,graphvizexecutable="C:\\\\Program Files (x86)\\\\Graphviz2.38\\\\bin\\\\dot.exe",write_result=false"""
-eval(parse(string("DTM2.updateSettingsMod!(this_dt2msett,",settstr,")")))
+eval(Meta.parse(string("DTM2.updateSettingsMod!(this_dt2msett,",settstr,")")))
 
 Profile.clear_malloc_data()
  st2,dtm2model=DTM2.run_model_actual(dtmtable,this_dt2msett,fn); #2.1s roughly
