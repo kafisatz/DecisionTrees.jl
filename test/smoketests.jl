@@ -1,5 +1,6 @@
 #smoketest_tree.jl
 
+@testset "Smoketests" begin
 
 ##################################################
 #Read the data
@@ -142,3 +143,5 @@ strs,resm6=dtm(dtmtable,sett)
 sett.minw=oldminw
 #example with weights.==1 and denominator.==1
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
+    
+   end #testset
