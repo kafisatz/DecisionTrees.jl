@@ -255,7 +255,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             header_settings=deepcopy(desc_settingsvec)
             allstats=Array{Float64,2}(length(numbrs),n_folds)			
             allsettings=Array{Any,2}(length(settingsvec),n_folds)
-            allmodels=Vector{Any}(nSettings)
+            allmodels=Vector{Any}(n_folds)
         #define default stats if the model fails
             defaulted_stats=deepcopy(numbrs)
             defaulted_settings=deepcopy(settingsvec)
