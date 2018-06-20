@@ -221,66 +221,6 @@ function is_categorical_column(x,nm)
     return elt <:AbstractString
 end
 
-function run_model_main(settingsFilename::String,dataFilename::String,datafolder::String,outfilename::String,outfileStringOnly::String;nrows::Int=-1)
-	#this function distinguishes two cases: either a *.JLD file is loaded or a *.CSV file is converted to a *.jld file
-	@assert length(settingsFilename)>3
-	@assert length(dataFilename)>3
-	const_shift_cols=global_const_shift_cols #this was 6 in earlier versions where the settings column was column 6, now the settings column is separate
-	@assert isfile(settingsFilename) "Settings file $(settingsFilename) not found. Abort."
-	if !(lowercase(dataFilename)[end-2:end]=="sql")&&!isfile(dataFilename);error("Data file $(dataFilename) not found.");end; # Did you provide a *.csv instead of a *.jld2 file (or vice-versa)?");end;
-	#the next function is mainly here to avoid that there is a result from an old run, whis is interpreted as the result of the current run (which may have failed for instance)
-		#we should check how much time it needs and maybe disable it eventually
-		deleteAllOutputFiles(datafolder,outfileStringOnly)
-	#Read Settings
-		settingsArray,number_of_num_features=readSettings(settingsFilename)
-	if size(settingsArray,1)>2
-		#warn("Experimental: Settings File has more than two rows. Running multiple models")
-		if lowercase(reverse(dataFilename)[1:4])!="dlj."
-			#prep data and create *.jld file #NOTE: the fact that we save the *.jld file to disk is obsolete here (could be improved in the future) todo/tbd
-			@info "Prepping data for multirow run"
-			settingsArrayTWOROWS=settingsArray[1:2,:]
-			key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArrayTWOROWS,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
-			dataFilename,extp=splitext(dataFilename)
-			dataFilename=string(dataFilename,".jld2")
-			@info "this will probably fail with a *.db or mysql  input file/reference"
-			@assert isfile(dataFilename) "Something went wrong: dataFilename should be a prepped *.jld2 file here"
-		end
-		println("Loading Julia save file: \n $(dataFilename)")
-		dictOfVariables=load(dataFilename);
-		telapsed=toq()
-		@info "Time to read data: $(telapsed)"
-		return run_model_multirow_settings(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
-	end
-
-	#check if JLD or CSV was provided
-	if lowercase(reverse(dataFilename)[1:4])=="dlj." #dataFilename[end-4:end]
-		println("Loading Julia save file: \n $(dataFilename)")
-		dictOfVariables=load(dataFilename);
-		telapsed=toq()
-		@info "Time to read data: $(telapsed)"
-		return run_model_jld(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
-	#non jld file was provided
-	else
-		key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
-		#key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=runmodel_non_jld(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows)
-        telapsed=toq()
-        sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
-        return run_model_actual(key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues,dataFilename)
-		#return runmodel_non_jld(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows)
-	end
-end
-
-#function if dictionary from *.jld2 was loaded
-function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)
-	tic()
-	oldsettings=di["oldsettings"]
-	sett=ModelSettings() #default model settings
-	updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
-    telapsed=toq()
-    sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
-    return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
-end
-
 function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_ext::String)
 #warn: this function has a lot of redundancies with another function in this file ->prep_data_from_df
 tic()
@@ -428,63 +368,6 @@ tic()
 	end
 
 	return dtmtable
-end
-
-
-function prepare_non_jld_data(dataFilename::String,settingsArray::Array{String,2},datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int,nrows::Int,number_of_num_features::Int)
-local eltypev,dfIndata
-	if lowercase(dataFilename)[end-2:end]==".db"
-		@info "todo: Test *.DB Sqlite functionality."
-		@info "the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')"
-		warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
-		println("Importing data from SQLiteDB file: \n $(dataFilename)")
-		try
-			@info "check if disabling gc speeds this up"
-			dfIndata=readDFfromSQLiteDB(dataFilename,const_shift_cols)
-		catch sqllitereaderr
-			@show sqllitereaderr
-			error("Unable to read from SQLiteDB. See above.")
-		end
-	elseif lowercase(dataFilename)[end-2:end]=="sql"
-		print("Importing data from SQL db.")
-		warn("If this uses to  much memory implement limit 100,300 !!")
-		warn("like this we can read stepwise and append to the df in julia!")
-		try
-			dfIndata=readDFfromSQLDB()
-		catch eri
-			@show eri
-			error("Unable to read from SQL DB. See above.")
-		end
-		println(" done.")
-	else
-		#CSV was provided, Reading Data
-			println("Importing CSV data: \n $(dataFilename)")
-        #Read only a few rows to determine AbstractString/Numeric columns
-		  try
-			eltypev=define_eltypevector(DataFrames.readtable(dataFilename,nrows=100),const_shift_cols,number_of_num_features)
-		  catch eri
-			warn("Readtable failed! Check the size of the *.CSV: $(dataFilename)") #sometimes the file only consists of the header (e.g. if the SAS export failed), then readtable will fail.
-			fz=0
-			fz=filesize(dataFilename)/1024
-			warn("Filesize is $(fz) KB")
-			@show eri
-			@assert false
-		  end
-		#Read whole dataset
-		try
-			dfIndata=readtable(dataFilename,eltypes=eltypev,nrows=nrows) #this currently uses by far to much memory on a 14m row file. The limitation is about a 7m row file with 77 columns
-		catch readerror
-			@show readerror
-			error("Unable to read file $(dataFilename)")
-		end
-	end
-
-	#at this point the data exists as a dataframe
-		telapsed=toq()
-		println("Time to read data: $(telapsed)")
-
-	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prep_data_from_df(dataFilename,settingsArray,dfIndata,datafolder,outfilename,outfileStringOnly,const_shift_cols)
-return 	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues
 end
 
 """
@@ -912,6 +795,128 @@ end #end distinction between three model types
  return filelistWithFilesToBeZipped,resulting_model
 end
 
+function dtm(dtmtable::DTMTable,sett::ModelSettings;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
+    return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,file::String)
+end
+
+
+
+#=
+function run_model_main(settingsFilename::String,dataFilename::String,datafolder::String,outfilename::String,outfileStringOnly::String;nrows::Int=-1)
+	#this function distinguishes two cases: either a *.JLD file is loaded or a *.CSV file is converted to a *.jld file
+	@assert length(settingsFilename)>3
+	@assert length(dataFilename)>3
+	const_shift_cols=global_const_shift_cols #this was 6 in earlier versions where the settings column was column 6, now the settings column is separate
+	@assert isfile(settingsFilename) "Settings file $(settingsFilename) not found. Abort."
+	if !(lowercase(dataFilename)[end-2:end]=="sql")&&!isfile(dataFilename);error("Data file $(dataFilename) not found.");end; # Did you provide a *.csv instead of a *.jld2 file (or vice-versa)?");end;
+	#the next function is mainly here to avoid that there is a result from an old run, whis is interpreted as the result of the current run (which may have failed for instance)
+		#we should check how much time it needs and maybe disable it eventually
+		deleteAllOutputFiles(datafolder,outfileStringOnly)
+	#Read Settings
+		settingsArray,number_of_num_features=readSettings(settingsFilename)
+	if size(settingsArray,1)>2		
+		if lowercase(reverse(dataFilename)[1:4])!="dlj."
+			#prep data and create *.jld file #NOTE: the fact that we save the *.jld file to disk is obsolete here (could be improved in the future) todo/tbd
+			@info "Prepping data for multirow run"
+			settingsArrayTWOROWS=settingsArray[1:2,:]
+			key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArrayTWOROWS,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
+			dataFilename,extp=splitext(dataFilename)
+			dataFilename=string(dataFilename,".jld2")
+			@info "this will probably fail with a *.db or mysql  input file/reference"
+			@assert isfile(dataFilename) "Something went wrong: dataFilename should be a prepped *.jld2 file here"
+		end
+		println("Loading Julia save file: \n $(dataFilename)")
+		dictOfVariables=load(dataFilename);
+		telapsed=toq()
+		@info "Time to read data: $(telapsed)"
+		return run_model_multirow_settings(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
+	end
+
+	#check if JLD or CSV was provided
+	if lowercase(reverse(dataFilename)[1:4])=="dlj." #dataFilename[end-4:end]
+		println("Loading Julia save file: \n $(dataFilename)")
+		dictOfVariables=load(dataFilename);
+		telapsed=toq()
+		@info "Time to read data: $(telapsed)"
+		return run_model_jld(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
+	#non jld file was provided
+	else
+		key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)		
+        telapsed=toq()
+        sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
+        return run_model_actual(key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues,dataFilename)		
+	end
+end
+
+#function if dictionary from *.jld2 was loaded
+function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)
+	tic()
+	oldsettings=di["oldsettings"]
+	sett=ModelSettings() #default model settings
+	updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
+    telapsed=toq()
+    sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
+    return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
+end
+
+function prepare_non_jld_data(dataFilename::String,settingsArray::Array{String,2},datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int,nrows::Int,number_of_num_features::Int)
+local eltypev,dfIndata
+	if lowercase(dataFilename)[end-2:end]==".db"
+		@info "todo: Test *.DB Sqlite functionality."
+		@info "the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')"
+		warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
+		println("Importing data from SQLiteDB file: \n $(dataFilename)")
+		try
+			@info "check if disabling gc speeds this up"
+			dfIndata=readDFfromSQLiteDB(dataFilename,const_shift_cols)
+		catch sqllitereaderr
+			@show sqllitereaderr
+			error("Unable to read from SQLiteDB. See above.")
+		end
+	elseif lowercase(dataFilename)[end-2:end]=="sql"
+		print("Importing data from SQL db.")
+		warn("If this uses to  much memory implement limit 100,300 !!")
+		warn("like this we can read stepwise and append to the df in julia!")
+		try
+			dfIndata=readDFfromSQLDB()
+		catch eri
+			@show eri
+			error("Unable to read from SQL DB. See above.")
+		end
+		println(" done.")
+	else
+		#CSV was provided, Reading Data
+			println("Importing CSV data: \n $(dataFilename)")
+        #Read only a few rows to determine AbstractString/Numeric columns
+		  try
+			eltypev=define_eltypevector(DataFrames.readtable(dataFilename,nrows=100),const_shift_cols,number_of_num_features)
+		  catch eri
+			warn("Readtable failed! Check the size of the *.CSV: $(dataFilename)") #sometimes the file only consists of the header (e.g. if the SAS export failed), then readtable will fail.
+			fz=0
+			fz=filesize(dataFilename)/1024
+			warn("Filesize is $(fz) KB")
+			@show eri
+			@assert false
+		  end
+		#Read whole dataset
+		try
+			dfIndata=readtable(dataFilename,eltypes=eltypev,nrows=nrows) #this currently uses by far to much memory on a 14m row file. The limitation is about a 7m row file with 77 columns
+		catch readerror
+			@show readerror
+			error("Unable to read file $(dataFilename)")
+		end
+	end
+
+	#at this point the data exists as a dataframe
+		telapsed=toq()
+		println("Time to read data: $(telapsed)")
+
+	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prep_data_from_df(dataFilename,settingsArray,dfIndata,datafolder,outfilename,outfileStringOnly,const_shift_cols)
+return 	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues
+end
+
+
+
 """
 If run_model_actual is called with an array of settings, the model is run on all settings.
 The model type (e.g. boosting/tree/bagging) needs to be the same for each entry of settings
@@ -983,6 +988,4 @@ function run_legacy(mld::String,fld::String)
     return rs
 end
 
-function dtm(dtmtable::DTMTable,sett::ModelSettings;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
-    return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,file::String)
-end
+=#
