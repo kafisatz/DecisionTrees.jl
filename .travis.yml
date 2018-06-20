@@ -6,8 +6,9 @@ julia:
   - nightly  
 notifications:
   email: false
-#script: # the default script is equivalent to the following
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#  - julia -e 'Pkg.clone(pwd()); Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)';
+script: # the default script is equivalent to the following
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'println("building PyCall for Travis...");ENV["PYTHON"]="";Pkg.build("PyCall");println("Done building PyCall.Restarting Julia...");exit();'
+  - julia -e 'Pkg.clone(pwd()); Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)';
 after_success:
   - julia -e 'cd(Pkg.dir("DecisionTrees")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
