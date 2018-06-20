@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2018 Bernhard König (Milliman AG)
+Copyright (c) 2018 Bernhard König
 
 Some portions of the code are based on https://github.com/JuliaComputing/PooledArrays.jl, Copyright (c) 2016 Julia Computing, Inc.
 PooledArrays itself is partially based on DataArrays.jl, Copyright (c) 2012: Harlan Harris, EPRI (Tom Short's code), Chris DuBois, John Myles White, and other contributors.
