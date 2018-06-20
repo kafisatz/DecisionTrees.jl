@@ -1,1 +1,11 @@
-julia 0.6.3
+julia 0.7-alpha
+Random
+Dates
+DataFrames
+FileIO
+JLD2
+OnlineStats
+ProgressMeter
+PyCall
+StatsBase
+StatsFuns
