@@ -221,12 +221,6 @@ version = "0.4.2+"
     Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
     Unicode = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
-[[Rmath]]
-deps = ["BinDeps", "Compat", "Libdl"]
-git-tree-sha1 = "3ab78faf8f8e6edc1c599c19d0a33f63bd360dac"
-uuid = "79098fc4-a85e-5d69-aa6a-4863f24498fa"
-version = "0.3.3"
-
 [[SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 
@@ -248,12 +242,6 @@ version = "0.2.1"
 [[SparseArrays]]
 uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
-[[SpecialFunctions]]
-deps = ["BinDeps", "Compat", "Libdl"]
-git-tree-sha1 = "ab519559b18834944811f7551e3b412118c6f71b"
-uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "0.3.3"
-
 [[StatsBase]]
 deps = ["Compat", "DataStructures", "LinearAlgebra", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Test"]
 git-tree-sha1 = "f4129d2e4c9636cc91b876c93e4483e51c5f4c60"
@@ -261,14 +249,6 @@ repo-rev = "d28d8269c8f104bcf90db75e74e901533fe22595"
 repo-url = "https://github.com/JuliaStats/StatsBase.jl.git"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 version = "0.23.0+"
-
-[[StatsFuns]]
-deps = ["Compat", "Rmath", "SpecialFunctions"]
-git-tree-sha1 = "52449ae9cc029f70b80eb5293b7894bc110a6c42"
-repo-rev = "master"
-repo-url = "https://github.com/JuliaStats/StatsFuns.jl.git"
-uuid = "4c63d2b9-4356-54db-8cca-17b64c39e42c"
-version = "0.6.0+"
 
 [[SweepOperator]]
 git-tree-sha1 = "3de8b7b1764431aea93f1dda464a4669879088d5"
