@@ -14,13 +14,13 @@ testdir = joinpath(dirname(@__FILE__),"")
 if testdir==""
     try 
         pkgdir=Pkg.dir("DecisionTrees") #how long will this remain supported?
-        testdir=joinpath(pkgdir,"test/")
+        testdir=joinpath(pkgdir,"test")
     catch
     end
 else 
-    pkgdir=normpath(joinpath(testdir,"../"))
+    pkgdir=normpath(joinpath(testdir,".."))
 end
-datadir=joinpath(pkgdir,"data/")
+datadir=joinpath(pkgdir,"data")
 
 @testset "DecisionTrees" begin
     println("DTM: Running tests:")
