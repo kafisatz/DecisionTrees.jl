@@ -217,6 +217,13 @@ estimatedFrequencieForFirst20Obs=predict(resM,dtmtable.features[1:20,:])
 #getting new/unseen data into the right format is not trivial at the moment. It is easiset to use prepare_dataframe_for_dtm! to the 
 #whole data set and then discrard possible hold out observations  (or mark as validation through validx)
 
+#Let us try a more granular model with more iterations and a higher learning rate
+updateSettingsMod!(sett,minw=-0.01,niter=100,mf=0.1,subsampling_features_prop=1.0,boolCalculatePoissonError=true)
+resultingFiles,resMGranular=dtm(dtmtable,sett)
+
+#todo write down error metrics of this model
+#possibly do a CV thereof
+
 
 ############################################################
 #Additional options

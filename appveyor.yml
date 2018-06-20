@@ -38,5 +38,5 @@ build_script:
       Pkg.clone(pwd(), \"DecisionTrees\"); Pkg.build(\"DecisionTrees\")"
 
 test_script:
-  - C:\projects\julia\bin\julia -e "println(\"building PyCall for Travis...\");ENV[\"PYTHON\"]=\"\";Pkg.build(\"PyCall\");using PyCall;global const pyModPandas = PyNULL();global const pyModxlsxwriter = PyNULL();copy!(pyModPandas, pyimport_conda(\"pandas\",\"pandas\"));copy!(pyModxlsxwriter, pyimport_conda(\"xlsxwriter\",\"xlsxwriter\"));writer=pyModPandas[:ExcelWriter](\"blabla_deletme.xlsx\", engine = \"xlsxwriter\");@show typeof(writer);println(\"if this worked, then pandas and xlsxwriter should be installed\");println(\"Done building PyCall.Restarting Julia...\");exit(); "
+  - C:\projects\julia\bin\julia -e "println(\"Building PyCall for Travis...\");ENV[\"PYTHON\"]=\"\";Pkg.build(\"PyCall\");using PyCall;global const pyModPandas = PyNULL();global const pyModxlsxwriter = PyNULL();copy!(pyModPandas, pyimport_conda(\"pandas\",\"pandas\"));copy!(pyModxlsxwriter, pyimport_conda(\"xlsxwriter\",\"xlsxwriter\"));writer=pyModPandas[:ExcelWriter](\"blabla_deletme.xlsx\", engine = \"xlsxwriter\");@show typeof(writer);println(\"if this worked, then pandas and xlsxwriter should be installed\");println(\"Done building PyCall.Restarting Julia...\");exit(); "
   - C:\projects\julia\bin\julia -e "Pkg.test(\"DecisionTrees\")"
