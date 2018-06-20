@@ -232,7 +232,7 @@ valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around
 #Let us consider a cross validation of this model.
 cvsampler=CVOptions(-5,0.0,true)
 #this will run 5 models and thus might take some time
-statsdf,settsdf,cvModels=dtm(dtmtable,sett)
+statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 #todo continue here
 
