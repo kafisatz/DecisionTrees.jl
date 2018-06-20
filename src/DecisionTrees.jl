@@ -104,9 +104,14 @@ function get_sha1()
 	which_res=@which DecisionTrees.__init__()
 	dtpath=splitdir(splitext(string(which_res.file))[1])[1][1:end-4]
 	current_path=pwd()
-	cd(dtpath)
-	cmd=`git rev-parse HEAD`	
-	sha1_of_dt=readstring(cmd)[1:end-1] #need to discard \n at the end
+	cd(dtpath)	
+	sha1_of_dt="n/a"
+	try
+		cmd=`git rev-parse HEAD`
+		sha1_of_dt=readstring(cmd)[1:end-1] #need to discard \n at the end
+	catch 
+		
+	end 
 	cd(current_path)
 	return sha1_of_dt
 end
