@@ -132,6 +132,11 @@ sett.randomw=0.02
 strs,resm5=dtm(dtmtable,sett)
 @test typeof(resm5.modelstats)==DataFrame
 
+sett.spawnsmaller=false
+sett.randomw=0.0
+strs,resm5b=dtm(dtmtable,sett)
+@test typeof(resm5b.modelstats)==DataFrame
+    
 #minw too big
 oldminw=sett.minw
 sett.minw=-0.51
