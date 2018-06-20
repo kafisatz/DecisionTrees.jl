@@ -293,7 +293,7 @@ settV=createGridSearchSettings(sett,
     minw=[-0.03,-0.01,-0.005,-0.0025]
     ,mf=[0.1,0.05],
     subsampling_features_prop=[.5,.7,1.0],
-    crit=["poissondeviance" "difference"]
+    crit=["poissondeviance" "difference"])
     #,   subsampling_prop=[1.0,.5,.7]);
 
 #consider the length(settV) which is the number of models that will be run
