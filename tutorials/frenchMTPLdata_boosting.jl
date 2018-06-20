@@ -123,12 +123,13 @@ originalTrnValIndex=deepcopy(fullData[:trnTest])
 #i.e. with subsampling_features_prop=0.5 each tree will only use half of the predictors
 
 #boolCalculatePoissonError, is a boolean which we need to enable here in order for output to show the poisson error of the estimates
-updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.025,subsampling_features_prop=.7,boolCalculatePoissonError=true)
+updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.05,subsampling_features_prop=.7,boolCalculatePoissonError=true)
 
 ##############################
 #Run single Boosting Model
 ##############################
 
+#This model might take few minutes to run.
 #resM is the resulting Model
 resultingFiles,resM=dtm(dtmtable,sett)
 #consider the resulting Excel file for a descritipon of the model 
@@ -140,7 +141,7 @@ sheetnames=map(x->x.name,resM.exceldata.sheets)
 #the following is the ModelStatistics sheets as a Dataframe 
 resM.exceldata.sheets[3].data
 #this is the lift in the training data for each iteration of the boosting model
-resM.exceldata.sheets[3].data[:x6]
+resM.exceldata.sheets[3].data[:x6][1:sett.niter+1]
 
 ############################################################
 #Investigate the predictions (fitted values)
@@ -175,8 +176,8 @@ fitted=resM.meanobserved.*resM.rawrelativities
 
 #Let us calculate the Poisson Error for these estimates
 errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
-trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #should be around 0.30939804739941096
-valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around 0.31950570163159764
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #should be around 0.3104379280001656
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around 0.32060219905526594
 
 #2. Smoothed fitted values per Score. 
 scores=resM.scores
@@ -191,8 +192,8 @@ fitted=fittedThroughScores
 @show unique(fitted)
 #this should correspond to sett.nscores
 errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
-trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.3087311765403276
-valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.31904324177240373
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.30909682928383053
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.3192856166040531
 
 #3. (raw) Observed frequency per Score
 #As the score is merely an aggregation of the resulting 'relativities' (i.e. the spread of the fitted frequencies by the ensbemble)
@@ -207,8 +208,8 @@ end
 #Again, let us consider the Poisson Error
 fitted=rawFittedThroughScores
 errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
-trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.30466923428172205
-valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.3192841010476779
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.30523053930420263
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.31953356919603665
 
 #Unseen data
 #Note: For any out of sample data (which MUST have exactly the same structure as dtmtable.features!)
@@ -320,9 +321,28 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 @info "Starting grid search..."
 
 tt0=time_ns()
-statsdf,settsdf,allmodels=dtm(dtmtable,settV,file="R:\\temp\\4\\dtm_n.CSV")
+statsdf,settsdf,allmodels=dtm(dtmtable,settV)
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
+
+#Consider the resulting vector of models 'allmodels' 
+#We apply addtional functions on these results, e.g.
+fittedValuesRawRelativities=map(x->x.meanobserved.*x.rawrelativities, allmodels);
+
+#in the following we vill evaluate the Poisson Error for the LAST iteration of the model
+#Note: this is not the 'BEST' iteration, but the last one.
+valAvgErrsMultirun=zeros(length(fittedValuesRawRelativities))
+for i=1:length(fittedValuesRawRelativities)    
+    fitted=fittedValuesRawRelativities[i]
+    errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
+    trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx)
+    valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx)
+    valAvgErrsMultirun[i]=valAvgError
+end 
+
+@show bestModel=argmin(valAvgErrsMultirun)
+bestSetting=settsdf[bestModel,:]
+#this data should be consistent with the data in the Excel output
 
 warn("todo:check best tree with poisson error too!")
     #crit::SplittingCriterion # fn version of 4
