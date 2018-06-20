@@ -22,3 +22,5 @@ data/adult/adult.test.xlsb
 data/adult/adult.test_orig
 data/freMTPL2/freMTPL2.csv
 dtm_compiles.csv
+data/freMTPL2/JuliaBoostingScores1000.csv
+data/freMTPL2/freMTPL2_withJuliaBoostingScores1000.csv

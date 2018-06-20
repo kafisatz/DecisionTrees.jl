@@ -235,7 +235,11 @@ cvsampler=CVOptions(-5,0.0,true)
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 #todo continue here
-
+#Let us attach the scores to the data and write it to disk.
+#We will then fit a GLM in R with and without the scores as predictor
+fullDataWithScores=deepcopy(fullData);
+fullDataWithScores[:scores]=resMGranular.scores;
+writetable(joinpath("data","freMTPL2","freMTPL2_withJuliaBoostingScores1000.csv"),fullDataWithScores)
 
 ############################################################
 #Additional options
