@@ -110,7 +110,7 @@ boolSaveResultAsJLDFile="true",
 showProgressBar_time="true",
 boolProduceEstAndLeafMatrices="true",
 write_dot_graph="false",
-boolCalculateGini="true"
+boolCalculateGini="true",
 
 boolCalculatePoissonError="true",
 performanceMeasure="Average Poisson Error Val"
