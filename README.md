@@ -5,7 +5,7 @@ This package is under development
 
 DecisionTrees Julia package repo.
 
-[comment]: <> ( [![DecisionTrees](http://pkg.julialang.org/badges/DecisionTrees_0.7.svg)](http://pkg.julialang.org/?pkg=DecisionTrees) )
+
 
 Linux: [![Build Status](https://travis-ci.org/JuliaLang/DecisionTrees.jl.svg?branch=master)](https://travis-ci.org/JuliaLang/DecisionTrees.jl)
 
