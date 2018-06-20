@@ -174,7 +174,7 @@ srand(intDatahash)
 end
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
-    warn("This requires testing especially when nprocs()>2")
+    #warn("This requires testing especially when nprocs()>2")
     #if folds<0 then we consider n disjoint training sets
     
     #currently we have three possible CVs

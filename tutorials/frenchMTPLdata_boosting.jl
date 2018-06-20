@@ -2,10 +2,7 @@
 #Boosting Model for the French MTPL Data
 ############################################################
 
-# If you do not yet have a suitable editor for Julia, you may want to consider VS Code.
-# Consider this link
-# https://github.com/JuliaEditorSupport/julia-vscode
-# We note that there are various alternative editors for Julia.
+#We suggest that you first go through the frenchMTPLdata_single_tree.jl tutorial before doing this tutorial
 
 ##############################
 #Load packages
@@ -233,8 +230,11 @@ valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around
 
 #The model is slightly better than the previous model.
 #Let us consider a cross validation of this model.
-cvsampler=CVOptions(-10,0.0,true)
-resultingFiles,resMGranular=dtm(dtmtable,sett)
+cvsampler=CVOptions(-5,0.0,true)
+#this will run 5 models and thus might take some time
+statsdf,settsdf,cvModels=dtm(dtmtable,sett)
+
+#todo continue here
 
 
 ############################################################
