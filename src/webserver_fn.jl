@@ -3,7 +3,7 @@ function update_folderlist!(listening_folders,folder_list_file)
 	local farr
 	try
 		complete_list=Array{String}(0)
-		res=readcsv(folder_list_file)
+		res=readdlm(folder_list_file)
 		res2=convert(Array{String,1},res[:,1])
 		resize!(listening_folders,length(res2))
 		listening_folders[:]=res2
@@ -288,8 +288,8 @@ end
 
 function this_runs_on_worker(process,logFilename,juliaProgram,harg,arguments)			
 		printover("Starting modelling...")
-		std_orig=STDOUT
-		stderr_orig=STDERR
+		std_orig=stdout
+		stderr_orig=stderr
 		f1=open(logFilename, "w") 
 			redirect_stdout(f1)
 			redirect_stderr(f1)

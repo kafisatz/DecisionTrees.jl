@@ -106,7 +106,7 @@ function get_sha1()
 	current_path=pwd()
 	cd(dtpath)
 	cmd=`git rev-parse HEAD`	
-	sha1_of_dt=readstring(cmd)[1:end-1] #need to discard \n at the end
+	sha1_of_dt=read(cmd, String)[1:end-1] #need to discard \n at the end
 	cd(current_path)
 	return sha1_of_dt
 end

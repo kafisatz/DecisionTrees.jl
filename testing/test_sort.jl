@@ -1,6 +1,6 @@
 using SortingAlgorithms
 
-raw_rel=readcsv("C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\data_tmp\\eraw_rel.csv");
+raw_rel=readdlm("C:\\Users\\bernhard.konig\\Documents\\ASync\\irobot\\data_tmp\\eraw_rel.csv");
 orig=deepcopy(raw_rel[:]);
  
 r=deepcopy(orig);i=zeros(Int,length(r)); @benchmark mysortperm!(i,r)
