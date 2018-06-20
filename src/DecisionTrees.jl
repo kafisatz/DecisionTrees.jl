@@ -117,6 +117,7 @@ function get_sha1()
 end
 
 #Precompile files
-	include("precompile.jl")
+    include(joinpath("precompile","precompile_DecisionTrees.jl"))
+	#include("precompile.jl")
 	
 end #end Module DTM
