@@ -40,7 +40,7 @@ srand(1234)
 include("types.jl")
 include("cross_validation_samplers.jl") #needs to be included early on as types are in here
 include("sorting.jl")
-include("splittingmeasures\\splittingmeasures.jl")
+include(joinpath(splittingmeasures,"splittingmeasures.jl"))
 include("helper_functions.jl")
 include("apply_tree_fn.jl")
 include("build_tree.jl")
