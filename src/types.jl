@@ -729,7 +729,9 @@ function checkIfSettingsAreValid(s::ModelSettings)
       @assert s.statsRandomByVariable<typemax(UInt8) #more than 255 random groups is really not meaningful; we do work with a UInt8 list later on
 	  @assert in(s.model_type,["boosted_tree" "build_tree" "bagged_tree" "bagged_boosted_tree"])
       @assert (s.randomw>=0) & (s.randomw<=1)
-      @assert s.max_splitting_points_num<255 "Maximum number of splitting points is currently limited to 254"
+	  #Note, we could easily support more splitting Points (i.e. UInt64), but it is likely that the user has not intended to exceed typemax(UInt16), thus we catch this here
+	  max_splitting_points_num_INTERNAL=Int(typemax(UInt16))-1
+      @assert s.max_splitting_points_num<max_splitting_points_num_INTERNAL "Maximum number of splitting points is currently limited to $(max_splitting_points_num_INTERNAL)"
 	  @assert s.max_splitting_points_num>0
 	  if (s.model_type=="bagged_boosted_tree")
 		@assert min(cBB_niterBagging,cBB_niterBoosting)>0

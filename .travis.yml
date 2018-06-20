@@ -1,6 +1,8 @@
 language: julia
 os:
-  - osx
+  #- osx 
+  #OSX is complaining about │    could not load library "libcholmod"
+  #ErrorException("could not load library "libopenblas64_"
   - linux
 julia:
   - nightly  
