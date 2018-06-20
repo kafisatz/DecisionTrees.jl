@@ -255,6 +255,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             header_settings=deepcopy(desc_settingsvec)
             allstats=Array{Float64,2}(length(numbrs),n_folds)			
             allsettings=Array{Any,2}(length(settingsvec),n_folds)
+            allmodels=Vector{Any}(nSettings)
         #define default stats if the model fails
             defaulted_stats=deepcopy(numbrs)
             defaulted_settings=deepcopy(settingsvec)
@@ -275,9 +276,11 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             numbrs=pmap_entry[1]
             settingsvec=pmap_entry[2]
             i=pmap_entry[3]
+            mdl=pmap_entry[4]
             #append stats 
                 allstats[:,i].=deepcopy(numbrs)
                 allsettings[:,i].=deepcopy(settingsvec)
+                allmodels[i]=mdl
         end
     
         #3. aggregate some statistics
@@ -328,7 +331,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         sett.minw=deepcopy(minw_orig)
         sett.seed = seed_orig 
         
-        return statsdf,settsdf    
+        return statsdf,settsdf,allmodels 
     end
         
 function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)	
@@ -397,11 +400,11 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
                 @show desc_settingsvec
                 @show header_settings
             end            
-        return numbrs,settingsvec,i
+        return numbrs,settingsvec,i,model
     catch eri
         warn("DTM: CV model $(i) failed.")
         println(eri)
-        return defaulted_stats,defaulted_settings,i
+        return defaulted_stats,defaulted_settings,i,deepcopy(EmtpyDTModel())
     end
 
     return nothing

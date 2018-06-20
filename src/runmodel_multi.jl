@@ -39,8 +39,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
             allmodels=Vector{Any}(nSettings)
         #define default stats if the model fails
             defaulted_stats=deepcopy(numbrs)
-            defaulted_settings=deepcopy(settingsvec)
-            #emptyModel=emptyModel(model)
+            defaulted_settings=deepcopy(settingsvec)            
             emptyModel=deepcopy(EmtpyDTModel())
             fill!(defaulted_stats,0.0)
 

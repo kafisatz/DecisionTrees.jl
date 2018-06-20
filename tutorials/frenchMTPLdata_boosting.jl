@@ -223,7 +223,18 @@ updateSettingsMod!(sett,minw=-0.01,niter=100,mf=0.1,subsampling_features_prop=1.
 resultingFiles,resMGranular=dtm(dtmtable,sett)
 
 #todo write down error metrics of this model
-#possibly do a CV thereof
+
+#Let us calculate its error
+fitted=resMGranular.meanobserved.*resMGranular.rawrelativities
+#Let us calculate the Poisson Error for these estimates
+errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
+trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #should be around 0.296411226074372
+valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #should be around 0.3129144168276613
+
+#The model is slightly better than the previous model.
+#Let us consider a cross validation of this model.
+cvsampler=CVOptions(-10,0.0,true)
+resultingFiles,resMGranular=dtm(dtmtable,sett)
 
 
 ############################################################
