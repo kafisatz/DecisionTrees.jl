@@ -25,7 +25,8 @@ include("PooledArraysDTM.jl")
 using .PooledArraysDTM 
 
 using Dates,Random
-using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
+#using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
+using PyCall,DataFrames,JLD2,FileIO,OnlineStats,ProgressMeter,StatsBase
  
 #for precompile files, we need some additional packages
 using DataStreams
