@@ -29,13 +29,13 @@ else
 end
 
 #obs,obsVAL,trn_meanobservedvalue,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time=initSettingsWhichAreTheSameForBoostingAndBagging(actualNumerator,actualNumeratorVAL,denominator,sett)
-iterationsPerCore=calcIterationsPerCore(sett.niter,nprocs())
+iterationsPerCore=calcIterationsPerCore(sett.niter,Distributed.Distributed.nprocs())
 sampleSizeForEachTreeCanBeNEG=convert(Int,round(sett.subsampling_prop*length(trnidx)))
 if abs(sampleSizeForEachTreeCanBeNEG)<1
 	sampleSizeForEachTreeCanBeNEG=convert(Int,sign(sett.subsampling_prop))
 end
 
-vecTreesWErrs = Distributed.@distributed (vcat) for ii=1:nprocs()
+vecTreesWErrs = Distributed.@distributed (vcat) for ii=1:Distributed.Distributed.nprocs()
 	#create_bagged_trees(iterationsPerCore[ii],sampleSizeForEachTreeCanBeNEG,trn_meanobservedvalue,candMatWOMaxValues,mappings,sett,actualNumerator,denominator,weight,numfeatures,charfeatures)		
 	#sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
 	create_bagged_trees(iterationsPerCore[ii],trnidx,sampleSizeForEachTreeCanBeNEG,trn_meanobservedvalue,candMatWOMaxValues,mappings,sett,actualNumerator,denominator,weight,features)	

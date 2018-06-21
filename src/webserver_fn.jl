@@ -49,7 +49,7 @@ function test_module_on_workers()
 	try
 		#list of different test cases
 		clist=["tree_tiny","boosting_tiny","bagging_tiny","boost_tiny_subs","boost_tiny_subs_withrepl"] #,"boosting_testmodel_small"]
-		n=nprocs()
+		n=Distributed.nprocs()
 		ntests=length(clist)
 		booleans=BitArray(undef,n);fill!(booleans,true)
 		i = 1
@@ -271,7 +271,7 @@ end
 function invoke_worker_process(rr,process,logFilename,juliaProgram,harg,arguments)	
 	println("")
 	@info "$(now()). Started: $(logFilename)"
-	if nprocs()==1
+	if Distributed.nprocs()==1
 			rr = this_runs_on_worker(process,logFilename,juliaProgram,harg,arguments)
 	else
 		@async begin

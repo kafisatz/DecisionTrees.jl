@@ -117,7 +117,8 @@ removeUnionTypes!(dfin,independent_vars)
     end
     #delete main columns if they appear in the indep columns
     for remove_this_col in [numcol denomcol weightcol trnvalcol keycol][:]
-        deleteat!(independent_vars, findin(independent_vars, [remove_this_col]))
+        #deleteat!(independent_vars, findin(independent_vars, [remove_this_col]))
+		deleteat!(independent_vars,findall((in)([remove_this_col]), independent_vars))
     end
     n_indep=length(independent_vars)
 

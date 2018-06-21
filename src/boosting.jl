@@ -43,7 +43,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		est_matrix=Array{Float64}(undef,obs,iterations+1)
 		est_matrixFromScores=deepcopy(est_matrix)
 		MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
-		MatrixOfLeafNumbers[:,1]=0
+		MatrixOfLeafNumbers[:,1].=0
 		est_matrix[:,1]=copy(transpose(estimatedRatio))
 		est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
 	else

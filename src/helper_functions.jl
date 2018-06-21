@@ -1694,7 +1694,7 @@ end
 
 
 function map_numdata_to_candidates(this_column,candlist)
-	mapped_vec=zeros(this_column)
+	mapped_vec=fill!(similar(this_column), 0) #zeros(this_column)
 	for ii=1:length(this_column)
 		#x=this_column[1]
 		mapped_idx=searchsortedfirst(candlist,this_column[ii])
@@ -1711,7 +1711,7 @@ function define_candidates(feature_column,max_splitting_points_num::Int)
 	#step 2 ensure each element of domain_i corresponds to an observation
 	uq_obs=unique(feature_column);
 	sort!(uq_obs);
-	result=zeros(domain_i)
+	result=fill!(similar(domain_i), 0)#zeros(domain_i)
 	for tmploopvar=1:length(domain_i)
 		thisval=domain_i[tmploopvar]
 		idx2=searchsortedfirst(uq_obs,thisval)
@@ -2792,7 +2792,7 @@ function some_tree_settings(trnidx,validx,fixedinds::Array{Int,1},candMatWOMaxVa
 	nLeavesEstimate=Int(round(max(1,0.5*(totalweight/minweight+0.5*totalweight/minweight))))
 	nDepthEstimate=ceil(log(2,nLeavesEstimate))
 	#this Depthestimate is about 3 times too low as we create very granular trees!
-	nDepthToStartParallelization=Int(round(max(1,min(nDepthEstimate-1,log(2,nprocs())))))
+	nDepthToStartParallelization=Int(round(max(1,min(nDepthEstimate-1,log(2,Distributed.nprocs())))))
 
 	if length(fixedinds) >0 #features are pre set
 		inds=deepcopy(fixedinds);
