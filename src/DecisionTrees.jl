@@ -2,19 +2,21 @@ __precompile__()
 VERSION >= v"0.7-"
 #note on v0.7 alpha precompilation through 'using' (i.e. when the code was not precomipled before) takes about 800 seconds
 #once precompilation is done, the using statement might need around 500 seconds. 
-@warn "BK: DTM currently has a performance regression of 50% in Julia 0.7alpha versus 0.6.3. \nYou should start julia with --depwarn=no option (in case there are still unfixed deprecations), otherwise the algorithms might be further slowed down. I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
+@warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou should start julia with --depwarn=no option (in case there are still unfixed deprecations), otherwise the algorithms might be further slowed down. I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
 
-@info "DTM: BK to add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
-@info "DTM: BK to 'remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)"
-@info "DTM: BK add 'time_finished' to model result (and possibly the time needed for the modelling)"
-@info "DTM: BK need to ensure that the code runs smoothly even when no split is found (e.g. minw too big)"
-@info "DTM: BK possibly introduce an option not to calculate intermediate metrics/scoring/sorting -> faster runtime"
-@info "DTM: BK to check if sortperm! performance has improved in newer Julia versions"
-@info "DTM: BK to fix this - we should not rely on mappings and candmatwomax anymore (if possible)"
-@info "DTM: BK to add purity improvement for each split! Stop splitting if it is > threshold"
-@info "BK: do not use df_name_vector anymore, but the symbol in the subset or simply names(features) - possibly also get rid of mappings and candmat...."
-@info "BK: tbd add yes/no to the top of each printed DOT graph indicating that 'yes goes left'"
-@info "BK: avoid branching in critical functions / use ifelse or similar constructs"
+#=
+@info "DTM: BK Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
+@info "DTM: BK 'Remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)"
+@info "DTM: BK Add 'time_finished' to model result (and possibly the time needed for the modelling)"
+@info "DTM: BK Need to ensure that the code runs smoothly even when no split is found (e.g. minw too big)"
+@info "DTM: BK Possibly introduce an option not to calculate certain intermediate metrics (scoring, sorting, ...) -> faster runtime"
+@info "DTM: BK To check if sortperm! performance has improved in newer Julia versions"
+@info "DTM: BK To fix this: the code should not rely on dtmtable.mappings and dtmtable.candmatwomax anymore (if possible). The pools have the equivalent information"
+@info "DTM: BK To add purity improvement for each split! Stop splitting if it is > some_specified_threshold"
+@info "DTM: BK Do not use df_name_vector anymore, but the symbol in the subset or simply names(features)"
+@info "DTM: BK Add yes/no to the top of each printed DOT graph (in the PDF output) indicating that 'yes goes left'"
+@info "DTM: BK Try to avoid branching in critical functions; use ifelse or similar constructs (this might improve the performance)"
+=#
 
 module DecisionTrees
 

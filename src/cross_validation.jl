@@ -65,6 +65,7 @@ srand(intDatahash)
             header_settings=Vector{String}(1)
             allstats=Array{Float64,2}
             allsettings=Array{Any,2}
+            allmodels=Vector{Any}
             i=1
             n_folds=abs(cvo.folds)
 
@@ -102,7 +103,7 @@ srand(intDatahash)
             header_settings=deepcopy(desc_settingsvec)
             allstats=Array{Float64,2}(length(numbrs),n_folds)			
             allsettings=Array{Any,2}(length(settingsvec),n_folds)
-            allmodels=Vector{Any}(nSettings)
+            allmodels=Vector{Any}(n_folds)
         else			
             if !all(header[2:end].==desc[2:end])
                 warn("Model run $(i) returned an unexpected results vector:")
