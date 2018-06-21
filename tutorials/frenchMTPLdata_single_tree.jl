@@ -160,13 +160,21 @@ unique(leafnumbers)
 #this is detailed further below
 
 #Tree representation
-dot_graph=graph(resM)
-
 #If you have Graphviz installed, you can generate a plot (on a PDF) of the tree
 updateSettingsMod!(sett,write_dot_graph="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
 resultingFiles,resM=dtm(dtmtable,sett)
-
 #You will also get a *.dot.txt file with a text representation of the graph
+
+#If you do not have graphviz installed, you can do the following: 
+    #you can create a tree representation like this
+    dot_graph=graph(resM) #this is the content of the .dot.txt file
+
+    #copy tree graph to Clipboard
+    clipboard(dot_graph)
+    #go to 'a graphviz online too':
+    https://dreampuf.github.io/GraphvizOnline/ 
+    #paste the tree 
+
 
 #output location
 #you can provide a file and folder name in the following manner:
