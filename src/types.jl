@@ -658,14 +658,17 @@ function updateSettingsMod!(s::ModelSettings;args...)
 	@assert res==nothing "Some settings are invalid! Abort."
 end
 
+myParseAsFloat(x::T) where {T<:AbstractString} = parse(Float64,val)
+myParseAsFloat(x::T) where {T<:Number} = float(val)
 convertFromString(oldvalue::T,val) where {T <: Any}=convert(T,val) #generic method catchall
 convertFromString(oldvalue::T,val) where {T <: AbstractString}=convert(T,string(val))
-convertFromString(oldvalue::T,val::U) where {T <: AbstractFloat,U<:AbstractString}=parse(Float64,val)
-convertFromString(oldvalue::T,val) where {T <: AbstractFloat}=float(val)
-convertFromString(oldvalue::T,val::U) where {T <: Integer,U<:AbstractString}=convert(Integer,parse(Float64,val)) 
-convertFromString(oldvalue::T,val) where {T <: Integer}=convert(Integer,float(val))
-convertFromString(oldvalue::T,val::U) where {T <: Unsigned,U<:AbstractString}=uint(parse(Float64,val))
-convertFromString(oldvalue::T,val) where {T <: Unsigned}=uint(float(val))
+
+#convertFromString(oldvalue::T,val::U) where {T <: AbstractFloat,U<:AbstractString}=parse(Float64,val)
+convertFromString(oldvalue::T,val) where {T <: AbstractFloat}=myParseAsFloat(val)
+convertFromString(oldvalue::T,val) where {T <: Integer}=convert(Integer,myParseAsFloat(val))
+#convertFromString(oldvalue::T,val::U) where {T <: Integer,U<:AbstractString}=convert(Integer,parse(Float64,val)) 
+#convertFromString(oldvalue::T,val::U) where {T <: Unsigned,U<:AbstractString}=uint(parse(Float64,val))
+convertFromString(oldvalue::T,val) where {T <: Unsigned}=uint(myParseAsFloat(val))
 convertFromString(oldvalue::T,val) where {T <: Bool}=(lowercase(val)=="t"||lowercase(val)=="true"||val=="1")
 function convertFromString(oldvalue::T,val) where {T <: SortBy}
 	@assert lowercase(val)=="sortbymean"||lowercase(val)=="mean"

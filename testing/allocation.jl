@@ -8,44 +8,62 @@ pkgdir=Pkg.dir("DecisionTrees") #how long will this remain supported?
 testdir=joinpath(pkgdir,"test")
 datadir=joinpath(pkgdir,"data")
 
-elt=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
+#Read the data
+datafile=joinpath(datadir,"freMTPL2\\freMTPL2.csv")
+@assert isfile(datafile);
+@time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
-fi="data1Small.csv"
-thisfile=joinpath(datadir,fi)
-@assert isfile(thisfile)
-@time df_tmp=CSV.read(thisfile,allowmissing=:none,types=elt,categorical=false,rows_for_type_detect=10000);
+    areasSorted=sort(unique(fullData[:Area]))
+    AreaInteger=map(x->findall((in)([x]),areasSorted)[1],fullData[:Area])
+    fullData[:AreaInteger]=AreaInteger
 
-selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
+#correct for unreasonable observations
+for i=1:size(fullData,1)
+    fullData[:ClaimNb][i]=min(4,fullData[:ClaimNb][i])
+    fullData[:Exposure][i]=min(1.0,fullData[:Exposure][i])
+end
+    
+#set independent variables
+selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","BonusMalus","VehBrand","VehGas","Density","Region"]
 
-#keep 10 largest PLZ only
-vorig=deepcopy(df_tmp[:PLZ_WOHNORT])
-counts,freqs,vals,keep=getCounts(vorig,threshold=10)
-vnew=df_tmp[:PLZ_WOHNORT]
-mapToOther!(vnew,keep,9999999)
-
-##################################################
 #Prepare the data
-##################################################
+##############################
 
-dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
-sett.minw=-.2
+dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 
-#selected_explanatory_vars=[    "VORSCHAEDEN_ANZAHL",    "MALLORCA_POLICE",	"SCHUTZBRIEF_INKL",	"FREIE_WERKSTATTWAHL",	"AUTOMOBILCLUB_MITGLIED_SEIT",	"BAHNCARD",	"ZAHLUNGSWEISE",	"JAHRESKARTE_OEPNV",	"MOTORRAD_BESITZER",	"AUTOMOBILCLUB",	"SFKLASSE_VOLLKASKO",	"SFKLASSE_HAFTPFLICHT",	"STELLPLATZ_ABSCHLIESSBAR",	"NAECHTLICHER_STELLPLATZ",	"NUTZUNGSWEISE",	"JAEHRLICHE_FAHRLEISTUNG",	"TSN",	"ERSTZULASSUNG",	"HSN",	"FINANZIERUNGSART",	"ZULASSUNG_AUF_VERSICHERUNGSNEHM",	"STADT",	"KENNZEICHEN",	"PLZ_DES_HALTER",	"SELBSTGENUTZTES_WOHNEIGENTUM",	"ART_DES_WOHNEIGENTUM",	"GEBURTSDATUM",	"FAMILIENSTAND",	"NATIONALITAET",	"GESCHLECHT",	"FUEHRERSCHEIN_ERWORBEN_AM",	"VORSCHAEDEN0_typeKH",	"VORSCHAEDEN0_typetk",	"VORSCHAEDEN0_month",	"VORSCHAEDEN0_year",	"VORSCHAEDEN1_typetk",	"VORSCHAEDEN1_month",	"VORSCHAEDEN1_year",	"VORSCHAEDEN2_typevk",	"VORSCHAEDEN2_month",	"VORSCHAEDEN2_year",	"adacid",	"name",	"marke",	"modell",	"preis",	"getriebeart",	"antriebsart",	"Fahrzeugklasse",	"co2klasse",	"kw",	"ps",	"tueranzahl",	"Motorart",	"Kraftstoffart",	"Motorbauart",	"Schadstoffklasse",	"Karosserie",	"Sitzanzahl",	"typklasseh_num",	"typklassetk_num",	"typklassevk_num",	"hubraum2",	"drehmoment2",	"breite2",	"radstand2",	"laenge2",	"hoehe2",	"leergewicht2",	"gesamtgewicht2",	"zuladung2",	"kofferraumvolumen_num",	"hoechstgeschwindigkeit2",	"verbrauchgesamt2",	"verbrauchausserorts2",	"verbrauchinnerorts2",	"beschleunigung2",	"tank2",	"kfzsteuer2",	"anzahlgaenge2",	"anzahlzylinder2",	"co2_wert",	"modellstart_y"]
-##################################################
-#run tree
-##################################################
-strs,resm=dtm(dtmtable,sett)
+##############################
+#Define model SETTINGS
 
-##################################################
-#run boosting
-##################################################
+updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=2,mf=0.1,subsampling_features_prop=.7,boolCalculatePoissonError=true)
 
-sett.niter=10
-sett.model_type="boosted_tree"
-strs,resm2=dtm(dtmtable,sett)
+##############################
+#Run single Boosting Model
+resultingFiles,resM=dtm(dtmtable,sett)
+
+#measure allocation
+updateSettingsMod!(sett,
+niter=40,
+model_type="boosted_tree",
+nscores="1000",
+write_statistics="false",
+write_sas_code="false",
+write_iteration_matrix="false",
+write_result="false",
+write_csharp_code="false",
+write_vba_code="false",
+boolSaveJLDFile="false",
+boolSaveResultAsJLDFile="false",
+
+showProgressBar_time="false",
+boolProduceEstAndLeafMatrices="false",
+write_dot_graph="false",
+
+boolCalculatePoissonError="true",
+performanceMeasure="Average Poisson Error Val"
+)
+
 
 Profile.clear_malloc_data()
-
 strs,resm2=dtm(dtmtable,sett)
 @info("allocation run done.")
 quit();
