@@ -156,7 +156,7 @@ srand(intDatahash)
     #define Exceldata
     sh1=ExcelSheet("settings",settsdf)
     sh2=ExcelSheet("stats",statsdf)
-    xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(0))
+    xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(undef,0))
     #write data
     @info "DTM: Writing multistats to file:\r\n$(filen)"
     try 		
@@ -317,7 +317,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         #define Exceldata
         sh1=ExcelSheet("settings",settsdf)
         sh2=ExcelSheet("stats",statsdf)
-        xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(0))
+        xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(undef,0))
         #write data
         try 		
             @time write_statistics(xld,filen,true,false)		

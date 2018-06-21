@@ -54,7 +54,7 @@ mutable struct ExcelData
 	sheets::Array{ExcelSheet,1}
     charts::Array{Chart,1}
     function ExcelData()
-        return new(Array{ExcelSheet}(0),Array{Chart}(0))
+        return new(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
     end
     function ExcelData(a,b)
         return  new(a,b)
@@ -418,7 +418,7 @@ mutable struct ModelSettings
 	#combined bagging&boosting model
 	cBB_niterBoosting=0
 	cBB_niterBagging=0
-	fixedinds=Array{Int}(0)
+	fixedinds=Array{Int}(undef,0)
 	boolNumeratorStats=false
 	bINTERNALignoreNegRelsBoosting=false
 	statsByVariables=Int[]
@@ -439,7 +439,7 @@ mutable struct ModelSettings
 	#the following are treated specially
 	ncolsdfIndata=-1 #
 	ishift=0 #
-	df_name_vector=Array{String}(0) #
+	df_name_vector=Array{String}(undef,0) #
     number_of_char_features=-1 #
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
@@ -817,7 +817,7 @@ mutable struct Tree <: DTModel
 		@assert length(settings.df_name_vector)==nf
 		variableImp1Dim=zeros(Int,nf)
 		variableImp2Dim=zeros(Int,div(nf*(nf-1),2))
-		ms=Array{Any}(0,0)
+		ms=Array{Any}(undef,0,0)
 		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata,fp)
 	end
 	function Tree()		

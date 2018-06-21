@@ -74,9 +74,9 @@ end
 			est_matrix[:,1]=copy(transpose(estimatedRatio))
 			est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
 		else
-			est_matrix=Array{Float64}(0,0)
+			est_matrix=Array{Float64}(undef,0,0)
 			est_matrixFromScores=deepcopy(est_matrix)
-			MatrixOfLeafNumbers=Array{Int}(0,0)
+			MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 		end
 		
 		#est_matrix=Array{Float64}(obs,iterations+1)
@@ -88,8 +88,8 @@ end
 		#vectorOfLeafNumbersTrn=Array{Int}(obs,iterations+1)
 		#vectorOfLeafNumbersTrn[:,1]=0
 
-		vectorOfLeafArrays[1]=Array{Leaf}(0) #the first entry is not defined
-		#vectorOfRulePathsToLeavesArrays[1]=Array{Array{Rulepath,1}}(0) #the first entry is not defined	
+		vectorOfLeafArrays[1]=Array{Leaf}(undef,0) #the first entry is not defined
+		#vectorOfRulePathsToLeavesArrays[1]=Array{Array{Rulepath,1}}(undef,0) #the first entry is not defined	
 		
 		#est_matrix[:,1]=copy(transpose(estimatedRatio))
 		#est_matrixVAL[:,1]=copy(transpose(estimatedRatioVAL))

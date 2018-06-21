@@ -108,9 +108,9 @@ function predict(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool
 		est_matrix[:,1]=copy(transpose(estimatedRatio))
 		est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
 	else
-		est_matrix=Array{Float64}(0,0)
+		est_matrix=Array{Float64}(undef,0,0)
 		est_matrixFromScores=deepcopy(est_matrix)
-		MatrixOfLeafNumbers=Array{Int}(0,0)
+		MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 	end
 	
   for iter=1:niter    

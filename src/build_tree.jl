@@ -38,10 +38,10 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
 	settings.minw=minweightcalculated #update minw
 	@assert length(inds)>0 "Error: no features were selected length(num_inds)=$(length(num_inds)), length(char_inds)=$(length(char_inds))"
 	settings.nDepthToStartParallelization=nDepthToStartParallelization #update nDepthToStartParallelization
-	empty_xl_data=ExcelData(Array{ExcelSheet}(0),Array{Chart}(0))
+	empty_xl_data=ExcelData(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
 	fp=get_feature_pools(features)
 	resultingTree=Tree(deepcopy(emptyNode),intVarsUsed,candMatWOMaxValues,mappings,inds,settings,deepcopy(empty_xl_data),fp)
-	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath}(0),settings.parallel_tree_construction,Distributed.myid(),fitted_values)
+	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath}(undef,0),settings.parallel_tree_construction,Distributed.myid(),fitted_values)
 	#set Leaf Numbers
 	set_leaf_numbers!(resultingTree)
 	return resultingTree
@@ -202,13 +202,13 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 return Node(id,id2,subset,fetched_left,fetched_right,parent_rp)::Node
 end
 
-function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int,randomweight::Float64,crit::SplittingCriterion,parallel_level_threshold::Int=9999999999,parallel_weight_threshold::Int=9999999999,inds::Array{Int,1}=Array{Int}(0),catSortByThreshold::Int=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned
+function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int,randomweight::Float64,crit::SplittingCriterion,parallel_level_threshold::Int=9999999999,parallel_weight_threshold::Int=9999999999,inds::Array{Int,1}=Array{Int}(undef,0),catSortByThreshold::Int=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned
 	#This function selects the maximal possible split defined by crit (thus depending on the impurity function, we need to put a minus sign in front of it)
 		tmpsz::Int=0
 		if sum(view(weight,trnidx))<2*minweight;
 			return const_default_splitdef;
 		end
-		tmp_splitlist=Vector{Splitdef{T}}(0)
+		tmp_splitlist=Vector{Splitdef{T}}(undef,0)
 		for i in inds
 			#ATTENTION: for char variables we pass the variable i with a negative sing!!
 			#this allows us to distinguish whether we are working on a char or num variable later on
@@ -260,7 +260,7 @@ crit_type=typeof(crit)
 #feature_column_id is negative in case of character variables
 best_value=-Inf
 best_thresh=best_wl=best_wr=NaN
-best_subset=Array{UInt8}(0)
+best_subset=Array{UInt8}(undef,0)
 trnfeatures=view(features,trnidx)
 elt=eltype(trnfeatures.parent.refs)
   labellist_sorted=collect(one(elt):convert(elt,length(trnfeatures.parent.pool))) #this used to be levels(features) #this also contains the val feature levels here! It is considerably faster than levels(view) \factor 100 or so
@@ -270,7 +270,7 @@ elt=eltype(trnfeatures.parent.refs)
 	#todo/tbd countsort here might be obsolete: we should check if levels is always sorted by construction
   #also we will later sort the labels in a different order anyway (then again the list probably needs to be sorted in the natural manner such that build_listOfMeanResponse is working properly)
   if size(labellist_sorted,1) <= 1
-    return collect(Vector{Splitdef{T}}(0))
+    return collect(Vector{Splitdef{T}}(undef,0))
   else
 	countsort!(labellist_sorted)
     #here I am (somewhat) misusing multiple dispatch since I was too lazy to parametrize this at the moment (todo/tbd in the future)
@@ -316,7 +316,7 @@ elt=eltype(trnfeatures.parent.refs)
         feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id) + number_of_num_features : feature_column_id
       return [Splitdef(feature_column_id,feature_column_id2,fname,Vector{T}(tmp_result[2]),tmp_result[1],tmp_result[3],tmp_result[4])]
     else
-      return collect(Vector{Splitdef{T}}(0))
+      return collect(Vector{Splitdef{T}}(undef,0))
     end
   else
   #randomweight>0

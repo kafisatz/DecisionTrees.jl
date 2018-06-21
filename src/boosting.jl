@@ -33,10 +33,10 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	indicatedRelativityForApplyTree_reused=zeros(obs)
 	reused_fitted_leafnr_vector=zeros(Int,obs)
     sortvec_reused_trn_only=zeros(Int,length(trnidx))
-    intVarsUsed=Array{Array{Array{Int,1},1}}(0);sizehint!(intVarsUsed,iterations)
-	inds_considered=Array{Array{Int,1}}(0);sizehint!(inds_considered,iterations)
-	#intCharVarsUsed=Array{Array{Array{Int,1},1}}(0);sizehint!(intCharVarsUsed,iterations)
-	#char_inds_considered=Array{Array{Int,1}}(0);sizehint!(char_inds_considered,iterations)
+    intVarsUsed=Array{Array{Array{Int,1},1}}(undef,0);sizehint!(intVarsUsed,iterations)
+	inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(inds_considered,iterations)
+	#intCharVarsUsed=Array{Array{Array{Int,1},1}}(undef,0);sizehint!(intCharVarsUsed,iterations)
+	#char_inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(char_inds_considered,iterations)
 	
 	res=Array{Union{Leaf,Node{UInt8},Node{UInt16}}}(iterations)
 	if boolProduceEstAndLeafMatrices
@@ -47,17 +47,17 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		est_matrix[:,1]=copy(transpose(estimatedRatio))
 		est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
 	else
-		est_matrix=Array{Float64}(0,0)
+		est_matrix=Array{Float64}(undef,0,0)
 		est_matrixFromScores=deepcopy(est_matrix)
-		MatrixOfLeafNumbers=Array{Int}(0,0)
+		MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 	end
 	
 	scores=zeros(Int,obs)	
 	estFromScores=zeros(obs)
 	#vectorOfRulePathsToLeavesArrays=Array{Array{Array{Rulepath,1},1}}(iterations+1)
-	#vectorOfRulePathsToLeavesArrays[1]=Array{Array{Rulepath,1}}(0) #the first entry is not defined	
+	#vectorOfRulePathsToLeavesArrays[1]=Array{Array{Rulepath,1}}(undef,0) #the first entry is not defined	
 	vectorOfLeafArrays=Array{Array{Leaf,1}}(iterations+1)
-	vectorOfLeafArrays[1]=Array{Leaf}(0) #the first entry is not defined		
+	vectorOfLeafArrays[1]=Array{Leaf}(undef,0) #the first entry is not defined		
 	
     p = Progress(iterations, 2, "Progress of Boosting Model:") # minimum update interval: x seconds (2)
     ((adaptiveLearningRate>=1.0)||(adaptiveLearningRate<=0.0)) ? (BoolAdaptiveLearningRate=false) : (BoolAdaptiveLearningRate=true)

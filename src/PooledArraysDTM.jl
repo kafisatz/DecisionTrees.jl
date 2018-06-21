@@ -407,7 +407,7 @@ function Base.unshift!(pv::PooledVector{S,R}, v::T) where {S,R,T}
     return v
 end
 
-Base.shift!(pv::PooledVector) = pv.pool[shift!(pv.refs)]
+Base.popfirst!(pv::PooledVector) = pv.pool[popfirst!(pv.refs)]
 
 Base.empty!(pv::PooledVector) = (empty!(pv.refs); pv)
 

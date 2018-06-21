@@ -97,7 +97,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
       #warning: if the labellist is not sorted 1:n we need to be careful here!
       chosen_subset=labellist[chosen_subset_bitarray]
       else
-      chosen_subset=Array{UInt}(0)
+      chosen_subset=Array{UInt}(undef,0)
     end
     return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
@@ -136,7 +136,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   weightsr=zeros(subs_size)
 
   sumnl=sumwl=sumdl=0.0
-  this_splitlist=Array{Splitdef}(0)
+  this_splitlist=Array{Splitdef}(undef,0)
 
   counter=1
   for i in subs
