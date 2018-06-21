@@ -34,9 +34,9 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	reused_fitted_leafnr_vector=zeros(Int,obs)
     sortvec_reused_trn_only=zeros(Int,length(trnidx))
     intVarsUsed=Array{Array{Array{Int,1},1}}(0);sizehint!(intVarsUsed,iterations)
-	inds_considered=Array{Array{Int64,1}}(0);sizehint!(inds_considered,iterations)
+	inds_considered=Array{Array{Int,1}}(0);sizehint!(inds_considered,iterations)
 	#intCharVarsUsed=Array{Array{Array{Int,1},1}}(0);sizehint!(intCharVarsUsed,iterations)
-	#char_inds_considered=Array{Array{Int64,1}}(0);sizehint!(char_inds_considered,iterations)
+	#char_inds_considered=Array{Array{Int,1}}(0);sizehint!(char_inds_considered,iterations)
 	
 	res=Array{Union{Leaf,Node{UInt8},Node{UInt16}}}(iterations)
 	if boolProduceEstAndLeafMatrices

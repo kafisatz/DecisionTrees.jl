@@ -48,7 +48,7 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
 end
 
 function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings::ModelSettings,thisTree::Tree,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::DataFrame,
-									depth::Int64,randomweight::Float64,parent_rp::Array{Rulepath,1},parallel_tree_construction::Bool,parentid::Int64,fitted_values::Vector{Float64})
+									depth::Int,randomweight::Float64,parent_rp::Array{Rulepath,1},parallel_tree_construction::Bool,parentid::Int,fitted_values::Vector{Float64})
 	#!!!! the current concept forsees that features is always the FULL DataFrame
 	boolRandomizeOnlySplitAtTopNode=settings.boolRandomizeOnlySplitAtTopNode
 	local inds
@@ -202,7 +202,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 return Node(id,id2,subset,fetched_left,fetched_right,parent_rp)::Node
 end
 
-function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int64,randomweight::Float64,crit::SplittingCriterion,parallel_level_threshold::Int64=9999999999,parallel_weight_threshold::Int64=9999999999,inds::Array{Int64,1}=Array{Int64}(0),catSortByThreshold::Int64=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned
+function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int,randomweight::Float64,crit::SplittingCriterion,parallel_level_threshold::Int=9999999999,parallel_weight_threshold::Int=9999999999,inds::Array{Int,1}=Array{Int}(0),catSortByThreshold::Int=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned
 	#This function selects the maximal possible split defined by crit (thus depending on the impurity function, we need to put a minus sign in front of it)
 		tmpsz::Int=0
 		if sum(view(weight,trnidx))<2*minweight;
@@ -231,7 +231,7 @@ function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vec
 							#randomize choice
 							spl::Splitdef{T}=splitlist_sorted[1]
 							if randomweight>0 #((depth==0) && (randomweight>0))
-								rnd=Int64(max(1,min(tmpsz,ceil(rand()*randomweight*tmpsz)))) #I am not sure if it can happen that rnd becomes 0 if we do not impose the max(1,...) condition. But it seems safe to enforce it in case an incredibly small random number is generated
+								rnd=Int(max(1,min(tmpsz,ceil(rand()*randomweight*tmpsz)))) #I am not sure if it can happen that rnd becomes 0 if we do not impose the max(1,...) condition. But it seems safe to enforce it in case an incredibly small random number is generated
 								spl=splitlist_sorted[rnd]::Splitdef{T}
 							else #randomweight<=0
 								#deterministic choice (greedy)
@@ -254,7 +254,7 @@ end
 
 
 #new approach; first summarize by label, then iterate over the gray code such that only one category needs to switch classes and "online" update the metrics
-function _split_feature(return_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fname::Symbol,features,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int64,randomweight::Float64,catSortByThreshold::Int64,catSortBy::SortBy) where T<:Unsigned
+function _split_feature(return_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fname::Symbol,features,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int,randomweight::Float64,catSortByThreshold::Int,catSortBy::SortBy) where T<:Unsigned
 crit_type=typeof(crit)
 #This function is now for numeric and character variables!
 #feature_column_id is negative in case of character variables

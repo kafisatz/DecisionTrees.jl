@@ -10,7 +10,7 @@ using DecisionTrees
 tela = (time_ns()-t0)/1e9
 @show tela #maybe 500-700 seconds on June 11, 2018
 
-#elt=[Int64,	Float64,	Float64,	Float64,	Int64,	String,	String,	String,	Int64,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int64,	Int64,	Int64,	Int64,	String,	Int64,	String,	String,	Int64,	String,	String,	Int64,	String,	String,	Int64,	String,	Int64,	String,	String,	Int64,	Int64,	String,	Int64,	Int64,	String,	Int64,	Int64,	String,	Int64,	String,	String,	String,	Int64,	String,	String,	String,	String,	Int64,	Int64,	Int64,	String,	String,	String,	String,	String,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64,	Float64,	Int64,	Float64,	Float64,	Float64,	Float64,	Int64,	Int64,	Int64,	Int64,	Int64,	Int64]
+#elt=[Int,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
 header=["age","workclass","fnlwgt","education","education-num","marital-status","occupation","relationship","race","sex","capital-gain","capital-loss","hours-per-week","native-country","target"]
 #@time df_tmp=readtable(string("data\\data1mini.csv"),eltypes=elt); 
 @time dftrain=CSV.read(string("data\\adult\\adult.data"),header=header,rows_for_type_detect=10000,allowmissing=:none,categorical=false,rows=32561);
@@ -65,8 +65,8 @@ dtmtableTest.denominator=dtmtableTest.denominator[size(dftrain,1)+1:end];
 dtmtableTest.weight=dtmtableTest.weight[size(dftrain,1)+1:end];
 dtmtableTest.features=dtmtableTest.features[size(dftrain,1)+1:end,:];
 #temporarily reassign tnr and val indices. These will be overwritten later on
-dtmtableTest.validx=convert(Vector{Int64},1:(length(dtmtableTest.weight)-2))
-dtmtableTest.trnidx=convert(Vector{Int64},(length(dtmtableTest.weight)-2):length(dtmtableTest.weight))
+dtmtableTest.validx=convert(Vector{Int},1:(length(dtmtableTest.weight)-2))
+dtmtableTest.trnidx=convert(Vector{Int},(length(dtmtableTest.weight)-2):length(dtmtableTest.weight))
     
 #define trn and val data sets
 resample_trnvalidx!(dtmtableTrain,.7)
@@ -90,7 +90,7 @@ predictionsOnHoldOut,leafnrs=predict(resModel,dtmtableTest.features)
 preds=ifelse.(predictionsOnHoldOut.<.5,1.0,0.0)
 truth=dtmtableTest.numerator
 
-err,accuracy,mat=confusmatBinary(1.+convert(Vector{Int64},truth),1.+convert(Vector{Int64},preds))
+err,accuracy,mat=confusmatBinary(1.+convert(Vector{Int},truth),1.+convert(Vector{Int},preds))
 #tp 2281
 #tn 621
 # R[2,1] =FP = 1565 preds.==0 and truth.==1

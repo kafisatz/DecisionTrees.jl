@@ -1,1 +1,1 @@
-julia --track-allocation=user -e "include(\"testing\\allocation.jl\");"
+julia --track-allocation=user -e "include(\"allocation.jl\");"

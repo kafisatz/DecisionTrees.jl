@@ -445,7 +445,7 @@ function Base.vcat(a::PooledArray, b::PooledArray)
         newpool[i] = bp[invmap[i]]
     end
     refs2 = map(r->poolmap[r], b.refs)
-    types = [UInt8, UInt16, UInt32, UInt64]
+    types = [UInt8, UInt16, UInt32, UInt]
     tidx = findfirst(t->l < typemax(t), types)
     T = types[tidx]
     newrefs = Base.typed_vcat(T, a.refs, refs2)

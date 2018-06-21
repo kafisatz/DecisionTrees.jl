@@ -53,7 +53,7 @@ return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
 
-function calculateSplitValue(a::MaxMinusValueSplit,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int64)
+function calculateSplitValue(a::MaxMinusValueSplit,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int)
 #here randomweight>0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -93,7 +93,7 @@ return this_splitlist
 end
 
 #Functions for arbitrary splits for RankOpt
-function calculateSplitValue(a::MaxMinusValueSplit,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int64,moderationfactor::Float64)
+function calculateSplitValue(a::MaxMinusValueSplit,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int,moderationfactor::Float64)
     suml=sumr=f=l=0.0
     countl=countr=0
     for i=1:size(features,1)
@@ -110,7 +110,7 @@ function calculateSplitValue(a::MaxMinusValueSplit,labels::Array{Float64,1}, lab
 return max(-sumr/Float64(countr),-suml/Float64(countl)), Float64(countl),Float64(countr)
 end
 
-function calculateSplitValue(a::MaxMinusValueSplit,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::pdaMod,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int64, moderationfactor::Float64)
+function calculateSplitValue(a::MaxMinusValueSplit,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::pdaMod,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int, moderationfactor::Float64)
   suml=sumr=0.0
   countl=countr=0
     for i in 1:length(features.pda)

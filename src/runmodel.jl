@@ -572,7 +572,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		 prnt&&println("Preparing output... Time: $(now())")
          #1-dim Variable Importance
           var_imp1d_str_arr,var_imp2d_str_arr,onedimintvec_unused,twodimintvec_unused=variable_importance(leaves_of_tree,sett.df_name_vector,sett.number_of_num_features)
-          nleaves=Int64(size(leaves_of_tree,1))
+          nleaves=Int(size(leaves_of_tree,1))
 		 res=hcat(key,trnidx_one_zero_full_length,fitted_values_tree)
 		#Create output statistics		
 			#this is not done in an efficient manner yet..... we are copying data to get est[trnidx] etc...

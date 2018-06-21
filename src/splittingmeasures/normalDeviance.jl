@@ -183,7 +183,7 @@ end
 end
 
 
-function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int64,moments_per_pdaclass)
+function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int,moments_per_pdaclass)
 warn("221 this will not work yet.....")
 warn("randomw should be postive here")
 

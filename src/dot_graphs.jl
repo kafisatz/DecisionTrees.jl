@@ -2,7 +2,7 @@
 # import DTM: number_of_nodes,nodesize,maxdepth,create_leaves_array,fittedratio
 export graph 
 
-function graph(tree::Tree) #tree::Node,number_of_num_features::Int64,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function graph(tree::Tree) #tree::Node,number_of_num_features::Int,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
     #https://en.wikipedia.org/wiki/DOT_(graph_description_language)
     #http://www.webgraphviz.com/
     #creates a digraph string in DOT language
