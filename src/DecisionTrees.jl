@@ -96,7 +96,6 @@ global const global_byte_order_mark='\ufeff'
 global const CSHARP_VALID_CHARS="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_123456789äëöüïÿâêîôûàèìòùáéíóúý" #the list is probably much longer, but this will do for now
 
 function __init__()
-	const juliaStartedat=now() 
 	#the following lines may trigger the installation of the respective python packages
 	copy!(pyModPandas, pyimport_conda("pandas","pandas"))
 	copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"))	

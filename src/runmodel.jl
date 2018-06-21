@@ -528,7 +528,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
       #permutedims is "transpose" in julia 0.5
 	  #model_setting_string=convert(String,string(model_setting_string, "\n\n", "Names:Levels: \n",join(permutedims(names_and_levels, (2, 1)),":")))
       model_setting_string=convert(String,string(model_setting_string, "\n", "Folder of Julia code (decisiontree.jl): \n", dirname(@__FILE__)))
-	  model_setting_string=convert(String,string(model_setting_string, "\n", "Julia started at: \n$(juliaStartedat) "))
+	  #model_setting_string=convert(String,string(model_setting_string, "\n", "Julia started at: \n not_available "))
       model_setting_string=convert(String,string(model_setting_string, "\n", "Julia (Modelling) start time: \n$(now()) "))
 
 prnt&&println("---Model Settings--------------------------------------------------------------")
