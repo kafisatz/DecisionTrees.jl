@@ -41,7 +41,7 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
 	empty_xl_data=ExcelData(Array{ExcelSheet}(0),Array{Chart}(0))
 	fp=get_feature_pools(features)
 	resultingTree=Tree(deepcopy(emptyNode),intVarsUsed,candMatWOMaxValues,mappings,inds,settings,deepcopy(empty_xl_data),fp)
-	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath}(0),settings.parallel_tree_construction,myid(),fitted_values)
+	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath}(0),settings.parallel_tree_construction,Distributed.myid(),fitted_values)
 	#set Leaf Numbers
 	set_leaf_numbers!(resultingTree)
 	return resultingTree
@@ -154,13 +154,13 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 						fill_some_elements!(fitted_values,l,mean_observedl)
 							remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
           else
-            remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,myid(),fitted_values)
+            remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
 		      end
 					if rightchildwillbefurthersplit			    
 						fill_some_elements!(fitted_values,r,mean_observedr)
             remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
           else
-            remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,myid(),fitted_values)
+            remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
           end
       else
        #here we spawn a process for the smaller "child"
@@ -170,26 +170,26 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 							fill_some_elements!(fitted_values,r,mean_observedr)
              	  remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
             else
-              remote_ref_build_tree_rightchild = @spawn build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,myid(),fitted_values)
+              remote_ref_build_tree_rightchild = Distributed.@spawn build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
             end
 						if leftchildwillbefurthersplit
 							fill_some_elements!(fitted_values,l,mean_observedl)
 						  remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
             else
-             remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,myid(),fitted_values)
+             remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
             end
         else
 						if leftchildwillbefurthersplit
 							fill_some_elements!(fitted_values,l,mean_observedl)
 						  remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
             else
-              remote_ref_build_tree_leftchild = @spawn build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,myid(),fitted_values)
+              remote_ref_build_tree_leftchild = Distributed.@spawn build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
             end
 						if rightchildwillbefurthersplit
 							fill_some_elements!(fitted_values,r,mean_observedr)
                remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
             else
-              remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,myid(),fitted_values)
+              remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
             end
         end
      end

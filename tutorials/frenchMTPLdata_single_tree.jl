@@ -102,7 +102,7 @@ dtmtable.features #explanatory variables
 #the data takes up less space in RAM and caches which generally increases performance
 
 #keep a copy of original train and test split
-originalTrnValIndex=deepcopy(fullData[:trnTest])    
+originalTrnValIndex=deepcopy(fullData[:trnTest])
 
 #Redefine trn and val data sets
 #if you prefer train on X% of the data, you can use this function to adjust the training set. By default it is sampled randomly
@@ -311,11 +311,11 @@ CVresult=dtm_single_threaded(dtmtable,sett,CVOptions(20,0.7,true))
 #the error measure remains relatively stable across several CV samples
 #for some samples it is even less than 0.31 on the validation data
 
-
-#try more granualr model 
+#try another model
 updateSettingsMod!(sett,minw=500);
 CVresult=dtm_single_threaded(dtmtable,sett,cvsampler)
-
+sett.minw=500
+originalTrnValIndex
 
 ############################################################
 #Changing the impurity function

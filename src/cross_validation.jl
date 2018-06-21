@@ -1,7 +1,7 @@
 export dtm,dtm_debug,dtm_single_threaded
 
 function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
-    @info "DTM: (bk) You may want to consider the multi threaded verison of this function"
+    @info "DTM: (bk) You may want to consider the multi threaded verison of this function: simply call dtm(...)"
 #if folds<0 then we consider n disjoint training sets
 
 #currently we have trhee possible CVs
@@ -14,12 +14,12 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     
     #during CV  we will overwrite trnidx and validx!
     #store orig indices
-    const trnidx_orig=deepcopy(dtmtable.trnidx)
-    const trnsize_orig=length(trnidx_orig)
-    const fullsize=length(dtmtable.weight)
-    const validx_orig=deepcopy(dtmtable.validx)
-    const minw_orig=deepcopy(sett.minw)
-    const seed_orig=deepcopy(sett.seed)
+    trnidx_orig=deepcopy(dtmtable.trnidx)
+    trnsize_orig=length(trnidx_orig)
+    fullsize=length(dtmtable.weight)
+    validx_orig=deepcopy(dtmtable.validx)
+    minw_orig=deepcopy(sett.minw)
+    seed_orig=deepcopy(sett.seed)
     minw_prop=minw_orig/trnsize_orig
     
 #set rnd state to make this function reporducible (irrespective of trn/val idx)
@@ -188,12 +188,12 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         
     #during CV  we will overwrite trnidx and validx!
     #store orig indices
-    const trnidx_orig=deepcopy(dtmtable.trnidx)
-    const trnsize_orig=length(trnidx_orig)
-    const fullsize=length(dtmtable.weight)
-    const validx_orig=deepcopy(dtmtable.validx)
-    const minw_orig=deepcopy(sett.minw)
-    const seed_orig=deepcopy(sett.seed)
+    trnidx_orig=deepcopy(dtmtable.trnidx)
+    trnsize_orig=length(trnidx_orig)
+    fullsize=length(dtmtable.weight)
+    validx_orig=deepcopy(dtmtable.validx)
+    minw_orig=deepcopy(sett.minw)
+    seed_orig=deepcopy(sett.seed)
     minw_prop=minw_orig/trnsize_orig
 
     #set rnd state to make this function reporducible (irrespective of trn/val idx)
@@ -264,13 +264,12 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
 
         #create a dictionary which contains all data
             di=Dict("ext"=>ext,"minw_prop"=>minw_prop,"size_which_is_sampled"=>size_which_is_sampled,"defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"cvsampler"=>cvsampler,"intDatahash"=>intDatahash,"sett"=>deepcopy(sett),"cvo"=>cvo,"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
-        #send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)
-        #sendto(workers(),local_data_dict=deepcopy(di))
-        sendto_module(DecisionTrees,workers(),local_data_dict=deepcopy(di))
+        #send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)        
+        sendto_module(DecisionTrees,Distributed.workers(),local_data_dict=deepcopy(di))
         
         #run all models in parallel
         warn("this is currently terribly slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
-            pmapresult=pmap(iLoop -> run_cvsample_on_a_process(iLoop,local_data_dict),1:length(cvsampler))
+            pmapresult=Distributed.pmap(iLoop -> run_cvsample_on_a_process(iLoop,local_data_dict),1:length(cvsampler))
                        
         #2. run models   
         for pmap_entry in pmapresult# this_sample in cvsampler

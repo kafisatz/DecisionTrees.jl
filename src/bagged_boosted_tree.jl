@@ -9,7 +9,7 @@ error("this will not work as it has not been updated for DecisionTrees.")
 	iterationsPerCore=calcIterationsPerCore(cBB_niterBagging,nprocs())
 	sampleSizeForEachTreeCanBeNEG=convert(Int,round(sett.subsampling_prop*length(denominator)))
 	
-	vecBoostedTrees = @parallel (vcat) for ii=1:nprocs()		
+	vecBoostedTrees = Distributed.@parallel (vcat) for ii=1:nprocs()		
 	#	ii=1;vecTreesWErrs=
 		create_Subsamples_and_BoostedTrees(iterationsPerCore[ii],sampleSizeForEachTreeCanBeNEG,meanobservedvalue,candMatWOMaxValues,mappings,sett,actualNumerator,denominator,weight,numfeatures,charfeatures)
     end

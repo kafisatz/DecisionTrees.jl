@@ -45,15 +45,14 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
 
         #create a dictionary which contains all data
             di=Dict("ext"=>ext,"emptyModel"=>emptyModel,"defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"intDatahash"=>intDatahash,"settingsVector"=>deepcopy(settingsVector),"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
-        #send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)
-        #sendto(workers(),local_data_dict=deepcopy(di))
-        sendto_module(DecisionTrees,workers(),local_data_dict=deepcopy(di))
+        #send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)        
+        sendto_module(DecisionTrees,Distributed.workers(),local_data_dict=deepcopy(di))
         if nprocs()==1
             local_data_dict=di #this is needed in case there are no workers
         end
         #run all models in parallel
         #warn("this is currently rather slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
-            pmapresult=pmap(iLoop -> singleRunDtm(iLoop,local_data_dict),1:length(settingsVector))
+            pmapresult=Distributed.pmap(iLoop -> singleRunDtm(iLoop,local_data_dict),1:length(settingsVector))
                        
         #2. run models   
         for pmap_entry in pmapresult# this_sample in cvsampler

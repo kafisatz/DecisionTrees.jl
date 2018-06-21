@@ -646,7 +646,7 @@ function _precompile_()
     precompile(Tuple{typeof(Base.isempty), Base.Iterators.Stateful{Array{Float64, 1}, Union{Nothing, Tuple{Float64, Int64}}}})
     precompile(Tuple{typeof(Base.merge_types), Tuple{Symbol}, Type{NamedTuple{(:append,), Tuple{Bool}}}, Type{NamedTuple{(), Tuple{}}}})
     precompile(Tuple{getfield(Base, Symbol("##print_to_string#337")), Nothing, typeof(identity), Type{Int}, Int})
-    precompile(Tuple{typeof(Base._toq)})
+    
     precompile(Tuple{typeof(Base.convert), Type{Array{Float64, 2}}, Array{Any, 2}})
     precompile(Tuple{typeof(Base.Filesystem.normpath), String})
     precompile(Tuple{typeof(Base.project_file_name_uuid_path), String, String})

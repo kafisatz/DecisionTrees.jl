@@ -1,9 +1,7 @@
 
 using DecisionTrees
-using BenchmarkTools
-using Revise    
+using CSV
 using DataFrames
-using JLD2
 using Profile
 
 pkgdir=Pkg.dir("DecisionTrees") #how long will this remain supported?
@@ -14,7 +12,7 @@ elt=[Int64,	Float64,	Float64,	Float64,	Float64,	Float64,	Int64,	String,	String,	
 
 fi="data1Small.csv"
 thisfile=joinpath(datadir,fi)
-@test isfile(thisfile)
+@assert isfile(thisfile)
 @time df_tmp=CSV.read(thisfile,allowmissing=:none,types=elt,categorical=false,rows_for_type_detect=10000);
 
 selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
@@ -37,8 +35,6 @@ sett.minw=-.2
 #run tree
 ##################################################
 strs,resm=dtm(dtmtable,sett)
-@test typeof(resm.modelstats)==DataFrame
-@test 1==1
 
 ##################################################
 #run boosting
@@ -47,9 +43,6 @@ strs,resm=dtm(dtmtable,sett)
 sett.niter=10
 sett.model_type="boosted_tree"
 strs,resm2=dtm(dtmtable,sett)
-@test typeof(resm2.modelstats)==DataFrame
-@test 1==1
-
 
 Profile.clear_malloc_data()
 

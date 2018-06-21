@@ -1547,8 +1547,8 @@ end
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
 This verison of the function is for numerical variables
 """
-#todo tbd, we could restrict the input to U<:Number and T<:Unsigned for the pda f
 function lrIndices(idx::Vector{Int},f,subset::Array) 
+	#todo tbd, we could restrict the input to U<:Number and T<:Unsigned for the pda f
 	l=Vector{Int}(0)
 	r=Vector{Int}(0)
 	sizehint!(l,length(idx))
@@ -4356,7 +4356,8 @@ end
 function numberAsStringForCSharp(x)
 	#todo tbd: if we have very small values things will fail here!
 	#e.g. string(0.0000000000000000000000000000000000000002329) will become "2.329e-34" or similar, this might fail in c#
-	s=replace(replace(string(x),'-',"MINUS"),'.','_')
+	s=replace(replace(string(x),'-'=>"MINUS"),'.'=>'_')
+	#s=replace(replace(string(x),'-',"MINUS"),'.','_')	
 	return s
 end
 
@@ -5275,7 +5276,7 @@ number_of_nodes(l::Leaf)=0
 
 function sendto_module(m::Module,p::Int; args...)
 	for (nm, val) in args;
-		@spawnat(p, eval(m, Expr(:(=), nm, val)))
+		Distributed.@spawnat(p, eval(m, Expr(:(=), nm, val)))
 	end
 end
 function sendto_module(m::Module,ps::Vector{Int}; args...)
@@ -5286,7 +5287,7 @@ end
 
 function sendto(p::Int; args...)
       for (nm, val) in args
-          @spawnat(p, eval(Main, Expr(:(=), nm, val)))
+          Distributed.@spawnat(p, eval(Main, Expr(:(=), nm, val)))
       end
 end
 
@@ -5432,7 +5433,6 @@ vals are the values
 keep are the values which occur more often than abs(threshold) for threshold<0.0
 keep are the largest floor(threshold) values for threshold>0
 """
-
 function getCounts(x;threshold::T=-0.01) where T<:Number
     if threshold<0
         @assert abs(threshold)<1 "DTM: abs(threshold) must be <1 (or positive and integer)"

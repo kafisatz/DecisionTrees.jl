@@ -36,7 +36,7 @@ if abs(sampleSizeForEachTreeCanBeNEG)<1
 	sampleSizeForEachTreeCanBeNEG=convert(Int,sign(sett.subsampling_prop))
 end
 
-vecTreesWErrs = @parallel (vcat) for ii=1:nprocs()
+vecTreesWErrs = Distributed.@parallel (vcat) for ii=1:nprocs()
 	#create_bagged_trees(iterationsPerCore[ii],sampleSizeForEachTreeCanBeNEG,trn_meanobservedvalue,candMatWOMaxValues,mappings,sett,actualNumerator,denominator,weight,numfeatures,charfeatures)		
 	#sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
 	create_bagged_trees(iterationsPerCore[ii],trnidx,sampleSizeForEachTreeCanBeNEG,trn_meanobservedvalue,candMatWOMaxValues,mappings,sett,actualNumerator,denominator,weight,features)	

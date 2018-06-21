@@ -38,7 +38,6 @@ outfilename=string("c:\\temp\\",outfileStringOnly)
 dataFilename="C:\\temp\\where_to_save_jld_file"
 key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prep_data_from_df_modernized(df_prepped,this_sett,datafolder,outfilename,dataFilename,outfileStringOnly)
 
-tic()
 result_of_runmodel,resulting_model=run_model_actual(key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,datafolder,outfilename,outfileStringOnly,DTM.global_const_shift_cols,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues,dataFilename)
 
 #a

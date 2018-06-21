@@ -8,8 +8,8 @@ using DecisionTrees
 @show tela = (time_ns()-t0)/1e9
 
 #set directories
-pkgdir=""
-testdir = joinpath(dirname(@__FILE__),"")
+global pkgdir=""
+global testdir = joinpath(dirname(@__FILE__),"")
 #the following if clause is for "direct execution" (e.g. in VScode where @__FILE__ does not seem to work)
 if testdir==""
     try 

@@ -57,7 +57,7 @@ function test_module_on_workers()
 		#nextidx() = (idx=[i,jj]; i<n ? i+=1 : jj+=1; idx)
 		@sync begin
 			for p=1:n
-				if p != myid() || n == 1			
+				if p != Distributed.myid() || n == 1			
 					@async begin						
 						while true
 							idx = nextidx()							
@@ -275,7 +275,7 @@ function invoke_worker_process(rr,process,logFilename,juliaProgram,harg,argument
 			rr = this_runs_on_worker(process,logFilename,juliaProgram,harg,arguments)
 	else
 		@async begin
-			rr = @spawn this_runs_on_worker(process,logFilename,juliaProgram,harg,arguments)
+			rr = Distributed.@spawn this_runs_on_worker(process,logFilename,juliaProgram,harg,arguments)
 		end
 		#It is crucial that we wait here until the LOG file is created
 		#otherwise we span multiple julia processes which work on the same *.log file

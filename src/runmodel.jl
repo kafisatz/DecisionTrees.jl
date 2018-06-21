@@ -6,8 +6,6 @@ function run_model(ARGS;nrows::Int=-1)
    #the first call of this function takes about 15 seconds (probably the first call of the module takes that much time....)
    failed_return_value=String["false"] #should be of the same type as the result of run_model
    try
-		tic() #this tic is for the time measurment until right before the zip file is created.
-		tic()		
 		#first function which is called by run.jl:
 		settingsFilename,dataFilename,datafolder,outfilename,outfileStringOnly=return_file_and_folders(ARGS)
 		result_of_runmodel,resulting_model=run_model_main(settingsFilename,dataFilename,convert(String,datafolder),outfilename,outfileStringOnly,nrows=nrows)
@@ -223,8 +221,6 @@ end
 
 function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_ext::String)
 #warn: this function has a lot of redundancies with another function in this file ->prep_data_from_df
-tic()
-
 	datafilename,ext=splitext(fn_with_ext) #actually one can provide fn_with_ext="c:\\temp\\my folder\\out" (so no extension is necessary)
 	datafolder,outfileStringOnly=splitdir(datafilename)
 	if length(outfileStringOnly)==0
@@ -263,7 +259,7 @@ tic()
 	  println("Consider discarding or changing these values/rows.")
 	  error("Abort.")
 	end
-	const strNegativeRatioWarning="Negative Ratios may lead to errors during the modelling process for models which rely on multiplicative residuals! \nIt is suggested that you adjust the data such that no negative values occur!"
+	strNegativeRatioWarning="Negative Ratios may lead to errors during the modelling process for models which rely on multiplicative residuals! \nIt is suggested that you adjust the data such that no negative values occur!"
 	if any(x->x<0.0,denominator)
 	  warn("There are training obsevations with negative values in the denominator column!")
 	  warn(strNegativeRatioWarning)
@@ -377,7 +373,7 @@ run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 """
 function run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 #this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
-tic() #total modelling time , prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,1))s = $(round(elapsed_until_this_point/60,1))m")
+#total modelling time , prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,1))s = $(round(elapsed_until_this_point/60,1))m")
 
 sett=deepcopy(input_setttings)
 @assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
@@ -772,7 +768,7 @@ end #end distinction between three model types
    #Create ZIP file
      #Push Log file to file list
 	 #println("\n")
-	 elapsed_until_this_point=toq()
+	 elapsed_until_this_point=0.0
 	 prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,1))s = $(round(elapsed_until_this_point/60,1))m")
 	 if sett.boolCreateZipFile
 		 #strBasename,ext=splitext(basename(dataFilename))
@@ -827,7 +823,7 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 		end
 		println("Loading Julia save file: \n $(dataFilename)")
 		dictOfVariables=load(dataFilename);
-		telapsed=toq()
+		telapsed=0.0
 		@info "Time to read data: $(telapsed)"
 		return run_model_multirow_settings(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 	end
@@ -836,25 +832,24 @@ function run_model_main(settingsFilename::String,dataFilename::String,datafolder
 	if lowercase(reverse(dataFilename)[1:4])=="dlj." #dataFilename[end-4:end]
 		println("Loading Julia save file: \n $(dataFilename)")
 		dictOfVariables=load(dataFilename);
-		telapsed=toq()
+		telapsed=0.0
 		@info "Time to read data: $(telapsed)"
 		return run_model_jld(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 	#non jld file was provided
 	else
 		key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)		
-        telapsed=toq()
+        telapsed=0.0
         sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
         return run_model_actual(key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues,dataFilename)		
 	end
 end
 
 #function if dictionary from *.jld2 was loaded
-function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)
-	tic()
+function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)	
 	oldsettings=di["oldsettings"]
 	sett=ModelSettings() #default model settings
 	updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
-    telapsed=toq()
+    telapsed=0.0	
     sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
     return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
 end
@@ -908,8 +903,8 @@ local eltypev,dfIndata
 	end
 
 	#at this point the data exists as a dataframe
-		telapsed=toq()
-		println("Time to read data: $(telapsed)")
+		telapsed=0.0
+		#println("Time to read data: $(telapsed)")
 
 	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prep_data_from_df(dataFilename,settingsArray,dfIndata,datafolder,outfilename,outfileStringOnly,const_shift_cols)
 return 	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues
