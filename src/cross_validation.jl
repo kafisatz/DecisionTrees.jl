@@ -355,9 +355,10 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
         #find ith sample
             jj=1
             local this_sample
-            for this_sample in cvsampler            
+            for a_sample in cvsampler            
                 jj+=1
-                if jj>=i 
+                if jj>=i
+					this_sample=a_sample # this line is new; on 0.7alpha Julia was complainig that I use the value of the iterator variable which may not exist outside the loop in later verions (although I clearly defined this_sample outside the loop....)
                     break
                 end
             end
