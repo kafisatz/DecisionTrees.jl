@@ -159,6 +159,9 @@ unique(leafnumbers)
 #Changing the impurity function
 #this is detailed further below
 
+#Tree representation
+dot_graph=graph(resM)
+
 #If you have Graphviz installed, you can generate a plot (on a PDF) of the tree
 updateSettingsMod!(sett,write_dot_graph="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
 resultingFiles,resM=dtm(dtmtable,sett)
@@ -300,6 +303,10 @@ CVresult=dtm_single_threaded(dtmtable,sett,CVOptions(20,0.7,true))
 #the error measure remains relatively stable across several CV samples
 #for some samples it is even less than 0.31 on the validation data
 
+
+#try more granualr model 
+updateSettingsMod!(sett,minw=500);
+CVresult=dtm_single_threaded(dtmtable,sett,cvsampler)
 
 
 ############################################################

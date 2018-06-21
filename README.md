@@ -17,7 +17,7 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 
 
 
-##Ideas for future improvements
+## Ideas for future improvements
 
 * Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run.
 * 'Remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)
