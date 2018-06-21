@@ -48,8 +48,8 @@ function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
 #convention, in the beginning everything is on the right side
-elementsInLeftChildBV=BitVector(length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
-chosen_subset_bitarray=BitVector(0)
+elementsInLeftChildBV=BitVector(undef,length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
+chosen_subset_bitarray=BitVector(undef,0)
 #momentstot=deepcopy(moments_per_pdaclass[1])
 #for idx=2:length(moments_per_pdaclass)
 #  merge!(momentstot,moments_per_pdaclass[idx])
@@ -192,7 +192,7 @@ save("C:\\temp\\myf.jld2","a",a,"labellist",labellist,"sumnumerator",sumnumerato
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
 #convention, in the beginning everything is on the right side
-elementsInLeftChildBV=BitVector(length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
+elementsInLeftChildBV=BitVector(undef,length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
 
 #momentstot=deepcopy(moments_per_pdaclass[1])
 #for idx=2:length(moments_per_pdaclass)

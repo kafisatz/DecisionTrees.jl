@@ -6,9 +6,9 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
 
   #convention, in the beginning everything is on the right side
-  elementsInLeftChildBV=BitVector(length(labellist));
+  elementsInLeftChildBV=BitVector(undef,length(labellist));
   fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
-  chosen_subset_bitarray=BitVector(0)
+  chosen_subset_bitarray=BitVector(undef,0)
   numtot=sum(sumnumerator)
   denomtot=sum(sumdenominator)
   weighttot=sum(sumweight)
@@ -114,9 +114,9 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
 
   #convention, in the beginning everything is on the right side
-  elementsInLeftChildBV=BitVector(length(labellist));
+  elementsInLeftChildBV=BitVector(undef,length(labellist));
   fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
-  #chosen_subset_bitarray=BitVector(0)
+  #chosen_subset_bitarray=BitVector(undef,0)
   numtot=sum(sumnumerator)
   denomtot=sum(sumdenominator)
   weighttot=sum(sumweight)

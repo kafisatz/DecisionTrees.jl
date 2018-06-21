@@ -26,8 +26,8 @@ function function create_Subsamples_and_BoostedTrees(itr::Int,sampleSizeCanBeNEG
 	sett.subsampling_features_prop=1.0
 #init sampledata
 	abssampleSize,sampleVector,num,denom,w,numf,charf,ooBagnum,ooBagdenom,ooBagw,ooBagnumf,ooBagcharf,ooBagsize=initBoostrapSample(sampleSizeCanBeNEGATIVE,numerator,denominator,weight,charfeatures,numfeatures)
-	leafNrooBag=Array{Int}(ooBagsize)
-	ooBagEstimates=Array{Float64}(ooBagsize)		
+	leafNrooBag=Array{Int}(undef,ooBagsize)
+	ooBagEstimates=Array{Float64}(undef,ooBagsize)		
 	
 	for i=1:itr
 	#sample data			

@@ -17,7 +17,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		error("DTM: This should not have happend: size(mdf_vector) is neither 1 nor #iterations")
     end
 	if size(moderationvector,1)==1
-		actual_moderationvector=Array{Float64}(iterations)
+		actual_moderationvector=Array{Float64}(undef,iterations)
 		fill!(actual_moderationvector,deepcopy(moderationvector[1]))
 	else
 		actual_moderationvector=deepcopy(moderationvector)
@@ -38,11 +38,11 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	#intCharVarsUsed=Array{Array{Array{Int,1},1}}(undef,0);sizehint!(intCharVarsUsed,iterations)
 	#char_inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(char_inds_considered,iterations)
 	
-	res=Array{Union{Leaf,Node{UInt8},Node{UInt16}}}(iterations)
+	res=Array{Union{Leaf,Node{UInt8},Node{UInt16}}}(undef,iterations)
 	if boolProduceEstAndLeafMatrices
-		est_matrix=Array{Float64}(obs,iterations+1)
+		est_matrix=Array{Float64}(undef,obs,iterations+1)
 		est_matrixFromScores=deepcopy(est_matrix)
-		MatrixOfLeafNumbers=Array{Int}(obs,iterations+1)
+		MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
 		MatrixOfLeafNumbers[:,1]=0
 		est_matrix[:,1]=copy(transpose(estimatedRatio))
 		est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		

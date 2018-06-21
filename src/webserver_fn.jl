@@ -51,7 +51,7 @@ function test_module_on_workers()
 		clist=["tree_tiny","boosting_tiny","bagging_tiny","boost_tiny_subs","boost_tiny_subs_withrepl"] #,"boosting_testmodel_small"]
 		n=nprocs()
 		ntests=length(clist)
-		booleans=BitArray(n);fill!(booleans,true)
+		booleans=BitArray(undef,n);fill!(booleans,true)
 		i = 1
 		nextidx() = (idx=i; i+=1; idx)
 		#nextidx() = (idx=[i,jj]; i<n ? i+=1 : jj+=1; idx)

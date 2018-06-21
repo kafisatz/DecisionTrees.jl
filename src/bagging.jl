@@ -1,6 +1,5 @@
 #Bagging Algorithm
 function bagged_tree(dtmtable::DTMTable,sett::ModelSettings)		
-#	function bagged_tree(mappings::Array{Array{String,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},sett::ModelSettings,actualNumerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1},actualNumeratorVAL::Array{Float64,1},denominatorVAL::Array{Float64,1},weightVAL::Array{Float64,1}, numfeaturesVAL::Array{pdaMod,1},charfeaturesVAL::Array{pdaMod,1})
 trnidx=dtmtable.trnidx
 validx=dtmtable.validx
 features=dtmtable.features
@@ -18,7 +17,7 @@ if (size(moderationvector,1)!=iterations && size(moderationvector,1)!=1)
 	error("DTM: This should not have happend: size(mdf_vector) is neither 1 nor #iterations")
 end
 if size(moderationvector,1)==1
-	actual_moderationvector=Array{Float64}(iterations)
+	actual_moderationvector=Array{Float64}(undef,iterations)
 	fill!(actual_moderationvector,deepcopy(moderationvector[1]))
 else
 	actual_moderationvector=deepcopy(moderationvector)
@@ -64,12 +63,12 @@ end
 		#leafNumbersThisTreeVAL=zeros(Int,obsVAL)		
 		#currentRelativityVAL=ones(obsVAL)		
 		
-		leaves_of_tree=Array{Array{Leaf,1}}(iterations)
+		leaves_of_tree=Array{Array{Leaf,1}}(undef,iterations)
 		
 		if boolProduceEstAndLeafMatrices
-			est_matrix=Array{Float64}(obs,iterations+1)
+			est_matrix=Array{Float64}(undef,obs,iterations+1)
 			est_matrixFromScores=deepcopy(est_matrix)
-			MatrixOfLeafNumbers=Array{Int}(obs,iterations+1)
+			MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
 			MatrixOfLeafNumbers[:,1]=0
 			est_matrix[:,1]=copy(transpose(estimatedRatio))
 			est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
@@ -83,7 +82,7 @@ end
 		#est_matrixFromScores=Array{Float64}(obs,iterations+1)
 		#est_matrixVAL=Array{Float64}(obsVAL,iterations+1)
 		#est_matrixFromScoresVAL=Array{Float64}(obsVAL,iterations+1)	
-		vectorOfLeafArrays=Array{Array{Leaf,1}}(iterations+1)
+		vectorOfLeafArrays=Array{Array{Leaf,1}}(undef,iterations+1)
 		#vectorOfRulePathsToLeavesArrays=Array{Array{Array{Rulepath,1},1}}(iterations+1)
 		#vectorOfLeafNumbersTrn=Array{Int}(obs,iterations+1)
 		#vectorOfLeafNumbersTrn[:,1]=0

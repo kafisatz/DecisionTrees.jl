@@ -3,8 +3,8 @@ function calculateSplitValue(a::MaxMinusValueSplit,labellist::Array{UInt8,1},sum
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
 #convention, in the beginning everything is on the right side
-elementsInLeftChildBV=BitVector(length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
-chosen_subset_bitarray=BitVector(0)
+elementsInLeftChildBV=BitVector(undef,length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
+chosen_subset_bitarray=BitVector(undef,0)
 numtot=sum(sumnumerator)
 denomtot=sum(sumdenominator)
 weighttot=sum(sumweight)
@@ -58,7 +58,7 @@ function calculateSplitValue(a::MaxMinusValueSplit,labellist::Array{UInt8,1},sum
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
 #convention, in the beginning everything is on the right side
-elementsInLeftChildBV=BitVector(length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
+elementsInLeftChildBV=BitVector(undef,length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
 numtot=sum(sumnumerator)
 denomtot=sum(sumdenominator)
 weighttot=sum(sumweight)

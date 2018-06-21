@@ -788,8 +788,8 @@ end
 function createTwoWayValidationCharts(trnidx,validx,nameOfValidationSheet,scoreBandLabels::Array{String,1},mappings,candMatWOMaxValues,sett,scores,actualNumerator,denominator,weight,finalEstimateForCharts,features)
 denominatortrn=view(denominator,trnidx)
 
-trnMatched=BitVector(length(actualNumerator))
-valMatched=BitVector(length(actualNumerator))
+trnMatched=BitVector(undef,length(actualNumerator))
+valMatched=BitVector(undef,length(actualNumerator))
 
 locrow=3
 locincrement=22
@@ -2533,17 +2533,8 @@ function build_listOfMeanResponse_mse(labels::Array{Float64,1},features::pdaMod,
   countlist,firstindices=custom_countsort!(features_sorted,labels,labels_sorted)
   sum_of_sum_of_squareslist=zeros(Float64,ncategories)
   meanobservedlist=zeros(Float64,ncategories)
-#   features_sorted=deepcopy(features) 
-  #this determines the order of all lists (output of this function)
-#   idx_sortfpda=sortperm(features_sorted.pda,alg=QuickSort)
-#   features_sorted.pda.refs=features_sorted.pda.refs[idx_sortfpda]
   labellist_sorted=sort(feature_levels)
-#   labels_sorted=deepcopy(labels)[idx_sortfpda]
-#   firstindices=Array{Int}(ncategories)
-#   for i=1:ncategories
-#     firstindices[i]=searchsortedfirst(features_sorted.pda.refs,labellist_sorted[i])
-#   end
-
+  
   kmin=1
   for i=1:ncategories
     kmax= i<ncategories ? firstindices[i+1]-1 : length(labels_sorted)
@@ -2562,7 +2553,7 @@ function build_listOfMeanResponse_mse(labels::Array{Float64,1},features::pdaMod,
 end
 
 function rand_bool_idx(n::Int,p::Float64)
-  res=BitArray(n)
+  res=BitArray(undef,n)
   for i=1:n
     rand()<p ? res[i]=true : res[i]=false
   end
@@ -2712,7 +2703,7 @@ function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{Stri
   for i=1:nleaves
     depth=max(depth,length(leaves_array[i].rule_path))
   end
-  list_of_featureids_on_path_to_leaves=Array{Int}(nleaves,depth)
+  list_of_featureids_on_path_to_leaves=Array{Int}(undef,nleaves,depth)
   fill!(list_of_featureids_on_path_to_leaves,0)
     for i=1:nleaves
       for k=1:length(leaves_array[i].rule_path)
@@ -2731,7 +2722,7 @@ function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{Stri
    end
   end
 
-  twodimcount=Array{Int}(div(sz*(sz-1),2))
+  twodimcount=Array{Int}(undef,div(sz*(sz-1),2))
   fill!(twodimcount,0)
   #todo/tbd twodimcount and onedimcount can be created much more efficiently
   #we do not need to loop through all the variables, but only through the ones which are actually used by the tree!
@@ -2751,8 +2742,8 @@ function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{Stri
   end
   twodimcountfloat=Float64(twodimcount/sum(twodimcount))
 
-  res1dim=Array{String}(sz,2)
-  res2dim=Array{String}(div(sz*(sz-1),2),3)
+  res1dim=Array{String}(undef,sz,2)
+  res2dim=Array{String}(undef,div(sz*(sz-1),2),3)
   count=0
   for i=1:sz, j=i+1:sz
     count+=1
@@ -2851,7 +2842,7 @@ end
 
 function get_left_index_vector(numfeatures::Array{Float64,2},id::Int,thresh::Float64)
   sz=size(numfeatures,1)
-  res=BitArray(sz)
+  res=BitArray(undef,sz)
   for i=1:sz
       res[i]=(numfeatures[i,id]<thresh)
   end
@@ -2907,7 +2898,7 @@ return complement
 end
 
 function int_idx_to_bitarray(idx::Array{Int,1},sz::Int)
-  res=BitArray(sz)
+  res=BitArray(undef,sz)
   fill!(res,false)
   for i=1:length(idx)
     res[idx[i]]=true
@@ -2918,7 +2909,7 @@ end
 function BitArrayIndexMatchingSubset(a::Array{String,1},leftsubset::Array{String,1})
   #this function is incredibly inefficient but the alternative below is not yet working
   #tbd / todo: improve splitting of PDAs
-  res=BitArray(length(a))
+  res=BitArray(undef,length(a))
   fill!(res,false)
   match = findall(in(leftsubset), a)
   for i in 1:length(match)
@@ -2930,7 +2921,7 @@ end
   function BitArrayIndexMatchingSubset(a::PooledArray{String,UInt8,1},leftsubset::Array{String,1})
   #this function is incredibly inefficient but the alternative below is not yet working
   #tbd / todo: improve splitting of PDAs
-  res=BitArray(length(a))
+  res=BitArray(undef,length(a))
   match = findall(in(leftsubset), a.pool)
   for i in 1:length(a)
     res[i]=(a.refs[i] in match)
@@ -3706,7 +3697,7 @@ function return_file_and_folders(ARGS)
 end
 
 function reversals(vec;order=true)
-  res=BitArray(length(vec))
+  res=BitArray(undef,length(vec))
   res[1]=0
   if order
     for i=2:length(vec)
@@ -4345,8 +4336,7 @@ end
 function numberAsStringForCSharp(x)
 	#todo tbd: if we have very small values things will fail here!
 	#e.g. string(0.0000000000000000000000000000000000000002329) will become "2.329e-34" or similar, this might fail in c#
-	s=replace(replace(string(x),'-'=>"MINUS"),'.'=>'_')
-	#s=replace(replace(string(x),'-',"MINUS"),'.','_')	
+	s=replace(replace(string(x),'-'=>"MINUS"),'.'=>'_')	
 	return s
 end
 
@@ -4534,13 +4524,10 @@ boollist=Array{Array{String,1}}(undef,0)
 end
 
 function create_custom_string(instr::String)
-	x=strip(instr) #leading/trailing blanks
-	#replace(x,' ','_') #todo, find out why this is not done by the loop below
+	x=strip(instr) #leading/trailing blanks	
 	for char in x #i=1:length(x)
-		if !in(char,CSHARP_VALID_CHARS)
-		#if !in(x[i],CSHARP_VALID_CHARS)
-			x=replace(x,char,"_")
-			#x=replace(x,x[i],"_")
+		if !in(char,CSHARP_VALID_CHARS)		
+			x=replace(x,char => "_")			
 		end
 	end
 	return x
@@ -5117,10 +5104,6 @@ function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesP
 	df_name_vector=sett.df_name_vector
 	iterations=size(bt.trees,1)
 	fiostream=open(fileloc,"a")
-	#settings2=copy(settings)
-	#settings2=replace(settings2,"\n","\r\n")
-	#settings2=replace(settings2,"\r\r\n","\r\n")
-	#write(fiostream,"/* \r\nSettings: \r\n",settings2,"\r\n*/ \r\n")
 	generate_csharpheader(fiostream)
 	csharp_write_pub_str(fiostream,"AnalysisObjective","TBD_TODO_CompetitorPremium")
 	csharp_write_pub_str(fiostream,"AnalysisName","TBD_TODO_SomeModelName")

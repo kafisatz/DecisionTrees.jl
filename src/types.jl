@@ -660,8 +660,11 @@ end
 
 convertFromString(oldvalue::T,val) where {T <: Any}=convert(T,val) #generic method catchall
 convertFromString(oldvalue::T,val) where {T <: AbstractString}=convert(T,string(val))
+convertFromString(oldvalue::T,val::U) where {T <: AbstractFloat,U<:AbstractString}=parse(Float64,val)
 convertFromString(oldvalue::T,val) where {T <: AbstractFloat}=float(val)
-convertFromString(oldvalue::T,val) where {T <: Integer}=convert(Integer,float(val)) #parse(Int,float(val))
+convertFromString(oldvalue::T,val::U) where {T <: Integer,U<:AbstractString}=convert(Integer,parse(Float64,val)) 
+convertFromString(oldvalue::T,val) where {T <: Integer}=convert(Integer,float(val))
+convertFromString(oldvalue::T,val::U) where {T <: Unsigned,U<:AbstractString}=uint(parse(Float64,val))
 convertFromString(oldvalue::T,val) where {T <: Unsigned}=uint(float(val))
 convertFromString(oldvalue::T,val) where {T <: Bool}=(lowercase(val)=="t"||lowercase(val)=="true"||val=="1")
 function convertFromString(oldvalue::T,val) where {T <: SortBy}
