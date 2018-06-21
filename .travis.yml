@@ -5,6 +5,7 @@ os:
   #ErrorException("could not load library "libopenblas64_"
   - linux
 julia:
+  - 0.7alpha
   - nightly  
 notifications:
   email: false
