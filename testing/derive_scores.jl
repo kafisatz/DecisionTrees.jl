@@ -112,7 +112,6 @@ numerator=view(numerator_full_vec,trnidx)
 denominator=view(denominator_full_vec,trnidx)
 estimatedRatioPerRow=view(estimatedRatioPerRow_full_vec,trnidx)
 
-#warn("remove this");writecsv("C:\\temp\\raw_rel.csv",raw_rel)
 srt=sortperm(raw_rel,alg=QuickSort) #we could use RadixSort here, it uses about 40m of memory for 5m obs, AND I am unsure how easy it is to get the permutation (compared to sorting in place). But the algorithm is about 50% faster for random floats than QuickSort.
 obs=length(raw_rel)
 raw_rel_srt=view(raw_rel,srt)

@@ -28,6 +28,7 @@ using .PooledArraysDTM
 
 using Dates,Random
 import Distributed
+import DelimitedFiles
 #using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
 using PyCall,DataFrames,JLD2,FileIO,OnlineStats,ProgressMeter,StatsBase
 
@@ -66,9 +67,9 @@ global const defaultModelNameWtihCSVext=string(defaultModelName,".csv")
 global nLevelsThreshold=2000
 global const global_number_of_num_f_warning_mandatory_field="Abort. Settings do not contain any value for number_of_num_features (which is mandatory)."
 global const stars="*******************************************************************************"
-global const emptyRulepath=Array{Rulepath}(0)
+global const emptyRulepath=Array{Rulepath}(undef,0)
 global const emptyLeaf=Leaf(0,NaN,NaN,NaN,-1,emptyRulepath,NaN,NaN,0)
-global const emptyNode=Node(0,0,Array{UInt8}(0),deepcopy(emptyLeaf),deepcopy(emptyLeaf),deepcopy(emptyRulepath))
+global const emptyNode=Node(0,0,Array{UInt8}(undef,0),deepcopy(emptyLeaf),deepcopy(emptyLeaf),deepcopy(emptyRulepath))
 global const global_const_shift_cols=5+1-1
 global const global_pldamod_valid_types=[String,Float64]	
 

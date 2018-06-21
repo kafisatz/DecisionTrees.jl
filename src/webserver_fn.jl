@@ -2,7 +2,7 @@ function update_folderlist!(listening_folders,folder_list_file)
 # fld(mod(Int(now()),60000),1000) #time of this minute in seconds
 	local farr
 	try
-		complete_list=Array{String}(0)
+		complete_list=Array{String}(undef,0)
 		res=readdlm(folder_list_file)
 		res2=convert(Array{String,1},res[:,1])
 		resize!(listening_folders,length(res2))
@@ -23,7 +23,7 @@ function update_folderlist!(listening_folders,folder_list_file)
 						end
 					catch eri
 						@show eri
-						farr=Array{String}(0)
+						farr=Array{String}(undef,0)
 					end
 					#command=`cmd /C dir $(loopdir) /s /b /o:n /ad >$(file_with_folderlist)` 
 					#run(command)					
@@ -104,7 +104,7 @@ end
 
 function startlistening(folder_list_file,julia_code_folder)
 	julia_code_folder=add_backslashes(julia_code_folder)
-	listening_folders=Array{String}(0)
+	listening_folders=Array{String}(undef,0)
 	secs=2
 	while true #intentional infinite loop
 		try
@@ -164,7 +164,7 @@ end
 
 function getdata_and_settingsfile(flist)
 	settingsf="";dataf="";
-	fl2=Array{eltype(flist)}(0)
+	fl2=Array{eltype(flist)}(undef,0)
 	if size(flist,1)>0
 		fl=[lowercase(x) for x in deepcopy(flist)]
 		#*.jld are pushed first such that they are prioritized

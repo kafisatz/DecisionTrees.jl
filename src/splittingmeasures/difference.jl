@@ -47,14 +47,14 @@ if isfinite(val)
   #warning: if the labellist is not sorted 1:n we need to be careful here!
   chosen_subset=labellist[chosen_subset_bitarray]
 else
-  chosen_subset=Array{UInt}(0)
+  chosen_subset=Array{UInt}(undef,0)
 end
 return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
 
 #todo/tbd assert eltype of lablelist is a UInt
-function calculateSplitValue(a::DifferenceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int64) where T<:Unsigned
+function calculateSplitValue(a::DifferenceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int) where T<:Unsigned
 #here randomweight>0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -65,7 +65,7 @@ denomtot=sum(sumdenominator)
 weighttot=sum(sumweight)
 weighttot_minw=weighttot-minweight
 sumnl=sumdl=sumwl=0.0
-this_splitlist=Array{Splitdef}(0)
+this_splitlist=Array{Splitdef}(undef,0)
 
 for i in subs
     #i is an index, it indicates which element of labellist will flip sides for the next calculation

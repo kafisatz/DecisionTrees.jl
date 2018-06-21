@@ -68,7 +68,7 @@ function apply_tree_by_leaf(t::Union{Leaf,Node{UInt8},Node{UInt16}},features::Da
   #fit::Vector{Float64},leaf::Vector{Int},
   nobs=size(features,1)
   fit=zeros(Float64,nobs)
-  leafnrs=zeros(Int64,nobs)
+  leafnrs=zeros(Int,nobs)
   idx=collect(1:nobs)
   apply_tree_by_leaf_iteration!(idx,t,features,fit,leafnrs)  
   return fit,leafnrs
@@ -93,12 +93,12 @@ function predict(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool
   estimatedRatio=ones(obs).*trn_meanobservedvalue  
   currentRelativity=ones(obs)
   indicatedRelativityForApplyTree_reused=zeros(obs)
-  reused_fitted_leafnr_vector=zeros(Int64,obs)
+  reused_fitted_leafnr_vector=zeros(Int,obs)
   est_SmoothedEstFromScores=zeros(obs)
   est_UnSmoothedEstFromScores=zeros(obs)
   
   thisidx=collect(1:obs)
-  empty_validx=ones(Int64,0)
+  empty_validx=ones(Int,0)
 
   if boolProduceEstAndLeafMatrices
 		est_matrix=Array{Float64}(obs,iterations+1)
@@ -108,9 +108,9 @@ function predict(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool
 		est_matrix[:,1]=copy(transpose(estimatedRatio))
 		est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
 	else
-		est_matrix=Array{Float64}(0,0)
+		est_matrix=Array{Float64}(undef,0,0)
 		est_matrixFromScores=deepcopy(est_matrix)
-		MatrixOfLeafNumbers=Array{Int}(0,0)
+		MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 	end
 	
   for iter=1:niter    

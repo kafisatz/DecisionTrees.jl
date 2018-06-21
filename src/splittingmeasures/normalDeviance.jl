@@ -106,7 +106,7 @@ if isfinite(val)
   #warning: if the labellist is not sorted 1:n we need to be careful here!
   chosen_subset=labellist[chosen_subset_bitarray]
 else
-  chosen_subset=Array{UInt}(0)
+  chosen_subset=Array{UInt}(undef,0)
 end
 return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
@@ -183,7 +183,7 @@ end
 end
 
 
-function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int64,moments_per_pdaclass)
+function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int,moments_per_pdaclass)
 warn("221 this will not work yet.....")
 warn("randomw should be postive here")
 
@@ -204,7 +204,7 @@ weighttot_minw=weighttot-minweight
 momentsl=Series(OnlineStats.Mean(),OnlineStats.Variance())
 momentsr=Series(OnlineStats.Mean(),OnlineStats.Variance())
 sumwl=0.0
-this_splitlist=Array{Splitdef}(0)
+this_splitlist=Array{Splitdef}(undef,0)
 
 for i in subs
     #i is an index, it indicates which element of labellist will flip sides for the next calculation

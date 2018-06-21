@@ -14,7 +14,7 @@ try
       end
     	@info "Trying to install those packages..."
     		# Use eventual proxy info
-    		proxy_arg=Array{AbstractString}(0)
+    		proxy_arg=Array{AbstractString}(undef,0)
     		if haskey(ENV, "http_proxy")
     			push!(proxy_arg, "--proxy")
     			push!(proxy_arg, ENV["http_proxy"])

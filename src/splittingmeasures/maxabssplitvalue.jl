@@ -47,13 +47,13 @@ if isfinite(val)
   #warning: if the labellist is not sorted 1:n we need to be careful here!
   chosen_subset=labellist[chosen_subset_bitarray]
 else
-  chosen_subset=Array{UInt}(0)
+  chosen_subset=Array{UInt}(undef,0)
 end
 return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
 
-function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int64)
+function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int)
 #here randomweight>0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -64,7 +64,7 @@ denomtot=sum(sumdenominator)
 weighttot=sum(sumweight)
 weighttot_minw=weighttot-minweight
 sumnl=sumdl=sumwl=0.0
-this_splitlist=Array{Splitdef}(0)
+this_splitlist=Array{Splitdef}(undef,0)
 
 for i in subs
     #i is an index, it indicates which element of labellist will flip sides for the next calculation
@@ -93,7 +93,7 @@ return this_splitlist
 end
 
 #Functions for arbitrary splits for RankOpt
-function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int64,moderationfactor::Float64)
+function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int,moderationfactor::Float64)
     suml=sumr=f=l=0.0
     countl=countr=0
     for i=1:size(features,1)
@@ -110,7 +110,7 @@ function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,la
 return max(abs(sumr/Float64(countr)),abs(suml/Float64(countl))), Float64(countl),Float64(countr)
 end
 
-function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::pdaMod,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int64, moderationfactor::Float64)
+function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::pdaMod,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int, moderationfactor::Float64)
   suml=sumr=0.0
   countl=countr=0
     for i in 1:length(features.pda)

@@ -401,7 +401,7 @@ function queryWithTypes(db,sql::AbstractString, values=[])
         colnames[i] = bytestring(SQLite.sqlite3_column_name(stmt.handle,i-1))
         #results[i] = Any[]
         #if t == SQLITE_INTEGER
-        #    results[i] = Int64[]
+        #    results[i] = Int[]
         #elseif t == SQLITE_FLOAT
 		t = SQLite.sqlite3_column_type(stmt.handle,i-1)
 		if t == SQLite.SQLITE_FLOAT
@@ -446,7 +446,7 @@ function write_any_array_to_excel_file(arr::Array,file::String)
 	ascii(file)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr))]
-	xld=ExcelData(sheets,Array{Chart}(0))
+	xld=ExcelData(sheets,Array{Chart}(undef,0))
 	write_statistics(xld,file,false,false)
 	return nothing
 end
@@ -455,7 +455,7 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,file::String)
 	ascii(file)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2))]
-	xld=ExcelData(sheets,Array{Chart}(0))
+	xld=ExcelData(sheets,Array{Chart}(undef,0))
 	write_statistics(xld,file,false,false)
 	return nothing
 end
@@ -464,7 +464,7 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,arr3::Array,file::
 	ascii(file)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2)),ExcelSheet("sheet3",convert(DataFrame,arr3))]
-	xld=ExcelData(sheets,Array{Chart}(0))
+	xld=ExcelData(sheets,Array{Chart}(undef,0))
 	write_statistics(xld,file,false,false)
 	return nothing
 end
@@ -473,7 +473,7 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,arr3::Array,arr4::
 	ascii(file)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2)),ExcelSheet("sheet3",convert(DataFrame,arr3)),ExcelSheet("sheet4",convert(DataFrame,arr4))]
-	xld=ExcelData(sheets,Array{Chart}(0))
+	xld=ExcelData(sheets,Array{Chart}(undef,0))
 	write_statistics(xld,file,false,false)
 	return nothing
 end
@@ -482,7 +482,7 @@ function write_any_array_to_excel_file(arr::Array{Array{T,2},1},file::String) wh
 	ascii(file)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet(string("sheet",i),convert(DataFrame,arr[i])) for i=1:length(arr)]
-	xld=ExcelData(sheets,Array{Chart}(0))
+	xld=ExcelData(sheets,Array{Chart}(undef,0))
 	write_statistics(xld,file,false,false)
 	return nothing
 end
@@ -606,7 +606,7 @@ temporarily disabled
 			jfield_types = Array{DataType}( nfields)
 			mysqlfield_types = Array{Cuint}( nfields)
 			field_headers = Array{Symbol}( nfields)
-			resultingArray=Array{Any}(0)
+			resultingArray=Array{Any}(undef,0)
 
 			for i = 1:nfields
 				mysql_field = unsafe_load(fields, i)
@@ -759,7 +759,7 @@ function readDFfromSQLiteDB(file,const_shift_cols::Int,number_of_num_features::I
 end
 
 function variablesUsed(bt)
-	utf8ListVarsUsed=Array{String}(0)
+	utf8ListVarsUsed=Array{String}(undef,0)
 	niter=bt.settings.niter
 	nmat=zeros(Int,bt.settings.number_of_num_features+bt.settings.number_of_char_features,niter)
 	for i=1:niter
@@ -799,7 +799,7 @@ local loc,thismat,emptyline,resultingMatrix,statsThisIteration,singleRowWithKeyM
 emptyOutMatrix=repeat([],0,16) #note the 16 is hardcoded here which is very bad programming, it is the width of the ouput "statsThisIteration" of the fn createTrnValStatsForThisIteration
 resultingMatrix=deepcopy(emptyOutMatrix)
 integerVarlist=sett.statsByVariables
-validationCharts=Array{Chart}(0)
+validationCharts=Array{Chart}(undef,0)
 if sett.statsRandomByVariable>0
 	#random groups are requested
 	integerVarlist=vcat(integerVarlist,[0])
@@ -922,7 +922,7 @@ function modify_eltypes_by_guessing!(df::DataFrame)
 	return nothing
 end
 
-function define_eltypevector(df::DataFrame,const_shift_cols::Int64,number_of_num_features::Int64)
+function define_eltypevector(df::DataFrame,const_shift_cols::Int,number_of_num_features::Int)
 #Output is an eltypevector with elements Float64 and String
   #const_shift_cols=6
   cols=size(df,2)
@@ -933,7 +933,7 @@ function define_eltypevector(df::DataFrame,const_shift_cols::Int64,number_of_num
   eltypevector[2]=Float64
   eltypevector[3]=Float64
   eltypevector[4]=Float64
-  eltypevector[5]=Int64
+  eltypevector[5]=Int
   eltypevector[6]=String
   #tbd/todo if numvars need to come first: add a check that checks if only charvars appear towards the end
   i2=0
@@ -1430,7 +1430,7 @@ function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) #,num
 		repl==false ? smpUniqueSorted=smp : smpUniqueSorted=unique(smp)
 		sort!(smpUniqueSorted) 
 
-		smpUnusedPart=Vector{eltype(smp)}(0)
+		smpUnusedPart=Vector{eltype(smp)}(undef,0)
 		sizehint!(smpUnusedPart,length(trnidx)-length(smpUniqueSorted))
 		for x in trnidx
 			tmp=searchsorted(smpUniqueSorted,x)
@@ -1484,7 +1484,7 @@ end
 
 function initExcelData()
 #Define ExcelSheet
-	xlData=ExcelData(Array{ExcelSheet}(0),Array{Chart}(0))
+	xlData=ExcelData(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
 	#nameOfModelStatisticsSheet=global_nameOfModelStatisticsSheet
 	#nameOfSettingsSheet=global_nameOfSettingsSheet
 	nameOfScoresSheet="Scores"
@@ -1528,8 +1528,8 @@ returns l and r indices (l corresponds to all elements of trnidx that 'match' su
 This verison of the function is for String / Categorical variables
 """
 function lrIndices(trnidx::Vector{Int},f::PooledArray{String,T,1},subset::Array) where T<:Unsigned
-	l=Vector{Int}(0)
-	r=Vector{Int}(0)
+	l=Vector{Int}(undef,0)
+	r=Vector{Int}(undef,0)
 	sizehint!(l,length(trnidx))
 	sizehint!(r,length(trnidx))
 	for i in trnidx
@@ -1549,8 +1549,8 @@ This verison of the function is for numerical variables
 """
 function lrIndices(idx::Vector{Int},f,subset::Array) 
 	#todo tbd, we could restrict the input to U<:Number and T<:Unsigned for the pda f
-	l=Vector{Int}(0)
-	r=Vector{Int}(0)
+	l=Vector{Int}(undef,0)
+	r=Vector{Int}(undef,0)
 	sizehint!(l,length(idx))
 	sizehint!(r,length(idx))
 	for i in idx
@@ -1577,8 +1577,8 @@ end
 
 function createIntegerIndices(trn_val_idx)
 	l=length(trn_val_idx)
-	t=Vector{Int}(0)
-	v=Vector{Int}(0)
+	t=Vector{Int}(undef,0)
+	v=Vector{Int}(undef,0)
 	sizehint!(v,l)
 	sizehint!(t,l)
 	for i=1:l 
@@ -1645,12 +1645,12 @@ end
 
 
 """adds numerical explanatory vars as PDAs to the DF f"""
-function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int64,features::DataFrame) #Version where no candidates are supplied -> Julia chooses the candidates
+function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame) #Version where no candidates are supplied -> Julia chooses the candidates
   nobs=length(trn_val_idx)
   cols=sett.number_of_num_features 
   
   local this_column #need to initialize the variable here otherwise it will only exist locally in the try loop
-  candMatWOMaxValues=Array{Array{Float64,1}}(0)
+  candMatWOMaxValues=Array{Array{Float64,1}}(undef,0)
   for i=1:cols
 	thisname=Symbol(sett.df_name_vector[i])	
 	original_data_vector=wholeDF[thisname] 	
@@ -1703,7 +1703,7 @@ function map_numdata_to_candidates(this_column,candlist)
 	return mapped_vec
 end
 
-function define_candidates(feature_column,max_splitting_points_num::Int64)
+function define_candidates(feature_column,max_splitting_points_num::Int)
 	#step 1: get quantiles of data
 	domain_i = unique(quantile(feature_column, range(0.5/Float64(max_splitting_points_num), stop=1.0-0.5/Float64(max_splitting_points_num), length=max_splitting_points_num)))
 	@assert size(domain_i,1)<=max_splitting_points_num #that should not happen
@@ -1821,7 +1821,7 @@ function someRankOptStats(mat::Array{Float64,2},numerator::Array{Float64,1},Prem
 	nobs,iters=size(mat)
 	iters=iters-1 #iteration 0 is not of interest
 	premsum=sum(numerator)
-	rklostcountlist=zeros(Int64,iters)
+	rklostcountlist=zeros(Int,iters)
 	premincrementlist=zeros(Float64,iters)
 	for i=1:iters
 		rklostcountlist[i]=sum(mat[:,i+1].>PremiumOfNextRank)
@@ -1846,7 +1846,7 @@ function firstmatch(x::Array{T,1},y::T) where {T}
   res
 end
 
-#function aggregateScores(num::Array{Float64,1},denom::Array{Float64,1},weight::Array{Float64,1},est::Array{Float64,1},scores::Array{Int64,1},scorebandsstartingpoints::Array{Int64,1})
+#function aggregateScores(num::Array{Float64,1},denom::Array{Float64,1},weight::Array{Float64,1},est::Array{Float64,1},scores::Array{Int,1},scorebandsstartingpoints::Array{Int,1})
 function aggregateScores(num,denom,weight,estRatio,scores,scorebandsstartingpoints)
 	nClasses=length(scorebandsstartingpoints)
 	sumnumer = zeros(Float64, nClasses)
@@ -1866,7 +1866,7 @@ function aggregateScores(num,denom,weight,estRatio,scores,scorebandsstartingpoin
 end
 
 function createScorebandsUTF8List(scorebandsstartingpoints,nscores::Int;addtotal::Bool=false)
-	scorebandsUTF8List=Array{String}(0)
+	scorebandsUTF8List=Array{String}(undef,0)
 	nClasses=length(scorebandsstartingpoints)
 	for i=1:nClasses
 		i<nClasses ? last=string(scorebandsstartingpoints[i+1]-1) : last=string(nscores)
@@ -1879,7 +1879,7 @@ function createScorebandsUTF8List(scorebandsstartingpoints,nscores::Int;addtotal
 	return scorebandsUTF8List
 end
 
-function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstartingpoints::Array{Int64,1}
+function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstartingpoints::Array{Int,1}
 ,numeratortrn,denominatortrn,weighttrn,ratioEsttrn,scorestrn
 ,numeratorval,denominatorval,weightval,ratioEstval,scoresval,sett::ModelSettings)
 		nClasses=length(scorebandsstartingpoints)		
@@ -1961,14 +1961,14 @@ function calc_sum_squares(num_actual,num_estimate,denom)
 end
 
 #createSingleTreeExcel(trnidx,validx,sett,tree,leaves_of_tree,fitted_values_tree,leaf_number_vector,numerator,denominator,weight)
-function createSingleTreeExcel(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function createSingleTreeExcel(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
 	nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData=initExcelData()
 	overallstats=createTrnValStats!(trnidx,validx,sett,nameOfModelStatisticsSheet,nameOfSettingsSheet,xlData,tree,leaves_of_tree,est,leafNumbers,numerator,denominator,weight)
 return xlData,overallstats
 end
 
-#,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
-function createTrnValStats!(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,nameOfModelStatisticsSheet::T,nameOfSettingsSheet::T,xlData,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}) where {T <: AbstractString}
+#,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function createTrnValStats!(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,nameOfModelStatisticsSheet::T,nameOfSettingsSheet::T,xlData,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}) where {T <: AbstractString}
 t=tree.rootnode
 #function for SINGLE Tree
 	nClasses=length(leaves_of_tree)
@@ -2178,14 +2178,6 @@ function buildStatistics(header,description,sumnumeratortrn,sumdenominatortrn,su
 	return stats,overallstats
 end
 
-#todo/tbd find out how to parametrize these functions properly....
-#this syntax does not seem to work when it is called with a labellist::Array{UInt8,1}
-#function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1}) where T<:UInt
-#ERROR: MethodError: no method matching sortlists!(::DecisionTrees.SortByMean, ::Array{UInt8,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1})
-#Closest candidates are:
-#sortlists!(::DecisionTrees.SortByMean, ::Array{T<:UInt64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}) where T<:UInt64 at C:\Users\bernhard.konig\Documents\ASync\home\Code\Julia\DecisionTrees.jl\src\helper_functions.jl:2060
-#sortlists!(::DecisionTrees.SortByMean, ::Array{T<:UInt64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}) where T<:UInt64 at C:\Users\bernhard.konig\Documents\ASync\home\Code\Julia\DecisionTrees.jl\src\helper_functions.jl:2085
-#sortlists!(::DecisionTrees.SortByMean, ::Array{T<:UInt64,1}, ::Array{Int64,1}, ::Array{Float64,1}, ::Array{Float64,1}) where T<:UInt64 at C:\Users\bernhard.konig\Documents\ASync\home\Code\Julia\DecisionTrees.jl\src\helper_functions.jl:2073
 function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1}) where T<:Unsigned
 	#todo/tbd generalize this function for an arbitrary number of input vectors
 		#function for sorting all the lists by the mean
@@ -2199,7 +2191,7 @@ function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Ar
 		return nothing
 end
 
-function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},intSumrklost::Array{Int64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1}) where T<:Unsigned
+function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},intSumrklost::Array{Int,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1}) where T<:Unsigned
 	#function for sorting all the lists by the mean
 #	meanratioperclass=sumnumerator./sumdenominator
 	#srt=sortperm(meanratioperclass,alg=QuickSort)
@@ -2241,7 +2233,7 @@ function print_graycode(m)
   current=zero(n)
   o=one(n)
   for i=zero(n):n
-    @show Int64(i),bits(current)
+    @show Int(i),bits(current)
     t=trailing_ones(i)
     x=o<<t
     current=current$x
@@ -2297,7 +2289,7 @@ function get_firstpos(v::Array{T,1}) where {T}
   return firstpos
 end
 
-function aggregate_data(f::pdaMod,scores::Array{Int64,1},numeratorEst::Array{Float64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function aggregate_data(f::pdaMod,scores::Array{Int,1},numeratorEst::Array{Float64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     #this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
 	#most of the time is spent here, if we can improve the for loop below, that would improve performance greatly!
@@ -2391,7 +2383,7 @@ end
 
 function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})  where T<:SubArray
 	#! preliminary testing showed that we can save 10% if we explicitly type f as in
-	# aggregate_data_diff(f::SubArray{String,1,PooledArray{String,UInt8,1},Tuple{Array{Int64,1}},false},denominator....)	
+	# aggregate_data_diff(f::SubArray{String,1,PooledArray{String,UInt8,1},Tuple{Array{Int,1}},false},denominator....)	
     #if we never subset the pda and always work on a view of the original data, then lo, hi are always 1: size(pool)!
     lo=one(eltype(f.parent.refs)) #UInt8(1)    
     hi=convert(eltype(f.parent.refs),length(f.parent.pool)) #hi=convert(UInt8,length(f.parent.pool))
@@ -2428,7 +2420,7 @@ end
 
 function myfindinInt(big::Array{T,1},small::Array{T,1}) where {T}
 	#returns integer array which indicates which elements are not found in the smaller array
-	res=Array{Int}(0)
+	res=Array{Int}(undef,0)
 	for i=1:length(big)
 		z=big[i]
 		if !in(z,small)
@@ -2438,12 +2430,12 @@ function myfindinInt(big::Array{T,1},small::Array{T,1}) where {T}
 	return res
 end
 
-function aggregate_data_rklostcount(f::pdaMod,increasedPremiumVector::Array{Float64,1},intRanksLostVector::Array{Int64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function aggregate_data_rklostcount(f::pdaMod,increasedPremiumVector::Array{Float64,1},intRanksLostVector::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     a=f.pda.refs
     (lo, hi) = extrema(levels(f))
     lengtha=length(a)
     cnt = zeros(Int, hi - lo + 1)
-	intSumrklost = zeros(Int64, hi - lo + 1)
+	intSumrklost = zeros(Int, hi - lo + 1)
 	sumweight= zeros(Float64, hi - lo + 1)
 	ooo=one(lo)-lo
     #note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
@@ -2616,10 +2608,10 @@ function variable_importance_internal(leaves_array::Array{Leaf,1},namevec::Array
 #number_of_num_features=length(intNumVarsUsed)
 	sz=length(namevec)
 	nleaves=length(leaves_array)
-	onedimcount=zeros(Int64,sz)
-	twodimcount=zeros(Int64,div(sz*(sz-1),2))
-	seen1dim=Array{Int}(0)
-	seen2dim=Array{Int}(0)
+	onedimcount=zeros(Int,sz)
+	twodimcount=zeros(Int,div(sz*(sz-1),2))
+	seen1dim=Array{Int}(undef,0)
+	seen2dim=Array{Int}(undef,0)
 	for i=1:nleaves
 		resize!(seen1dim,0) #reset the array to the empty array
 		resize!(seen2dim,0) #reset the array to the empty array
@@ -2712,7 +2704,7 @@ function twodimIndex(variable1::Int,variable2::Int,nvars::Int)
 	return idx
 end
 
-function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{String,1},number_of_num_features::Int64)
+function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{String,1},number_of_num_features::Int)
   #tbd/todo improve the performance of this code; better yet: construct the variable_importance during the tree building process!
   sz=length(namevec)
   nleaves=length(leaves_array)
@@ -2720,7 +2712,7 @@ function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{Stri
   for i=1:nleaves
     depth=max(depth,length(leaves_array[i].rule_path))
   end
-  list_of_featureids_on_path_to_leaves=Array{Int64}(nleaves,depth)
+  list_of_featureids_on_path_to_leaves=Array{Int}(nleaves,depth)
   fill!(list_of_featureids_on_path_to_leaves,0)
     for i=1:nleaves
       for k=1:length(leaves_array[i].rule_path)
@@ -2732,14 +2724,14 @@ function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{Stri
       end
   end
 
-  onedimcount=zeros(Int64,sz)
+  onedimcount=zeros(Int,sz)
   for j=1:sz, k=1:nleaves
    if in(j,view(list_of_featureids_on_path_to_leaves,k,:))
       onedimcount[j]+=1
    end
   end
 
-  twodimcount=Array{Int64}(div(sz*(sz-1),2))
+  twodimcount=Array{Int}(div(sz*(sz-1),2))
   fill!(twodimcount,0)
   #todo/tbd twodimcount and onedimcount can be created much more efficiently
   #we do not need to loop through all the variables, but only through the ones which are actually used by the tree!
@@ -2791,7 +2783,7 @@ function some_tree_settings(trnidx,validx,fixedinds::Array{Int,1},candMatWOMaxVa
 		@assert length(fixedinds)==0 "subsampling_features_prop must be 1.0 (i.e. disabled) if fixed subsets of features are provided!"
 	end
 
-	intVarsUsed=Array{Array{Int,1}}(0)	
+	intVarsUsed=Array{Array{Int,1}}(undef,0)	
 	for i=1:length(candMatWOMaxValues)
 		push!(intVarsUsed,copy(zeros(Int,length(candMatWOMaxValues[i]))))
 	end	
@@ -2806,10 +2798,10 @@ function some_tree_settings(trnidx,validx,fixedinds::Array{Int,1},candMatWOMaxVa
 		minweight= totalweight*(-minweight)
 	end
     @assert !(minweight<0)
-	nLeavesEstimate=Int64(round(max(1,0.5*(totalweight/minweight+0.5*totalweight/minweight))))
+	nLeavesEstimate=Int(round(max(1,0.5*(totalweight/minweight+0.5*totalweight/minweight))))
 	nDepthEstimate=ceil(log(2,nLeavesEstimate))
 	#this Depthestimate is about 3 times too low as we create very granular trees!
-	nDepthToStartParallelization=Int64(round(max(1,min(nDepthEstimate-1,log(2,nprocs())))))
+	nDepthToStartParallelization=Int(round(max(1,min(nDepthEstimate-1,log(2,nprocs())))))
 
 	if length(fixedinds) >0 #features are pre set
 		inds=deepcopy(fixedinds);
@@ -2826,7 +2818,7 @@ function randomFeatureSelection(n_features::Int,subsampling_features_prop::Float
 	# subsampling_features_prop<0.0 -> here, it may be that only 1 variable is chosen, or that all variables are chosen
 	@assert abs(subsampling_features_prop)>0.0
 	@assert n_features>=0
-	inds=Vector{Int64}(0);
+	inds=Vector{Int}(undef,0);
 	if abs(subsampling_features_prop)>=1.0
 		inds=collect(1:n_features)
 	else
@@ -2857,7 +2849,7 @@ end
 return inds
 end
 
-function get_left_index_vector(numfeatures::Array{Float64,2},id::Int64,thresh::Float64)
+function get_left_index_vector(numfeatures::Array{Float64,2},id::Int,thresh::Float64)
   sz=size(numfeatures,1)
   res=BitArray(sz)
   for i=1:sz
@@ -2869,7 +2861,7 @@ end
 function myunique(C::Array{UInt8,1},maximalNumberOfDistinctValues::Int)
 #output is a vector of unique values
 #this function is faster than unique in some cases as it stops when "seen" is full (it uses apriori knowledge of the maximal number of distinct values which can occur)
-    out = Array{eltype(C)}(0)
+    out = Array{eltype(C)}(undef,0)
     seen = Set{eltype(C)}()
 	sizehint!(seen,maximalNumberOfDistinctValues)
 	sizehint!(out,maximalNumberOfDistinctValues)
@@ -2886,7 +2878,7 @@ function myunique(C::Array{UInt8,1},maximalNumberOfDistinctValues::Int)
 end
 
 function my_findin(small::Array{UInt8,1},big::Array{UInt8,1})
-res=Array{Int}(0)
+res=Array{Int}(undef,0)
 sizehint!(res,length(small))
 for i=1:size(small,1)
     val=small[i]
@@ -2900,9 +2892,9 @@ end
 return res
 end
 
-function complement_int_index(idx::Array{Int64,1},sz::Int64)
+function complement_int_index(idx::Array{Int,1},sz::Int)
     set=[1:sz]
-    complement=Array{Int64}(length(set)-length(idx))
+    complement=Array{Int}(length(set)-length(idx))
     k=1
     for i=1:size(set,1)
         if in(set[i],idx)
@@ -2914,7 +2906,7 @@ function complement_int_index(idx::Array{Int64,1},sz::Int64)
 return complement
 end
 
-function int_idx_to_bitarray(idx::Array{Int64,1},sz::Int64)
+function int_idx_to_bitarray(idx::Array{Int,1},sz::Int)
   res=BitArray(sz)
   fill!(res,false)
   for i=1:length(idx)
@@ -2947,7 +2939,7 @@ end
 end
 
 
-function int_idx_to_bool_idx(leftidx::Array{Int64,1},rightidx::Array{Int64,1})
+function int_idx_to_bool_idx(leftidx::Array{Int,1},rightidx::Array{Int,1})
   #this can probably be done more efficiently
   maxl=maximum(leftidx)
   maxr=maximum(rightidx)
@@ -2969,11 +2961,11 @@ function int_idx_to_bool_idx(leftidx::Array{Int64,1},rightidx::Array{Int64,1})
 end
 
 #print Tree Fn
-function print_tree(tree::Leaf,sett::ModelSettings,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},indent::Int64)
+function print_tree(tree::Leaf,sett::ModelSettings,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},indent::Int)
     println("L|S$(round(nodesize(tree), digits=1)),Fit$(round(tree.fitted, digits=2)),D$(tree.depth)")
 end
 
-function print_tree(tree::Node{T},sett::ModelSettings,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},indent::Int64=0) where T<:Unsigned 
+function print_tree(tree::Node{T},sett::ModelSettings,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},indent::Int=0) where T<:Unsigned 
 	orig_id=tree.featid
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -2987,7 +2979,7 @@ function print_tree(tree::Node{T},sett::ModelSettings,candMatWOMaxValues::Array{
 end
 
 #write Tree Fn
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,number_of_num_features::Int64,indent::Int64=0,fileloc="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where {E <: Ensemble}
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,number_of_num_features::Int,indent::Int=0,fileloc="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where {E <: Ensemble}
   iterations=size(ensemble.trees,1)
   sz=length(df_name_vector)
   onedimintvec_sum=zeros(Float64,sz)
@@ -3051,14 +3043,14 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,nu
   return nothing
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Tree,number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,fileloc::String,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Tree,number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,fileloc::String,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
 	#version which opens fileloc
 	f=open(fileloc,"a+")
 		write_tree(candMatWOMaxValues,tree.rootnode,number_of_num_features,var_imp1d_str_arr,var_imp2d_str_arr,indent,f,df_name_vector,mappings)
     close(f)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
 #function in the special case where the whole tree is in fact a single leaf
 	#version which uses f::IOStream as input
 	write(f,"\r\n1 dimensional predictor 'frequency':")
@@ -3077,7 +3069,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,num
     write_tree(candMatWOMaxValues,tree,number_of_num_features, indent + 1,f,df_name_vector,mappings)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where T<:Unsigned 
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where T<:Unsigned 
 	#version which uses f::IOStream as input
 	write(f,"\r\n1 dimensional predictor 'frequency':")
 	my_write(f,var_imp1d_str_arr);
@@ -3100,7 +3092,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},
     write_tree(candMatWOMaxValues,tree.right,number_of_num_features, indent + 1,f,df_name_vector,mappings)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64, indent::Int64=0,fileloc::String="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int, indent::Int=0,fileloc::String="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
     warn("This should not happen. Opening file $(fileloc) to write Leaf information.")
 	#This should only happen when the whole tree is a leaf.
 	#We should by any means avoid to open and close the file for each leaf.
@@ -3109,11 +3101,11 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,num
     close(f)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
     write(f,"L|S$(round(nodesize(tree), digits=1)),Fit$(round(tree.fitted, digits=2)),D$(tree.depth)\r\n")
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64, indent::Int64,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0)) where T<:Unsigned 
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int, indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
     orig_id>0 ? write(f,"N|F$(this_id)  $(df_name_vector[this_id]),T$(round(candMatWOMaxValues[this_id][tree.subset[end]], sigdigits=5)),Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))")
@@ -3125,7 +3117,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},
 end
 
 #write SAS Code fn
-function write_sas_code(estimatesPerScore,candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"),indent::Int64=0)	
+function write_sas_code(estimatesPerScore,candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,number_of_num_features::Int,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"),indent::Int=0)	
 	
 iterations=size(bt.trees,1)
 local vname
@@ -3263,7 +3255,7 @@ close(fiostream)
 end
 
 """write_sas_code version for single trees"""
-function write_sas_code(candMatWOMaxValues::Array{Array{Float64,1},1},inTree::Tree,number_of_num_features::Int64,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),mdf::Float64=1.0;leafvarname::String=convert(String,"leaf"),indent::Int64=0)
+function write_sas_code(candMatWOMaxValues::Array{Array{Float64,1},1},inTree::Tree,number_of_num_features::Int,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),mdf::Float64=1.0;leafvarname::String=convert(String,"leaf"),indent::Int=0)
 tree=inTree.rootnode
 notsign=convert(String,"not")
 insign=convert(String," in ")
@@ -3316,7 +3308,7 @@ end
 close(fiostream)
 end
 
-function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int64, indent::Int64,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0) where T<:Unsigned 
+function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int, indent::Int,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 	notsign=convert(String,"not")
@@ -3344,7 +3336,7 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
 	end
 end
 
-function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int64,indent::Int64,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0)
+function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,indent::Int,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0)
 	writecomments=false
   if writecomments
     add=" *Nodesize: $(round(nodesize(tree), digits=1)), Fitted Value: $(round(tree.fitted, digits=2)), Depth: $(tree.depth);\r\n"
@@ -3359,7 +3351,7 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
 	write(fiostream," " ^ indent,"rel_mod_",leafvarname,"=$(val);\r\n")
 end
 
-function write_sas_code(leaves::Array{Leaf,1},number_of_num_features::Int64,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"))
+function write_sas_code(leaves::Array{Leaf,1},number_of_num_features::Int,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
 	error("BK: This function should not be used anymore. (right?)")	
 	#open file
 fiostream=open(fileloc,"w")
@@ -3382,7 +3374,7 @@ fiostream=open(fileloc,"w")
 close(fiostream)
 end
 
-function write_rules_to_file(leaves::Array{Leaf,1},f::IOStream,namevec::Array{String,1},number_of_num_features,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);leafvarname::String=convert(String,"leaf"))
+function write_rules_to_file(leaves::Array{Leaf,1},f::IOStream,namevec::Array{String,1},number_of_num_features,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
   for i=1:size(leaves,1)
     if i==1
       write(f,"if ")
@@ -3395,7 +3387,7 @@ function write_rules_to_file(leaves::Array{Leaf,1},f::IOStream,namevec::Array{St
   end
 end
 
-function rulpath_vector_to_str(rp::Array{Rulepath,1},namevec::Array{String,1},number_of_num_features::Int64,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0))
+function rulpath_vector_to_str(rp::Array{Rulepath,1},namevec::Array{String,1},number_of_num_features::Int,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
   result=convert(String,"")
   for i=1:size(rp,1)
     if i>1
@@ -3408,7 +3400,7 @@ end
 return result
 end
 
-function reconstruct_rule(r::Rulepath,namevec::Array{String,1},number_of_num_features,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(0);notsign=convert(String,"not")::String,insign=convert(String," in ")::String,quotestr=convert(String,"'")::String,listbeg=convert(String,"(")::String,listend=convert(String,")")::String)
+function reconstruct_rule(r::Rulepath,namevec::Array{String,1},number_of_num_features,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);notsign=convert(String,"not")::String,insign=convert(String," in ")::String,quotestr=convert(String,"'")::String,listbeg=convert(String,"(")::String,listend=convert(String,")")::String)
   orig_id=r.featid
   orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
   #[$(join(mappings[-orig_id][[convert(Int,z) for z in bt.trees[i].subset]],","))]
@@ -3543,7 +3535,7 @@ function inverse_permutation(a::Array{T,1}) where {T}
 end
 
 function sort_splitlist(sd::Vector{Splitdef{T}}) where T<:Unsigned #::Array{Splitdef,1})
-    ar=Array{Float64}(0)
+    ar=Array{Float64}(undef,0)
 	sizehint!(ar,size(sd,1))
     #todo, sort by splitvalue, feature_id, threshold and some interpretation of subset
     #otherwise there can be multiple splits with the same purity
@@ -3560,7 +3552,7 @@ end
 
 function subset_splitlist(sd::Vector{Splitdef{T}},minweight::Float64) where T<:Unsigned
 	#outputs only these members that have enough weight
-	res=Vector{Splitdef{T}}(0)
+	res=Vector{Splitdef{T}}(undef,0)
 	for i=1:size(sd,1)
 		if min(sd[i].weightr,sd[i].weightl)>=minweight
 			push!(res,sd[i])
@@ -3592,7 +3584,7 @@ function index_vector_from_rulepath(rpArray::Array{Rulepath,1},numfeatures::Arra
   return res
 end
 
-function df_column_has_na(df::DataFrame,colindex::Int64)
+function df_column_has_na(df::DataFrame,colindex::Int)
   size(findall(in(true), isna(df[colindex])),1)
 end
 
@@ -3607,7 +3599,7 @@ function defineleftrightPDA(left::BitVector,right::BitVector,mat_charfeatures::A
   return res_charfeatures_l,res_charfeatures_r
 end
 
-  function check_for_missing_data(dfIndata::DataFrame,const_shift_cols::Int64)
+  function check_for_missing_data(dfIndata::DataFrame,const_shift_cols::Int)
 	#Ensure that data has no missing values
 	namevec=names(dfIndata)
 	for ii=1:size(dfIndata,2)
@@ -3625,7 +3617,7 @@ end
 	return true
 end
 
-function check_for_missing_data(mat::Array{Any,2},const_shift_cols::Int64,header::Array{AbstractString,1})
+function check_for_missing_data(mat::Array{Any,2},const_shift_cols::Int,header::Array{AbstractString,1})
 	#Ensure that data has no missing values
 	for ii=1:size(mat,2)
 	  if ii!=const_shift_cols
@@ -3654,16 +3646,16 @@ function return_file_and_folders(ARGS)
 	  #if ((this_hostname=="MUNICH1")||(this_hostname=="MUNICH2")||(this_hostname=="MUNICH3"));    fallback_datafolder=convert(String,"C:\\temp");  end;
 	function path_readable(s);    res=false;    try (res=isreadable(s));    catch (res=false);    end;    res;  end;
   #convert ARGS to String
-  ASCIIStringARGS=Array{String}(0)
+  ASCIIStringARGS=Array{String}(undef,0)
   try
 	[ascii(x) for x in ARGS]
 	ASCIIStringARGS=[strip(convert(String,x)) for x in ARGS]
 	#it might be that parameters such as -v or -e ... where submitted; if so, remove these from the arglist
 	while (length(ASCIIStringARGS)>0)&&(length(ASCIIStringARGS[1])>0)&&(ASCIIStringARGS[1][1]=='-')
-		shift!(ASCIIStringARGS)
+		popfirst!(ASCIIStringARGS)
 	end
 	if ASCIIStringARGS[1]=="0"
-		shift!(ASCIIStringARGS) #it may happen that the first entry is "0" (why? because of -p 0?"s
+		popfirst!(ASCIIStringARGS) #it may happen that the first entry is "0" (why? because of -p 0?"s
 	end
   catch er
 	strr="Failed to convert ARGS to ASCIIString"
@@ -3783,9 +3775,9 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
     thispoint+=1
     next=estimatedRatioPerScore[thispoint+intSpan-1]
     push!(thisRange,next)
-    shift!(thisRange)
+    popfirst!(thisRange)
     push!(x,x[end]+1.0)
-    shift!(x)
+    popfirst!(x)
     intercept::Float64,slope::Float64=mylinreg(x,thisRange,w) #todo tbd, this line takes quite some time as it is used very often, this can certainly be improved!
     smoothed=float(thispoint)*slope+intercept
 	estimatedRatioPerScore[thispoint]=smoothed
@@ -3796,8 +3788,8 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
   while thispoint<nscores
     thispoint+=1
     #remove the last element of each vector
-    shift!(thisRange)
-    shift!(x)
+    popfirst!(thisRange)
+    popfirst!(x)
     pop!(w)
     intercept,slope=mylinreg(x,thisRange,w)
 	smoothed=thispoint*slope+intercept
@@ -3961,20 +3953,17 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
     denominator=view(denominator_full_vec,trnidx)
     estimatedRatioPerRow=view(estimatedRatioPerRow_full_vec,trnidx)
 	
-	#warn("remove this");writecsv("C:\\temp\\raw_rel.csv",raw_rel)
 	#srt::Vector{Int}=sortperm(raw_rel,alg=QuickSort) #we could use RadixSort here, it uses about 40m of memory for 5m obs, AND I am unsure how easy it is to get the permutation (compared to sorting in place). But the algorithm is about 50% faster for random floats than QuickSort.
 	#sortperm!(srt,raw_rel,alg=QuickSort)
 	my_sortperm_you_should_regularily_check_if_sortperm_in_base_has_become_more_efficient!(srt,raw_rel) #we could use RadixSort here, it uses about 40m of memory for 5m obs, AND I am unsure how easy it is to get the permutation (compared to sorting in place). But the algorithm is about 50% faster for random floats than QuickSort.
 	obs=length(raw_rel)
-	raw_rel_srt=view(raw_rel,srt)
-	#@show unique(raw_rel_srt) #this is moderated and has 'little' spread for small mf
+	raw_rel_srt=view(raw_rel,srt)	
 	weight_srt=view(weight,srt)
-	estimatedRatioPerRow_srt=view(estimatedRatioPerRow,srt)
-	#@show unique(estimatedRatioPerRow_srt) #this is moderated and has 'little' spread for small mf
+	estimatedRatioPerRow_srt=view(estimatedRatioPerRow,srt)	
 	denominator_srt=view(denominator,srt)
 	numerator_srt=view(numerator,srt)
 
-	#rowCountPerUniqueRelativity::Vector{Int64},weightPerUniqueRelativity::Vector{Float64}=deriveRowCountAndWeight(weight_srt,raw_rel_srt,uniqueRelativitiesSorted)
+	#rowCountPerUniqueRelativity::Vector{Int},weightPerUniqueRelativity::Vector{Float64}=deriveRowCountAndWeight(weight_srt,raw_rel_srt,uniqueRelativitiesSorted)
 	weightPerUniqueRelativity=weight_srt
 	
 	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt	
@@ -4288,7 +4277,7 @@ function replace_in_vector!(arr::Array{T,1},orig::T,new::T) where {T}
 	return nothing
 end
 
-function addPredictorData(listOfValues,colnames,sett::ModelSettings,scores,numeratorEst,numerator,denominator,weight,finalEstimateForCharts,f,varnum::Int64)
+function addPredictorData(listOfValues,colnames,sett::ModelSettings,scores,numeratorEst,numerator,denominator,weight,finalEstimateForCharts,f,varnum::Int)
 	thisdata=deepcopy(colnames)
 	thisdata[1]=deepcopy(sett.df_name_vector[varnum])
 	valuelist,cnt,sumscores,sumnumeratorEst,sumnumerator,sumdenominator,sumweight=aggregate_data(f,scores,numeratorEst,numerator,denominator,weight)
@@ -4418,10 +4407,10 @@ function write_and_create_boollist_char_vba(fiostream::IOStream,mappings::Array{
 	#of course we would also know the values from the validation data, but that should not matter here, since any new data which the module
 	#will see, might have even other/new values in it.
 	#Does that make sense? Or should we include the values from the val data in this list?
-		boollist=Array{Array{String,1}}(0)
+		boollist=Array{Array{String,1}}(undef,0)
 		for i=1:length(mappings)
 			thisvarname=df_name_vector[number_of_num_features+i]
-			thisboollist=Array{String}(0)
+			thisboollist=Array{String}(undef,0)
 			for j=1:length(mappings[i])
 					str=create_custom_string(mappings[i][j]) #this can be any String, let us see what C# can handle
 					#if C# isunable to handle the UTF8Strings, we need to convert it to some ASCIIString, while ensuring that we still have UNIQUENESS, todo /tbd check this
@@ -4444,10 +4433,10 @@ end
 function write_and_create_boollist_num_vba(fiostream::IOStream,df_name_vector::Array{String,1},number_of_num_features::Int,candMatWOMaxValues::Array{Array{Float64,1},1},boolNumVarsUsedByModel::Array{Array{Bool,1},1})
 #NOTE, here we assume that the numerical variables are "first" in the df_name_vector
 #todo: only define booleans which are actually used by the model! this will keep the code smaller and likely more efficient
-boollist=Array{Array{String,1}}(0)
+boollist=Array{Array{String,1}}(undef,0)
 	for i=1:number_of_num_features
 		thisvarname=df_name_vector[i]
-		thisboollist=Array{String}(0)
+		thisboollist=Array{String}(undef,0)
 		for j=1:length(candMatWOMaxValues[i])
 				thisbool=convert(String,string(thisvarname,"_isLE_",numberAsStringForCSharp(candMatWOMaxValues[i][j])))
 				while in(thisbool,thisboollist) #need to ensure that the list is unique!
@@ -4523,10 +4512,10 @@ end
 function write_and_create_boollist_num(fiostream::IOStream,df_name_vector::Array{String,1},number_of_num_features::Int,candMatWOMaxValues::Array{Array{Float64,1},1},boolNumVarsUsedByModel::Array{Array{Bool,1},1})
 #NOTE, here we assume that the numerical variables are "first" in the df_name_vector
 #todo: only define booleans which are actually used by the model! this will keep the code smaller and likely more efficient
-boollist=Array{Array{String,1}}(0)
+boollist=Array{Array{String,1}}(undef,0)
 	for i=1:number_of_num_features
 		thisvarname=df_name_vector[i]
-		thisboollist=Array{String}(0)
+		thisboollist=Array{String}(undef,0)
 		for j=1:length(candMatWOMaxValues[i])
 				thisbool=convert(String,string(thisvarname,"_isLE_",numberAsStringForCSharp(candMatWOMaxValues[i][j])))
 				while in(thisbool,thisboollist) #need to ensure that the list is unique!
@@ -4562,10 +4551,10 @@ function write_and_create_boollist_char(fiostream::IOStream,mappings::Array{Arra
 #of course we would also know the values from the validation data, but that should not matter here, since any new data which the module
 #will see, might have even other/new values in it.
 #Does that make sense? Or should we include the values from the val data in this list?
-	boollist=Array{Array{String,1}}(0)
+	boollist=Array{Array{String,1}}(undef,0)
 	for i=1:length(mappings)
 		thisvarname=df_name_vector[number_of_num_features+i]
-		thisboollist=Array{String}(0)
+		thisboollist=Array{String}(undef,0)
 		for j=1:length(mappings[i])
 				str=create_custom_string(mappings[i][j]) #this can be any String, let us see what C# can handle
 				#if C# isunable to handle the UTF8Strings, we need to convert it to some ASCIIString, while ensuring that we still have UNIQUENESS, todo /tbd check this
@@ -5008,8 +4997,8 @@ function csharp_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostre
 end
 
 function determine_used_variables(bt::BoostedTree)
-	boolNumVarsUsedByModel=Array{Array{Bool,1}}(0)
-	boolCharVarsUsedByModel=Array{Array{Bool,1}}(0)
+	boolNumVarsUsedByModel=Array{Array{Bool,1}}(undef,0)
+	boolCharVarsUsedByModel=Array{Array{Bool,1}}(undef,0)
 	#settings	#number_of_char_features
 	number_of_num_features=bt.settings.number_of_num_features
 	number_of_char_features=bt.settings.number_of_char_features	
@@ -5298,7 +5287,7 @@ function sendto(ps::Vector{Int}; args...)
 end
 
 function get_feature_pools(f::DataFrame)
-	fp=Vector{Union{Vector{String},Vector{Float64}}}(0)
+	fp=Vector{Union{Vector{String},Vector{Float64}}}(undef,0)
 	@inbounds for i in 1:size(f,2)
 		push!(fp,deepcopy(f[i].pool))
 	end

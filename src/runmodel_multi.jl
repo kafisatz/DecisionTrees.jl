@@ -100,7 +100,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
         #define Exceldata
         sh1=ExcelSheet("settings",settsdf)
         sh2=ExcelSheet("stats",statsdf)
-        xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(0))
+        xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(undef,0))
         #write data
         try 		
             println("Writing summary statistics to file:\r\n$(filen)")

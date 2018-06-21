@@ -1,4 +1,4 @@
-function calculateSplitValue(a::ROptMinRLostSplit,labellist::Array{UInt8,1},intSumrklost::Array{Int64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets)
+function calculateSplitValue(a::ROptMinRLostSplit,labellist::Array{UInt8,1},intSumrklost::Array{Int,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets)
 #here randomweight==0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -52,7 +52,7 @@ return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
 
-function calculateSplitValue(a::ROptMinRLostSplit,labellist::Array{UInt8,1},intSumrklost::Array{Int64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int64)
+function calculateSplitValue(a::ROptMinRLostSplit,labellist::Array{UInt8,1},intSumrklost::Array{Int,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int)
 #here randomweight>0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner

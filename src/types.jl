@@ -54,7 +54,7 @@ mutable struct ExcelData
 	sheets::Array{ExcelSheet,1}
     charts::Array{Chart,1}
     function ExcelData()
-        return new(Array{ExcelSheet}(0),Array{Chart}(0))
+        return new(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
     end
     function ExcelData(a,b)
         return  new(a,b)
@@ -81,8 +81,8 @@ abstract type DTSubsets end
 
 #custom loop over subsets (Gray Code) ONLY UNTIL the middle - USING SYMMETRY of the list as we consider binary splits
 	struct MyGrayCodeSubsetsHALF <: DTSubsets
-		size_of_set::Int64
-		stopat::Int64 #(1 << it.size_of_set)-2
+		size_of_set::Int
+		stopat::Int #(1 << it.size_of_set)-2
 	end
 
 	eltype(it::MyGrayCodeSubsetsHALF) = Int #Array{eltype(1),1}
@@ -103,7 +103,7 @@ abstract type DTSubsets end
 
 #normal subset list for numeric splitting points ("increasing" subset)
 	struct MyIncreasingSubsets <: DTSubsets
-		size_of_set::Int64
+		size_of_set::Int
 	end
 
 	eltype(it::MyIncreasingSubsets) = Array{eltype(1),1}
@@ -181,8 +181,8 @@ end
 
 #todo check the difference between immutable and type!! are we using immutables correctly here?
 struct Splitdef{T<:Unsigned} #Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
-	featid::Int64
-	featid_new_positive::Int64
+	featid::Int
+	featid_new_positive::Int
     featurename::Symbol
     subset::Array{T,1}
     splitvalue::Float64 #Depends on the criterion function used (e.g. difference)
@@ -190,9 +190,9 @@ struct Splitdef{T<:Unsigned} #Splitdef(feature_column_id,feature_column_id2,fnam
     weightr::Float64
 end
 ==(x::Splitdef,y::Splitdef)= (x.featid==y.featid) && (x.featurename==y.featurename) && (x.featid_new_positive==y.featid_new_positive) && (x.splitvalue==y.splitvalue) && (x.subset==y.subset)  && (x.weightl==y.weightl)  && (x.weightr==y.weightr)
-#Splitdef(x::Tuple{Int64,Float64,Array{UInt8,1},Float64,Float64,Float64})= Splitdef(x[1],x[2],x[3],x[4],x[5],x[6])
-hash(x::Splitdef)=hash(x,UInt64(9))
-function hash(x::Splitdef,h::UInt64)
+#Splitdef(x::Tuple{Int,Float64,Array{UInt8,1},Float64,Float64,Float64})= Splitdef(x[1],x[2],x[3],x[4],x[5],x[6])
+hash(x::Splitdef)=hash(x,UInt(9))
+function hash(x::Splitdef,h::UInt)
   h=hash(x.featid,h)
   h=hash(x.featid_new_positive,h)
   h=hash(x.featurename,h)
@@ -204,7 +204,7 @@ function hash(x::Splitdef,h::UInt64)
 end
 
 struct Rulepath{T<:Unsigned}
-    featid::Int64
+    featid::Int
     subset::Vector{T}
     isLeftChild::Bool
 end
@@ -212,8 +212,8 @@ end
 Rulepath{T}() where {T<:Unsigned} = Rulepath(0,T[],false)
 
 ==(x::Rulepath,y::Rulepath)= (x.featid==y.featid) && (x.isLeftChild==y.isLeftChild) && (x.subset==y.subset)
-hash(x::Rulepath)=hash(x,UInt64(9))
-function hash(x::Rulepath,h::UInt64)
+hash(x::Rulepath)=hash(x,UInt(9))
+function hash(x::Rulepath,h::UInt)
   h=hash(x.featid,h)
   h=hash(x.isLeftChild,h)
   for i in x.subset
@@ -228,7 +228,7 @@ mutable struct Leaf #leafs are mutable, since we determine the number of the lea
     mean::Float64
     fitted::Float64 #this is usually identical to the mean, but can be different for some instances
   	size::Float64 #  this is equal to sum(weight)
-    depth::Int64
+    depth::Int
     rule_path::Array{Rulepath,1}
 	sumnumerator::Float64
 	sumdenominator::Float64
@@ -242,8 +242,8 @@ mutable struct Leaf #leafs are mutable, since we determine the number of the lea
     end
 end
 ==(x::Leaf,y::Leaf)= (x.rowcount==y.rowcount) && (x.mean==y.mean) && (x.fitted==y.fitted)  && (x.size==y.size)  && (x.depth==y.depth)  && (x.rule_path==y.rule_path)  && (x.sumnumerator==y.sumnumerator)  && (x.sumdenominator==y.sumdenominator) && (x.id==y.id)
-hash(x::Leaf)=hash(x,UInt64(9))
-function hash(x::Leaf,h::UInt64)
+hash(x::Leaf)=hash(x,UInt(9))
+function hash(x::Leaf,h::UInt)
   h=hash(x.rowcount,h)
   h=hash(x.mean,h)
   h=hash(x.fitted,h)
@@ -258,8 +258,8 @@ end
 
 struct Node{T<:Unsigned}
     #todo, add depth!
-    featid::Int64
-    featid_new_positive::Int64
+    featid::Int
+    featid_new_positive::Int
     #we have redundance in the tree structure, the rulepath contains the same information as the members of the node; todo - remove it!
     subset::Array{T,1}
     left::Union{Leaf,Node{UInt8},Node{UInt16}}
@@ -272,32 +272,32 @@ mutable struct ModelSettings
 	minw::Float64 #2
 	randomw::Float64 #3
 	crit::SplittingCriterion # fn version of 4
-	max_splitting_points_num::Int64 #5
-	niter::Int64 #6
+	max_splitting_points_num::Int #5
+	niter::Int #6
 	mf::Float64 #7 moderationfactor
-	nscores::Int64 #8
+	nscores::Int #8
 	adaptiveLearningRate::Float64 #9
-	number_of_tariffs::Int64 #10
-	prem_buffer::Int64 #11
+	number_of_tariffs::Int #10
+	prem_buffer::Int #11
 	BoolStartAtMean::Bool #12
 	bool_write_tree::Bool #13	
-	number_of_num_features::Int64 #14
+	number_of_num_features::Int #14
 	parallel_tree_construction::Bool #15
 	using_local_variables::Bool #16
-	parallel_level_threshold::Int64 #17
-	parallel_weight_threshold::Int64 #18
-	nthreads::Int64 #19
+	parallel_level_threshold::Int #17
+	parallel_weight_threshold::Int #18
+	nthreads::Int #19
 	dataIdentifier::String #20
 	algorithmsFolder::String #21
 	startime::String #22
 	indata::String #23
 	var_dep::String #24
-	indepcount::Int64 #25
+	indepcount::Int #25
 	spawnsmaller::Bool #26
 	recursivespawning::Bool #27
 	pminweightfactor::Float64 #28
 	pminrelpctsize::Float64 #29
-	pflipspawnsmalllargedepth::Int64 #30
+	pflipspawnsmalllargedepth::Int #30
 	juliaprogfolder::String #31
 	boolMDFPerLeaf::Bool #32
 	ranks_lost_pct::Float64 #33
@@ -309,9 +309,9 @@ mutable struct ModelSettings
 	subsampling_features_prop::Float64 #39
 	version::String #40
 	preppedJLDFileExists::Bool #41
-	catSortByThreshold::Int64 #42
+	catSortByThreshold::Int #42
 	catSortBy::SortBy #43
-	scorebandsstartingpoints::Array{Int64,1} #44
+	scorebandsstartingpoints::Array{Int,1} #44
 	showTimeUsedByEachIteration::Bool #45
 	smoothEstimates::String #46
 	deriveFitPerScoreFromObservedRatios::Bool #deriveFitPerScoreFromObservedRatios::Bool (if this is true then the fit per score will be based on the observed ratio per score (instead of the fitted ratio per score)) . Note that this does not influence the structure of the tree, but only the fitted ratio per score (and scoreband)
@@ -347,10 +347,10 @@ mutable struct ModelSettings
 	fitForStatsAndCharts::String
 
 	#the following are treated specially
-	ncolsdfIndata::Int64
-	ishift::Int64
+	ncolsdfIndata::Int
+	ishift::Int
 	df_name_vector::Array{String,1}
-    number_of_char_features::Int64 #this is calculated by Julia from number_of_num_features and ncolsdfIndata (which is defined by the data)
+    number_of_char_features::Int #this is calculated by Julia from number_of_num_features and ncolsdfIndata (which is defined by the data)
 
 	chosen_apply_tree_fn::String #defined below
 	moderationvector::Array{Float64,1} #50 onwards
@@ -418,7 +418,7 @@ mutable struct ModelSettings
 	#combined bagging&boosting model
 	cBB_niterBoosting=0
 	cBB_niterBagging=0
-	fixedinds=Array{Int}(0)
+	fixedinds=Array{Int}(undef,0)
 	boolNumeratorStats=false
 	bINTERNALignoreNegRelsBoosting=false
 	statsByVariables=Int[]
@@ -439,7 +439,7 @@ mutable struct ModelSettings
 	#the following are treated specially
 	ncolsdfIndata=-1 #
 	ishift=0 #
-	df_name_vector=Array{String}(0) #
+	df_name_vector=Array{String}(undef,0) #
     number_of_char_features=-1 #
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
@@ -480,12 +480,12 @@ return stringValue
 end
 
 """
-updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int64,const_shift_cols::Int64,columnnames::Array{String,1})
+updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int,const_shift_cols::Int,columnnames::Array{String,1})
 
 this is NOT the user facing function of updatedSettings!
 consider updateSettingsMod! instead
 """
-function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int64,const_shift_cols::Int64,columnnames::Array{String,1})
+function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int,const_shift_cols::Int,columnnames::Array{String,1})
 	dataisJLD=lowercase(dataFilename[end-3:end])==".jld2"
 	s.ncolsdfIndata=ncolsdfIndata
 	#@show columnnames
@@ -697,7 +697,7 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 	return crit
 end
 
-function convertFromString(oldvalue::Array{Int64,1},val)
+function convertFromString(oldvalue::Array{Int,1},val)
 local arr
     try
 		arr=Int[parse(Int,x) for x in split(val,',')]
@@ -729,7 +729,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
       @assert s.statsRandomByVariable<typemax(UInt8) #more than 255 random groups is really not meaningful; we do work with a UInt8 list later on
 	  @assert in(s.model_type,["boosted_tree" "build_tree" "bagged_tree" "bagged_boosted_tree"])
       @assert (s.randomw>=0) & (s.randomw<=1)
-	  #Note, we could easily support more splitting Points (i.e. UInt64), but it is likely that the user has not intended to exceed typemax(UInt16), thus we catch this here
+	  #Note, we could easily support more splitting Points (i.e. UInt), but it is likely that the user has not intended to exceed typemax(UInt16), thus we catch this here
 	  max_splitting_points_num_INTERNAL=Int(typemax(UInt16))-1
       @assert s.max_splitting_points_num<max_splitting_points_num_INTERNAL "Maximum number of splitting points is currently limited to $(max_splitting_points_num_INTERNAL)"
 	  @assert s.max_splitting_points_num>0
@@ -805,19 +805,19 @@ mutable struct Tree <: DTModel
 	intVarsUsed::Array{Array{Int,1},1}	
 	candMatWOMaxValues::Array{Array{Float64,1},1}
 	charMappings::Array{Array{String,1},1}
-	inds_considered::Array{Int64,1}	
+	inds_considered::Array{Int,1}	
 	settings::ModelSettings
 	variableImp1Dim::Array{Int,1}
 	variableImp2Dim::Array{Int,1}	
 	modelstats::DataFrame # #overall model statistics and performance (trn and val), this needs to be a matrix (Any) with a header row NOTE: this is a feature of multiple model types! (tree, boosting, bagging) and we need consistency because of the function run_model_multirow_settings
 	exceldata::ExcelData
 	featurepools::Array{Union{Array{Float64,1},Array{String,1}},1}
-	function Tree(rootnode::Union{Leaf,Node{UInt8},Node{UInt16}},intVarsUsed::Array{Array{Int,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},charMappings::Array{Array{String,1},1},inds_considered::Array{Int64,1},settings::ModelSettings,exceldata::ExcelData,fp::Array{Union{Array{Float64,1},Array{String,1}},1})
+	function Tree(rootnode::Union{Leaf,Node{UInt8},Node{UInt16}},intVarsUsed::Array{Array{Int,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},charMappings::Array{Array{String,1},1},inds_considered::Array{Int,1},settings::ModelSettings,exceldata::ExcelData,fp::Array{Union{Array{Float64,1},Array{String,1}},1})
 		nf=settings.number_of_char_features+settings.number_of_num_features
 		@assert length(settings.df_name_vector)==nf
 		variableImp1Dim=zeros(Int,nf)
 		variableImp2Dim=zeros(Int,div(nf*(nf-1),2))
-		ms=Array{Any}(0,0)
+		ms=Array{Any}(undef,0,0)
 		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata,fp)
 	end
 	function Tree()		
@@ -867,10 +867,10 @@ struct BoostedTree <: Ensemble
 	intVarsUsed::Array{Array{Array{Int,1},1},1}
 	candMatWOMaxValues::Array{Array{Float64,1},1}
 	charMappings::Array{Array{String,1},1}
-	inds_considered::Array{Array{Int64,1},1}
+	inds_considered::Array{Array{Int,1},1}
 	
     moderationvector::Array{Float64,1}
-    scores::Array{Int64,1}
+    scores::Array{Int,1}
     rawrelativities::Array{Float64,1}
     maxRawRelativityPerScoreSorted::Array{Float64,1}
     meanobserved::Float64
@@ -893,9 +893,9 @@ struct BaggedTree <: Ensemble
 	intVarsUsed::Array{Array{Array{Int,1},1},1}
 	candMatWOMaxValues::Array{Array{Float64,1},1}
 	charMappings::Array{Array{String,1},1}
-	inds_considered::Array{Array{Int64,1},1}
+	inds_considered::Array{Array{Int,1},1}
 	
-    scores::Array{Int64,1}
+    scores::Array{Int,1}
     rawrelativities::Array{Float64,1}
     maxRawRelativityPerScoreSorted::Array{Float64,1}
     meanobserved::Float64

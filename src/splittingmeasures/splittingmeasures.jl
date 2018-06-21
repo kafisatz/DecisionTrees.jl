@@ -10,7 +10,7 @@ include("ROptMinRLost.jl")
 include("ROptMinRLostPct.jl")
 include("rankopt.jl")
 
-function _minimize_lost_ranks_maximize_5pct(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int64,moderationfactor::Float64)
+function _minimize_lost_ranks_maximize_5pct(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int,moderationfactor::Float64)
     sz=size(labels,1)
     error("this is not working anymore")
 	idx=features.<thresh
@@ -21,7 +21,7 @@ function _minimize_lost_ranks_maximize_5pct(labels::Array{Float64,1}, labels_ori
 return max(quantile(labelsl,0.05),quantile(labelsr,0.05)),Float64(countl),Float64(countr)
 end
 
-function _minimize_lost_ranks_maximize_minresidual(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int64,moderationfactor::Float64)
+function _minimize_lost_ranks_maximize_minresidual(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int,moderationfactor::Float64)
     minl=minr=Inf
     countl=countr=0
 	f,l=0.0
@@ -39,7 +39,7 @@ function _minimize_lost_ranks_maximize_minresidual(labels::Array{Float64,1}, lab
 return max(minr,minl),Float64(countl),Float64(countr)
 end
 
-function _minimize_lost_ranks_maximize_minresidual(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int64, moderationfactor::Float64)
+function _minimize_lost_ranks_maximize_minresidual(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int, moderationfactor::Float64)
 minl=minr=l=0.0
   countl=countr=0
     for i in 1:length(features.pda)
@@ -55,7 +55,7 @@ minl=minr=l=0.0
 return max(minr,minl),Float64(countl),Float64(countr)
 end
 
-function _minimize_lost_ranks_difference(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int64,moderationfactor::Float64)
+function _minimize_lost_ranks_difference(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int,moderationfactor::Float64)
  suml=sumr=l=f=0.0
     countl=countr=0
     for i=1:size(features,1)
@@ -72,7 +72,7 @@ function _minimize_lost_ranks_difference(labels::Array{Float64,1}, labels_orig::
 return abs(sumr/Float64(countr)-suml/Float64(countl)), Float64(countl),Float64(countr)
 end
 
-function _minimize_lost_ranks_difference(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int64, moderationfactor::Float64)
+function _minimize_lost_ranks_difference(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int, moderationfactor::Float64)
 suml=sumr=0.0
   countl=countr=0
     for i in 1:length(features.pda)

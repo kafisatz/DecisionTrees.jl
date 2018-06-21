@@ -572,7 +572,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		 prnt&&println("Preparing output... Time: $(now())")
          #1-dim Variable Importance
           var_imp1d_str_arr,var_imp2d_str_arr,onedimintvec_unused,twodimintvec_unused=variable_importance(leaves_of_tree,sett.df_name_vector,sett.number_of_num_features)
-          nleaves=Int64(size(leaves_of_tree,1))
+          nleaves=Int(size(leaves_of_tree,1))
 		 res=hcat(key,trnidx_one_zero_full_length,fitted_values_tree)
 		#Create output statistics		
 			#this is not done in an efficient manner yet..... we are copying data to get est[trnidx] etc...
@@ -627,7 +627,7 @@ prnt&&println("---Model Settings------------------------------------------------
 			if sett.write_result
 				println("Exporting Data: \n $(this_outfile)")
 				isfile(this_outfile)&&rm(this_outfile)
-				writecsv(this_outfile,res)
+				DelimitedFiles.writedlm(this_outfile,res,',')
 				push!(filelistWithFilesToBeZipped,this_outfile)
             end
 	#end build tree
@@ -719,7 +719,7 @@ end
 		if sett.write_result
 			println("Exporting Data: \n $(this_outfile)")
 			isfile(this_outfile)&&rm(this_outfile)
-			writecsv(this_outfile,res)
+			DelimitedFiles.writedlm(this_outfile,res,',')
 			push!(filelistWithFilesToBeZipped,this_outfile)
 		end
 	#write estimates matrix
@@ -737,14 +737,14 @@ end
 				vectorOfLeafNumbersMOD=hcat(key,vectorOfLeafNumbers[:,2:end])
 				println("Exporting LeafNumber Matrix: \n $(leafnrfile)")
 					isfile(leafnrfile)&&rm(leafnrfile)
-					writecsv(leafnrfile,vectorOfLeafNumbersMOD)
+					DelimitedFiles.writedlm(leafnrfile,vectorOfLeafNumbersMOD,',')
 					push!(filelistWithFilesToBeZipped,leafnrfile)
 				#MATRIX 1
 					estmat_outile2=string(path_and_fn_wo_extension,"_iteration_matrixFromScores.csv")
 					res_estmatrixFromScores=hcat(key,est_matrixFromScores)
 					println("Exporting Estimates Matrix (based on Scores): \n $(estmat_outile2)")
 					isfile(estmat_outile2)&&rm(estmat_outile2)
-					writecsv(estmat_outile2,res_estmatrixFromScores)
+					DelimitedFiles.writedlm(estmat_outile2,res_estmatrixFromScores,',')
 					push!(filelistWithFilesToBeZipped,estmat_outile2)
 				#MATRIX 2
 					estmat_outile=string(path_and_fn_wo_extension,"_iteration_matrix.csv")
@@ -753,7 +753,7 @@ end
 						#println("Saving iteration matrix to jld file; this is only a backup in case the CSV export does not work (which sometimes happens with very large files)")
 						#@time save(string(estmat_outile,".jld"),"res_estmatrix",res_estmatrix)
 					isfile(estmat_outile)&&rm(estmat_outile)
-					writecsv(estmat_outile,res_estmatrix)
+					DelimitedFiles.writedlm(estmat_outile,res_estmatrix,',')
 					push!(filelistWithFilesToBeZipped,estmat_outile)
 			end
 		end
