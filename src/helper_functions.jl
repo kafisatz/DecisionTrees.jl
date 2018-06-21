@@ -796,7 +796,7 @@ locincrement=22
 locrow-=locincrement
 #loop through vars
 local loc,thismat,emptyline,resultingMatrix,statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn,strVarname,list,intVarnamePOSITIVE,feat,featVAL,outMatrix
-emptyOutMatrix=repmat([],0,16) #note the 16 is hardcoded here which is very bad programming, it is the width of the ouput "statsThisIteration" of the fn createTrnValStatsForThisIteration
+emptyOutMatrix=repeat([],0,16) #note the 16 is hardcoded here which is very bad programming, it is the width of the ouput "statsThisIteration" of the fn createTrnValStatsForThisIteration
 resultingMatrix=deepcopy(emptyOutMatrix)
 integerVarlist=sett.statsByVariables
 validationCharts=Array{Chart}(0)
@@ -838,7 +838,7 @@ for intVarname in integerVarlist
 		
 		statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,-1,sett.scorebandsstartingpoints,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,sett)
 		statsThisIteration[1,1]="Scoreband" #this cell has the value "Cumulative Stats n=-1" by default which is not useful here.
-		statsThisIteration=hcat(statsThisIteration[:,1],vcat([strVarname],repmat([strthresh],size(statsThisIteration,1)-1,1)),statsThisIteration[:,2:end])
+		statsThisIteration=hcat(statsThisIteration[:,1],vcat([strVarname],repeat([strthresh],size(statsThisIteration,1)-1,1)),statsThisIteration[:,2:end])
 		outMatrix=vcat(deepcopy(outMatrix),deepcopy(statsThisIteration))
 	end
 	#trn charts
@@ -855,8 +855,8 @@ for intVarname in integerVarlist
 		thismat=deepcopy(outMatrix)
 		outMatrix=deepcopy(emptyOutMatrix) #reset the matrix
 		hd=[string("Validation by ",strVarname)]
-		header=hcat(hd,repmat([""],1,size(thismat,2)-1))
-		isdefined(:emptyline) ? true : emptyline=repmat([""],1,size(thismat,2))
+		header=hcat(hd,repeat([""],1,size(thismat,2)-1))
+		isdefined(:emptyline) ? true : emptyline=repeat([""],1,size(thismat,2))
 		thismat=vcat(header,emptyline,thismat,emptyline,emptyline)
 		resultingMatrix=vcat(resultingMatrix,thismat)
 end
@@ -1123,7 +1123,7 @@ function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::V
 		tmpvector_3=reshape(tmpvector_2_t,1,length(tmpvector_2_t))
 		errors_num_estimates=hcat(vcat(tmpvector_2,m1),vcat(tmpvector_3,m2)) # [:,3:end]
 	#add two emtpy rows
-		result=vcat(result,repmat([""],2,size(result,2)))
+		result=vcat(result,repeat([""],2,size(result,2)))
 	#todo tbd potentially add error statistics by score band (maybe consider the average estimated premium per score band versus the actual)
 	#Error Histogram
 	errstartrow=1+size(result,1)
@@ -1138,15 +1138,15 @@ function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::V
 		errorhist2=errorhistogram(histbins,view(actualNumerator,trnidx),view(estimateUnsmoothed,trnidx),view(estimateSmoothed,trnidx),view(estimateFromRelativities,trnidx),view(actualNumerator,validx),view(estimateUnsmoothed,validx),view(estimateSmoothed,validx),view(estimateFromRelativities,validx))
 		errorhist2=vcat(errorhistheader,errorhist2)
 	#add two emtpy rows
-		errorhist=vcat(errorhist,repmat([""],2,size(errorhist,2)))
+		errorhist=vcat(errorhist,repeat([""],2,size(errorhist,2)))
 		errorhist=vcat(errorhist,errorhist2)
 	#attach histogram below errors per iteration
 	#increase breadth
 		mx=max(size(result,2),size(errorhist,2))
 		if mx>size(result,2)
-			result=hcat(result,repmat([""],size(result,1),mx-size(result,2)))
+			result=hcat(result,repeat([""],size(result,1),mx-size(result,2)))
 		else
-			errorhist=hcat(errorhist,repmat([""],size(errorhist,1),mx-size(errorhist,2)))
+			errorhist=hcat(errorhist,repeat([""],size(errorhist,1),mx-size(errorhist,2)))
 		end
 	#attach histogram
 		result=vcat(result,errorhist)
@@ -1831,7 +1831,7 @@ function someRankOptStats(mat::Array{Float64,2},numerator::Array{Float64,1},Prem
 	prempct=premincrementlist./premsum
 	res=[[1:iters] rklostcountlist premincrementlist rklpct prempct rklpct./prempct]
 	header=["Iteration" "Ranks Lost" "Additional Premium" "Ranks Lost Pct" "Additional Premium Pct" "Ratio"]
-	res=[header,res,repmat([""],2,length(header))]
+	res=[header,res,repeat([""],2,length(header))]
 	return res
 end
 
@@ -2029,27 +2029,27 @@ t=tree.rootnode
     r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
     r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal    
     #attach Gini
-		ginirowtrn=["Gini Numerator Trn" giniTrn repmat([""],1,size(thisres,2)-2)]
+		ginirowtrn=["Gini Numerator Trn" giniTrn repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;ginirowtrn];overallstats=[overallstats;ginirowtrn];
-		ginirowval=["Gini Numerator Val" giniVal repmat([""],1,size(thisres,2)-2)]
+		ginirowval=["Gini Numerator Val" giniVal repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;ginirowval];overallstats=[overallstats;ginirowval];
 	#quadratic weighted kappa
 		qwkappaTrn=tryQWKappa(view(numerator,trnidx),view(est,trnidx))
 		qwkappaVal=tryQWKappa(view(numerator,validx),view(est,validx))
 	#attach qwkappa
-		qwkapparowtrn=["Quadratic Weighted Kappa (Numerator) Trn" qwkappaTrn repmat([""],1,size(thisres,2)-2)]
+		qwkapparowtrn=["Quadratic Weighted Kappa (Numerator) Trn" qwkappaTrn repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;qwkapparowtrn];overallstats=[overallstats;qwkapparowtrn];
-		qwkapparowval=["Quadratic Weighted Kappa (Numerator) Val" qwkappaVal repmat([""],1,size(thisres,2)-2)]
+		qwkapparowval=["Quadratic Weighted Kappa (Numerator) Val" qwkappaVal repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;qwkapparowval];overallstats=[overallstats;qwkapparowval];
     #attach r squared
-        r2rowtrn=["R Squared of Numerator Trn" r2_of_numeratortrn repmat([""],1,size(thisres,2)-2)]
+        r2rowtrn=["R Squared of Numerator Trn" r2_of_numeratortrn repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;r2rowtrn];overallstats=[overallstats;r2rowtrn];
-		r2rowval=["R Squared of Numerator Val" r2_of_numeratorval repmat([""],1,size(thisres,2)-2)]
+		r2rowval=["R Squared of Numerator Val" r2_of_numeratorval repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;r2rowval];overallstats=[overallstats;r2rowval];
     #attach rss
-        rss_rowtrn=["RSS of Numerator Trn" residual_sum_squares_of_numeratorTrn repmat([""],1,size(thisres,2)-2)]
+        rss_rowtrn=["RSS of Numerator Trn" residual_sum_squares_of_numeratorTrn repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;rss_rowtrn];overallstats=[overallstats;rss_rowtrn];
-		rss_rowval=["RSS of Numerator Val" residual_sum_squares_of_numeratorVal repmat([""],1,size(thisres,2)-2)]
+		rss_rowval=["RSS of Numerator Val" residual_sum_squares_of_numeratorVal repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;rss_rowval];overallstats=[overallstats;rss_rowval];
 	#attach poisson error (for frequency models)	
 		if sett.boolCalculatePoissonError
@@ -2061,9 +2061,9 @@ t=tree.rootnode
             poissonErrTrn=0.0
             poissonErrVal=0.0
 		end		
-		poiErr_rowtrn=["Average Poisson Error Trn" poissonErrTrn repmat([""],1,size(thisres,2)-2)]
+		poiErr_rowtrn=["Average Poisson Error Trn" poissonErrTrn repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;poiErr_rowtrn];overallstats=[overallstats;poiErr_rowtrn];
-		poiErr_rowval=["Average Poisson Error Val" poissonErrVal repmat([""],1,size(thisres,2)-2)]
+		poiErr_rowval=["Average Poisson Error Val" poissonErrVal repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;poiErr_rowval];overallstats=[overallstats;poiErr_rowval];
 
 
@@ -2156,21 +2156,21 @@ function buildStatistics(header,description,sumnumeratortrn,sumdenominatortrn,su
 	statsval=[description sumweightval float(sumweightval)/sumweightval[end] sumnumeratorval sumdenominatorval observedratioval sumnumeratorEstimateval fittedratioval relativityval]
 
 	#add a header row and two empty rows in between
-	headerval=["Validation Data" repmat([""],1,length(header)-1)]
+	headerval=["Validation Data" repeat([""],1,length(header)-1)]
 	headertrn=deepcopy(headerval)
 	headertrn[1]="Training Data"
-	empty=repmat([""],1,length(header))
+	empty=repeat([""],1,length(header))
 
-	corrow=["Correlation" correlation repmat([""],1,length(header)-2)]
+	corrow=["Correlation" correlation repeat([""],1,length(header)-2)]
 	stddevrows=[["Std Dev Trn" stddevtrn];["Std Dev Val" stddevval];["Std Dev Ratio" stddevratio]]
-	stddevrows=[stddevrows repmat([""],3,length(header)-2)]
+	stddevrows=[stddevrows repeat([""],3,length(header)-2)]
 	#lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted
-	lifttrn=["Lift Trn" lifttrn repmat([""],1,length(header)-2)]
-	liftval=["Lift Val" liftval repmat([""],1,length(header)-2)]
-	reversalstrn=["Reversals Trn" reversalstrn repmat([""],1,length(header)-2)]
-	reversalsval=["Reversals Val" reversalsval repmat([""],1,length(header)-2)]
-	relDiffTrnObsVSValObs=["RelDiff TrnObs vs ValObs" relDiffTrnObsVSValObs repmat([""],1,length(header)-2)]
-	relDiffValObsVSTrnFitted=["RelDiff ValObs vs TrnFitted" relDiffValObsVSTrnFitted repmat([""],1,length(header)-2)]
+	lifttrn=["Lift Trn" lifttrn repeat([""],1,length(header)-2)]
+	liftval=["Lift Val" liftval repeat([""],1,length(header)-2)]
+	reversalstrn=["Reversals Trn" reversalstrn repeat([""],1,length(header)-2)]
+	reversalsval=["Reversals Val" reversalsval repeat([""],1,length(header)-2)]
+	relDiffTrnObsVSValObs=["RelDiff TrnObs vs ValObs" relDiffTrnObsVSValObs repeat([""],1,length(header)-2)]
+	relDiffValObsVSTrnFitted=["RelDiff ValObs vs TrnFitted" relDiffValObsVSTrnFitted repeat([""],1,length(header)-2)]
 
 	stats=[headertrn;header;statstrn;empty;empty;headerval;header;statsval;empty;empty]
 	overallstats=[corrow;stddevrows;lifttrn;liftval;reversalstrn;reversalsval;relDiffTrnObsVSValObs;relDiffValObsVSTrnFitted]
@@ -4248,7 +4248,7 @@ function createPredictorData(idx::Vector{Int},nameOfpredictorsSheet,mappings,can
 		features=view(featuresfull,idx)
 
 		colnames=String["Variable Name" "Weight" "Numerator" "Denominator" "Observed Ratio" "Estimate" "Difference" "Average  Score"]
-		predictorsData=repmat([""],1,length(colnames))
+		predictorsData=repeat([""],1,length(colnames))
 		numeratorEst=denominator.*finalEstimateForCharts
 		@assert length(numeratorEst)==length(weight)==length(denominator)==length(scores)==length(actualNumerator) #this is essential: the inbounds macro will lead to a serious error (within aggregate_data) if the vectors have unequal length
 		#charts
@@ -4344,7 +4344,7 @@ function addPredictorData(listOfValues,colnames,sett::ModelSettings,scores,numer
 		save("c:\\temp\\mi.jld2","f",f,"listOfValues"	,listOfValues,	"colnames"	,colnames,	"sett"	,sett,	"scores"	,scores,	"numeratorEst"	,numeratorEst,	"numerator"	,numerator,	"denominator"	,denominator,	"weight"	,weight,	"finalEstimateForCharts"	,finalEstimateForCharts,	"varnum"	,varnum)
 		@assert false "Critical Error when concatenating predictor statistics"
 	end
-	thisdata=vcat(thisdata,tbl,repmat([""],1,length(colnames)))
+	thisdata=vcat(thisdata,tbl,repeat([""],1,length(colnames)))
 	return thisdata
 end
 

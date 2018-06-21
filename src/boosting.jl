@@ -181,15 +181,15 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	estimatedNumeratorForStats=selectedEstimatedRatioForStats.*denominator
 		
 	#add empty lines
-	statsPerIteration=vcat(statsPerIteration,repmat([""],empty_rows_after_iteration_stats,size(statsPerIteration,2)))
+	statsPerIteration=vcat(statsPerIteration,repeat([""],empty_rows_after_iteration_stats,size(statsPerIteration,2)))
 	#Add Charts which show stats for all iterations
 		add_iteration_charts!(xlData,sett,1)
-		size(statsPerIteration,2)>size(cumulativeStatsPerScoreBand,2) ? cumulativeStatsPerScoreBand=hcat(cumulativeStatsPerScoreBand,repmat([""],size(cumulativeStatsPerScoreBand,1),size(statsPerIteration,2)-size(cumulativeStatsPerScoreBand,2))) : statsPerIteration=hcat(statsPerIteration,repmat([""],size(statsPerIteration,1),-size(statsPerIteration,2)+size(cumulativeStatsPerScoreBand,2)))
+		size(statsPerIteration,2)>size(cumulativeStatsPerScoreBand,2) ? cumulativeStatsPerScoreBand=hcat(cumulativeStatsPerScoreBand,repeat([""],size(cumulativeStatsPerScoreBand,1),size(statsPerIteration,2)-size(cumulativeStatsPerScoreBand,2))) : statsPerIteration=hcat(statsPerIteration,repeat([""],size(statsPerIteration,1),-size(statsPerIteration,2)+size(cumulativeStatsPerScoreBand,2)))
 		stats=vcat(statsPerIteration,cumulativeStatsPerScoreBand)
 #Create Score List
 	scoreheader=["Score" "Row Count" "Weight" "Numerator" "Denominator" "Maximal Raw Relativity" "Observed Ratio" "Smoothed Fit"]	
 	scoreMatrix=vcat(scoreheader,hcat(collect(1:size(maxRawRelativityPerScoreSorted,1)),obsPerScore,vectorWeightPerScore,numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,rawObservedRatioPerScore,MAPPINGSmoothedEstimatePerScore))
-	scoreMatrix=hcat(scoreMatrix,repmat([""],size(scoreMatrix,1),size(stats,2)-size(scoreMatrix,2)))
+	scoreMatrix=hcat(scoreMatrix,repeat([""],size(scoreMatrix,1),size(stats,2)-size(scoreMatrix,2)))
 #Add Score Chart
 	thischart=defineScoreChart(nameOfScoresSheet,nameOfScoresSheet,"B6",size(scoreMatrix,1)-1,1,3,7,8)
 	push!(xlData.charts,deepcopy(thischart))
@@ -218,7 +218,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			statsSheetINDEX=findall(in([nameOfModelStatisticsSheet]), [x.name for x in xlData.sheets])
 			@assert length(statsSheetINDEX)==1 "Error no statsheet was found in Excel data (when trying to attach Numerator Errors to Modelstatistics)"
 			statsSheetINDEX2=statsSheetINDEX[1]
-			errors_num_estimates=vcat(errors_num_estimates,repmat([""],size(stats,1)-size(errors_num_estimates,1),size(errors_num_estimates,2)))
+			errors_num_estimates=vcat(errors_num_estimates,repeat([""],size(stats,1)-size(errors_num_estimates,1),size(errors_num_estimates,2)))
 			stats=hcat(stats,errors_num_estimates)
 			xlData.sheets[statsSheetINDEX2]=ExcelSheet(nameOfModelStatisticsSheet,convert(DataFrame,stats))
 	end

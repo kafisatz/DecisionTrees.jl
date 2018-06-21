@@ -146,7 +146,7 @@ srand(intDatahash)
     stats_of_stats=hcat(means,medians,mins,maxs,stds,sums)
     titles=["Mean","Median","Min","Max","Std Dev","Sum"]
     stats_of_stats=hcat(titles,transpose(stats_of_stats))
-    stats_of_stats=vcat(repmat([""],1,size(stats_of_stats,2)),stats_of_stats)
+    stats_of_stats=vcat(repeat([""],1,size(stats_of_stats,2)),stats_of_stats)
     
     allstats_with_stats=vcat(transpose(allstats),stats_of_stats)
     #NOTE! statsdf is RE defined here!
@@ -307,7 +307,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         stats_of_stats=hcat(means,medians,mins,maxs,stds,sums)
         titles=["Mean","Median","Min","Max","Std Dev","Sum"]
         stats_of_stats=hcat(titles,transpose(stats_of_stats))
-        stats_of_stats=vcat(repmat([""],1,size(stats_of_stats,2)),stats_of_stats)
+        stats_of_stats=vcat(repeat([""],1,size(stats_of_stats,2)),stats_of_stats)
         
         allstats_with_stats=vcat(transpose(allstats),stats_of_stats)
         #NOTE! statsdf is RE defined here!
