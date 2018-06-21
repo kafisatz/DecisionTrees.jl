@@ -6,7 +6,7 @@ export mysortperm,mysortperm!
 
 
 function my_sortperm_you_should_regularily_check_if_sortperm_in_base_has_become_more_efficient!(ii,A)
-    const n = length(A)
+     n = length(A)
    #ii = Array(Int,n)
 
    for i = 1:n
@@ -22,7 +22,7 @@ end # function mysortperm!
 
 
 function mysortperm(A)
-    const n = length(A)
+     n = length(A)
    ii = Array(Int,n)
 
    for i = 1:n

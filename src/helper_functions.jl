@@ -3635,7 +3635,7 @@ function return_file_and_folders(ARGS)
 	  fallback_datafolder=convert(String,Main.dictGlobalSettings["Temp Folder"])
 	  #if (this_hostname=="ZURI20A7-CTO1WW");    fallback_datafolder=convert(String,"r:\\temp");  end
 	  #if ((this_hostname=="MUNICH1")||(this_hostname=="MUNICH2")||(this_hostname=="MUNICH3"));    fallback_datafolder=convert(String,"C:\\temp");  end;
-	function path_readable(s);    res=false;    try (res=isreadable(s));    catch (res=false);    end;    res;  end;
+	function path_readable(s);    res=false;    try;res=isreadable(s);    catch; res=false;    end;    res;  end;
   #convert ARGS to String
   ASCIIStringARGS=Array{String}(undef,0)
   try

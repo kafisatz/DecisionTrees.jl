@@ -658,8 +658,8 @@ function updateSettingsMod!(s::ModelSettings;args...)
 	@assert res==nothing "Some settings are invalid! Abort."
 end
 
-myParseAsFloat(x::T) where {T<:AbstractString} = parse(Float64,val)
-myParseAsFloat(x::T) where {T<:Number} = float(val)
+myParseAsFloat(val::T) where {T<:AbstractString} = parse(Float64,val)
+myParseAsFloat(val::T) where {T<:Number} = float(val)
 convertFromString(oldvalue::T,val) where {T <: Any}=convert(T,val) #generic method catchall
 convertFromString(oldvalue::T,val) where {T <: AbstractString}=convert(T,string(val))
 
@@ -842,7 +842,7 @@ mutable struct Tree <: DTModel
 	end
 end
 
-#this type was only created, such that the @parallel results can be created more easilty (with a vcat operation)
+#this type was only created, such that the @distributed results can be created more easilty (with a vcat operation)
 #there would have been other workarounds which would have worked too
 mutable struct TreeWithErrorStats
 	tree::Tree
