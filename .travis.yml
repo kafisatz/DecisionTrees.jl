@@ -13,7 +13,7 @@ notifications:
   email: false
 script: # the default script is equivalent to the following
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  #- julia -e 'import Pkg;Pkg.clone(pwd());println("Building PyCall for Travis...");ENV["PYTHON"]="";Pkg.build("PyCall");using PyCall;global const pyModPandas = PyNULL();global const pyModxlsxwriter = PyNULL();copy!(pyModPandas, pyimport_conda("pandas","pandas"));copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"));writer=pyModPandas[:ExcelWriter]("blabla_deletme.xlsx", engine = "xlsxwriter");@show typeof(writer);println("if this worked, then pandas and xlsxwriter should be installed");println("Done building PyCall.Restarting Julia...");exit();'
+  - julia -e 'import Pkg;Pkg.clone(pwd());println("Building PyCall for Travis...");ENV["PYTHON"]="";Pkg.build("PyCall");using PyCall;global const pyModPandas = PyNULL();global const pyModxlsxwriter = PyNULL();copy!(pyModPandas, pyimport_conda("pandas","pandas"));copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"));writer=pyModPandas[:ExcelWriter]("blabla_deletme.xlsx", engine = "xlsxwriter");@show typeof(writer);println("if this worked, then pandas and xlsxwriter should be installed");println("Done building PyCall.Restarting Julia...");exit();'
   #- julia -e 'Pkg.clone(pwd()); Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)';
   #- julia -e 'Pkg.clone(pwd());Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)';
   - julia -e 'import Pkg; Pkg.develop(pwd()); Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)'
