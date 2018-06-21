@@ -1,5 +1,6 @@
 #smoketest_tree.jl
 
+@testset "Smoketests" begin
 
 ##################################################
 #Read the data
@@ -131,6 +132,11 @@ sett.randomw=0.02
 strs,resm5=dtm(dtmtable,sett)
 @test typeof(resm5.modelstats)==DataFrame
 
+sett.spawnsmaller=false
+sett.randomw=0.0
+strs,resm5b=dtm(dtmtable,sett)
+@test typeof(resm5b.modelstats)==DataFrame
+    
 #minw too big
 oldminw=sett.minw
 sett.minw=-0.51
@@ -142,3 +148,5 @@ strs,resm6=dtm(dtmtable,sett)
 sett.minw=oldminw
 #example with weights.==1 and denominator.==1
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
+    
+   end #testset
