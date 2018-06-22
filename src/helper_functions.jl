@@ -856,7 +856,7 @@ for intVarname in integerVarlist
 		outMatrix=deepcopy(emptyOutMatrix) #reset the matrix
 		hd=[string("Validation by ",strVarname)]
 		header=hcat(hd,repeat([""],1,size(thismat,2)-1))
-		@isdefined :emptyline ? true : emptyline=repeat([""],1,size(thismat,2))
+		emptyline=repeat([""],1,size(thismat,2))
 		thismat=vcat(header,emptyline,thismat,emptyline,emptyline)
 		resultingMatrix=vcat(resultingMatrix,thismat)
 end

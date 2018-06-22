@@ -2,6 +2,25 @@
 
 @testset "Smoketests" begin
 
+
+###
+#test hashing (for 32 bit windows executable)
+###
+using DataFrames
+import Random: rand,randstring
+let
+rows=700000;
+w=rand(rows);
+d=rand(rows);
+n=rand(rows);
+f1=map(i->randstring(1+i%8),collect(1:rows))
+f2=rand(rows)
+f3=rand(Int,rows)
+df=DataFrame(a=f1,b=f2,c=f3)
+intDatahash = Int(.25*hash(2231,hash(df,hash(n,hash(d,hash(w))))))
+
+end
+
 ##################################################
 #Read the data
 ##################################################

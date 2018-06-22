@@ -8,14 +8,8 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
     for x=1:size(dtmtable.features,2)
         s=hash(dtmtable.features[x],s)    
     end
-    #intDatahash = Int(.25*hash(2231,s))
-	try	
-		intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
-    catch er
-		@show er
-		#fails on 32 bit?
-	end
-	srand(intDatahash)
+    intDatahash = Int(fld(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight)))))))
+    srand(intDatahash)
     
    #initialize variables
         path_and_fn_wo_extension="some"
