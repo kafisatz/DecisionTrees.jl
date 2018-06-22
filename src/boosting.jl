@@ -56,7 +56,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	estFromScores=zeros(obs)
 	#vectorOfRulePathsToLeavesArrays=Array{Array{Array{Rulepath,1},1}}(iterations+1)
 	#vectorOfRulePathsToLeavesArrays[1]=Array{Array{Rulepath,1}}(undef,0) #the first entry is not defined	
-	vectorOfLeafArrays=Array{Array{Leaf,1}}(iterations+1)
+	vectorOfLeafArrays=Array{Array{Leaf,1}}(undef,iterations+1)
 	vectorOfLeafArrays[1]=Array{Leaf}(undef,0) #the first entry is not defined		
 	
     p = Progress(iterations, 2, "Progress of Boosting Model:") # minimum update interval: x seconds (2)
@@ -65,7 +65,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		BoolAdaptiveLearningRate&&error("DTM: this is not yet updated to reflect numerator/denominator objectives!!")
 	#this header needs to be in line with the output of the function createTrnValStatsForThisIteration
 	statsPerIteration=global_statsperiter_header	
-	currentRelativity=Array{Float64}(obs)
+	currentRelativity=Array{Float64}(undef,obs)
 	scoreBandLabels=createScorebandsUTF8List(sett.scorebandsstartingpoints,sett.nscores,addtotal=true)
 	#this row is only here such that the variables are initialized outside the for loop
 	local fristRowOfThisTable,obsPerScore,vectorWeightPerScore,numPerScore,denomPerScore,scores,scoresVAL,cumulativeStatsPerScoreBand,maxRawRelativityPerScoreSorted,rawObservedRatioPerScore,MAPPINGSmoothedEstimatePerScore

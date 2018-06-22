@@ -23,7 +23,7 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int,df_name_vecto
     dot_graph *= "// Maximal depth of the tree: $(maxdepth(tree))\n\n\n"
 
     edge_to_the_left = if orig_id>0
-         "$(sett.df_name_vector[this_id]) <= $(signif(candMatWOMaxValues[this_id][node.subset[end]],5))"
+         "$(sett.df_name_vector[this_id]) <= $(round(candMatWOMaxValues[this_id][node.subset[end]],sigdigits=5))"
     else
         if size(node.subset,1)==1
             "$(sett.df_name_vector[this_id]) = $(mappings[-orig_id][node.subset][1])"

@@ -10,8 +10,8 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
    #initialize variables
         path_and_fn_wo_extension="some"
         path_and_fn_wo_extension,ext=splitext(file)
-        header=Vector{String}(1)
-        header_settings=Vector{String}(1)
+        header=Vector{String}(undef,1)
+        header_settings=Vector{String}(undef,1)
         i=1        
 
         #run an initial dummy model to get the 'structure' (ie header and size) of the output statistics
@@ -29,9 +29,9 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
                 pushfirst!(desc_settingsvec,"Number")
             header=deepcopy(desc)
             header_settings=deepcopy(desc_settingsvec)
-            allstats=Array{Float64,2}(length(numbrs),nSettings)			
-            allsettings=Array{Any,2}(length(settingsvec),nSettings)
-            allmodels=Vector{Any}(nSettings)
+            allstats=Array{Float64,2}(undef,length(numbrs),nSettings)			
+            allsettings=Array{Any,2}(undef,length(settingsvec),nSettings)
+            allmodels=Vector{Any}(undef,nSettings)
         #define default stats if the model fails
             defaulted_stats=deepcopy(numbrs)
             defaulted_settings=deepcopy(settingsvec)            

@@ -61,8 +61,8 @@ srand(intDatahash)
     #initialize variables
             path_and_fn_wo_extension="some"
             path_and_fn_wo_extension,ext=splitext(file)
-            header=Vector{String}(1)
-            header_settings=Vector{String}(1)
+            header=Vector{String}(undef,1)
+            header_settings=Vector{String}(undef,1)
             allstats=Array{Float64,2}
             allsettings=Array{Any,2}
             allmodels=Vector{Any}
@@ -235,8 +235,8 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         #initialize variables
         path_and_fn_wo_extension="some"
         path_and_fn_wo_extension,ext=splitext(file)
-        header=Vector{String}(1)
-        header_settings=Vector{String}(1)
+        header=Vector{String}(undef,1)
+        header_settings=Vector{String}(undef,1)
         i=1
         n_folds=abs(cvo.folds)
 
@@ -254,9 +254,9 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
                 pushfirst!(desc_settingsvec,"Number")
             header=deepcopy(desc)
             header_settings=deepcopy(desc_settingsvec)
-            allstats=Array{Float64,2}(length(numbrs),n_folds)			
-            allsettings=Array{Any,2}(length(settingsvec),n_folds)
-            allmodels=Vector{Any}(n_folds)
+            allstats=Array{Float64,2}(undef,length(numbrs),n_folds)			
+            allsettings=Array{Any,2}(undef,length(settingsvec),n_folds)
+            allmodels=Vector{Any}(undef,n_folds)
         #define default stats if the model fails
             defaulted_stats=deepcopy(numbrs)
             defaulted_settings=deepcopy(settingsvec)

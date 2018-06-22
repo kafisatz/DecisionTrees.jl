@@ -138,7 +138,7 @@ mutable struct DTMTable
 		@assert length(key)==length(weight)
 		@assert length(key)==size(features,1)
 		@assert length(cands)+length(maps)==size(features,2)
-		@assert length(findin(trnidx,validx))==0 "DTM: trnidx and validx are not mutually exclusive"
+		@assert length(findall((in)(validx),trnidx))==0 "DTM: trnidx and validx are not mutually exclusive"
 		return new(key,trnidx,validx,numerator,denominator,weight,features,cands,maps)
 	end
 end

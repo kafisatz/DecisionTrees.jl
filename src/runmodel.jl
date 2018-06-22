@@ -117,7 +117,6 @@ removeUnionTypes!(dfin,independent_vars)
     end
     #delete main columns if they appear in the indep columns
     for remove_this_col in [numcol denomcol weightcol trnvalcol keycol][:]
-        #deleteat!(independent_vars, findin(independent_vars, [remove_this_col]))
 		deleteat!(independent_vars,findall((in)([remove_this_col]), independent_vars))
     end
     n_indep=length(independent_vars)
@@ -374,7 +373,6 @@ run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 """
 function run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 #this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
-#total modelling time , prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,1))s = $(round(elapsed_until_this_point/60,1))m")
 
 sett=deepcopy(input_setttings)
 @assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
@@ -553,7 +551,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		  end
 
 	#build a simple tree
-		fitted_values_tree=zeros(numerator)		
+		fitted_values_tree=zero(numerator)		
 		if prnt
 			@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
 		else
@@ -770,10 +768,8 @@ end #end distinction between three model types
      #Push Log file to file list
 	 #println("\n")
 	 elapsed_until_this_point=0.0
-	 prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,1))s = $(round(elapsed_until_this_point/60,1))m")
+	 prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,digits=1))s = $(round(elapsed_until_this_point/60,digits=1))m")
 	 if sett.boolCreateZipFile
-		 #strBasename,ext=splitext(basename(dataFilename))
-		 #logfile=string(datafolder,"\\",strBasename,".log")
 		 logfile=string(path_and_fn_wo_extension,".log")
 		 tmplogfile="c:\\temp\\julia_logfile.log";isfile(tmplogfile)&&rm(tmplogfile)
 		 try

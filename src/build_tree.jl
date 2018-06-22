@@ -119,7 +119,6 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
             intVarsUsed[id][subset[end]]+=1 #set this value to true to indicate, that is is used by the tree
         end
         column=features[id2]
-        #indexOfMatchedUint8s=findin(column.ids,subset)
     	matched_strings=column.pool[subset]
         l,r=lrIndices(trnidx,column,subset)
 

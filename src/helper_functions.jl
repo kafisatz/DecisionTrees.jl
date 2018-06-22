@@ -1,6 +1,6 @@
 export mapToOther!,getCounts, getFittedValues, createGridSearchSettings,poissonError,confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
 
-import Base: append!,mean,length,findin,isless,eltype,resize!,convert
+import Base: append!,mean,length,isless,eltype,resize!,convert
 #import PooledArrays.levels
 #import MySQL: mysql_query,mysql_display_error,mysql_store_result,mysql_affected_rows,mysql_free_result,mysql_num_fields,mysql_fetch_fields,mysql_num_rows,mysql_get_julia_type,mysql_fetch_row,MYSQL_RES,MYSQL_TYPE,MYSQL_ROW #temporarily disabled
 export createZipFile
@@ -1038,8 +1038,9 @@ function writeAllFieldsToString(s)
 end
 
 function writeAllFieldsToArray(s)
-	nn=fieldnames(s)
-	res=Array{AbstractString}(length(nn),2)
+	#nn=fieldnames(s)
+	nn=fieldnames(typeof(s))
+	res=Array{AbstractString}(undef,length(nn),2)
 	i=0
 	for x in nn
 		i+=1
@@ -2646,8 +2647,8 @@ function variable_importance(leaves_array::Array{Leaf,1},namevec::Array{String,1
   nleaves=length(leaves_array)
   onedimcount,twodimcount=variable_importance_internal(leaves_array,namevec,number_of_num_features)
   twodimcountfloat=convert(Vector{Float64},twodimcount./sum(twodimcount)) #Float64[convert(Float64,x) for x in twodimcount/sum(twodimcount)]
-  res1dim=Array{String}(sz,2)
-  res2dim=Array{String}(div(sz*(sz-1),2),3)
+  res1dim=Array{String}(undef,sz,2)
+  res2dim=Array{String}(undef,div(sz*(sz-1),2),3)
   count=0
   for i=1:sz, j=i+1:sz
     count+=1
@@ -2993,8 +2994,8 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,nu
   onedimintvec_avg=onedimintvec_sum/sum(onedimintvec_sum)
   twodimintvec_avg=twodimintvec_sum/sum(twodimintvec_sum)
 
-  res1dim=Array{String}(sz,2)
-  res2dim=Array{String}(div(sz*(sz-1),2),3)
+  res1dim=Array{String}(undef,sz,2)
+  res2dim=Array{String}(undef,div(sz*(sz-1),2),3)
   count=0
   for i=1:sz, j=i+1:sz
     count+=1
@@ -3962,7 +3963,7 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	wperscore=wtot/nscores
 	scoreEndPoints=zeros(Int,nscores)
 	scoreEndPoints[end]=size(weight_srt,1)
-	vectorWeightPerScore=Array{Float64}(nscores)
+	vectorWeightPerScore=Array{Float64}(undef,nscores)
 
 	# derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 	nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nscores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
@@ -4233,7 +4234,7 @@ function createPredictorData(idx::Vector{Int},nameOfpredictorsSheet,mappings,can
 		@assert length(numeratorEst)==length(weight)==length(denominator)==length(scores)==length(actualNumerator) #this is essential: the inbounds macro will lead to a serious error (within aggregate_data) if the vectors have unequal length
 		#charts
 		nfeat=size(features,2)
-		predictorCharts=Array{Chart}(2*(nfeat)) #we have two charts for each feature
+		predictorCharts=Array{Chart}(undef,2*(nfeat)) #we have two charts for each feature
 		chartscol="J"
 		chartscol2="AJ"
 		addchartrow=21
