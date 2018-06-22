@@ -20,7 +20,7 @@ df=DataFrame(a=f1,b=f2,c=f3)
 try
     @test floor(Int,.25*hash(2231,hash(df,hash(n,hash(d,hash(w))))))>0
 catch
-    @test false "the above failed" 
+    @test 1==0
 end
 end
 
