@@ -2549,11 +2549,11 @@ function rand_bool_idx(n::Int,p::Float64)
   return res
 end
 
-function dynamic_increment(residuals::Array{Float64,1},current_mdf::Float64,ranks_lost_pct::Float64,variable_mdf_pct::Float64)
-    incr=quantile(residuals,ranks_lost_pct)
-    incr*=variable_mdf_pct
-  return incr
-end
+#function dynamic_increment(residuals::Array{Float64,1},current_mdf::Float64,ranks_lost_pct::Float64,variable_mdf_pct::Float64)
+#    incr=quantile(residuals,ranks_lost_pct)
+#    incr*=variable_mdf_pct
+#  return incr
+#end
 
 function full_indices(parentidx,left)
   obs=size(parentidx,1)
@@ -2778,18 +2778,14 @@ function some_tree_settings(trnidx,validx,fixedinds::Array{Int,1},candMatWOMaxVa
 		minweight= totalweight*(-minweight)
 	end
     @assert !(minweight<0)
-	nLeavesEstimate=Int(round(max(1,0.5*(totalweight/minweight+0.5*totalweight/minweight))))
-	nDepthEstimate=ceil(log(2,nLeavesEstimate))
-	#this Depthestimate is about 3 times too low as we create very granular trees!
-	nDepthToStartParallelization=Int(round(max(1,min(nDepthEstimate-1,log(2,Distributed.nprocs())))))
-
+		
 	if length(fixedinds) >0 #features are pre set
 		inds=deepcopy(fixedinds);
 	else
 		inds=randomFeatureSelection(n,subsampling_features_prop)
 	end
 	#end
-	return intVarsUsed,inds,minweight,nDepthToStartParallelization
+	return intVarsUsed,inds,minweight
 end
 
 function randomFeatureSelection(n_features::Int,subsampling_features_prop::Float64)

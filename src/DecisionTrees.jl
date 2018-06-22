@@ -31,7 +31,7 @@ import Random
 import Distributed
 import DelimitedFiles
 import PyCall
-import DataFrames
+import DataFrames: DataFrame
 import JLD2
 #import FileIO #do we need this at all?
 #import OnlineStats

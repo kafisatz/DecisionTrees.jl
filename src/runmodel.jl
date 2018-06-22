@@ -288,14 +288,14 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	#IMPORTANT convention  numerical data 'comes first' (i.e. first x columns are numerical), then categorical
 	print("Preparing character variables...")
 	for i=1:sett.number_of_char_features
-		if !(eltype(dfIndata[global_const_shift_cols+i+sett.ishift+sett.number_of_num_features])<:AbstractString) 
-			@show eltype(dfIndata[global_const_shift_cols+i+sett.ishift+sett.number_of_num_features])
-			@show dfIndata[1:min(10,size(dfIndata,1)),global_const_shift_cols+i+sett.ishift+sett.number_of_num_features]
+		if !(eltype(dfIndata[global_const_shift_cols+i+sett.number_of_num_features])<:AbstractString) 
+			@show eltype(dfIndata[global_const_shift_cols+i+sett.number_of_num_features])
+			@show dfIndata[1:min(10,size(dfIndata,1)),global_const_shift_cols+i+sett.number_of_num_features]
 			error("Character variable $(i) = $(sett.df_name_vector[i+sett.number_of_num_features]) is not <:AbstractString in the dataframe.")
 			#@warn("It may be that the variable was exported as character (by SAS) even though it is infact an integer. Please check!")			
 		end		
 	  try
-		colnumber=global_const_shift_cols+sett.ishift+sett.number_of_num_features+i
+		colnumber=global_const_shift_cols+sett.number_of_num_features+i
 		thisname=Symbol(df_names[i+sett.number_of_num_features]) #df_names[colnumber]
 		thiscol_as_utf8=dfIndata[thisname] #view(dfIndata,:,colnumber)
 		if eltype(thiscol_as_utf8)!=String
@@ -843,12 +843,14 @@ end
 
 #function if dictionary from *.jld2 was loaded
 function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)	
-	oldsettings=di["oldsettings"]
-	sett=ModelSettings() #default model settings
-	updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
-    telapsed=0.0	
-    sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
-    return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
+	error("this function is not supported anymore.")
+    #specifically we have deleted the field sett.ncolsdfIndata
+    #oldsettings=di["oldsettings"]
+	#sett=ModelSettings() #default model settings
+	#updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
+    #telapsed=0.0	
+    #sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
+    #return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
 end
 
 function prepare_non_jld_data(dataFilename::String,settingsArray::Array{String,2},datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int,nrows::Int,number_of_num_features::Int)

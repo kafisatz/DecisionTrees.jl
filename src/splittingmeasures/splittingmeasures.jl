@@ -2,6 +2,8 @@
 include("difference.jl")
 include("normalDeviance.jl")
 include("poissondeviance.jl")
+
+#these are not maintained anymore
 include("maxsplitvalue.jl")
 include("maxabssplitvalue.jl")
 include("maxminussplitvalue.jl")

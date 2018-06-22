@@ -34,21 +34,20 @@ function sample_data_and_build_tree!(trnidx::Vector{Int},validx::Vector{Int},fit
 end
 
 function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},settings::ModelSettings,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,fitted_values::Vector{Float64})
-	intVarsUsed,inds,minweightcalculated,nDepthToStartParallelization=some_tree_settings(trnidx,validx,settings.fixedinds,candMatWOMaxValues,mappings,settings.minw,weight,settings.subsampling_features_prop,size(features,2))
+	intVarsUsed,inds,minweightcalculated=some_tree_settings(trnidx,validx,settings.fixedinds,candMatWOMaxValues,mappings,settings.minw,weight,settings.subsampling_features_prop,size(features,2))
 	settings.minw=minweightcalculated #update minw
 	@assert length(inds)>0 "Error: no features were selected length(num_inds)=$(length(num_inds)), length(char_inds)=$(length(char_inds))"
-	settings.nDepthToStartParallelization=nDepthToStartParallelization #update nDepthToStartParallelization
 	empty_xl_data=ExcelData(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
 	fp=get_feature_pools(features)
 	resultingTree=Tree(deepcopy(emptyNode),intVarsUsed,candMatWOMaxValues,mappings,inds,settings,deepcopy(empty_xl_data),fp)
-	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath}(undef,0),settings.parallel_tree_construction,Distributed.myid(),fitted_values)
+	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath}(undef,0),Distributed.myid(),fitted_values)
 	#set Leaf Numbers
 	set_leaf_numbers!(resultingTree)
 	return resultingTree
 end
 
 function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings::ModelSettings,thisTree::Tree,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::DataFrame,
-									depth::Int,randomweight::Float64,parent_rp::Array{Rulepath,1},parallel_tree_construction::Bool,parentid::Int,fitted_values::Vector{Float64})
+									depth::Int,randomweight::Float64,parent_rp::Array{Rulepath,1},parentid::Int,fitted_values::Vector{Float64})
 	#!!!! the current concept forsees that features is always the FULL DataFrame
 	boolRandomizeOnlySplitAtTopNode=settings.boolRandomizeOnlySplitAtTopNode
 	local inds
@@ -64,23 +63,15 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 
 	minweight=settings.minw
 	crit=settings.crit
-	parallel_level_threshold=settings.parallel_level_threshold
-	parallel_weight_threshold=settings.parallel_weight_threshold
-	nDepthToStartParallelization=settings.nDepthToStartParallelization
 	spawnsmaller=settings.spawnsmaller
-	recursivespawning=settings.recursivespawning
-	pminweightfactor=settings.pminweightfactor
-	pminrelpctsize=settings.pminrelpctsize
-	pflipspawnsmalllargedepth=settings.pflipspawnsmalllargedepth
 	catSortByThreshold=settings.catSortByThreshold
 	catSortBy=settings.catSortBy
 
 	nobs=size(numerator,1)
-	boolMDFPerLeaf=false #this is disabled here
-    fnames=names(features)
+	fnames=names(features)
 	#@code_warntype _split(settings.number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames,features, minweight, depth,randomweight,crit,parallel_level_threshold,parallel_weight_threshold,inds,catSortByThreshold,catSortBy)
 	T=find_max_type(features) #::U #::Union{UInt8,UInt16,UInt32}
-	best_split = _split(one(T),settings.number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames,features, minweight, depth,randomweight,crit,parallel_level_threshold,parallel_weight_threshold,inds,catSortByThreshold,catSortBy)
+	best_split = _split(one(T),settings.number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames,features, minweight, depth,randomweight,crit,inds,catSortByThreshold,catSortBy)
 	id=best_split.featid
 	subset=best_split.subset
 	fname=best_split.featurename
@@ -131,12 +122,8 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 	rightchildwillbefurthersplit=sumwr<2*minweight
 	(sumwr>sumwl) ? boolSpawnLeft=false : boolSpawnLeft=true
     if spawnsmaller;boolSpawnLeft=!boolSpawnLeft;end;
-    #flip spawning left or rigth childer at a certain depth
-    if (depth>=pflipspawnsmalllargedepth);boolSpawnLeft=!boolSpawnLeft;end;
-
-    boolRChildAllowedToFurtherSpawnProcesses=(recursivespawning&&(sumwr>(minweight))&&(pminrelpctsize<(sumwr/(sumwr+sumwl))))
-    boolLChildAllowedToFurtherSpawnProcesses=(recursivespawning&&(sumwl>(minweight))&&(pminrelpctsize<(sumwl/(sumwr+sumwl))))
-  	boolRandomizeOnlySplitAtTopNode ? newrandomweight=copy(randomweight) : newrandomweight=0.0
+    
+    boolRandomizeOnlySplitAtTopNode ? newrandomweight=copy(randomweight) : newrandomweight=0.0
 
     #todo/tbd check the different if/then here, I think a few things are not quite accurate
 	#Also, we probably do not need any parallelization for the construction of a single tree-> we should disable this functionality
@@ -148,18 +135,18 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 	mean_observedr=trnsumnr/trnsumdr
 	fitted_labelsl=mean_observedl;
 	fitted_labelsr=mean_observedr;
-	if !(parallel_tree_construction)||(max(sumwr,sumwl)<minweight)
+	if (max(sumwr,sumwl)<minweight)
 					if leftchildwillbefurthersplit			
 						fill_some_elements!(fitted_values,l,mean_observedl)
 							remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
           else
-            remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
+            remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values)
 		      end
 					if rightchildwillbefurthersplit			    
 						fill_some_elements!(fitted_values,r,mean_observedr)
             remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
           else
-            remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
+            remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values)
           end
       else
        #here we spawn a process for the smaller "child"
@@ -169,26 +156,26 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 							fill_some_elements!(fitted_values,r,mean_observedr)
              	  remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
             else
-              remote_ref_build_tree_rightchild = Distributed.@spawn build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
+              remote_ref_build_tree_rightchild = Distributed.@spawn build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values)
             end
 						if leftchildwillbefurthersplit
 							fill_some_elements!(fitted_values,l,mean_observedl)
 						  remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
             else
-             remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
+             remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values)
             end
         else
 						if leftchildwillbefurthersplit
 							fill_some_elements!(fitted_values,l,mean_observedl)
 						  remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
             else
-              remote_ref_build_tree_leftchild = Distributed.@spawn build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,boolLChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
+              remote_ref_build_tree_leftchild = Distributed.@spawn build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values)
             end
 						if rightchildwillbefurthersplit
 							fill_some_elements!(fitted_values,r,mean_observedr)
                remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
             else
-              remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,boolRChildAllowedToFurtherSpawnProcesses,Distributed.myid(),fitted_values)
+              remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values)
             end
         end
      end
@@ -201,7 +188,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 return Node(id,id2,subset,fetched_left,fetched_right,parent_rp)::Node
 end
 
-function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int,randomweight::Float64,crit::SplittingCriterion,parallel_level_threshold::Int=9999999999,parallel_weight_threshold::Int=9999999999,inds::Array{Int,1}=Array{Int}(undef,0),catSortByThreshold::Int=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned
+function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int,randomweight::Float64,crit::SplittingCriterion,inds::Array{Int,1}=Array{Int}(undef,0),catSortByThreshold::Int=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned
 	#This function selects the maximal possible split defined by crit (thus depending on the impurity function, we need to put a minus sign in front of it)
 		tmpsz::Int=0
 		if sum(view(weight,trnidx))<2*minweight;
