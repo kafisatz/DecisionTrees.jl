@@ -1,9 +1,7 @@
 # DecisionTrees.jl
-Julia Decision Tree Algorithms
+Julia Decision Tree Algorithms for Regression
 
 This package is under development
-
-DecisionTrees Julia package repo.
 
 
 
@@ -30,3 +28,4 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 * Do not use df_name_vector anymore, but the symbol in the subset or simply names(features)
 * Add yes/no to the top of each printed DOT graph (in the PDF output) indicating that 'yes goes left'
 * Try to avoid branching in critical functions; use ifelse or similar constructs (this might improve the performance)
+* Clean up code (too many type annotations, ... )
