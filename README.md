@@ -30,3 +30,4 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 * Try to avoid branching in critical functions; use ifelse or similar constructs (this might improve the performance)
 * Clean up code (too many type annotations, ... )
 * Consider a nicer representation (such as https://github.com/sisl/D3Trees.jl)
+* Add more unit tests to trigger errors and warnings (see also the julia docs on testing)
