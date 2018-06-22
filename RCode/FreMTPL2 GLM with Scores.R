@@ -19,18 +19,28 @@ library(plyr)
 library(rpart)
 library(rpart.plot)
 library(Hmisc)
-
+library(compare)
 
 #Read datafile with attached Scores (produced by Boosting Model in Julia)
-fi<-'C:\\Users\\bernhard.konig.ROOT_MILLIMAN\\Documents\\async\\home\\code\\julia\\DecisionTrees.jl\\data\\freMTPL2\\freMTPL2_withJuliaBoostingScores1000.csv'
+fi<-'C:\\Users\\bernhard.konig\\Documents\\async\\home\\code\\julia\\DecisionTrees.jl\\data\\freMTPL2\\freMTPL2_withJuliaBoostingScores1000.csv'
 dat<-fread(fi)
 data(freMTPL2freq)
-dat <- freMTPL2freq
+
+#amend the original data
+datOrig<-freMTPL2freq
+datOrig$ClaimNb <- pmin(datOrig$ClaimNb, 4)   # correct for unreasonable observations (that might be data error)
+datOrig$Exposure <- pmin(datOrig$Exposure, 1) # correct for unreasonable observations (that might be data error)
+
+#amend dat
 dat$VehGas <- factor(dat$VehGas)      # consider VehGas as categorical
 dat$n <- 1                            # intercept
-dat$ClaimNb <- pmin(dat$ClaimNb, 4)   # correct for unreasonable observations (that might be data error)
-dat$Exposure <- pmin(dat$Exposure, 1) # correct for unreasonable observations (that might be data error)
-str(dat)
+dat$Area<-as.factor(dat$Area)
+
+#compare data
+comparison<-compare(datOrig,dat,allowAll=TRUE)
+comparison$result
+summary(comparison)
+comparison$detailedResult
 
 
 ###############################################
@@ -46,19 +56,28 @@ Poisson.Deviance <- function(pred, obs){
 ###############################################
 
 dat2 <- dat
+dat2$ClaimNb<-as.numeric(dat2$ClaimNb)
+dat2$VehBrand <- as.factor(dat2$VehBrand)
 dat2$AreaGLM <- as.integer(dat2$Area)
 dat2$VehPowerGLM <- as.factor(pmin(dat2$VehPower,9))
 VehAgeGLM <- cbind(c(0:110), c(1, rep(2,10), rep(3,100)))
 dat2$VehAgeGLM <- as.factor(VehAgeGLM[dat2$VehAge+1,2])
-dat2[,"VehAgeGLM"] <-relevel(dat2[,"VehAgeGLM"], ref="2")
+relevel(as.factor(dat2$VehAgeGLM),ref="2")
+#dat2[,"VehAgeGLM"] <-relevel(dat2[,"VehAgeGLM"], ref="2")
 DrivAgeGLM <- cbind(c(18:100), c(rep(1,21-18), rep(2,26-21), rep(3,31-26), rep(4,41-31), rep(5,51-41), rep(6,71-51), rep(7,101-71)))
 dat2$DrivAgeGLM <- as.factor(DrivAgeGLM[dat2$DrivAge-17,2])
-dat2[,"DrivAgeGLM"] <-relevel(dat2[,"DrivAgeGLM"], ref="5")
+relevel(dat2$DrivAgeGLM, ref="5")
+#dat2[,"DrivAgeGLM"] <-relevel(dat2[,"DrivAgeGLM"], ref="5")
 dat2$BonusMalusGLM <- as.integer(pmin(dat2$BonusMalus, 150))
 dat2$DensityGLM <- as.numeric(log(dat2$Density))
-dat2[,"Region"] <-relevel(dat2[,"Region"], ref="R24")
+dat2$Region<-as.factor(dat2$Region)
+relevel(dat2$Region, ref="R24")
+#dat2[,"Region"] <-relevel(dat2[,"Region"], ref="R24")
 dat2$AreaRT <- as.integer(dat2$Area)
 dat2$VehGasRT <- as.integer(dat2$VehGas)
+#let us construct N score bands
+nscorebands<-50
+dat2$scorebands<-as.factor(ceil(dat2$scores/(1000/nscorebands)))
 str(dat2)
 
 ###############################################
@@ -76,7 +95,7 @@ test <- dat2[-ll,]
 #########  GLM analysis
 ###############################################
 
-### Model GLM1
+### Model GLM1, wihtout the Score
 d.glm1 <- glm(ClaimNb ~ VehPowerGLM + VehAgeGLM + DrivAgeGLM + BonusMalusGLM
                         + VehBrand + VehGas + DensityGLM + Region + AreaGLM, 
                         data=learn, offset=log(Exposure), family=poisson())
@@ -87,110 +106,44 @@ summary(d.glm1)
 learn$fitGLM <- fitted(d.glm1)
 test$fitGLM <- predict(d.glm1, newdata=test, type="response")
 
-glmfit_alldata<-c(as.vector(learn$fitGLM),as.vector(test$fitGLM))
-ids<-c(learn$IDpol,test$IDpol)
-srtperm<-order(ids)
-ids[srtperm]
-is.unsorted(ids[srtperm])
-
+options(digits=22)
+getOption("digits")
 
 # in-sample and out-of-sample losses (in 10^(-2))
-(insampleGLM <- 100*Poisson.Deviance(learn$fitGLM, learn$ClaimNb))
-100*Poisson.Deviance(test$fitGLM, test$ClaimNb)
+(insampleGLM <- 100*Poisson.Deviance(learn$fitGLM, learn$ClaimNb)) #31.26738
+100*Poisson.Deviance(test$fitGLM, test$ClaimNb) #32.17123
 
 
-###############################################
-#########  Regressionn tree analysis
-###############################################
+#Consider the GLM with the score variable
 
-### Model RT2
-t0<-Sys.time()
-tree1 <- rpart(cbind(Exposure,ClaimNb) ~ AreaRT + VehPower + VehAge + DrivAge + BonusMalus + VehBrand + VehGasRT + Density + Region, 
-            learn, method="poisson",
-            control=rpart.control(xval=1, minbucket=10000, cp=0.00001))     
-ela<-Sys.time()-t0
-rpart.plot(tree1)        # plot tree
-tree1                    # show tree with all binary splits
-printcp(tree1)           # cost-complexit statistics
+### Model GLM1, wihtout the Score
+d.glm2 <- glm(ClaimNb ~ VehPowerGLM + VehAgeGLM + DrivAgeGLM + BonusMalusGLM
+              + VehBrand + VehGas + DensityGLM + Region + AreaGLM +scorebands, 
+              data=learn, offset=log(Exposure), family=poisson())
 
-learn$fitRT <- predict(tree1)*learn$Exposure
-test$fitRT <- predict(tree1, newdata=test)*test$Exposure
-100*Poisson.Deviance(learn$fitRT, learn$ClaimNb)
-100*Poisson.Deviance(test$fitRT, test$ClaimNb)
+summary(d.glm2)  
+#anova(d.glm2)   # this calculation takes a bit of time                                          
 
+#we can see two things
+#1) that the score is highly significant (actually it is the most significant factor)
+#2) in return the significance of the other variables decrease
+#both of the above are expected due to the way the score was defined
 
-average_loss <- cbind(tree1$cptable[,2], tree1$cptable[,3], tree1$cptable[,3]* tree1$frame$dev[1] / n_l)
-plot(x=average_loss[,1], y=average_loss[,3]*100, type='l', col="blue", ylim=c(30.5,33.5), xlab="number of splits", ylab="average in-sample loss (in 10^(-2))", main="decrease of in-sample loss")
-points(x=average_loss[,1], y=average_loss[,3]*100, pch=19, col="blue")
-abline(h=c(insampleGLM), col="green", lty=2)
-legend(x="topright", col=c("blue", "green"), lty=c(1,2), lwd=c(1,1), pch=c(19,-1), legend=c("Model RT2", "Model GLM1"))
+learn$fitGLM2 <- fitted(d.glm2)
+test$fitGLM2 <- predict(d.glm2, newdata=test, type="response")
 
+# in-sample and out-of-sample losses (in 10^(-2))
+(insampleGLM <- 100*Poisson.Deviance(learn$fitGLM2, learn$ClaimNb)) #
+100*Poisson.Deviance(test$fitGLM2, test$ClaimNb) 
 
-# cross-validation and cost-complexity pruning
-K <- 10                  # K-fold cross-validation value
-set.seed(100)
-xgroup <- rep(1:K, length = nrow(learn))
-xfit <- xpred.rpart(tree1, xgroup)
-(n_subtrees <- dim(tree1$cptable)[1])
-std1 <- numeric(n_subtrees)
-err1 <- numeric(n_subtrees)
-err_group <- numeric(K)
-for (i in 1:n_subtrees){
- for (k in 1:K){
-  ind_group <- which(xgroup ==k)  
-  err_group[k] <- Poisson.Deviance(learn[ind_group,"Exposure"]*xfit[ind_group,i],learn[ind_group,"ClaimNb"])
-               }
-  err1[i] <- mean(err_group)             
-  std1[i] <- sd(err_group)
-   }
+#VALIDATION ERROR
+#when including scores as log linear factor
+  #32.005868191510004  (train: 30.13709594018319)
+#when including 10 discrete scorebands (as unordered factor)
+  #31.835941361638032 (train: 30.044557985296333)
+#when including 20 discrete scorebands (as unordered factor)
+  #31.691920201655044 (train: 29.802325706494621)
+#when including 50 discrete scorebands (as unordered factor)
+  #31.586166499590558 (train: 29.66890227788042 )
 
-x1 <- log10(tree1$cptable[,1])
-xmain <- "cross-validation error plot"
-xlabel <- "cost-complexity parameter (log-scale)"
-ylabel <- "CV error (in 10^(-2))"
-errbar(x=x1, y=err1*100, yplus=(err1+std1)*100, yminus=(err1-std1)*100, xlim=rev(range(x1)), col="blue", main=xmain, ylab=ylabel, xlab=xlabel)
-lines(x=x1, y=err1*100, col="blue")
-abline(h=c(min(err1+std1)*100), lty=1, col="orange")
-abline(h=c(min(err1)*100), lty=1, col="magenta")
-abline(h=c(insampleGLM), col="green", lty=2)
-legend(x="topright", col=c("blue", "orange", "magenta", "green"), lty=c(1,1,1,2), lwd=c(1,1,1,1), pch=c(19,-1,-1,-1), legend=c("tree1", "1-SD rule", "min.CV rule", "Model GLM1"))
-
-# prune to appropriate cp constant
-printcp(tree1)
-tree2 <- prune(tree1, cp=0.00003)
-printcp(tree2)
-
-learn$fitRT2 <- predict(tree2)*learn$Exposure
-test$fitRT2 <- predict(tree2, newdata=test)*test$Exposure
-100*Poisson.Deviance(learn$fitRT2, learn$ClaimNb)
-100*Poisson.Deviance(test$fitRT2, test$ClaimNb)
-
-
-
-###############################################
-#########  Poisson regression tree boosting
-###############################################
-
-### Model PBM3
-J0 <- 3       # depth of tree
-M0 <- 50      # iterations
-nu <- 1       # shrinkage constant 
-
-learn$fitPBM <- learn$Exposure
-test$fitPBM  <- test$Exposure
-
-for (m in 1:M0){
-    PBM.1 <- rpart(cbind(fitPBM,ClaimNb) ~ AreaRT + VehPower + VehAge + DrivAge + BonusMalus + VehBrand + VehGasRT + Density + Region, 
-             data=learn, method="poisson",
-             control=rpart.control(maxdepth=J0, maxsurrogate=0, xval=1, minbucket=10000, cp=0.00001))     
-             if(m>1){
-                   learn$fitPBM <- learn$fitPBM * predict(PBM.1)^nu
-                   test$fitPBM <- test$fitPBM * predict(PBM.1, newdata=test)^nu
-                   } else {
-                   learn$fitPBM <- learn$fitPBM * predict(PBM.1)
-                   test$fitPBM <- test$fitPBM * predict(PBM.1, newdata=test)
-                   }
-              }
-
-100*Poisson.Deviance(learn$fitPBM, learn$ClaimNb)
-100*Poisson.Deviance(test$fitPBM, test$ClaimNb)
+#todo add single tree
