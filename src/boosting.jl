@@ -80,7 +80,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	for iter=1:iterations
         @timeConditional(showTimeUsedByEachIteration, begin
 		#Build Iteration iter
-			#showTimeUsedByEachIteration&&println("Calculating iteration $(iter). Time: $(now())")
+			#showTimeUsedByEachIteration&&println("Calculating iteration $(iter). Time: $(Dates.now())")
 			current_mdf=moderationvector[min(iter,size(moderationvector,1))] #mdf remains constant if a vector of size 1 was provided (instead of a vector of size iterations)			
 			
 			if showTimeUsedByEachIteration
@@ -224,7 +224,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	end
 	z=deepcopy(stats[1:sett.niter+1,:])
 	modelstats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
-	names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
+	DataFrames.names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
 #resulting BT
 	#create trnidx
 	@assert issorted(trnidx)

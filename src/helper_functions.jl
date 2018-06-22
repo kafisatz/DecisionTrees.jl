@@ -21,11 +21,6 @@ function find_max_type(x::DataFrame)
     return UInt8
 end
 
-#it is critical to define levels properly for PooledArray
-function Missings.levels(x::PooledArray)
-    return deepcopy(x.pool)
-end
-
 function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
 	@assert trnprop>0
 	@assert trnprop<1
@@ -331,18 +326,18 @@ function select_best_model(itercol,metric_col,modelnrcol,i)
 	return val,m[loc]
 end
 
-function eta_before(t0::DateTime,model_i_which_starts_now::Int,nmodels::Int)
+function eta_before(t0::Dates.DateTime,model_i_which_starts_now::Int,nmodels::Int)
 	#here the model with number model_i_which_starts_now is just starting (thus it is not yet completed)
-	elapsed=(now()-t0)
+	elapsed=(Dates.now()-t0)
 	elapsed_s=elapsed.value/1000
 	elapsed_m=elapsed_s/60
 	eta=elapsed_s/max(1,model_i_which_starts_now-1)*(nmodels-model_i_which_starts_now-1)
 	return eta
 end
 
-function eta_after(t0::DateTime,model_i_which_is_completed::Int,nmodels::Int)
+function eta_after(t0::Dates.DateTime,model_i_which_is_completed::Int,nmodels::Int)
 	#here the model with number model_i_which_is_completed has just starting completed
-	elapsed=(now()-t0)
+	elapsed=(Dates.now()-t0)
 	elapsed_s=elapsed.value/1000
 	elapsed_m=elapsed_s/60
 	eta=elapsed_s/model_i_which_is_completed*(nmodels-model_i_which_is_completed)
@@ -1419,7 +1414,7 @@ function calcIterationsPerCore2(ntot::Int,ncores::Int)
 	end
 end
 
-function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) #,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1},smp::Array{Int,1},n::Array{Float64,1},d::Array{Float64,1},w::Array{Float64,1},numf::Array{pdaMod,1},charf::Array{pdaMod,1},un::Array{Float64,1},ud::Array{Float64,1},uw::Array{Float64,1},unumf::Array{pdaMod,1},ucharf::Array{pdaMod,1})
+function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) 
 #this version should (does it?) allocate less memory
 		repl=(samplesize<0)
 		@assert repl==false "DTM: Sampling without replacement is currently not supported." #bk -> tbd/todo check how we can make this work
@@ -1443,7 +1438,7 @@ function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) #,num
 return smpUnusedPart
 end
 
-function sampleData(samplesize::Int,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1})
+function sampleData(samplesize::Int,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{PooledArray,1},charfeatures::Array{PooledArray,1})
 		repl=!(samplesize<0)
 		smp=StatsBase.sample(1:size(numerator,1),abs(samplesize),replace=repl)
 	#draw sample from data, this currently creates a COPY of the data
@@ -1455,7 +1450,7 @@ function sampleData(samplesize::Int,numerator::Array{Float64,1},denominator::Arr
 return smp,n,d,w,numf,charf
 end
 
-function sampleData(prop::Float64,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1})
+function sampleData(prop::Float64,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{PooledArray,1},charfeatures::Array{PooledArray,1})
 	samplesize=convert(Int,round(prop*size(numerator,1)))
 	return sampleData(samplesize,numerator,denominator,weight,numfeatures,charfeatures)
 end
@@ -2278,14 +2273,14 @@ function get_firstpos(v::Array{T,1}) where {T}
   return firstpos
 end
 
-function aggregate_data(f::pdaMod,scores::Array{Int,1},numeratorEst::Array{Float64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function aggregate_data(f::PooledArray,scores::Array{Int,1},numeratorEst::Array{Float64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     #this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
 	#most of the time is spent here, if we can improve the for loop below, that would improve performance greatly!
 	#one possibility would be to introduce parallelization here (which is not straightforward, I think....)
 	a= f.pda.refs
 	#this should hold by definition/construction
-	(lo, hi) = extrema(levels(f))
+	(lo, hi) = extrema(PooledArraysDTM.levels(f))
 	ooo=one(lo)-lo
 	vecsize=hi+ooo
 	@assert length(f.ids)<=vecsize #need to investigate if it can happen that this does not hold true (tod/tbd)
@@ -2334,7 +2329,7 @@ function aggregate_data(f::PooledArray,scores,numeratorEst,numerator,denominator
 	ooo=one(lo)-lo
 	vecsize=hi+ooo
 
-	valuelist=levels(f) #we should not use levels here, it is the wrong function
+	valuelist=PooledArraysDTM.levels(f) #we should not use levels here, it is the wrong function
     cnt = zeros(Int, vecsize)
     sumnumerator = zeros(Float64, vecsize)
 	sumnumeratorEst = zeros(Float64, vecsize)
@@ -2419,9 +2414,9 @@ function myfindinInt(big::Array{T,1},small::Array{T,1}) where {T}
 	return res
 end
 
-function aggregate_data_rklostcount(f::pdaMod,increasedPremiumVector::Array{Float64,1},intRanksLostVector::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function aggregate_data_rklostcount(f::PooledArray,increasedPremiumVector::Array{Float64,1},intRanksLostVector::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     a=f.pda.refs
-    (lo, hi) = extrema(levels(f))
+    (lo, hi) = extrema(PooledArraysDTM.levels(f))
     lengtha=length(a)
     cnt = zeros(Int, hi - lo + 1)
 	intSumrklost = zeros(Int, hi - lo + 1)
@@ -2437,7 +2432,7 @@ function aggregate_data_rklostcount(f::pdaMod,increasedPremiumVector::Array{Floa
   return cnt,intSumrklost,sumweight
 end
 
-function build_listOfMeanResponse(crit::MaxValueSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::MaxValueSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64)
   #todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
   ncategories=length(feature_levels)
   #countlist,sumobservedlist=aggregate_data_diff(features,numerator,denominator,weight)
@@ -2455,7 +2450,7 @@ function build_listOfMeanResponse(crit::MaxValueSplit,numerator::Array{Float64,1
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
-function build_listOfMeanResponse(crit::MaxMinusValueSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::MaxMinusValueSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64)
   #todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
   ncategories=length(feature_levels)
   #countlist,sumobservedlist=aggregate_data_diff(features,numerator,denominator,weight)
@@ -2474,7 +2469,7 @@ return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
 
-function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64)
   ncategories=length(feature_levels)
   #calc variance for each "isolated" category
   countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(features,numerator,denominator,weight)
@@ -2513,7 +2508,7 @@ function build_listOfMeanResponse(crit::DifferenceSplit,trnidx::Vector{Int},vali
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
-function build_listOfMeanResponse_mse(labels::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64,lcwiowatt::Array{Float64,1})
+function build_listOfMeanResponse_mse(labels::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64,lcwiowatt::Array{Float64,1})
   #todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
   error("this is currently not working properly")
   @warn("ensure that this does not modify features!!")
@@ -4230,9 +4225,9 @@ function createPredictorData(idx::Vector{Int},nameOfpredictorsSheet,mappings,can
 			lastchartrow=currentchartrow			
 			vname=deepcopy(sett.df_name_vector[i])
 			feat=features[i]
-			thischart=defineUnivariateChart(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol,currentchartrow)),vname,length(levels(feat)),1,8,2,headerrow)
+			thischart=defineUnivariateChart(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol,currentchartrow)),vname,length(DataFrames.levels(feat)),1,8,2,headerrow)
 			predictorCharts[i]=deepcopy(thischart)
-			thischart=defineUnivariateChartWith2Lines(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol2,currentchartrow)),vname,length(levels(feat)),1,5,6,2,headerrow)
+			thischart=defineUnivariateChartWith2Lines(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol2,currentchartrow)),vname,length(DataFrames.levels(feat)),1,5,6,2,headerrow)
 			predictorCharts[nfeat+i]=deepcopy(thischart)
 			#todo,tbd maybe this can be replaced with feat.parent.pool
 		    mp = features[i].pool  #this is the FULL pool, in the selected data only a subset might exist.		
@@ -5036,7 +5031,7 @@ End Function
 	write(fiostream,'(')	
 	write(fiostream,sigstr)
 	write(fiostream,")\r\n")	
-	write(fiostream,"\r\n'Boosted Tree produced by Julia. Time: $(now())\r\n")
+	write(fiostream,"\r\n'Boosted Tree produced by Julia. Time: $(Dates.now())\r\n")
 	#generate_csharpheader(fiostream)	
 	write(fiostream,"\r\n")
 	boolVariablesUsed,boolNumVarsUsedByModel,boolCharVarsUsedByModel=determine_used_variables(bt)

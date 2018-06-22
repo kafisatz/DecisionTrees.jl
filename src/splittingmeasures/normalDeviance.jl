@@ -17,7 +17,6 @@
 	resbool=DecisionTrees.run_model(ARGS) #small version to compile functions
 
 	import Iterators
-	#import DecisionTrees.pdaMod
 	import OnlineStats,SQLite,DataFrames, ProgressMeter, Iterators,PyCall,JLD2
 	dix=load(string(loc,"jmortgage.jld2"));
 
@@ -112,13 +111,13 @@ end
 
 
 
-function aggregate_data_normal_deviance(f::pdaMod,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function aggregate_data_normal_deviance(f::PooledArray,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     #this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
 	#most of the time is spent here, if we can improve the for loop below, that would improve performance greatly!
 	#one possibility would be to introduce parallelization here (which is not straightforward, I think....)
 	a= f.pda.refs
-	(lo::UInt8, hi::UInt8) = extrema(levels(f))  
+	(lo::UInt8, hi::UInt8) = extrema(PooledArraysDTM.levels(f))  
   ooo=one(lo)-lo
 	vecsize=hi+ooo
   cnt = zeros(Int, vecsize)

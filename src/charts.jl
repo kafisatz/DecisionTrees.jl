@@ -4,7 +4,7 @@ export write_statistics
 function create_dataframe(arr::Array{U,2},header::Array{T,1}) where {T <: AbstractString,U <: Any}
 	res=convert(DataFrame,arr)
 	hsym=Symbol[x for x in header]
-	names!(res,hsym)
+	DataFrames.names!(res,hsym)
 	return res
 end
 

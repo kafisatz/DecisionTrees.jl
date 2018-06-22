@@ -26,9 +26,9 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     minw_prop=minw_orig/trnsize_orig
     
 #set rnd state to make this function reporducible (irrespective of trn/val idx)
-#srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
+#Random.srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
 	intDatahash = floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
-    srand(intDatahash)
+    Random.srand(intDatahash)
     
 #1. sample Data
     size_which_is_sampled=0
@@ -122,7 +122,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     #3. aggregate some statistics
     statsdf=DataFrame(transpose(allstats))    
     settsdf=DataFrame(permutedims(allsettings,[2,1]))
-    names!(settsdf,Symbol.(header_settings))
+    DataFrames.names!(settsdf,Symbol.(header_settings))
 
     fld,namestr=splitdir(path_and_fn_wo_extension)
     filen=string(path_and_fn_wo_extension,"_multistats.xlsx")
@@ -148,7 +148,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     allstats_with_stats=vcat(transpose(allstats),stats_of_stats)
     #NOTE! statsdf is RE defined here!
     statsdf=DataFrame(allstats_with_stats)
-    names!(statsdf,Symbol.(header))
+    DataFrames.names!(statsdf,Symbol.(header))
     
     #define Exceldata
     sh1=ExcelSheet("settings",settsdf)
@@ -194,7 +194,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
     minw_prop=minw_orig/trnsize_orig
 
     #set rnd state to make this function reporducible (irrespective of trn/val idx)
-    #srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
+    #Random.srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
     s=hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight)))
     for x=1:size(dtmtable.features,2)
         s=hash(dtmtable.features[x],s)    
@@ -202,7 +202,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
     intDatahash = Int(.25*hash(2231,s)) 
      # the next line does not work because (at the time of writing) the DataFrames Pkg has not implemented hash(x::DataFrame,u::UInt) correctly.
      # intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
-    srand(intDatahash)
+    Random.srand(intDatahash)
     
     #1. sample Data
         size_which_is_sampled=0
@@ -283,7 +283,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         #3. aggregate some statistics
         statsdf=DataFrame(transpose(allstats))    
         settsdf=DataFrame(permutedims(allsettings,[2,1]))
-        names!(settsdf,Symbol.(header_settings))
+        DataFrames.names!(settsdf,Symbol.(header_settings))
     
         fld,namestr=splitdir(path_and_fn_wo_extension)
         filen=string(path_and_fn_wo_extension,"_multistats.xlsx")
@@ -309,7 +309,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         allstats_with_stats=vcat(transpose(allstats),stats_of_stats)
         #NOTE! statsdf is RE defined here!
         statsdf=DataFrame(allstats_with_stats)
-        names!(statsdf,Symbol.(header))
+        DataFrames.names!(statsdf,Symbol.(header))
         
         #define Exceldata
         sh1=ExcelSheet("settings",settsdf)

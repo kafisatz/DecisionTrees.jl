@@ -18,7 +18,6 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 ## Ideas for future improvements
 
 * Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run.
-* 'Remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)
 * Add 'time_finished' to model result (and possibly the time needed for the modelling)
 * Need to ensure that the code runs smoothly even when no split is found (e.g. minw too big)
 * Possibly introduce an option not to calculate certain intermediate metrics (scoring, sorting, ...) -> faster runtime
@@ -30,4 +29,6 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 * Try to avoid branching in critical functions; use ifelse or similar constructs (this might improve the performance)
 * Clean up code (too many type annotations, ... )
 * Consider a nicer representation (such as https://github.com/sisl/D3Trees.jl)
-* Add more unit tests to trigger errors and warnings (see also the julia docs on testing)
+* Add more unit tests to trigger errors and warnings (see also the Julia docs on testing)
+* Add meaningful unit tests, e.g. check the lift on trn and val for a given single tree and boosting (for a given seed)
+* 'Remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)

@@ -301,7 +301,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 		if eltype(thiscol_as_utf8)!=String
 			thiscol_as_utf8=convert(Array{String,1},thiscol_as_utf8)
 		end
-		features[thisname]=PooledArray(thiscol_as_utf8)
+		features[thisname]=DecisionTrees.PooledArraysDTM.PooledArray(thiscol_as_utf8)
 		if length(features[thisname].pool)>255
 			@show nlevels=length(features[thisname].pool)
 			@warn("DTM: Variable $(string(thisname)) has more than 255 levels, namely $(nlevels)\nThe tree may take very long to be constructed.")			
@@ -454,8 +454,8 @@ for x=1:size(features,2)
 	s00=hash(features[x],s00)
 end
 srandInt=floor(Int,1/3*hash(931,s00))
-srand(srandInt)
-	#srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
+Random.srand(srandInt)
+	#Random.srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
 	#@show rand();@show rand();@show rand(); #check reproducability
 if sett.subsampling_prop <1.0 
 	@warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")
@@ -528,7 +528,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	  #model_setting_string=convert(String,string(model_setting_string, "\n\n", "Names:Levels: \n",join(permutedims(names_and_levels, (2, 1)),":")))
       model_setting_string=convert(String,string(model_setting_string, "\n", "Folder of Julia code (decisiontree.jl): \n", dirname(@__FILE__)))
 	  #model_setting_string=convert(String,string(model_setting_string, "\n", "Julia started at: \n not_available "))
-      model_setting_string=convert(String,string(model_setting_string, "\n", "Julia (Modelling) start time: \n$(now()) "))
+      model_setting_string=convert(String,string(model_setting_string, "\n", "Julia (Modelling) start time: \n$(Dates.now()) "))
 
 prnt&&println("---Model Settings--------------------------------------------------------------")
       if sett.boolRankOptimization && "build_tree"==sett.model_type
@@ -543,7 +543,7 @@ prnt&&println("---Model Settings------------------------------------------------
 			  println("NumMaxSplitPoints: $(sett.max_splitting_points_num), Criterion: $(sett.crit)")
 			  println(stars)
 			  println(string(""))
-			  println(string("Building Tree... Time: $(now())"))
+			  println(string("Building Tree... Time: $(Dates.now())"))
 		  end
 		  obsvalcols=1
 		  if sett.randomw>0
@@ -559,7 +559,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		end
 		
 		resulting_model=tree
-		prnt&&println("Deriving Trn Estimates... Time: $(now())")
+		prnt&&println("Deriving Trn Estimates... Time: $(Dates.now())")
 		leaves_of_tree=create_leaves_array(tree)
         leaf_number_vector=zeros(Int,length(fitted_values_tree))
         #todo/tbd possibly improve this by only applying the function once!
@@ -568,7 +568,7 @@ prnt&&println("---Model Settings------------------------------------------------
         if length(validx)>0
             apply_tree_by_leaf!(fitted_values_tree,leaf_number_vector,validx,tree.rootnode,features)
 		end		
-		 prnt&&println("Preparing output... Time: $(now())")
+		 prnt&&println("Preparing output... Time: $(Dates.now())")
          #1-dim Variable Importance
           var_imp1d_str_arr,var_imp2d_str_arr,onedimintvec_unused,twodimintvec_unused=variable_importance(leaves_of_tree,sett.df_name_vector,sett.number_of_num_features)
           nleaves=Int(size(leaves_of_tree,1))
@@ -583,7 +583,7 @@ prnt&&println("---Model Settings------------------------------------------------
 			#z=transpose(overallstats) #this should work, but it somehow doesnt.... https://discourse.julialang.org/t/transpose-not-working-on-array-any-2/6510
 			z=permutedims(overallstats,(2,1))
 			dfStats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
-			names!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
+			DataFrames.names!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
 			resulting_model.modelstats=dfStats
 			if sett.boolSaveResultAsJLDFile
 				println("Saving results to jld2 file: \n $(jldresultsfile)")
@@ -594,7 +594,7 @@ prnt&&println("---Model Settings------------------------------------------------
 
 		 #print_tree(tree)
 		 dot_graph=graph(resulting_model)
-         model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(now()) \n"))
+         model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n"))
 		 if sett.write_dot_graph
 			println("Writing DOT tree structure to file: \n $(dot_graph_TXT_file)")
 			isfile(dot_graph_TXT_file)&&rm(dot_graph_TXT_file)
@@ -645,7 +645,7 @@ prnt&&println("---Model Settings------------------------------------------------
 				xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultEnsemble=boosted_tree(dtmtable,sett)
 			end)
 			
-			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(now()) \n "))
+			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
 			#this line is for  the sas,vba and csharp code
 			estimatesPerScoreForCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
 			
@@ -681,7 +681,7 @@ prnt&&println("---Model Settings------------------------------------------------
 				#xlData,vectorOfLeafNumbersTrn,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,est_matrixFromScoresVAL,stats,scoresval,est_matrix_val,estimateUnsmoothedVal,estimateSmoothedVal,estimateFromRelativitiesVal,estimateUnsmoothedTrn,estimateSmoothedTrn,estimateFromRelativitiesTrn,resultEnsemble=bagged_tree(mappings,candMatWOMaxValues,sett,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,numeratorval,denominatorval,weightval,val_numfeatures,val_charfeatures_PDA)
 			end)
 			#
-			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(now()) \n "))
+			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
 		else
 			error("Unknown Model Type: $(sett.model_type) (Within Bagging/Boosting loop)")
 		end #end bagging or boosting
@@ -768,7 +768,7 @@ end #end distinction between three model types
      #Push Log file to file list
 	 #println("\n")
 	 elapsed_until_this_point=0.0
-	 prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,digits=1))s = $(round(elapsed_until_this_point/60,digits=1))m")
+	 prnt&&println("Modelling finished. Time: $(Dates.now()) - Total time was $(round(elapsed_until_this_point,digits=1))s = $(round(elapsed_until_this_point/60,digits=1))m")
 	 if sett.boolCreateZipFile
 		 logfile=string(path_and_fn_wo_extension,".log")
 		 tmplogfile="c:\\temp\\julia_logfile.log";isfile(tmplogfile)&&rm(tmplogfile)
@@ -957,9 +957,9 @@ function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::St
 	end	
 
 	statsdf=DataFrame(transpose(allstats))
-	names!(statsdf,Symbol.(header))
+	DataFrames.names!(statsdf,Symbol.(header))
 	settsdf=DataFrame(permutedims(allsettings,[2,1]))
-	names!(settsdf,Symbol.(header_settings))
+	DataFrames.names!(settsdf,Symbol.(header_settings))
 
 	@show fld,namestr=splitdir(path_and_fn_wo_extension)
 	filen=string(fld,"multistats.xlsx")

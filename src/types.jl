@@ -4,7 +4,7 @@ import Base: length,start,next,done,eltype,==,hash
 export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree
 export ModelSettings,copySettingsToCurrentType
 
-struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
+#struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
     
 #Splitting Criterions use multiple dispatch
 	abstract type SplittingCriterion  end
@@ -165,7 +165,7 @@ function Base.getindex(r::DTMTable,idx,compact_features=false)
         #"compact" features, it is possible that we could do this in a better/faster way
         for i=tmp_number_of_num_features+1:size(features,2)
             if eltype(features[i])!=UInt8
-                features[i]=PooledArray(Array(features[i]))
+                features[i]=DecisionTrees.PooledArraysDTM.PooledArray(Array(features[i]))
             end
         end    
 	end 
@@ -351,7 +351,7 @@ mutable struct ModelSettings
 	boolRandomizeOnlySplitAtTopNode=true #37
 	subsampling_prop=1.0 #38
 	subsampling_features_prop=1.0 #39
-	version="uninitialized" #40
+	version="not_initialized" #40
 	preppedJLDFileExists=false #41
 	catSortByThreshold=7 #42
 	catSortBy=SortByMean() #43
@@ -601,7 +601,6 @@ function checkIfSettingsAreValid(s::ModelSettings)
       @assert (s.mf>=0 && s.mf<=1)
 	  #end
       @assert (s.adaptiveLearningRate<=1.0 && s.adaptiveLearningRate>=0.0)
-      @assert s.variable_mdf_pct<=1.0
       #@assert s.subsampling_prop<=1.0 #positive value => without replacement
 	  @assert s.subsampling_prop>=-1.0 #negative value => with replacement, smaller than -1 is not possible wherease larger than 1 is possible
 	  if s.subsampling_prop<1.0

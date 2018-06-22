@@ -204,7 +204,7 @@ end
 
 	z=deepcopy(stats[1:sett.niter+1,:])
 	modelstats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
-	names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
+	DataFrames.names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
 #resulting Bagged Tree, construct Bagged Tree
 	intVarsUsed=[x.tree.intVarsUsed for x in vecTreesWErrs]
 	inds_considered=[x.tree.inds_considered for x in vecTreesWErrs]

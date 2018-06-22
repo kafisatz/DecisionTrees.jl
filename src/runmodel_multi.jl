@@ -4,11 +4,11 @@
 
 function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))    
     #set rnd state to make this function reporducible (irrespective of trn/val idx)
-    #srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
+    #Random.srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
     nSettings=length(settingsVector)
 
     intDatahash = floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
-    srand(intDatahash)
+    Random.srand(intDatahash)
     
    #initialize variables
         path_and_fn_wo_extension="some"
@@ -67,7 +67,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
         #3. aggregate some statistics
         statsdf=DataFrame(transpose(allstats))    
         settsdf=DataFrame(permutedims(allsettings,[2,1]))
-        names!(settsdf,Symbol.(header_settings))
+        DataFrames.names!(settsdf,Symbol.(header_settings))
     
         fld,namestr=splitdir(path_and_fn_wo_extension)
         filen=string(path_and_fn_wo_extension,"_multistats.xlsx")
@@ -93,7 +93,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
         allstats_with_stats=vcat(transpose(allstats),stats_of_stats)
         #NOTE! statsdf is RE defined here!
         statsdf=DataFrame(allstats_with_stats)
-        names!(statsdf,Symbol.(header))
+        DataFrames.names!(statsdf,Symbol.(header))
         
         #define Exceldata
         sh1=ExcelSheet("settings",settsdf)
@@ -167,7 +167,7 @@ end	 #singleRunDtm
 function get_model_stats(resulting_model::DTModel,defaulted_modelstats_df::DataFrame,i::Int)	
 	thesemodelstats=deepcopy(resulting_model.modelstats)	
 	nm=DataFrame(ones(Int,size(thesemodelstats,1),1).*i)	
-	names!(nm,Symbol[symbol("ModelNumber")])	
+	DataFrames.names!(nm,Symbol[symbol("ModelNumber")])	
 	return  thesemodelstats=hcat(nm,thesemodelstats)
 end
 
