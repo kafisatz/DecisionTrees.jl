@@ -24,7 +24,7 @@ export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!
 
 #include PooledArraysDTM module
 include("PooledArraysDTM.jl")
-using .PooledArraysDTM 
+import .PooledArraysDTM 
 
 import Dates
 import Random
@@ -34,15 +34,15 @@ import PyCall
 import DataFrames
 import JLD2
 #import FileIO #do we need this at all?
-import OnlineStats
+#import OnlineStats
 import ProgressMeter
 import StatsBase
-#using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
+#import PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
 #for the 'precompile files', we need some additional packages
 import DataStreams
 
-#using MySQL, # temporarily disabled 
-#using SQLite #disabled as it uses DataFrames 0.11
+#import MySQL, # temporarily disabled 
+#import SQLite #disabled as it uses DataFrames 0.11
 
 srand(1234)
 

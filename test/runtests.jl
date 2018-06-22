@@ -1,7 +1,7 @@
 t0=time_ns()
 
-using CSV
-using DataFrames
+import CSV
+import DataFrames
 using Test 
 using DecisionTrees 
 

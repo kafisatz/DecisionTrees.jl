@@ -16,10 +16,9 @@
 	ARGS=[string(loc,"jmortgage.settings_profiling.csv") string(loc,"jmortgage.CSV") string("out_jmortgage")];
 	resbool=DecisionTrees.run_model(ARGS) #small version to compile functions
 
-	using Iterators
-	using DTM
+	import Iterators
 	#import DecisionTrees.pdaMod
-	using OnlineStats,SQLite,DataFrames, ProgressMeter, Iterators,PyCall,JLD2
+	import OnlineStats,SQLite,DataFrames, ProgressMeter, Iterators,PyCall,JLD2
 	dix=load(string(loc,"jmortgage.jld2"));
 
 
