@@ -1224,7 +1224,7 @@ end
 function initBootstrapSample(sampleSizeCanBeNEGATIVE::Int) #,trnidx::Vector{Int},validx::Vector{Int})
 		abssampleSize=abs(sampleSizeCanBeNEGATIVE)
 		@assert abssampleSize>0
-		sampleVector=Vector{Int}(abssampleSize)
+		sampleVector=Vector{Int}(undef,abssampleSize)
 	return abssampleSize,sampleVector
 end
     
