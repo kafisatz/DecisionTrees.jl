@@ -1,5 +1,8 @@
 export dtm,dtm_debug,dtm_single_threaded
 
+#note: these functions (in cross_validation.jl have major redundancies with runmodel_multi.jl
+#we may want to improve this
+
 function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     @info "DTM: (bk) You may want to consider the multi threaded verison of this function: simply call dtm(...)"
 #if folds<0 then we consider n disjoint training sets
@@ -24,15 +27,9 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     
 #set rnd state to make this function reporducible (irrespective of trn/val idx)
 #srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
-s=hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight)))
-for x=1:size(dtmtable.features,2)
-    s=hash(dtmtable.features[x],s)    
-end
-intDatahash = Int(.25*hash(2231,s)) 
- # the next line does not work because (at the time of writing) the DataFrames Pkg has not implemented hash(x::DataFrame,u::UInt) correctly.
- # intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
-srand(intDatahash)
-
+	intDatahash = floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
+    srand(intDatahash)
+    
 #1. sample Data
     size_which_is_sampled=0
     #local cvsampler
@@ -71,7 +68,7 @@ srand(intDatahash)
 
     #2. run models   
     for this_sample in cvsampler
-        sett.seed = Int(hash(intDatahash,hash(99812,hash(i)))/3)
+        sett.seed = floor(Int,0.31*hash(intDatahash,hash(99812,hash(i))))
         if cvo.use_all_data
             #size_which_is_sampled=fullsize            
             this_trnidx=this_sample
@@ -378,7 +375,7 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
                 sett.minw=minw_prop*length(dtmtable.trnidx) #note minw is adjusted for each run!
             end
         #set seed
-            sett.seed = Int(hash(intDatahash,hash(99812,hash(i)))/3)
+            sett.seed =  floor(Int,0.31*hash(intDatahash,hash(99812,hash(i))))
         #define path
             path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
             fnmod=string(path_and_fn_wo_extension_mod,ext)

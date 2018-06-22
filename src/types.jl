@@ -956,7 +956,6 @@ mutable struct CVOptions
 		return x
 	end	
 	function CVOptions(a::T,b::N,c::Bool) where {T<:Integer,N<:Number}
-	#function CVOptions(a<:Integer,b<:Number,c::Bool)
 		x=new(Int(a),float(b),c)
 		@assert check_cvoptions(x)
 		return x

@@ -1,4 +1,7 @@
 
+#note: the functions (in cross_validation.jl have major redundancies with runmodel_multi.jl
+#we may want to improve this
+
 function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))    
     #set rnd state to make this function reporducible (irrespective of trn/val idx)
     #srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
