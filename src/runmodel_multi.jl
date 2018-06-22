@@ -4,11 +4,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
     #srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
     nSettings=length(settingsVector)
 
-    s=hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight)))
-    for x=1:size(dtmtable.features,2)
-        s=hash(dtmtable.features[x],s)    
-    end
-    intDatahash = Int(fld(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight)))))))
+    intDatahash = Int(.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
     srand(intDatahash)
     
    #initialize variables
