@@ -1,4 +1,4 @@
-warn("BK: DTM: This is currently experimental and may need review.")
+@warn("BK: DTM: This is currently experimental and may need review.")
 
 function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features) where T<:Unsigned
   #here randomweight==0
@@ -20,7 +20,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
 
   #pass on over the data:
   #get mean of left chlid and right child for each possible split
-  #warn("find out if we need/want freq or claimcount here!") #currently we are using the frequencies which are then multiplied with the exposure -> poisson deviance is evaluated on the number of claims  n_i~poisson(lambda_i * exposure_i)
+  #@warn("find out if we need/want freq or claimcount here!") #currently we are using the frequencies which are then multiplied with the exposure -> poisson deviance is evaluated on the number of claims  n_i~poisson(lambda_i * exposure_i)
   meansl=zeros(subs_size) #mean (frequency or possibly claim count) of the left node in case we go for split 'number' i
   meansr=zeros(subs_size) #same for right child
   #same for weights
@@ -128,7 +128,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
 
   #pass on over the data:
   #get mean of left chlid and right child for each possible split
-  #warn("find out if we need/want freq or claimcount here!")
+  #@warn("find out if we need/want freq or claimcount here!")
   meansl=zeros(subs_size) #mean (frequency or possibly claim count) of the left node in case we go for split 'number' i
   meansr=zeros(subs_size) #same for right child
   #same for weights

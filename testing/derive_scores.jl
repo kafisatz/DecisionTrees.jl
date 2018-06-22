@@ -1,7 +1,7 @@
 
 
 #update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)	
-#warn("remove this")	
+#@warn("remove this")	
 td=load("C:\\temp\\sc.jld")	;
 #		save("C:\\temp\\sc.jld","trnidx",trnidx,"validx",validx,"estimatedRatio",estimatedRatio,"currentRelativity",currentRelativity,"sett",sett,"actualNumerator",actualNumerator,"denominator",denominator,"weight",weight,"trn_meanobservedvalue",trn_meanobservedvalue,"iter",iter)
 #Derive Scores for this iteration #NOTE (tbd/todo: keep in mind) For large datasets (>5m rows) the sorting in construct scores may become a dominant part of the algorithm
@@ -36,7 +36,7 @@ boolSmoothingEnabled=!(smooth=="0")
 uniqueRelativitiesSorted=unique(view(relativities,trnidx))
 sort!(uniqueRelativitiesSorted,alg=QuickSort)
 ns=min(nscores,size(uniqueRelativitiesSorted,1))
-#ns<nscores&&warn("There are only $(ns) distinct relativities. Number of scores will be limited to $(ns) instead of $(nscores).")
+#ns<nscores&&@warn("There are only $(ns) distinct relativities. Number of scores will be limited to $(ns) instead of $(nscores).")
 aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=DTM2.constructScores(
     trnidx,validx,estimatedRatio,relativities,uniqueRelativitiesSorted,actualNumerator,denominator,weight,meanobservedvalue,ns,nscores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
 

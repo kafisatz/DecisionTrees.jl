@@ -359,5 +359,4 @@ end
 bestSetting=settsdf[bestModel,:]
 #this data should be consistent with the data in the Excel output
 
-warn("todo:check best tree with poisson error too!")
     #crit::SplittingCriterion # fn version of 4

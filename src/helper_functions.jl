@@ -199,7 +199,7 @@ function frequency_count(actual::Array{Int,1},estimate::Array{Int,1})
 	#NOTE: what do we do if the observed range of actual is limited, e.g. if there is no actual with value 1? shall we start at 2?
 	#I assume that this is a rare case
 	if lo!=1
-		warn("Lo of actual is not equal to 1: lo=$(lo), hi=$(hi)")
+		@warn("Lo of actual is not equal to 1: lo=$(lo), hi=$(hi)")
 	end
 	ooo=one(lo)-lo
 	vecsize=hi+ooo
@@ -1004,7 +1004,7 @@ function writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
 	catch e
         @show e
         dump(e)
-		warn("DTM: Failed to create Excel Statistics file. \r\n $(statsfileExcel)")
+		@warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(statsfileExcel)")
 	end
 	return nothing
 end
@@ -1591,7 +1591,7 @@ function createZipFile(zipFilename::T,filelist::Array{U,1},silent::Bool=false) w
       rm(zipFilename)
     catch err
       @show err
-      warn("Unable to delete file $(zipFilename)!")
+      @warn("Unable to delete file $(zipFilename)!")
     end
   end
 
@@ -1662,7 +1662,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 	#Generate candidate list
 	candlist=define_candidates(this_column,max_splitting_points_num)
 	if max_splitting_points_num>500
-		warn("DTM: max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
+		@warn("DTM: max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
 		if max_splitting_points_num>2000
 			error("DTM: max_splitting_points_num too large max_splitting_points_num=$(max_splitting_points_num)")
 		end
@@ -1747,12 +1747,12 @@ end
 function deleteIfExists(f::AbstractString)
 	!isfile(f)&&(return nothing)
 	if !my_iswriteable(f)
-		warn("No write access to file $(f)")
+		@warn("No write access to file $(f)")
 	else
 	try
 		rm(f)
 	catch err
-		warn("Unable to delete file $(f) It might be open by another application.\r\n\r\n\r\n")
+		@warn("Unable to delete file $(f) It might be open by another application.\r\n\r\n\r\n")
 		@show err
 	end
 	end
@@ -2012,7 +2012,7 @@ t=tree.rootnode
         total_sum_squares_of_numeratorTrn=residual_sum_squares_of_numeratorTrn=total_sum_squares_of_ratioTrn=residual_sum_squares_of_ratioTrn=1.0
         total_sum_squares_of_numeratorVal=residual_sum_squares_of_numeratorVal=total_sum_squares_of_ratioVal=residual_sum_squares_of_ratioVal=1.0
     end
-    warn("need to review/amend the rsquared and rss which are not correct!")
+    @warn("need to review/amend the rsquared and rss which are not correct!")
     r2_of_numeratortrn=1.0-residual_sum_squares_of_numeratorTrn/total_sum_squares_of_numeratorTrn
     r2_of_ratiotrn=1.0-residual_sum_squares_of_ratioTrn/total_sum_squares_of_ratioTrn
     r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
@@ -2356,7 +2356,7 @@ function aggregate_data(f::PooledArray,scores,numeratorEst,numerator,denominator
 	for i=vecsize:-1:1
 		@inbounds if cnt[i]==0
 	#if length(f.values)!=vecsize #delete some rows
-			#warn("BK, I am not sure if this works as anticipated")
+			#@warn("BK, I am not sure if this works as anticipated")
 		#for i in rows_to_be_deleted
 			deleteat!(cnt,i)
 			deleteat!(sumscores,i)
@@ -2384,7 +2384,7 @@ function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array
 	sumdenominator = zeros(Float64, vecsize)
 	sumweight= zeros(Float64, vecsize)
 
-	#warn("BK: need to add inbounds here as soon as things work.... ")
+	#@warn("BK: need to add inbounds here as soon as things work.... ")
 	 @inbounds for count in f.indices[1]
 	#for count=1:length(a)
 		#@inbounds idx=a[count] + ooo
@@ -2516,7 +2516,7 @@ end
 function build_listOfMeanResponse_mse(labels::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64,lcwiowatt::Array{Float64,1})
   #todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
   error("this is currently not working properly")
-  warn("ensure that this does not modify features!!")
+  @warn("ensure that this does not modify features!!")
   ncategories=length(feature_levels)
   features_sorted=deepcopy(features)#   vol,labels_sorted=custom_countsort!(features_sorted,labels,lcwiowatt)
   countlist,firstindices=custom_countsort!(features_sorted,labels,labels_sorted)
@@ -3073,7 +3073,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},
 end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int, indent::Int=0,fileloc::String="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
-    warn("This should not happen. Opening file $(fileloc) to write Leaf information.")
+    @warn("This should not happen. Opening file $(fileloc) to write Leaf information.")
 	#This should only happen when the whole tree is a leaf.
 	#We should by any means avoid to open and close the file for each leaf.
 	f=open(fileloc,"a+")
@@ -3325,7 +3325,7 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
   end
 	write(fiostream," " ^ indent,leafvarname,"=$(tree.id); $(add)")
     #this row is only meaningful for boosted multiplicative trees
-	#warn("check if this definition of val is accurate for a boosted tree (e.g. lr model)"
+	#@warn("check if this definition of val is accurate for a boosted tree (e.g. lr model)"
 	val=_moderate(tree.fitted,mdf)
 	#val=tree.fitted
 	write(fiostream," " ^ indent,"rel_mod_",leafvarname,"=$(val);\r\n")
@@ -3588,7 +3588,7 @@ end
 		idx=ismissing(dfIndata[ii])
 		narows=findall(idx)
 		@assert length(narows)>0 "this should not have happend" #narows should be >0 by definition
-		warn("Missing values detected. Rows= $(narows[1]), Column=$(ii):$(namevec[ii])")
+		@warn("Missing values detected. Rows= $(narows[1]), Column=$(ii):$(namevec[ii])")
         error("ABORT.")
         return false
       end
@@ -3649,7 +3649,7 @@ function return_file_and_folders(ARGS)
 	   try parse(Int,ASCIIStringARGS[1])
 		  #these are the settings if Julia is run in Juno or via the console
 		   @show ASCIIStringARGS
-		   warn("Using default input parameters!\r\n\r\n")
+		   @warn("Using default input parameters!\r\n\r\n")
 		   println("$(fallback_inputSettingsFile)")
 		   println("$(fallback_inputDataFile)")
 		   settingsFilename=fallback_inputSettingsFile
@@ -3668,7 +3668,7 @@ function return_file_and_folders(ARGS)
     end
   else
     #these are the settings if Julia is run in Juno or via the console
-     warn("Using default input parameters!\r\n\r\n")
+     @warn("Using default input parameters!\r\n\r\n")
 	 println("$(fallback_inputSettingsFile)")
 	 println("$(fallback_inputDataFile)")
 	 settingsFilename=fallback_inputSettingsFile
@@ -3719,7 +3719,7 @@ end
 function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Float64) #,linearregressionfn::Function)
   #Perform LOWESS/LOESS with degree 1 / weighted linear regression  estimatedRatioPerScore=copy(rawObservedRatioPerScore)
   @assert span>0.0
-  #warn("it matters if we start at the bottom or top end! which ones is better?")
+  #@warn("it matters if we start at the bottom or top end! which ones is better?")
   nscores=size(estimatedRatioPerScore,1)
   if (nscores<=2) #for 2 or less scores smoothing is not meaningful
 	@warn("DTM: nscores was less than 3. No smoothing performed")
@@ -4081,7 +4081,7 @@ end
 
 nscoresPotentiallyReducedTWOTimes::Int=0
 if (length(scoreEndPoints)>1)&&(scoreEndPoints[end-1]>=scoreEndPoints[end])
-#warn("Failed to uniformly distribute the scores! Scores will be degenerated. \r\nThis usually indicates that: (i) there are too many scores compared to the granularity of the model or (ii) the data is 'degenerated' (i.e. there is a mass of exposure for certain risk details)")
+#@warn("Failed to uniformly distribute the scores! Scores will be degenerated. \r\nThis usually indicates that: (i) there are too many scores compared to the granularity of the model or (ii) the data is 'degenerated' (i.e. there is a mass of exposure for certain risk details)")
 #Reduce the number of Scores again
 	thismax=maximum(scoreEndPoints)
 	endlocation::Int=searchsortedfirst(scoreEndPoints,convert(eltype(scoreEndPoints),thismax))
@@ -4157,7 +4157,7 @@ function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabl
 						rev=reversals(estimatedRatioPerScore)
 						sumrev=sum(rev)
 					end
-					#maxiterNotReached ? println("Smoothing of estimates finished after $(i) recursions.") :  warn("Smoothing process aborted after $(i) iterations. There were still $(sumrev) reversals.")
+					#maxiterNotReached ? println("Smoothing of estimates finished after $(i) recursions.") :  @warn("Smoothing process aborted after $(i) iterations. There were still $(sumrev) reversals.")
 					if print_details&&boolSmoothingEnabled #if smoothing is disabled this will not be of interest to the modeller
 						maxiterNotReached ? nothing :  @info "Smoothing stopped after $(i) passes: $(sumrev) reversals remained."
 					end
@@ -5052,7 +5052,7 @@ End Function
 	@assert length(boolListChar)==length(mappings)
 	#error("bk continue here")
 	#csharp_write_RequiredElementsProvided(fiostream,df_name_vector,boolVariablesUsed)
-	warn("todo, what if some variables are not as expected (unseen values for instance). Improve this / error handling similar to the generated SAS Code!")
+	@warn("todo, what if some variables are not as expected (unseen values for instance). Improve this / error handling similar to the generated SAS Code!")
 	vba_write_booleans(fiostream,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,boolCharVarsUsedByModel,boolNumVarsUsedByModel,boolVariablesUsed)
 	
 	#for i=1:length(df_name_vector)

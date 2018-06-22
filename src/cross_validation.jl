@@ -103,12 +103,12 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
             allmodels=Vector{Any}(n_folds)
         else			
             if !all(header[2:end].==desc[2:end])
-                warn("Model run $(i) returned an unexpected results vector:")
+                @warn("Model run $(i) returned an unexpected results vector:")
                 @show desc
                 @show header
             end
             if !all(header_settings[2:end].==desc_settingsvec[2:end])
-                warn("Model run $(i) returned an unexpected results vector:")
+                @warn("Model run $(i) returned an unexpected results vector:")
                 @show desc_settingsvec
                 @show header_settings
             end
@@ -160,7 +160,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
 		@time write_statistics(xld,filen,true,false)		
 	catch e
         @show e       
-		warn("DTM: Failed to create Excel Statistics file. \r\n $(filen)")
+		@warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(filen)")
 	end        
     #restore indices
     dtmtable.trnidx=deepcopy(trnidx_orig)
@@ -265,7 +265,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         sendto_module(DecisionTrees,Distributed.workers(),local_data_dict=deepcopy(di))
         
         #run all models in parallel
-        warn("this is currently terribly slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
+        @warn("this is currently terribly slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
             pmapresult=Distributed.pmap(iLoop -> run_cvsample_on_a_process(iLoop,local_data_dict),1:length(cvsampler))
                        
         #2. run models   
@@ -320,7 +320,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             @time write_statistics(xld,filen,true,false)		
         catch e
             @show e       
-            warn("DTM: Failed to create Excel Statistics file. \r\n $(filen)")
+            @warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(filen)")
         end        
         #restore indices
         dtmtable.trnidx=deepcopy(trnidx_orig)
@@ -389,18 +389,18 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
             pushfirst!(desc_settingsvec,"Number")
         #check if header and settings header are as expected
             if !all(header[2:end].==desc[2:end])
-                warn("Model run $(i) returned an unexpected results vector:")
+                @warn("Model run $(i) returned an unexpected results vector:")
                 @show desc
                 @show header
             end            
             if !all(header_settings[2:end].==desc_settingsvec[2:end])
-                warn("Model run $(i) returned an unexpected results vector:")
+                @warn("Model run $(i) returned an unexpected results vector:")
                 @show desc_settingsvec
                 @show header_settings
             end            
         return numbrs,settingsvec,i,model
     catch eri
-        warn("DTM: CV model $(i) failed.")
+        @warn("DTM: CV model $(i) failed.")
         println(eri)
         return defaulted_stats,defaulted_settings,i,deepcopy(EmtpyDTModel())
     end

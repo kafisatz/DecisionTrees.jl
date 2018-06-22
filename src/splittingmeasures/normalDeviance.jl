@@ -8,7 +8,7 @@
 	substract subsets as needed (gray code loop) with the function below
 	"""
 	)
-	warn("TBD: check allocation and time of aggregate_data_normal_deviance")
+	@warn("TBD: check allocation and time of aggregate_data_normal_deviance")
 
 	#this runs a small version to compile all functions
 	loc="C:\\jdata\\datafolder\\mortgage\\"
@@ -40,8 +40,8 @@
 =#
 
 function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass)
-  warn("229 this will not work yet.....")
-  warn("randomw should be zero here")
+  @warn("229 this will not work yet.....")
+  @warn("randomw should be zero here")
   save("C:\\temp\\myf.jld2","a",a,"labellist",labellist,"sumnumerator",sumnumerator,"sumdenominator",sumdenominator,"sumweight",sumweight,"countlistfloat",countlistfloat,"minweight",minweight,"subs",subs,"moments_per_pdaclass",moments_per_pdaclass)
 
 #here randomweight==0
@@ -126,7 +126,7 @@ function aggregate_data_normal_deviance(f::pdaMod,numerator::Array{Float64,1},de
   sumnumerator = zeros(Float64, vecsize)
 	sumdenominator = zeros(Float64, vecsize)
 	sumweight= zeros(Float64, vecsize)
-	warn("check if we need sumdenom and sumnom at all")
+	@warn("check if we need sumdenom and sumnom at all")
 	moments_per_pdaclass=Array{OnlineStats.Series}(vecsize)
 	for i=1:vecsize
 		moments_per_pdaclass[i]=Series(OnlineStats.Mean(),OnlineStats.Variance())
@@ -184,8 +184,8 @@ end
 
 
 function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int,moments_per_pdaclass)
-warn("221 this will not work yet.....")
-warn("randomw should be postive here")
+@warn("221 this will not work yet.....")
+@warn("randomw should be postive here")
 
 save("C:\\temp\\myf.jld2","a",a,"labellist",labellist,"sumnumerator",sumnumerator,"sumdenominator",sumdenominator,"sumweight",sumweight,"countlistfloat",countlistfloat,"minweight",minweight,"subs",subs,"feature_column_id",feature_column_id,"moments_per_pdaclass",moments_per_pdaclass)
 #here randomweight>0

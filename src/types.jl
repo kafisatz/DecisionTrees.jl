@@ -146,7 +146,7 @@ end
 Base.size(d::DTMTable) = size(d.features)
 
 function Base.getindex(r::DTMTable,idx,compact_features=false)
-    warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")    
+    @warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")    
     
     key=r.key[idx]
     one_to_n=collect(1:length(r.weight))
@@ -172,7 +172,7 @@ function Base.getindex(r::DTMTable,idx,compact_features=false)
     
     mp=deepcopy(r.mappings)
     #mp=deepcopy(map(i->features[i].pool,tmp_number_of_num_features+1:size(features,2)))
-	warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")
+	@warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")
     #error("this does not work properly. we NEED to update candmatmatrix otherwise we get a modelling error later on....")
     #for now candMatWOMaxValues is left as it was...
     dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),mp)
@@ -460,7 +460,7 @@ if col=="statsbyvariables"&&length(stringValue)>0
 	chosenvars=[lowercase(x) for x in split(stringValue,' ')]
 	integerindices=findall(in(chosenvars), [lowercase(x) for x in s.df_name_vector])
 	if length(integerindices)!=length(chosenvars)
-		warn("some variables of statsbyvariables were not found in the data")
+		@warn("some variables of statsbyvariables were not found in the data")
 		@show s.df_name_vector
 		@show chosenvars
 		@show stringValue
@@ -512,7 +512,7 @@ function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{S
 		col=headerLowercase[i]
 		stringValue=values[i] #this should always be a String
 		if col=="max_splitting_points_num"&&dataisJLD
-			warn("max_splitting_points_num setting cannot be changed if a *.jld2 file is provided.")
+			@warn("max_splitting_points_num setting cannot be changed if a *.jld2 file is provided.")
 		end
 		@assert col!="moderationvector" "Moderationvector is currently disabled."
 		#@assert col!="chosen_apply_tree_fn" "You are not allowed to modify the setting chosen_apply_tree_fn"
@@ -773,11 +773,11 @@ function checkIfSettingsAreValid(s::ModelSettings)
       #@assert s.subsampling_prop<=1.0 #positive value => without replacement
 	  @assert s.subsampling_prop>=-1.0 #negative value => with replacement, smaller than -1 is not possible wherease larger than 1 is possible
 	  if s.subsampling_prop<1.0
-		warn("Subsampling of the data is enabled. Ensure the value of subsampling_prop=$(s.subsampling_prop) has a meaningful value relative to minw=$(s.minw)")
+		@warn("Subsampling of the data is enabled. Ensure the value of subsampling_prop=$(s.subsampling_prop) has a meaningful value relative to minw=$(s.minw)")
 	  end
-	  #if (s.model_type!="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);warn("Subsampling with Boosting methods is experimental!");end
+	  #if (s.model_type!="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);@warn("Subsampling with Boosting methods is experimental!");end
 	  #todo/tbd need to fix this! see goodnessOfFit
-		if (s.model_type=="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);warn("Bagging is currently EXPERIMENTAL!") ;end
+		if (s.model_type=="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);@warn("Bagging is currently EXPERIMENTAL!") ;end
       #@assert (abs(s.subsampling_prop)==1.0)||(s.model_type=="bagged_tree") "ERROR: (bk) Sumbsampling is currently only available for Bagging, as it will require the usage of apply tree after each iteration (since not all estimates are available after the construction of the tree)! Thus (for now) you need to set subsampling_prop to 1.0."
       @assert (abs(s.subsampling_features_prop>0) && abs(s.subsampling_features_prop<=1))
 	  @assert s.scorebandsstartingpoints[1]==1

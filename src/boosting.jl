@@ -92,8 +92,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			#indicatedRelativity
 			if (!sett.bINTERNALignoreNegRelsBoosting)&&(minimum(indicatedRelativityForApplyTree_reused)<0.0)
 				#todo/tbd check this: if there are negative indicated relativites the boosting approach is not meaningful.
-				warn("The boosting model encountered negative indicated realtivities for some leaves.")
-				warn("This should not happen if you have only positive values for numerator and denominator.")
+				@warn("The boosting model encountered negative indicated realtivities for some leaves.")
+				@warn("This should not happen if you have only positive values for numerator and denominator.")
 				error("Abort.")
 			end
 			#todo/tbd check this: what if a fitted value in a leaf is 0? what will the indicatedRelativityForApplyTree_reused be? will the boosting work as expected?
@@ -212,7 +212,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	xlData.sheets=[modelsettingsSheet,overviewSheet,statsSheet,scoresSheet,predictorsSheet,validationSheet]
 #add boolNumeratorStats if requested
 	if sett.boolNumeratorStats
-		warn("tariff est stats are not updated for DTM2: this needs review")
+		@warn("tariff est stats are not updated for DTM2: this needs review")
 			errors_num_estimates=addTariffEstimationStatsAndGraphs!(xlData,trnidx,validx,actualNumerator,estimatedRatioUnsmoothed,estimatedRatioSmoothed,estimateRatioFromRelativities,est_matrix,est_matrixFromScores)
 		#attach errors per iteration to modelStatistics== statsSheet (Excel file)
 			statsSheetINDEX=findall(in([nameOfModelStatisticsSheet]), [x.name for x in xlData.sheets])

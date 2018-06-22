@@ -49,7 +49,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
             local_data_dict=di #this is needed in case there are no workers
         end
         #run all models in parallel
-        #warn("this is currently rather slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
+        #@warn("this is currently rather slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
             pmapresult=Distributed.pmap(iLoop -> singleRunDtm(iLoop,local_data_dict),1:length(settingsVector))
                        
         #2. run models   
@@ -105,7 +105,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
             @time write_statistics(xld,filen,true,false)		
         catch e
             @show e       
-            warn("DTM: Failed to create Excel Statistics file. \r\n $(filen)")
+            @warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(filen)")
         end                
         
         return statsdf,settsdf,allmodels
@@ -144,18 +144,18 @@ function singleRunDtm(i::Int,local_data_dict::Dict)
             pushfirst!(desc_settingsvec,"Number")
         #check if header and settings header are as expected
             if !all(header[2:end].==desc[2:end])
-                warn("Model run $(i) returned an unexpected results vector:")
+                @warn("Model run $(i) returned an unexpected results vector:")
                 @show desc
                 @show header
             end            
             if !all(header_settings[2:end].==desc_settingsvec[2:end])
-                warn("Model run $(i) returned an unexpected results vector:")
+                @warn("Model run $(i) returned an unexpected results vector:")
                 @show desc_settingsvec
                 @show header_settings
             end            
         return numbrs,settingsvec,i,model
     catch eri
-        warn("DTM: Model $(i) failed.")
+        @warn("DTM: Model $(i) failed.")
         println(eri)
         return defaulted_stats,defaulted_settings,i,emptyModel
     end

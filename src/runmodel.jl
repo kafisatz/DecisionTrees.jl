@@ -12,7 +12,7 @@ function run_model(ARGS;nrows::Int=-1)
 		if typeof(result_of_runmodel)==Array{String,1}
 			return result_of_runmodel
 		else
-			warn("Unexpected Model result:")
+			@warn("Unexpected Model result:")
 			@show typeof(result_of_runmodel)
 			@show result_of_runmodel
 			dump(result_of_runmodel)
@@ -20,7 +20,7 @@ function run_model(ARGS;nrows::Int=-1)
 		end
    catch model_error
 		@show model_error
-		warn("An error occurred during modelling phase. See above.")
+		@warn("An error occurred during modelling phase. See above.")
 		return failed_return_value
    end
 end
@@ -159,7 +159,7 @@ removeUnionTypes!(dfin,independent_vars)
 	n_char=length(char_features)
 	n_num=length(num_features)
 
-  #warn("this might benefit from optimization. I am not entirely sure, how the code performs for larger data sets")
+  #@warn("this might benefit from optimization. I am not entirely sure, how the code performs for larger data sets")
     if n_num>0        
         dfres[num_features]=dfin[num_features]
     end
@@ -208,7 +208,7 @@ return nothing
 end
 
 function is_categorical_column(x,nm)
-	#warn("BK need to ensure that there are NO union types!, especially we do not want the missing tpiye (for now)!")
+	#@warn("BK need to ensure that there are NO union types!, especially we do not want the missing tpiye (for now)!")
     elt=eltype(x)
     typeOfElt=typeof(elt)
     if typeOfElt!=DataType  
@@ -246,12 +246,12 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 		
 	count_neg_denom=sum(denominator.<=0)
 	if count_neg_denom>0 
-		warn("denominator contains observations with values <= 0.0")
+		@warn("denominator contains observations with values <= 0.0")
 		tot_sz=length(denominator)
-		warn("negative rowcount: $(count_neg_denom) of $(tot_sz). I.e. a proportion of $(count_neg_denom/tot_sz)")
+		@warn("negative rowcount: $(count_neg_denom) of $(tot_sz). I.e. a proportion of $(count_neg_denom/tot_sz)")
 	end
 	if any(denominator.==0) 
-	  warn("denominator[trn] contains observations with values 0.0")
+	  @warn("denominator[trn] contains observations with values 0.0")
 	  foundobs=findfirst(denominator,0.0)
 	  foundk=key[foundobs]
 	  println("First observation: key=$(foundk), rownumber_trn=$(foundobs), value=$(denominator[foundobs])")
@@ -261,15 +261,15 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	end
 	strNegativeRatioWarning="Negative Ratios may lead to errors during the modelling process for models which rely on multiplicative residuals! \nIt is suggested that you adjust the data such that no negative values occur!"
 	if any(x->x<0.0,denominator)
-	  warn("There are training obsevations with negative values in the denominator column!")
-	  warn(strNegativeRatioWarning)
+	  @warn("There are training obsevations with negative values in the denominator column!")
+	  @warn(strNegativeRatioWarning)
 	end
 	#obsratiotrn=numeratortrn./denominatortrn
 	if any(numerator.<0)
-		warn("There are negative observed ratios!")
-		warn(strNegativeRatioWarning)
+		@warn("There are negative observed ratios!")
+		@warn(strNegativeRatioWarning)
 		if sett.boolCalculatePoissonError
-			warn("DTM: Setting boolCalculatePoissonError to false!")
+			@warn("DTM: Setting boolCalculatePoissonError to false!")
 			sett.boolCalculatePoissonError=false
 		end		
 		if typeof(sett.crit) == PoissonDevianceSplit
@@ -292,7 +292,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 			@show eltype(dfIndata[global_const_shift_cols+i+sett.ishift+sett.number_of_num_features])
 			@show dfIndata[1:min(10,size(dfIndata,1)),global_const_shift_cols+i+sett.ishift+sett.number_of_num_features]
 			error("Character variable $(i) = $(sett.df_name_vector[i+sett.number_of_num_features]) is not <:AbstractString in the dataframe.")
-			#warn("It may be that the variable was exported as character (by SAS) even though it is infact an integer. Please check!")			
+			#@warn("It may be that the variable was exported as character (by SAS) even though it is infact an integer. Please check!")			
 		end		
 	  try
 		colnumber=global_const_shift_cols+sett.ishift+sett.number_of_num_features+i
@@ -304,7 +304,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 		features[thisname]=PooledArray(thiscol_as_utf8)
 		if length(features[thisname].pool)>255
 			@show nlevels=length(features[thisname].pool)
-			warn("DTM: Variable $(string(thisname)) has more than 255 levels, namely $(nlevels)\nThe tree may take very long to be constructed.")			
+			@warn("DTM: Variable $(string(thisname)) has more than 255 levels, namely $(nlevels)\nThe tree may take very long to be constructed.")			
 		end
 	  catch this_error
 		@show this_error
@@ -317,7 +317,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	wlo,whi=extrema(weight)
 	if wlo!=whi
 		print("Max weight is $(whi), min weight is $(wlo)")
-		warn("Currently the automatic choice of splitting points does not consider the weight distribution!")
+		@warn("Currently the automatic choice of splitting points does not consider the weight distribution!")
 	end
 	
 	pools=map(i->features[i].pool,1:size(features,2)) 
@@ -458,7 +458,7 @@ srand(srandInt)
 	#srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
 	#@show rand();@show rand();@show rand(); #check reproducability
 if sett.subsampling_prop <1.0 
-	warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")
+	@warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")
 end
 
 #there are at least two ways to derive estimates for hold out data: either loop through the leaves of the tree or loop over the rows of the validation data setting
@@ -467,11 +467,11 @@ sumwtrn=sum(view(weight,trnidx))
 sumwval=sum(view(weight,validx))
 minweighttmp = sett.minw < 0.0 ? sumwtrn*(-max(-1.0,sett.minw)) : sett.minw
 @assert minweighttmp>=0
-sumwtrn>=2*minweighttmp||warn("DTM: Specified minweight is larger than half of the total training weight!! No split is possible!")
+sumwtrn>=2*minweighttmp||@warn("DTM: Specified minweight is larger than half of the total training weight!! No split is possible!")
 
 someInteger=sumwtrn/minweighttmp
 if someInteger>100000
-	warn("DTM: Total training weight is: $(sumwtrn) and you specified minw=$(minweighttmp). The tree might become very large")
+	@warn("DTM: Total training weight is: $(sumwtrn) and you specified minw=$(minweighttmp). The tree might become very large")
 end
 
 prnt=sett.print_details
@@ -483,7 +483,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	max_n0=maximum(num_levels)
 	max_levels_uint8=typemax(UInt8)
 	if max(max_c0,max_n0)>max_levels_uint8
-		warn("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")		
+		@info("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")		
 	end	
 	@assert max_c0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
 	@assert max_n0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
@@ -547,7 +547,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		  end
 		  obsvalcols=1
 		  if sett.randomw>0
-			warn("Running single tree with positive random weight:$(sett.randomw)")
+			@warn("Running single tree with positive random weight:$(sett.randomw)")
 		  end
 
 	#build a simple tree
@@ -676,7 +676,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		elseif "bagged_tree"==sett.model_type
 			#bagging
 			@timeConditional(sett.print_details,begin
-			warn("bagging is not yet updated for dtm2! This will most likely fail!")
+			@warn("bagging is not yet updated for dtm2! This will most likely fail!")
 				xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultEnsemble=bagged_tree(dtmtable,sett)
 				#xlData,vectorOfLeafNumbersTrn,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,est_matrixFromScoresVAL,stats,scoresval,est_matrix_val,estimateUnsmoothedVal,estimateSmoothedVal,estimateFromRelativitiesVal,estimateUnsmoothedTrn,estimateSmoothedTrn,estimateFromRelativitiesTrn,resultEnsemble=bagged_tree(mappings,candMatWOMaxValues,sett,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,numeratorval,denominatorval,weightval,val_numfeatures,val_charfeatures_PDA)
 			end)
@@ -856,7 +856,7 @@ local eltypev,dfIndata
 	if lowercase(dataFilename)[end-2:end]==".db"
 		@info "todo: Test *.DB Sqlite functionality."
 		@info "the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')"
-		warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
+		@warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
 		println("Importing data from SQLiteDB file: \n $(dataFilename)")
 		try
 			@info "check if disabling gc speeds this up"
@@ -867,8 +867,8 @@ local eltypev,dfIndata
 		end
 	elseif lowercase(dataFilename)[end-2:end]=="sql"
 		print("Importing data from SQL db.")
-		warn("If this uses to  much memory implement limit 100,300 !!")
-		warn("like this we can read stepwise and append to the df in julia!")
+		@warn("If this uses to  much memory implement limit 100,300 !!")
+		@warn("like this we can read stepwise and append to the df in julia!")
 		try
 			dfIndata=readDFfromSQLDB()
 		catch eri
@@ -883,10 +883,10 @@ local eltypev,dfIndata
 		  try
 			eltypev=define_eltypevector(DataFrames.readtable(dataFilename,nrows=100),const_shift_cols,number_of_num_features)
 		  catch eri
-			warn("Readtable failed! Check the size of the *.CSV: $(dataFilename)") #sometimes the file only consists of the header (e.g. if the SAS export failed), then readtable will fail.
+			@warn("Readtable failed! Check the size of the *.CSV: $(dataFilename)") #sometimes the file only consists of the header (e.g. if the SAS export failed), then readtable will fail.
 			fz=0
 			fz=filesize(dataFilename)/1024
-			warn("Filesize is $(fz) KB")
+			@warn("Filesize is $(fz) KB")
 			@show eri
 			@assert false
 		  end
@@ -939,12 +939,12 @@ function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::St
 			allsettings=Array{Any,2}(length(settingsvec),nsetts)			
 		else			
 			if !all(header.==desc)
-				warn("Model run $(i) returned an unexpected results vector:")
+				@warn("Model run $(i) returned an unexpected results vector:")
 				@show desc
 				@show header
 			end
 			if !all(header_settings.==desc_settingsvec)
-				warn("Model run $(i) returned an unexpected results vector:")
+				@warn("Model run $(i) returned an unexpected results vector:")
 				@show desc_settingsvec
 				@show header_settings
 			end

@@ -37,7 +37,7 @@ li, lidict = Profile.retrieve()
 profile_loc="R:\\temp\\profile.jlprof"
 dd=splitdir(profile_loc)[1]
 if isdir(dd)
-    warn("This is currently failing with JLD2. I do no want to install JLD as it causes some compatibility issues (for now)")
+    @warn("This is currently failing with JLD2. I do no want to install JLD as it causes some compatibility issues (for now)")
 #    JLD2.@save "mi.jlddd" li lidict
 else
     @warn("Folder $(dd) not found!")
