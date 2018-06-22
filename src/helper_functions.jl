@@ -7,14 +7,15 @@ export createZipFile
 
 #this could certainly be done nice
 #tries to find the 'max' type of the refs (which is likely UInt8 or UInt16)
-function find_max_type(x::DataFrame)
+function find_max_type(x::DataFrame)::DataType #T where T<:Union{UInt8,UInt16}
+    #for col in 1:size(x,2)
+    #    if eltype(x[col].refs)==UInt32 
+    #        return UInt32
+    #    end
+    #end
     for col in 1:size(x,2)
-        if eltype(x[col].refs)==UInt32 
-            return UInt32
-        end
-    end
-    for col in 1:size(x,2)
-        if eltype(x[col].refs)==UInt16
+        @inbounds xi=x[col]
+        if eltype(xi.refs)==UInt16
             return UInt16
         end
     end
@@ -1495,7 +1496,7 @@ macro timeConditional(bool,ex)
 end
 
 #=
-    function leaf_numbers(leaves::Array{Leaf,1},trnsize::Int)
+    function leaf_numbers(leaves,trnsize::Int)
         leafnr=zeros(Int,trnsize)
         for i=1:length(leaves)
             thisid=leaves[i].id
@@ -1944,15 +1945,13 @@ function calc_sum_squares(num_actual,num_estimate,denom)
 	return sstot,ssres,sstot_ratio,ssres_ratio
 end
 
-#createSingleTreeExcel(trnidx,validx,sett,tree,leaves_of_tree,fitted_values_tree,leaf_number_vector,numerator,denominator,weight)
-function createSingleTreeExcel(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function createSingleTreeExcel(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,tree::Tree,leaves_of_tree,est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
 	nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData=initExcelData()
 	overallstats=createTrnValStats!(trnidx,validx,sett,nameOfModelStatisticsSheet,nameOfSettingsSheet,xlData,tree,leaves_of_tree,est,leafNumbers,numerator,denominator,weight)
 return xlData,overallstats
 end
 
-#,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
-function createTrnValStats!(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,nameOfModelStatisticsSheet::T,nameOfSettingsSheet::T,xlData,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}) where {T <: AbstractString}
+function createTrnValStats!(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,nameOfModelStatisticsSheet::T,nameOfSettingsSheet::T,xlData,tree::Tree,leaves_of_tree,est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}) where {T <: AbstractString}
 t=tree.rootnode
 #function for SINGLE Tree
 	nClasses=length(leaves_of_tree)
@@ -2248,15 +2247,15 @@ function countsort!(a::Array{T,1}) where {T <: Integer}
 #     b = zeros(T, length(a))
     cnt = zeros(Int, hi - lo + 1)
     for i in a
-     cnt[i - lo + 1] += 1
+        @inbounds cnt[i - lo + 1] += 1
     end
 
     z = one(Int)
     for i in lo:hi
-        while cnt[i - lo + 1] > 0
-            a[z] = i
+        @inbounds while cnt[i - lo + 1] > 0
+            @inbounds a[z] = i
             z += 1
-            cnt[i - lo + 1] -= 1
+            @inbounds cnt[i - lo + 1] -= 1
         end
     end
 end
@@ -2579,7 +2578,7 @@ function my_write(f::IOStream,arr::AbstractArray;sep::Char=',')
   nothing
 end
 
-function variable_importance_internal(leaves_array::Array{Leaf,1},namevec::Array{String,1},number_of_num_features::Int)
+function variable_importance_internal(leaves_array,namevec::Array{String,1},number_of_num_features::Int)
 #number_of_num_features=length(intNumVarsUsed)
 	sz=length(namevec)
 	nleaves=length(leaves_array)
@@ -2625,7 +2624,7 @@ function variable_importance_internal(leaves_array::Array{Leaf,1},namevec::Array
 	return onedimcount,twodimcount
 end
 
-function variable_importance(leaves_array::Array{Leaf,1},namevec::Array{String,1},number_of_num_features::Int)
+function variable_importance(leaves_array,namevec::Array{String,1},number_of_num_features::Int)
   sz=length(namevec)
   nleaves=length(leaves_array)
   onedimcount,twodimcount=variable_importance_internal(leaves_array,namevec,number_of_num_features)
@@ -2677,80 +2676,6 @@ function twodimIndex(variable1::Int,variable2::Int,nvars::Int)
 	#@show v1,v2,idx
 	#twodimcount[idx]+=1
 	return idx
-end
-
-function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{String,1},number_of_num_features::Int)
-  #tbd/todo improve the performance of this code; better yet: construct the variable_importance during the tree building process!
-  sz=length(namevec)
-  nleaves=length(leaves_array)
-  depth=0
-  for i=1:nleaves
-    depth=max(depth,length(leaves_array[i].rule_path))
-  end
-  list_of_featureids_on_path_to_leaves=Array{Int}(undef,nleaves,depth)
-  fill!(list_of_featureids_on_path_to_leaves,0)
-    for i=1:nleaves
-      for k=1:length(leaves_array[i].rule_path)
-        this_featid=leaves_array[i].rule_path[k].featid
-        if this_featid<0
-          this_featid=-this_featid+number_of_num_features
-        end
-        list_of_featureids_on_path_to_leaves[i,k]=this_featid
-      end
-  end
-
-  onedimcount=zeros(Int,sz)
-  for j=1:sz, k=1:nleaves
-   if in(j,view(list_of_featureids_on_path_to_leaves,k,:))
-      onedimcount[j]+=1
-   end
-  end
-
-  twodimcount=Array{Int}(undef,div(sz*(sz-1),2))
-  fill!(twodimcount,0)
-  #todo/tbd twodimcount and onedimcount can be created much more efficiently
-  #we do not need to loop through all the variables, but only through the ones which are actually used by the tree!
-  #"for i=1:used_by_tree, j=1:used_by_tree; if i!=j; i&j used in conjunction? ;end;end;"
-  count=0
-  #@info "check if this works as intended!"
-  for i=1:sz, j=i+1:sz
-      count+=1
-	  if min(onedimcount[j],onedimcount[i])>0 #both variables need to be used in the tree
-		  for k=1:nleaves
-		   this_tmp=view(list_of_featureids_on_path_to_leaves,k,:) #this line and the next take up quite some time
-		   if in(i,this_tmp) && in(j,this_tmp) #both indices appear on the path to leaf k
-			twodimcount[count]+=1
-		   end
-	   end
-    end
-  end
-  twodimcountfloat=Float64(twodimcount/sum(twodimcount))
-
-  res1dim=Array{String}(undef,sz,2)
-  res2dim=Array{String}(undef,div(sz*(sz-1),2),3)
-  count=0
-  for i=1:sz, j=i+1:sz
-    count+=1
-    res2dim[count,1]=namevec[i]
-    res2dim[count,2]=namevec[j]
-    res2dim[count,3]=string(twodimcountfloat[count])
-  end
-
-  res1dim[:,1]=deepcopy(namevec)
-  onedimcountfloat=float(onedimcount/sum(onedimcount))
-  for j=1:sz
-    res1dim[j,2]=string(Float64(onedimcountfloat[j]))
-  end
-  dropzero=onedimcountfloat.>0
-  res1dim=res1dim[dropzero,:]
-  onedimcountfloat=deepcopy(onedimcountfloat[dropzero])
-  srt=sortperm(onedimcountfloat,rev=true,alg=QuickSort)
-
-  dropzero=twodimcountfloat.>0
-  twodimcountfloatdropz=deepcopy(twodimcountfloat[dropzero])
-  res2dim=res2dim[dropzero,:]
-  srt2=sortperm(twodimcountfloatdropz,rev=true,alg=QuickSort)
-  return res1dim[srt,:],res2dim[srt2,:],onedimcount,twodimcount
 end
 
 function some_tree_settings(trnidx,validx,fixedinds::Array{Int,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},mw::Float64,weight::Array{Float64,1},subsampling_features_prop::Float64,n::Int)
@@ -3164,7 +3089,7 @@ end
 
 #write tree code
     for i=1:iterations
-		if typeof(bt.trees[i])!=Leaf
+		if in(typeof(bt.trees[i]),(Node{UInt16},Node{UInt8}))
 			orig_id=bt.trees[i].featid
 			orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 			write(fiostream,"\r\n\r\n*Iteration $(i);\r\n")
@@ -3245,7 +3170,7 @@ fiostream=open(fileloc,"w")
     write(fiostream,"data sas_tree;format ",leafvarname,";set runmodel;;")
     write(fiostream,"\r\n")
 
-if (typeof(tree)!=Leaf)  #in an earlier version we had ==Node ; however now node has a paramter -> (x==Node{UInt8}||x==Node{UInt16})
+    if in(typeof(tree),(Node{UInt16},Node{UInt8}))  #in an earlier version we had ==Node ; however now node has a parameter -> (x==Node{UInt8}||x==Node{UInt16})
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 
@@ -3264,11 +3189,9 @@ if (typeof(tree)!=Leaf)  #in an earlier version we had ==Node ; however now node
 	end
 else
 	#"Tree is not a node (hence it must be a Leaf). Code to write SAS code for a single leaf is not yet implemented"
-	#@assert typeof(tree)==Leaf
 	@info "DTM: Tree was a single leaf. No proper SAS Code was produced."
 	@assert false
 	write(fiostream," /*ERROR; the tree was a single leaf*/")
-	#write_tree_at_each_node!(candMatWOMaxValues,tree,number_of_num_features,indent,fiostream,df_name_vector,mappings,leafvarname,mdf)
 end
   #write rest of SAS code
   write(fiostream,"run; \r\nproc summary data=sas_tree missing;class ",leafvarname,";var &var_dep.;types ",leafvarname,";output out=_summary_( rename=(_freq_=n)) sum=;");
@@ -3318,11 +3241,10 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
     #this row is only meaningful for boosted multiplicative trees
 	#@warn("check if this definition of val is accurate for a boosted tree (e.g. lr model)"
 	val=_moderate(tree.fitted,mdf)
-	#val=tree.fitted
 	write(fiostream," " ^ indent,"rel_mod_",leafvarname,"=$(val);\r\n")
 end
 
-function write_sas_code(leaves::Array{Leaf,1},number_of_num_features::Int,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
+function write_sas_code(leaves,number_of_num_features::Int,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
 	error("BK: This function should not be used anymore. (right?)")	
 	#open file
 fiostream=open(fileloc,"w")
@@ -3345,7 +3267,7 @@ fiostream=open(fileloc,"w")
 close(fiostream)
 end
 
-function write_rules_to_file(leaves::Array{Leaf,1},f::IOStream,namevec::Array{String,1},number_of_num_features,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
+function write_rules_to_file(leaves,f::IOStream,namevec::Array{String,1},number_of_num_features,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
   for i=1:size(leaves,1)
     if i==1
       write(f,"if ")
@@ -3358,7 +3280,7 @@ function write_rules_to_file(leaves::Array{Leaf,1},f::IOStream,namevec::Array{St
   end
 end
 
-function rulpath_vector_to_str(rp::Array{Rulepath,1},namevec::Array{String,1},number_of_num_features::Int,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
+function rulpath_vector_to_str(rp,namevec::Array{String,1},number_of_num_features::Int,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
   result=convert(String,"")
   for i=1:size(rp,1)
     if i>1
@@ -3532,7 +3454,7 @@ function subset_splitlist(sd::Vector{Splitdef{T}},minweight::Float64) where T<:U
 	return res
 end
 
-function index_vector_from_rulepath(rpArray::Array{Rulepath,1},numfeatures::Array{Float64,2},charfeatures::Array{String,2})
+function index_vector_from_rulepath(rpArray,numfeatures::Array{Float64,2},charfeatures::Array{String,2})
   nobs=max(size(numfeatures,1),size(charfeatures,1))
   res=Array{Bool}(nobs)
   fill!(res,true)
@@ -4425,24 +4347,8 @@ boollist=Array{Array{String,1}}(undef,0)
 end
 
 function vba_write_writeIterations(indent::Int,fiostream::IOStream,iteration::Int,bt::BoostedTree,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features)
-	#write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n{\r\n")
-	tree=bt.trees[iteration]
-	#orig_id=tree.featid
-	#orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
-	#write(fiostream," " ^ indent)
-	#if orig_id>0
-	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n{\r\n")
-	#else
-#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n{\r\n")
-#	end
+            tree=bt.trees[iteration]
 			vba_write_writeIterations_recursive(bt.moderationvector[iteration],indent,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-#		write(fiostream," " ^ (indent-1))
-#		write(fiostream," }\r\nelse\r\n{\r\n")
-#			vba_write_writeIterations_recursive(indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings)
-#		write(fiostream," " ^ (indent-1))
-#		write(fiostream,"}\r\n")
-
-	#write(fiostream,"return dRawscore;\r\n}\r\n\r\n")
 	return nothing
 end
 
@@ -4455,21 +4361,10 @@ function vba_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream:
 	else
 		write(fiostream,repeat("\t",indent),"If (",join(boolListChar[-orig_id][collect(tree.subset)]," Or "),") Then\r\n")
 	end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
-		#write(fiostream,"EndIf\r\n")
 			vba_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.left,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-		#if typeof(tree.left)!=Leaf
-		#	write(fiostream," " ^ (indent-1))
 			write(fiostream,repeat("\t",indent),"Else\r\n")
-		#end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
-		#write(fiostream,"\r\n")
 				vba_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-		#if typeof(tree.right)!=Leaf
-#		write(fiostream,"\r\n{") : write(fiostream,'{')
-		#	write(fiostream," " ^ (indent-1))
 			write(fiostream,repeat("\t",indent),"EndIf\r\n")
-		#end
 	return nothing
 end
 
@@ -4911,20 +4806,8 @@ end
 function csharp_write_writeIterations(indent::Int,fiostream::IOStream,iteration::Int,bt::BoostedTree,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features)
 	write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n{\r\n")
 	tree=bt.trees[iteration]
-	#orig_id=tree.featid
-	#orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
-	#write(fiostream," " ^ indent)
-	#if orig_id>0
-	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n{\r\n")
-	#else
-#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n{\r\n")
-#	end
-			csharp_write_writeIterations_recursive(bt.moderationvector[iteration],indent+1,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-#		write(fiostream," " ^ (indent-1))
-#		write(fiostream," }\r\nelse\r\n{\r\n")
-#			csharp_write_writeIterations_recursive(indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings)
-#		write(fiostream," " ^ (indent-1))
-#		write(fiostream,"}\r\n")
+	
+    csharp_write_writeIterations_recursive(bt.moderationvector[iteration],indent+1,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 
 	write(fiostream,"return dRawscore;\r\n}\r\n\r\n")
 	return nothing
@@ -4939,21 +4822,12 @@ function csharp_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostre
 	else
 		write(fiostream,"\r\nif (",join(boolListChar[-orig_id][collect(tree.subset)],"||"),")")
 	end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
 		write(fiostream,'{')
 			csharp_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.left,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-		#if typeof(tree.left)!=Leaf
-		#	write(fiostream," " ^ (indent-1))
 			write(fiostream," }\r\nelse")
-		#end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
 		write(fiostream,'{')
 				csharp_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-		#if typeof(tree.right)!=Leaf
-#		write(fiostream,"\r\n{") : write(fiostream,'{')
-		#	write(fiostream," " ^ (indent-1))
 			write(fiostream,"}\r\n")
-		#end
 	return nothing
 end
 
@@ -5005,7 +4879,7 @@ function determine_used_variables(bt::BoostedTree)
 return boolVariablesUsed,boolNumVarsUsedByModel,boolCharVarsUsedByModel
 end
 
-function write_vba_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function write_vba_code(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -5078,7 +4952,7 @@ End Function
 end	
 
 
-function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function write_csharp_code(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -5252,9 +5126,9 @@ end
 function get_feature_pools(f::DataFrame)
 	fp=Vector{Union{Vector{String},Vector{Float64}}}(undef,0)
 	@inbounds for i in 1:size(f,2)
-		push!(fp,deepcopy(f[i].pool))
+		push!(fp,f[i].pool)
 	end
-	return fp
+	return fp::Vector{Union{Vector{String},Vector{Float64}}}
 end
 
 

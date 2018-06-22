@@ -10,7 +10,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	candMatWOMaxValues=dtmtable.candMatWOMaxValues
 	obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,boolProduceEstAndLeafMatrices=initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominator,sett)
 	#trn_meanobservedvalue is the mean observed RATIO, i.e. sum(numerator)/sum(denominator) for the training data
-	obs=obstrn+obsval
+	T_Uint8_or_UInt16=find_max_type(features)
+    obs=obstrn+obsval
 	current_error=0.0
     moderationfactor=moderationvector[1]
 	if (size(moderationvector,1)!=iterations && size(moderationvector,1)!=1)
@@ -35,10 +36,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
     sortvec_reused_trn_only=zeros(Int,length(trnidx))
     intVarsUsed=Array{Array{Array{Int,1},1}}(undef,0);sizehint!(intVarsUsed,iterations)
 	inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(inds_considered,iterations)
-	#intCharVarsUsed=Array{Array{Array{Int,1},1}}(undef,0);sizehint!(intCharVarsUsed,iterations)
-	#char_inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(char_inds_considered,iterations)
 	
-	res=Array{Union{Leaf,Node{UInt8},Node{UInt16}}}(undef,iterations)
+	res=Array{Union{Leaf{T_Uint8_or_UInt16},Node{UInt8},Node{UInt16}}}(undef,iterations)
 	if boolProduceEstAndLeafMatrices
 		est_matrix=Array{Float64}(undef,obs,iterations+1)
 		est_matrixFromScores=deepcopy(est_matrix)
@@ -54,10 +53,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	
 	scores=zeros(Int,obs)	
 	estFromScores=zeros(obs)
-	#vectorOfRulePathsToLeavesArrays=Array{Array{Array{Rulepath,1},1}}(iterations+1)
-	#vectorOfRulePathsToLeavesArrays[1]=Array{Array{Rulepath,1}}(undef,0) #the first entry is not defined	
-	vectorOfLeafArrays=Array{Array{Leaf,1}}(undef,iterations+1)
-	vectorOfLeafArrays[1]=Array{Leaf}(undef,0) #the first entry is not defined		
+	vectorOfLeafArrays=Array{Array{Leaf{T_Uint8_or_UInt16},1}}(undef,iterations+1)
+	vectorOfLeafArrays[1]=Array{Leaf{T_Uint8_or_UInt16}}(undef,0) #the first entry is not defined		
 	
     p = ProgressMeter.Progress(iterations, 2, "Progress of Boosting Model:") # minimum update interval: x seconds (2)
     ((adaptiveLearningRate>=1.0)||(adaptiveLearningRate<=0.0)) ? (BoolAdaptiveLearningRate=false) : (BoolAdaptiveLearningRate=true)
@@ -85,9 +82,9 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			
 			if showTimeUsedByEachIteration
 			#todo tbd: this can be done more efficiently: We can avoid the tmpTree object (also we do not need to call "sometreesettings" every time!, improve this
-				@time 	tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
+				@time 	tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
 			else
-						tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
+						tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
 			end
 			#indicatedRelativity
 			if (!sett.bINTERNALignoreNegRelsBoosting)&&(minimum(indicatedRelativityForApplyTree_reused)<0.0)

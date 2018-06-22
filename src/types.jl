@@ -222,24 +222,24 @@ function hash(x::Rulepath,h::UInt)
   return h
 end
 
-mutable struct Leaf #leafs are mutable, since we determine the number of the leaf a posteriori
+mutable struct Leaf{T<:Unsigned} #leafs are mutable, since we determine the number of the leaf a posteriori
     #NOTE: the idx array can have an unexpected meaning/size in the case where we perform subsampling!
 	rowcount::Int #number of observations of the training data set that fell into thta leaf
     mean::Float64
     fitted::Float64 #this is usually identical to the mean, but can be different for some instances
   	size::Float64 #  this is equal to sum(weight)
     depth::Int
-    rule_path::Array{Rulepath,1}
+    rule_path::Array{Rulepath{T},1}
 	sumnumerator::Float64
 	sumdenominator::Float64
     id::Int #a number 1<=id<=#number of leaves in the tree
-    function Leaf()        
-        rp=Vector{Rulepath{UInt8}()}
-        return new(0,0.0,0.0,0.0,0,rp,0.0,0.0,0)
+end
+function Leaf{T}() where T
+        rp=Vector{Rulepath{T}}(undef,0)
+        return Leaf{T}(0,0.0,0.0,0.0,0,rp,0.0,0.0,0)
     end
-    function Leaf(rowc,me,fi,sz,depth,rp,sumn,sumd,id)
-        return new(rowc,me,fi,sz,depth,rp,sumn,sumd,id)
-    end
+function Leaf(rowc,me,fi,sz,depth,rp::Vector{Rulepath{T}},sumn,sumd,id) where T
+    return Leaf{T}(rowc,me,fi,sz,depth,rp,sumn,sumd,id)
 end
 ==(x::Leaf,y::Leaf)= (x.rowcount==y.rowcount) && (x.mean==y.mean) && (x.fitted==y.fitted)  && (x.size==y.size)  && (x.depth==y.depth)  && (x.rule_path==y.rule_path)  && (x.sumnumerator==y.sumnumerator)  && (x.sumdenominator==y.sumdenominator) && (x.id==y.id)
 hash(x::Leaf)=hash(x,UInt(9))
@@ -262,9 +262,9 @@ struct Node{T<:Unsigned}
     featid_new_positive::Int
     #we have redundance in the tree structure, the rulepath contains the same information as the members of the node; todo - remove it!
     subset::Array{T,1}
-    left::Union{Leaf,Node{UInt8},Node{UInt16}}
-    right::Union{Leaf,Node{UInt8},Node{UInt16}}
-    rule_path::Array{Rulepath,1}
+    left::Union{Leaf{T},Node{T}} #,Node{UInt16}}
+    right::Union{Leaf{T},Node{T}} #,Node{UInt16}}
+    rule_path::Array{Rulepath{T},1}
 end
 
 mutable struct ModelSettings
@@ -658,7 +658,7 @@ mutable struct Tree <: DTModel
 		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata,fp)
 	end
 	function Tree()		
-        rootnode=Leaf()
+        rootnode=Leaf{UInt8}()
         intVarsUsed=Int[]
         candMatWOMaxValues=[Float64[]]
         charMappings=[String[]]

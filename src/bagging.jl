@@ -37,7 +37,7 @@ end
 
 vecTreesWErrs = Distributed.@distributed (vcat) for ii=1:Distributed.Distributed.nprocs()
 	#create_bagged_trees(iterationsPerCore[ii],sampleSizeForEachTreeCanBeNEG,trn_meanobservedvalue,candMatWOMaxValues,mappings,sett,actualNumerator,denominator,weight,numfeatures,charfeatures)		
-	#sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
+	#sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
 	create_bagged_trees(iterationsPerCore[ii],trnidx,sampleSizeForEachTreeCanBeNEG,trn_meanobservedvalue,candMatWOMaxValues,mappings,sett,actualNumerator,denominator,weight,features)	
 end
 		
@@ -58,12 +58,8 @@ end
 		sortvec_reused_trn_only=zeros(Int,length(trnidx))
 		scores=zeros(Int,obs)
 		estFromScores=zeros(obs)		
-		#estimatedRatioVAL=ones(obsVAL).*trn_meanobservedvalue
-		#currentEstimateOfIndividualTreeVAL=zeros(obsVAL)
-		#leafNumbersThisTreeVAL=zeros(Int,obsVAL)		
-		#currentRelativityVAL=ones(obsVAL)		
-		
-		leaves_of_tree=Array{Array{Leaf,1}}(undef,iterations)
+				
+		leaves_of_tree=Array{Array{Leaf{T},1}}(undef,iterations)
 		
 		if boolProduceEstAndLeafMatrices
 			est_matrix=Array{Float64}(undef,obs,iterations+1)
@@ -78,22 +74,8 @@ end
 			MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 		end
 		
-		#est_matrix=Array{Float64}(obs,iterations+1)
-		#est_matrixFromScores=Array{Float64}(obs,iterations+1)
-		#est_matrixVAL=Array{Float64}(obsVAL,iterations+1)
-		#est_matrixFromScoresVAL=Array{Float64}(obsVAL,iterations+1)	
-		vectorOfLeafArrays=Array{Array{Leaf,1}}(undef,iterations+1)
-		#vectorOfRulePathsToLeavesArrays=Array{Array{Array{Rulepath,1},1}}(iterations+1)
-		#vectorOfLeafNumbersTrn=Array{Int}(obs,iterations+1)
-		#vectorOfLeafNumbersTrn[:,1]=0
-
-		vectorOfLeafArrays[1]=Array{Leaf}(undef,0) #the first entry is not defined
-		#vectorOfRulePathsToLeavesArrays[1]=Array{Array{Rulepath,1}}(undef,0) #the first entry is not defined	
-		
-		#est_matrix[:,1]=copy(transpose(estimatedRatio))
-		#est_matrixVAL[:,1]=copy(transpose(estimatedRatioVAL))
-		#est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))	
-		#est_matrixFromScoresVAL[:,1]=copy(transpose(estimatedRatioVAL))	
+        vectorOfLeafArrays=Array{Array{Leaf,1}}(undef,iterations+1)
+		vectorOfLeafArrays[1]=Array{Leaf{T}}(undef,0) #the first entry is not defined
 		p = ProgressMeter.Progress(iterations, 5, "Progress of Bagging Model:") # minimum update interval: 5 second    
 		cumulativeWeight=0.0
 		local fristRowOfThisTable
@@ -238,7 +220,7 @@ function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here
 		#sample data			
 		unusedSamplePart=sampleData!(trnidx_which_should_only_be_used_once_here,sampleSizeCanBeNEGATIVE,sampleVector)							
 	#build tree	on subsample of data
-			thistree=build_tree!(sampleVector,unusedSamplePart,candMatWOMaxValues,mappings,deepcopy(sett),numerator,denominator,weight,features,fitted_values_all_data_this_vector_is_modified_by_build_tree)
+			thistree=build_tree!(sampleVector,unusedSamplePart,candMatWOMaxValues,mappings,deepcopy(sett),numerator,denominator,weight,features,fitted_values_all_data_this_vector_is_modified_by_build_tree,T_Uint8_or_UInt16)
 	#apply tree to ooBagSample
 			leaves_of_tree=create_leaves_array(thistree.rootnode)
 			#ooBagEstimates,leafNrooBag=eval(parse(settings.chosen_apply_tree_fn))(unusedSamplePart,leaves_of_tree,thistree.rootnode,features)

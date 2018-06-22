@@ -1,7 +1,8 @@
-using Revise
+#using Revise
 using Profile
-using JLD2
-using CSV,DataFrames
+#using JLD2
+using CSV
+#using DataFrames
 using DecisionTrees  
 
 include(joinpath("..","test\\runtests.jl"))
@@ -27,11 +28,18 @@ dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",
 
 updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.025,subsampling_features_prop=.7,boolCalculatePoissonError=true)
 
-resultingFiles,resM=dtm(dtmtable,sett)
+resultingFiles,resM=dtm(dtmtable,sett) #31s on notebook (x260 with profiling disabled but Revise on!)
 
+Profile.clear()
 @profile dtm(dtmtable,sett)
 
 
+thisIO=open("c:\\temp\\prof.txt", "w")
+Profile.print(IOContext(thisIO,:displaysize => (24, 500)),format=:flat)
+#Profile.print(IOContext(s, :displaysize => (24, 500)))
+close(thisIO);
+
+#old stuff?
 li, lidict = Profile.retrieve()
 
 profile_loc="R:\\temp\\profile.jlprof"

@@ -68,15 +68,21 @@ include("show.jl")
 global const pyModPandas = PyCall.PyNULL()
 global const pyModxlsxwriter = PyCall.PyNULL()
 
-global const_default_splitdef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0)
+global const UInt8VECTORemptySplitDef = Vector{Splitdef{UInt8}}(undef,0)
+global const UInt16VECTORemptySplitDef = Vector{Splitdef{UInt16}}(undef,0)
+global const UInt8emptySplitDef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0) #formerly const_default_splitdef
+global const UInt16emptySplitDef=Splitdef(0,0,Symbol(),Vector{UInt16}(),-Inf,0.0,0.0) 
 global const defaultModelName="dtmresult"
 global const defaultModelNameWtihCSVext=string(defaultModelName,".csv")
 global nLevelsThreshold=2000
 global const global_number_of_num_f_warning_mandatory_field="Abort. Settings do not contain any value for number_of_num_features (which is mandatory)."
 global const stars="*******************************************************************************"
-global const emptyRulepath=Array{Rulepath}(undef,0)
-global const emptyLeaf=Leaf(0,NaN,NaN,NaN,-1,emptyRulepath,NaN,NaN,0)
-global const emptyNode=Node(0,0,Array{UInt8}(undef,0),deepcopy(emptyLeaf),deepcopy(emptyLeaf),deepcopy(emptyRulepath))
+global const UInt8emptyRulepath=Array{Rulepath{UInt8}}(undef,0)
+global const UInt16emptyRulepath=Array{Rulepath{UInt16}}(undef,0)
+global const UInt8emptyLeaf=Leaf(0,NaN,NaN,NaN,-1,UInt8emptyRulepath,NaN,NaN,0)
+global const UInt16emptyLeaf=Leaf(0,NaN,NaN,NaN,-1,UInt16emptyRulepath,NaN,NaN,0)
+global const UInt8emptyNode=Node(0,0,Array{UInt8}(undef,0),deepcopy(UInt8emptyLeaf),deepcopy(UInt8emptyLeaf),deepcopy(UInt8emptyRulepath))
+global const UInt16emptyNode=Node(0,0,Array{UInt16}(undef,0),deepcopy(UInt16emptyLeaf),deepcopy(UInt16emptyLeaf),deepcopy(UInt16emptyRulepath))
 global const global_const_shift_cols=5+1-1
 global const global_pldamod_valid_types=[String,Float64]	
 

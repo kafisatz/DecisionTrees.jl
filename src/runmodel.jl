@@ -317,7 +317,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	wlo,whi=extrema(weight)
 	if wlo!=whi
 		print("Max weight is $(whi), min weight is $(wlo)")
-		@warn("Currently the automatic choice of splitting points does not consider the weight distribution!")
+		@info("Currently the automatic choice of splitting points does not consider the weight distribution!")
 	end
 	
 	pools=map(i->features[i].pool,1:size(features,2)) 
@@ -551,11 +551,12 @@ prnt&&println("---Model Settings------------------------------------------------
 		  end
 
 	#build a simple tree
-		fitted_values_tree=zero(numerator)		
+		fitted_values_tree=zero(numerator)	
+        T_Uint8_or_UInt16=find_max_type(features)
 		if prnt
-			@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
+			@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
 		else
-			tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
+			tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
 		end
 		
 		resulting_model=tree

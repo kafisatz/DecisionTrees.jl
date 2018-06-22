@@ -14,8 +14,10 @@ t0=time_ns()
 cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 #@info("You may want to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
-@everywhere using Revise
-@everywhere using CSV,DataFrames
+#@everywhere using Revise
+@everywhere import CSV
+@everywhere import DataFrames
+@everywhere import DataFrames: DataFrame
 
 @everywhere using DecisionTrees  
 

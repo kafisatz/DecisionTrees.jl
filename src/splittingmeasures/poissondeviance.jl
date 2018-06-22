@@ -1,5 +1,3 @@
-@warn("BK: DTM: This is currently experimental and may need review.")
-
 function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features) where T<:Unsigned
   #here randomweight==0
   #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
@@ -97,7 +95,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
       #warning: if the labellist is not sorted 1:n we need to be careful here!
       chosen_subset=labellist[chosen_subset_bitarray]
       else
-      chosen_subset=Array{UInt}(undef,0)
+      chosen_subset=Array{T}(undef,0)
     end
     return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
@@ -136,7 +134,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   weightsr=zeros(subs_size)
 
   sumnl=sumwl=sumdl=0.0
-  this_splitlist=Array{Splitdef}(undef,0)
+  this_splitlist=Array{Splitdef{T}}(undef,0)
 
   counter=1
   for i in subs
@@ -190,7 +188,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        				
         valnew = -(deviancel+deviancer) #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
 		feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id)+number_of_num_features : feature_column_id
-        push!(this_splitlist,Splitdef(feature_column_id,feature_column_id2,fname,labellist[elementsInLeftChildBV],valnew,sumwl,weighttot-sumwl))
+        push!(this_splitlist,Splitdef{T}(feature_column_id,feature_column_id2,fname,labellist[elementsInLeftChildBV],valnew,sumwl,weighttot-sumwl))
       end
 
     counter+=1

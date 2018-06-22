@@ -2,6 +2,7 @@ t0=time_ns()
 
 import CSV
 import DataFrames
+import DataFrames: DataFrame
 using Test 
 using DecisionTrees 
 

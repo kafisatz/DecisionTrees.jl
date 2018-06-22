@@ -1,7 +1,7 @@
 #Bagging of multiple boosted trees
 function bagged_boosted_tree(mappings::Array{Array{String,1},1},candMatWOMaxValues::Array{Array{Float64,1},1},sett::ModelSettings,actualNumerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{PooledArray,1},charfeatures::Array{PooledArray,1},actualNumeratorVAL::Array{Float64,1},denominatorVAL::Array{Float64,1},weightVAL::Array{Float64,1}, numfeaturesVAL::Array{PooledArray,1},charfeaturesVAL::Array{PooledArray,1})
 error("this will not work as it has not been updated for DecisionTrees.")
-	@assert sett.boolRandomizeOnlySplitAtTopNode=true #this must be true because of the selection of features in the tree construction ->    num_inds,char_inds=randomFeatureSelection(settings.number_of_num_features,settings.number_of_char_features,settings.subsampling_features_prop)
+	@assert sett.boolRandomizeOnlySplitAtTopNode=true #this must be true because of the selection of features in the tree construction ->    inds=randomFeatureSelection(settings.number_of_num_features,settings.number_of_char_features,settings.subsampling_features_prop)
 	obs,obsVAL,meanobservedvalue,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time=initSettingsWhichAreTheSameForBoostingAndBagging(actualNumerator,actualNumeratorVAL,denominator,sett)
 	cBB_niterBoosting=sett.cBB_niterBoosting
 	cBB_niterBagging=sett.cBB_niterBagging
