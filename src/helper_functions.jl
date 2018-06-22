@@ -768,7 +768,7 @@ function variablesUsed(bt)
 			nmat[j,i]+=sum(bt.intVarsUsed[i][j])
 		end
 	end
-	vars_used=sum(nmat,2).>0
+	vars_used=sum(nmat,dims=2).>0
 	return deepcopy(bt.settings.df_name_vector[vars_used[:]]),deepcopy(vars_used)
 end
 
@@ -856,7 +856,7 @@ for intVarname in integerVarlist
 		outMatrix=deepcopy(emptyOutMatrix) #reset the matrix
 		hd=[string("Validation by ",strVarname)]
 		header=hcat(hd,repeat([""],1,size(thismat,2)-1))
-		isdefined(:emptyline) ? true : emptyline=repeat([""],1,size(thismat,2))
+		@isdefined :emptyline ? true : emptyline=repeat([""],1,size(thismat,2))
 		thismat=vcat(header,emptyline,thismat,emptyline,emptyline)
 		resultingMatrix=vcat(resultingMatrix,thismat)
 end

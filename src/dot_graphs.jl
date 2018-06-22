@@ -32,7 +32,7 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int,df_name_vecto
         end
     end
 
-	label = "Fit $(signif(fittedratio(node),3)) Weight $(round(nodesize(node),digits=1))"		
+	label = "Fit $(round(fittedratio(node),sigdigits=3)) Weight $(round(nodesize(node),digits=1))"		
 
     name_of_this_node="R"
     dot_graph *= """$(name_of_this_node)[label="$(label)"]\n"""
@@ -75,7 +75,7 @@ function graph(node::Node{T},counter::Int,parentname::String,sett::ModelSettings
 	orig_id<0 ? this_id=sett.number_of_num_features-orig_id : this_id=orig_id
 
     edge_to_the_left = if orig_id>0
-         "$(sett.df_name_vector[this_id]) <= $(signif(candMatWOMaxValues[this_id][node.subset[end]],5))"
+         "$(sett.df_name_vector[this_id]) <= $(round(candMatWOMaxValues[this_id][node.subset[end]],sigdigits=5))"
     else
         if size(node.subset,1)==1
             "$(sett.df_name_vector[this_id]) = $(mappings[-orig_id][node.subset][1])"
@@ -84,7 +84,7 @@ function graph(node::Node{T},counter::Int,parentname::String,sett::ModelSettings
         end
     end
     
-	label = "Fit $(signif(fittedratio(node),3)) Weight $(round(nodesize(node),digits=1))"		
+	label = "Fit $(round(fittedratio(node),sigdigits=3)) Weight $(round(nodesize(node),digits=1))"		
     
 
     name_of_this_node="N$(counter)"
@@ -105,7 +105,7 @@ end
 
 function graph(node::Leaf,counter::Int,parentname::String,sett::ModelSettings,edge_from_parent_description::String,mappings,candMatWOMaxValues,total_weight_of_tree::Float64)
     thisw = nodesize(node)
-	label = "Leaf $(node.id)\nFit $(signif(node.fitted,3))\n Weight $(round(thisw,digits=1)) ($(round(100*thisw/total_weight_of_tree,digits=1))%)"
+	label = "Leaf $(node.id)\nFit $(round(node.fitted,sigdigits=3))\n Weight $(round(thisw,digits=1)) ($(round(100*thisw/total_weight_of_tree,digits=1))%)"
     name_of_this_node="N$(counter)"
     dot_graph = """$(name_of_this_node)[label="$(label)"]\n"""
     dot_graph *= """$(parentname)->$(name_of_this_node) [label="$(edge_from_parent_description)"]\n"""

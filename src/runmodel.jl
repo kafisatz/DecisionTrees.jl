@@ -496,8 +496,8 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 		  println(general_settings)
 		  print_some_settings(sett,["write_sas_code","write_iteration_matrix","write_result","write_statistics","boolCreateZipFile","write_csharp_code","statsRandomByVariable","boolSaveJLDFile"])
 		  println("---Data Summary----------------------------------------------------------------")
-		  println("Number of records - Trn: $(length(trnidx)) Val: $(length(validx)) Val Proportion: $(signif(length(validx)/(length(trnidx)+length(validx)),4))")
-		  println("Weight - Trn: $(signif(sumwtrn,6)) Val: $(signif(sumwval,6)) Val Proportion: $(signif(sumwval/(sumwtrn+sumwval),4))")
+		  println("Number of records - Trn: $(length(trnidx)) Val: $(length(validx)) Val Proportion: $(round(length(validx)/(length(trnidx)+length(validx)),sigdigits=4))")
+		  println("Weight - Trn: $(round(sumwtrn,sigdigits=6)) Val: $(round(sumwval,sigdigits=6)) Val Proportion: $(round(sumwval/(sumwtrn+sumwval),sigdigits=4))")
 		  println("Number of numeric/character variables: $(sett.number_of_num_features)/$(sett.number_of_char_features)")
       end
 	  if size(num_levels,1) >0
