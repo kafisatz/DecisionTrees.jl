@@ -515,13 +515,13 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
         char_level_string=""
         prnt&&println("The data does not contain any character attributes.")
       end
-	  prnt&&println("catSortByThreshold: $(sett.catSortByThreshold), catSortBy: $(sett.catSortBy), smoothEstimates: $(sett.smoothEstimates), deriveFitPerScoreFromObservedRatios: $(sett.deriveFitPerScoreFromObservedRatios)")
+	  prnt&&println("catSortByThreshold: $(sett.catSortByThreshold), catSortBy: $(replace(string(sett.catSortBy),"DecisionTrees."=>"")), smoothEstimates: $(sett.smoothEstimates), deriveFitPerScoreFromObservedRatios: $(sett.deriveFitPerScoreFromObservedRatios)")
 
   #create a string which contains all model settings (this will be written to output file(s))
       model_setting_string=convert(String,string("Number of records - Trn: $(length(trnidx)) Val: $(sum(validx)) \nNumber of levels for numeric variables: (Maximal # of linear steps: $(sett.max_splitting_points_num)) "))
       model_setting_string=convert(String,string(model_setting_string, "\n",num_level_string, "\nNumber of levels for character variables: \n", char_level_string ))
       model_setting_string=convert(String,string(model_setting_string, "\n", general_settings))
-      model_setting_string=convert(String,string(model_setting_string, "\n", "Type: $(sett.model_type) \nMinweight: $(sett.minw) \nRnd: $(sett.randomw) \nNumMaxSplitPoints: $(sett.max_splitting_points_num) \nCriterion: $(sett.crit) \nIterations: $(sett.niter) \nModeration Vector: $(join(sett.moderationvector,",")) \nNScores: $(sett.nscores) \nBoolStartAtMean: $(sett.BoolStartAtMean) "))
+      model_setting_string=convert(String,string(model_setting_string, "\n", "Type: $(sett.model_type) \nMinweight: $(sett.minw) \nRnd: $(sett.randomw) \nNumMaxSplitPoints: $(sett.max_splitting_points_num) \nCriterion: $(replace(string(sett.crit),"DecisionTrees."=>"")) \nIterations: $(sett.niter) \nModeration Vector: $(join(sett.moderationvector,",")) \nNScores: $(sett.nscores) \nBoolStartAtMean: $(sett.BoolStartAtMean) "))
       model_setting_string=convert(String,string(model_setting_string, "\n", "Datafolder= \n",datafolder,"\nOutfilename= \n",outfileStringOnly," "))
       model_setting_string=convert(String,string(model_setting_string, "\n\n", "CSV column names (in the order in which Julia processes them):\n",join(sett.df_name_vector,",")))
       #permutedims is "transpose" in julia 0.5
@@ -540,7 +540,7 @@ prnt&&println("---Model Settings------------------------------------------------
 	  if "build_tree"==sett.model_type
 		  if prnt
 			  println("Type: $(sett.model_type), Minweight: $(sett.minw), Rnd: $(sett.randomw)")
-			  println("NumMaxSplitPoints: $(sett.max_splitting_points_num), Criterion: $(sett.crit)")
+			  println("NumMaxSplitPoints: $(sett.max_splitting_points_num), Criterion: $(replace(string(sett.crit),"DecisionTrees."=>""))")
 			  println(stars)
 			  println(string(""))
 			  println(string("Building Tree... Time: $(now())"))
@@ -634,7 +634,7 @@ prnt&&println("---Model Settings------------------------------------------------
 		if prnt
 			println("Type: $(sett.model_type),Iterations: $(sett.niter),Minweight: $(sett.minw)")
 			if size(sett.moderationvector,1)>1;println("Moderationvector = $(join(sett.moderationvector,",")) ");else println("Moderation Factor: $(sett.mf)"); end;
-			println("Rnd: $(sett.randomw), NumMaxSplitPoints: $(sett.max_splitting_points_num), NScores: $(sett.nscores), Criterion: $(sett.crit)")
+			println("Rnd: $(sett.randomw), NumMaxSplitPoints: $(sett.max_splitting_points_num), NScores: $(sett.nscores), Criterion: $(replace(string(sett.crit),"DecisionTrees."=>""))")
 			println("boolRandomizeOnlySplitAtTopNode: $(sett.boolRandomizeOnlySplitAtTopNode), sett.boolRankOptimization: $(sett.boolRankOptimization)")
 			println("subsampling_features_prop: $(sett.subsampling_features_prop), subsampling_prop: $(sett.subsampling_prop)")
 			println(stars)

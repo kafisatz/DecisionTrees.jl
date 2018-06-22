@@ -94,7 +94,7 @@ end
 		#est_matrixVAL[:,1]=copy(transpose(estimatedRatioVAL))
 		#est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))	
 		#est_matrixFromScoresVAL[:,1]=copy(transpose(estimatedRatioVAL))	
-		p = Progress(iterations, 5, "Progress of Bagging Model:") # minimum update interval: 5 second    
+		p = ProgressMeter.Progress(iterations, 5, "Progress of Bagging Model:") # minimum update interval: 5 second    
 		cumulativeWeight=0.0
 		local fristRowOfThisTable
 	for iter=1:iterations

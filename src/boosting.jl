@@ -59,7 +59,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	vectorOfLeafArrays=Array{Array{Leaf,1}}(undef,iterations+1)
 	vectorOfLeafArrays[1]=Array{Leaf}(undef,0) #the first entry is not defined		
 	
-    p = Progress(iterations, 2, "Progress of Boosting Model:") # minimum update interval: x seconds (2)
+    p = ProgressMeter.Progress(iterations, 2, "Progress of Boosting Model:") # minimum update interval: x seconds (2)
     ((adaptiveLearningRate>=1.0)||(adaptiveLearningRate<=0.0)) ? (BoolAdaptiveLearningRate=false) : (BoolAdaptiveLearningRate=true)
 	#currently not supported
 		BoolAdaptiveLearningRate&&error("DTM: this is not yet updated to reflect numerator/denominator objectives!!")

@@ -2,7 +2,6 @@
 
 @testset "Smoketests" begin
 
-
 ###
 #test hashing (for 32 bit windows executable)
 ###

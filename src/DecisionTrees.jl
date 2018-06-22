@@ -29,7 +29,9 @@ using .PooledArraysDTM
 using Dates,Random
 import Distributed
 import DelimitedFiles
-#using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
+import Core
+
+#todo switch from 'using' to 'import' and use 'explicit calls', i.e. ProgressMeter.Progress instead of Progress 
 using PyCall,DataFrames,JLD2,FileIO,OnlineStats,ProgressMeter,StatsBase
 
 #for precompile files, we need some additional packages
