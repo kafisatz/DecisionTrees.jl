@@ -30,16 +30,16 @@ import Dates
 import Random
 import Distributed
 import DelimitedFiles
-#using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
-using PyCall,DataFrames
+import PyCall
+import DataFrames
 import JLD2
-import FileIO
+#import FileIO #do we need this at all?
 import OnlineStats
 import ProgressMeter
 import StatsBase
-
-#for precompile files, we need some additional packages
-using DataStreams
+#using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
+#for the 'precompile files', we need some additional packages
+import DataStreams
 
 #using MySQL, # temporarily disabled 
 #using SQLite #disabled as it uses DataFrames 0.11
@@ -64,8 +64,8 @@ include("roc.jl")
 include("cross_validation.jl")
 include("show.jl")
 
-global const pyModPandas = PyNULL()
-global const pyModxlsxwriter = PyNULL()
+global const pyModPandas = PyCall.PyNULL()
+global const pyModxlsxwriter = PyCall.PyNULL()
 
 global const_default_splitdef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0)
 global const defaultModelName="dtmresult"
@@ -104,8 +104,8 @@ global const CSHARP_VALID_CHARS="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 function __init__()
 	#the following lines may trigger the installation of the respective python packages
 	if false #temporarily disable this
-        copy!(pyModPandas, pyimport_conda("pandas","pandas"))
-        copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"))
+        copy!(pyModPandas, PyCall.pyimport_conda("pandas","pandas"))
+        copy!(pyModxlsxwriter, PyCall.pyimport_conda("xlsxwriter","xlsxwriter"))
     end
 end
 
