@@ -23,7 +23,7 @@ using BenchmarkTools
 
 v=df_prepped[:PLZ_WOHNORT]
 #version 1
-@benchmark uq1 = countmap(v)
+@benchmark uq1 = StatsBase.countmap(v)
 
 
 #version 2

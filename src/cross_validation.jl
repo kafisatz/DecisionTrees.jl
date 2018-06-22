@@ -137,7 +137,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     medians=map(x->median(statsdf[x]),col_rng_stats)
     mins=map(x->minimum(statsdf[x]),col_rng_stats)
     maxs=map(x->maximum(statsdf[x]),col_rng_stats)
-    stds=map(x->std(statsdf[x]),col_rng_stats)
+    stds=map(x->StatsBase.std(statsdf[x]),col_rng_stats)
     sums=map(x->sum(statsdf[x]),col_rng_stats)
 
     stats_of_stats=hcat(means,medians,mins,maxs,stds,sums)
@@ -298,7 +298,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         medians=map(x->median(statsdf[x]),col_rng_stats)
         mins=map(x->minimum(statsdf[x]),col_rng_stats)
         maxs=map(x->maximum(statsdf[x]),col_rng_stats)
-        stds=map(x->std(statsdf[x]),col_rng_stats)
+        stds=map(x->StatsBase.std(statsdf[x]),col_rng_stats)
         sums=map(x->sum(statsdf[x]),col_rng_stats)
     
         stats_of_stats=hcat(means,medians,mins,maxs,stds,sums)

@@ -588,7 +588,7 @@ prnt&&println("---Model Settings------------------------------------------------
 			if sett.boolSaveResultAsJLDFile
 				println("Saving results to jld2 file: \n $(jldresultsfile)")
 				isfile(jldresultsfile)&&rm(jldresultsfile)
-				@time @save jldresultsfile xlData res leaves_of_tree trnidx validx fitted_values_tree tree var_imp1d_str_arr var_imp2d_str_arr onedimintvec_unused twodimintvec_unused
+				@time JLD2.@save jldresultsfile xlData res leaves_of_tree trnidx validx fitted_values_tree tree var_imp1d_str_arr var_imp2d_str_arr onedimintvec_unused twodimintvec_unused
 				push!(filelistWithFilesToBeZipped,jldresultsfile)
 			end
 
@@ -695,7 +695,7 @@ end
 if sett.boolSaveResultAsJLDFile
 	println("Saving results to jld2 file: \n $(jldresultsfile)")
 	isfile(jldresultsfile)&&rm(jldresultsfile)
-	@time @save jldresultsfile xlData dtmtable trnidx validx vectorOfLeafNumbers vectorOfLeafArrays rawObservedRatioPerScore est_matrixFromScores stats estimateUnsmoothed estimateSmoothed estimateFromRelativities resultEnsemble
+	@time JLD2.@save jldresultsfile xlData dtmtable trnidx validx vectorOfLeafNumbers vectorOfLeafArrays rawObservedRatioPerScore est_matrixFromScores stats estimateUnsmoothed estimateSmoothed estimateFromRelativities resultEnsemble
 	push!(filelistWithFilesToBeZipped,jldresultsfile)
 end
 

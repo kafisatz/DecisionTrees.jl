@@ -38,7 +38,7 @@ profile_loc="R:\\temp\\profile.jlprof"
 dd=splitdir(profile_loc)[1]
 if isdir(dd)
     warn("This is currently failing with JLD2. I do no want to install JLD as it causes some compatibility issues (for now)")
-#    @save "mi.jlddd" li lidict
+#    JLD2.@save "mi.jlddd" li lidict
 else
     @warn("Folder $(dd) not found!")
 end
@@ -52,7 +52,7 @@ Profile.print(noisefloor=2.0,sortedby=:count)
 
 #=
 #to open and read the data
-using HDF5, JLD, ProfileView
-@load "/tmp/profdata.jld"
+using HDF5, JLD2, ProfileView
+JLD2.@load "/tmp/profdata.jld"
 ProfileView.view(li, lidict=lidict)
 =#

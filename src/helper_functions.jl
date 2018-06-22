@@ -32,7 +32,7 @@ function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
 	sz=length(x.weight)
 	trnsz=round(Int,trnprop*sz)
 	trnsz=max(1,min(sz,trnsz))
-	t=sample(1:sz,trnsz,replace=false,ordered=true)
+	t=StatsBase.sample(1:sz,trnsz,replace=false,ordered=true)
 	v=setdiff(1:sz,t)
 	@assert issorted(t)
 	@assert issorted(v)
@@ -1297,7 +1297,7 @@ function aggregateByLeafNr(leafNrVector::Array{Int,1},numeratorEST::Array{Float6
 end
 
 
-function corw(x::Array{T,1},y::Array{U,1},wvec::W) where {T <: Number,U <: Number,W <: AbstractWeights}
+function corw(x::Array{T,1},y::Array{U,1},wvec::W) where {T <: Number,U <: Number,W <: StatsBase.AbstractWeights}
   @assert length(x)==length(y)==length(wvec)
   #todo this can be done more efficiently
   #soon it will probably be available in StatsBase or in some other package
@@ -1426,7 +1426,7 @@ function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) #,num
 		#e.g. fitted_values_all_data_this_vector_is_modified_by_build_tree must possibly look different if replace=true 
 		#currently a CRITICAL assumption is that validx and trnidx are disjoint and unique(validx)==validx . The same must holde for the sample and oobag sample
 		@assert length(smp)==abs(samplesize)
-		sample!(trnidx,smp,replace=repl)
+		StatsBase.sample!(trnidx,smp,replace=repl)
 	#define unused part of data
 		repl==false ? smpUniqueSorted=smp : smpUniqueSorted=unique(smp)
 		sort!(smpUniqueSorted) 
@@ -1445,7 +1445,7 @@ end
 
 function sampleData(samplesize::Int,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1})
 		repl=!(samplesize<0)
-		smp=sample(1:size(numerator,1),abs(samplesize),replace=repl)
+		smp=StatsBase.sample(1:size(numerator,1),abs(samplesize),replace=repl)
 	#draw sample from data, this currently creates a COPY of the data
 		n=numerator[smp]
 		d=denominator[smp]
@@ -1493,18 +1493,6 @@ function initExcelData()
 	nameOfpredictorsSheet="Predictors"
 	nameOflistofpredictorsSheet="PredictorList"
 return nameOflistofpredictorsSheet,nameOfpredictorsSheet,global_nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,global_nameOfSettingsSheet,global_nameOfTWOWayValidationSheet,xlData
-end
-
-macro nogc(ex)
-  quote
-    try
-      gc_disable()
-      local val = $(esc(ex))
-    finally
-      gc_enable()
-    end
-    val
-  end
 end
 
 macro timeConditional(bool,ex)
@@ -1944,7 +1932,7 @@ function calc_sum_squares(num_actual,num_estimate,denom)
 	for i=1:sz
 		@inbounds act=num_actual[i]
 		@inbounds den=denom[i]
-		#(for boosting) WE NEED TO MULTIPLY THE NUMERATOR WITH THE DENOMINATOR HERE \ TBD, TODO: SOMEONE NEEDS TO REVIEW THIS
+		#(for boosting) WE NEED TO MULTIPLY THE NUMERATOR WITH THE DENOMINATOR HERE \ TBD, TODO: THIS MAY NEED REVIEW
 		@inbounds est=num_estimate[i]*den
 		ssres+=abs2(est-act)
 		sstot+=abs2(act-mean_act) #THIS SHOULD BE CACHED (be careful as the training data set may change over time)! todo, tbd
@@ -2108,7 +2096,7 @@ end
 function buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
 	relativitytrn=(sumnumeratortrn./sumdenominatortrn)/(sum(sumnumeratortrn)/sum(sumdenominatortrn))
 	relativityval=(sumnumeratorval./sumdenominatorval)/(sum(sumnumeratorval)/sum(sumdenominatorval)) #todo/tbd this can be improved: sum(sumnumeratorval)/sum(sumdenominatorval) will never change through the full boosting model, thus we do not need to calculate it all the time
-	correlation=cor(relativitytrn,relativityval)
+	correlation=StatsBase.cor(relativitytrn,relativityval)
 	#this is not meaningful if we have reversals!
     #mi,ma=extrema(relativitytrn);lifttrn=ma/mi
     #mi,ma=extrema(relativityval);liftval=ma/mi
@@ -2817,7 +2805,7 @@ function randomFeatureSelection(n_features::Int,subsampling_features_prop::Float
 		if subsampling_features_prop>0.0
 			candidates=collect(1:n_features)
 			m=Int(cld(size(candidates,1),1/subsampling_features_prop)) #m should always be >0 with this definition
-			inds=sample(candidates,m,replace=false)			
+			inds=StatsBase.sample(candidates,m,replace=false)			
 		elseif (subsampling_features_prop<0.0)&&(subsampling_features_prop>-1.0)
 			for i=1:n_features
 			  if rand()<subsampling_features_prop;push!(inds,copy(i));end;  #copy statment is obsolete here, as we work with a value in this case
@@ -2976,7 +2964,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,nu
   sz=length(df_name_vector)
   onedimintvec_sum=zeros(Float64,sz)
   twodimintvec_sum=zeros(Float64,div(sz*(sz-1),2))
-  p = Progress(iterations, 2, "Calculating variable importance and writing tree structure...") # minimum update interval: 2 second
+  p = ProgressMeter.Progress(iterations, 2, "Calculating variable importance and writing tree structure...") # minimum update interval: 2 second
   f=open(fileloc,"a+")
   for i=1:iterations
 	leaves_array=create_leaves_array(ensemble.trees[i])
@@ -2987,7 +2975,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,nu
 	  onedimintvec_sum+=onedimintvec
 	  twodimintvec_sum+=twodimintvec
 	write_tree(candMatWOMaxValues,ensemble.trees[i],number_of_num_features,var_imp1d_str_arr,var_imp2d_str_arr,0,f,df_name_vector,mappings)
-	next!(p)
+	ProgressMeter.next!(p)
   end
 
   #close(f) #todo/tbd check if we can comment this line and the line below which opens the file again. ideally the file is only opened once and closed once.
@@ -3825,7 +3813,7 @@ end
 	return mylinreg(x,y,FrequencyWeights(w))
 end
 =#
-function mylinreg(x::Array{Float64,1},y::Array{Float64,1},w::W) where {W <: AbstractWeights}	
+function mylinreg(x::Array{Float64,1},y::Array{Float64,1},w::W) where {W <: StatsBase.AbstractWeights}	
 	meanx=0.0
 	meany=0.0
 	meanxy=0.0
@@ -5410,7 +5398,7 @@ function getCounts(x;threshold::T=-0.01) where T<:Number
     if threshold<0
         @assert abs(threshold)<1 "DTM: abs(threshold) must be <1 (or positive and integer)"
     end    
-    d=countmap(x);    
+    d=StatsBase.countmap(x);    
     vals=collect(values(d));
     sumk=sum(vals);
     if sumk==length(x)

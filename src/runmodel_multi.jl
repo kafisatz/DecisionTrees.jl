@@ -82,7 +82,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
         medians=map(x->median(statsdf[x]),col_rng_stats)
         mins=map(x->minimum(statsdf[x]),col_rng_stats)
         maxs=map(x->maximum(statsdf[x]),col_rng_stats)
-        stds=map(x->std(statsdf[x]),col_rng_stats)
+        stds=map(x->StatsBase.std(statsdf[x]),col_rng_stats)
         sums=map(x->sum(statsdf[x]),col_rng_stats)
     
         stats_of_stats=hcat(means,medians,mins,maxs,stds,sums)

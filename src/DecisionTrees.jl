@@ -2,7 +2,7 @@ __precompile__()
 VERSION >= v"0.7-"
 #note on v0.7 alpha precompilation through 'using' (i.e. when the code was not precomipled before) takes about 800 seconds
 #once precompilation is done, the using statement might need around 500 seconds. 
-@warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou should start julia with --depwarn=no option (in case there are still unfixed deprecations), otherwise the algorithms might be further slowed down. I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
+@warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou may want to start julia with --depwarn=no option (in case there are still deprecation warnings in this package or its dependencies). I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
 
 #=
 @info "DTM: BK Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
@@ -26,11 +26,17 @@ export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!
 include("PooledArraysDTM.jl")
 using .PooledArraysDTM 
 
-using Dates,Random
+import Dates
+import Random
 import Distributed
 import DelimitedFiles
 #using PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
-using PyCall,DataFrames,JLD2,FileIO,OnlineStats,ProgressMeter,StatsBase
+using PyCall,DataFrames
+import JLD2
+import FileIO
+import OnlineStats
+import ProgressMeter
+import StatsBase
 
 #for precompile files, we need some additional packages
 using DataStreams
@@ -97,8 +103,10 @@ global const CSHARP_VALID_CHARS="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 
 function __init__()
 	#the following lines may trigger the installation of the respective python packages
-	copy!(pyModPandas, pyimport_conda("pandas","pandas"))
-	copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"))	
+	if false #temporarily disable this
+        copy!(pyModPandas, pyimport_conda("pandas","pandas"))
+        copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"))
+    end
 end
 
 function get_sha1()

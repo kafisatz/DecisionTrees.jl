@@ -87,8 +87,6 @@ function writeDFtoExcel(excelData::ExcelData,existingFile::T,row::Int,col::Int,w
 	#@assert isfile(existingFile)
 	@assert min(row,col)>=0
 	#write all data    
-	#writer = pyModPandas.ExcelWriter(existingFile, engine = "xlsxwriter")
-    #pyModPandas[:ExcelWriter]
     writer=pyModPandas[:ExcelWriter](existingFile, engine = "xlsxwriter")
     
 	for xlSheet in excelData.sheets
@@ -97,7 +95,6 @@ function writeDFtoExcel(excelData::ExcelData,existingFile::T,row::Int,col::Int,w
 		#create python dataframe	
 		dataDict = create_custom_dict(df)
 		dataDict = create_custom_dict(df)
-		#pyDF = pyModPandas.DataFrame(dataDict,columns=names(df)) #this was working under 0.4 but in 0.5 is converted to a julia dict (instead of being a python DF)
 		pyDF=pycall(pyModPandas[:DataFrame], PyObject, dataDict,columns=names(df))		
 		pycall(pyDF["to_excel"],PyAny,writer, header=write_header,index=write_index, sheet_name = sheet,startrow=row, startcol=col, encoding="utf-8")  #index=false suppress the rowcount		
 	end
