@@ -1,4 +1,4 @@
-function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features) where T<:Unsigned
+function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features) where {T<:Unsigned,PG<:PoissonOrGamma}
   #here randomweight==0
   #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -77,7 +77,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
       sumwl=weightsl[counter]
       #we can skip the calculation of the deviance, if we know that the leaves will be "too small"
       if (sumwl>minweight)&&(weighttot_minw>sumwl)        
-        @inbounds deviancel,deviancer=get_poisson_deviances(meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
+        @inbounds deviancel,deviancer=get_deviances(a,meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
       #end
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        
         valnew = -(deviancel+deviancer) #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
@@ -100,9 +100,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
     return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
-
-#function calculateSplitValue(a::DifferenxxxxceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int) where T<:Unsigned
-function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features,feature_column_id::Int)  where T<:Unsigned
+function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features,feature_column_id::Int) where {T<:Unsigned,PG<:PoissonOrGamma}
 #this is not yet supported:
   error("need to add fname and the other unused argument")
   #here randomweight>0
@@ -183,7 +181,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
       @inbounds sumwl=weightsl[counter]
       #we can skip the calculation of the deviance, if we know that the leaves will be "too small"
       if (sumwl>minweight)&&(weighttot_minw>sumwl)        
-        @inbounds deviancel,deviancer=get_poisson_deviances(meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
+        @inbounds deviancel,deviancer=get_deviances(a,meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
       #end
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        				
         valnew = -(deviancel+deviancer) #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
@@ -197,7 +195,7 @@ function calculateSplitValue(a::PoissonDevianceSplit,fname::Symbol,number_of_num
   return this_splitlist
 end
 
-function get_poisson_deviances(current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
+function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
     #for the poisson deviance consider the derivative of the poisson loss (or google, the reacfin paper or the 'axa' master thesis)
 	#this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
@@ -220,6 +218,27 @@ function get_poisson_deviances(current_meanl::Float64,current_meanr::Float64,lo,
 		else
             #dr += (xlogy(ni, ni / (wi*current_meanr)) - (ni - wi*current_meanr))
             dr += (ni*logy(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
+		end
+	end
+	return dl,dr
+end
+
+
+function get_deviances(a::GammaDevianceSplit,,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
+    #dr and dl are 'reused' by each iteration
+	dr=0.0
+	dl=0.0
+	#note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
+	for count in 1:length(f)	
+		@inbounds idx = f.parent.refs[count] + ooo		
+		@inbounds ni = numerator[count]
+        @inbounds wi = weight[count]
+        if elementsInLeftChildBV[idx]            
+            #poisson: dl += (ni*log(ni / (wi*current_meanl)) - (ni - wi*current_meanl))
+            dl += (-log(ni / (wi*current_meanl)) - (ni - wi*current_meanl)/(wi*current_meanl))
+		else            
+            #poisson: dr += (ni*logy(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
+            dl += (-log(ni / (wi*current_meanr)) - (ni - wi*current_meanr)/(wi*current_meanr))
 		end
 	end
 	return dl,dr

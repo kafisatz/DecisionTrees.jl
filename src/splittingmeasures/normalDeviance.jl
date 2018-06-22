@@ -1,3 +1,5 @@
+#this can be done considerably more efficiently than gamma/poisson as one can calculate the variance in one pass and do live updating thereof!
+
 #=
 	@info ""
 	Splitting Function = NormalDeviance
@@ -40,7 +42,7 @@
 function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass)
   @warn("229 this will not work yet.....")
   @warn("randomw should be zero here")
-  save("C:\\temp\\myf.jld2","a",a,"labellist",labellist,"sumnumerator",sumnumerator,"sumdenominator",sumdenominator,"sumweight",sumweight,"countlistfloat",countlistfloat,"minweight",minweight,"subs",subs,"moments_per_pdaclass",moments_per_pdaclass)
+  #save("C:\\temp\\myf.jld2","a",a,"labellist",labellist,"sumnumerator",sumnumerator,"sumdenominator",sumdenominator,"sumweight",sumweight,"countlistfloat",countlistfloat,"minweight",minweight,"subs",subs,"moments_per_pdaclass",moments_per_pdaclass)
 
 #here randomweight==0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})

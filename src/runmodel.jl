@@ -376,7 +376,9 @@ function run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::
 
 sett=deepcopy(input_setttings)
 @assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
-
+if sett.boolCalculateGini
+    @warn("Gini and RSS metrics are experimental and need to be reviewed and thoroughly checked (e.g. are they evaluated only for the numerator or for the ratio=numerator/denominator?")
+end
 x=checkIfSettingsAreValid(input_setttings)
 if !(x==nothing)
 	@warn "DTM: You may have provided invalid or inconsistent model settings. The model run may fail."

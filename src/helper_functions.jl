@@ -1878,8 +1878,8 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 			gini_single_argval=gini_single_argument(ratioEstval.*denominatorval)			
 			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,ratioEsttrn) 
 			normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,ratioEstval)
-			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,ratioEsttrn,denominatortrn)
-			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,ratioEstval,denominatorval)		
+			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,ratioEsttrn.*denominatortrn,denominatortrn)
+			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,ratioEstval.*denominatorval,denominatorval)		
 		else
 			gini_single_argtrn=1.0
 			gini_single_argval=1.0
@@ -1928,17 +1928,12 @@ function calc_sum_squares(num_actual,num_estimate,denom)
 	for i=1:sz
 		@inbounds act=num_actual[i]
 		@inbounds den=denom[i]
-		#(for boosting) WE NEED TO MULTIPLY THE NUMERATOR WITH THE DENOMINATOR HERE \ TBD, TODO: THIS MAY NEED REVIEW
-		@inbounds est=num_estimate[i]*den
-		ssres+=abs2(est-act)
+		@inbounds estimatedNum=num_estimate[i] #*den
+		ssres+=abs2(estimatedNum-act)
 		sstot+=abs2(act-mean_act) #THIS SHOULD BE CACHED (be careful as the training data set may change over time)! todo, tbd
 
-		ssres_ratio+=ifelse(den==0,0.0,abs2((est-act)/den))
-		sstot_ratio+=ifelse(den==0,0.0,abs2(act/den-mean_ratio_pointwise))		
-		#if i<3
-		#	@show mean(num_actual),mean(num_estimate),mean(denom),sum(num_actual),sum(num_estimate),sum(denom)
-		#	@show i,act,est,abs2(est-act),abs2(act-mean_act),abs2((est-act)/den),abs2(act/den-mean_ratio_pointwise)
-		#end
+		ssres_ratio+=ifelse(den==0,0.0,abs2((estimatedNum-act)/den))
+		sstot_ratio+=ifelse(den==0,0.0,abs2(act/den-mean_ratio_pointwise))
 	end
 		
 	#@show sstot,ssres,sstot_ratio,ssres_ratio

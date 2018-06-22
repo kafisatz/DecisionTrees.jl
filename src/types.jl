@@ -19,6 +19,9 @@ export ModelSettings,copySettingsToCurrentType
 	struct RankOptSplit         <: SplittingCriterion end
 	struct ROptMinRLostPctSplit	   <: SplittingCriterion end
 	struct ROptMinRLostSplit	   <: SplittingCriterion end
+    
+    PoissonOrGamma = Union{PoissonDevianceSplit,GammaDevianceSplit}
+    
 #sortby options for categorical splits
 	abstract type SortBy end
 	struct SortByMean 	<: SortBy end
