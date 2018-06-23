@@ -3,6 +3,7 @@ t0=time_ns()
 import CSV
 import DataFrames
 import DataFrames: DataFrame
+import Random
 using Test 
 using DecisionTrees 
 
@@ -23,6 +24,7 @@ else
 end
 datadir=joinpath(pkgdir,"data")
 
+Random.srand(1239946)
 @testset "DecisionTrees" begin
     t0runtests=time_ns()
     println("DTM: Running tests.") # Time = $(t0runtests)")

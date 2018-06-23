@@ -52,8 +52,12 @@ sett.niter=3
 #try different splitting criteria
 for splitCrit in ["difference","poissondeviance","gammadeviance"]
     updateSettingsMod!(sett,crit=splitCrit)
-    strs,resmT=dtm(dtmtable,sett)
-    @test typeof(resmT.modelstats)==DataFrame
+    try 
+        strs,resmT=dtm(dtmtable,sett)        
+        @test typeof(resmT.modelstats)==DataFrame
+    catch 
+        @test "this one failed->"==splitCrit
+    end
 end
 updateSettingsMod!(sett,crit="difference")
 

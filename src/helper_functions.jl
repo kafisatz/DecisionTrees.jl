@@ -2509,7 +2509,8 @@ function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Flo
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass
 end
 
-function build_listOfMeanResponse(crit::PoissonDevianceSplit,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64)
+#this fn is identical for Difference, Gamma and Poisson
+function build_listOfMeanResponse(crit::T,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64) where T<:Union{PoissonDevianceSplit,GammaDevianceSplit}
     return build_listOfMeanResponse(DifferenceSplit(),trnidx,validx,numerator,denominator,weight,features,feature_levels,minweight)
 end 
 
