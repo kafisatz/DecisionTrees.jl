@@ -24,17 +24,20 @@ end
 datadir=joinpath(pkgdir,"data")
 
 @testset "DecisionTrees" begin
-    println("DTM: Running tests:")
-    
+    t0runtests=time_ns()
+    println("DTM: Running tests.") # Time = $(t0runtests)")
+        
     global eltypesData1=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
     
     @warn("So far only very rudimentary tests have been implemented!")
     
     include("smoketests.jl")
     include("errors_and_warnings.jl")
-    include("functionalityTests.jls")
+    include("functionalityTests.jl")
 
-    println("DTM: Testing finished.")
+    println("DTM: Testing finished. Time needed:")
+    TimeForTesting = (time_ns()-t0runtests)/1e9
+    println((round(TimeForTesting,0)),"s")
+    println(round(TimeForTesting/60,1),"m")
+    println(round(TimeForTesting/3600,3),"h")
 end
-
-@show telaTotal = (time_ns()-t0)/1e9

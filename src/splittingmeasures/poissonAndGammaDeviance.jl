@@ -217,7 +217,7 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
             dl += (ni*log(ni / (wi*current_meanl)) - (ni - wi*current_meanl))
 		else
             #dr += (xlogy(ni, ni / (wi*current_meanr)) - (ni - wi*current_meanr))
-            dr += (ni*logy(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
+            dr += (ni*log(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
 		end
 	end
 	return dl,dr
