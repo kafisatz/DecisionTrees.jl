@@ -39,8 +39,6 @@ function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
 end
 
 function get_stats(model::Tree;perfMeasure::String="not_applicable_for_singe_tree")
-	#typeof(b)==Tree
-	#fieldnames(b)
 	statsdf=model.exceldata.sheets[2].data
 	#find the last rows of the results sheet
 	str="Correlation"
@@ -370,7 +368,7 @@ function readSettings(settingsFilename)
 end
 
 function convert(t::Type{Array},setti::ModelSettings)
-	fn=fieldnames(setti)
+	fn=fieldnames(typeof(setti))
 	res=Array{Any}(2,length(fn))
 	i=0
 	for f in fn
@@ -1019,7 +1017,7 @@ end
 
 
 function writeAllFields(f::IOStream,s)
-	for x in fieldnames(s)
+	for x in fieldnames(typeof(s))
 		write(f,x,"\r\n  ",string(getfield(s,x)),"\r\n")
 	end
 	return nothing
@@ -1027,14 +1025,14 @@ end
 
 function writeAllFieldsToString(s)
 	res=string()
-	for x in fieldnames(s)
+	for x in fieldnames(typeof(s))
 		res=string(res,x,"\r\n  ",string(getfield(s,x)),"\r\n")
 	end
 	return res
 end
 
 function writeAllFieldsToArray(s)
-	#nn=fieldnames(s)
+	#nn=fieldnames(typeof(s))
 	nn=fieldnames(typeof(s))
 	res=Array{AbstractString}(undef,length(nn),2)
 	i=0

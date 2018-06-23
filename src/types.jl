@@ -436,10 +436,10 @@ end
 
 function copySettingsToCurrentType(oldSetting)
 	s=ModelSettings()
-	newfields=fieldnames(s)
-	oldfields=fieldnames(oldSetting)    
+	newfields=fieldnames(typeof(s))
+	oldfields=fieldnames(typeof(oldSetting))    
 	
-	for field in fieldnames(oldSetting)
+	for field in fieldnames(typeof(oldSetting))
 		if in(field,newfields)
 			v=getfield(oldSetting,field)
 			setfield!(s,field,v)

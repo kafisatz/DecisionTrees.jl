@@ -11,7 +11,7 @@ objs_sizes_srt_mb=objs_sizes_srt./1024./1024
 objs_srt=objs[srt]
 rs=hcat(string.(objs_srt),string.(objs_sizes_srt_mb))
 
-for x in fieldnames(dtm1model)
+for x in fieldnames(typeof(dtm1model))
    zi= Core.eval("Base.summarysize(dtm2model.$(string(x))   )))
    @show x,zi
 end)))"
