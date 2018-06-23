@@ -74,7 +74,7 @@ end
 			MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 		end
 		
-        vectorOfLeafArrays=Array{Array{Leaf,1}}(undef,iterations+1)
+    vectorOfLeafArrays=Array{Array{Leaf{T},1}}(undef,iterations+1)
 		vectorOfLeafArrays[1]=Array{Leaf{T}}(undef,0) #the first entry is not defined
 		p = ProgressMeter.Progress(iterations, 5, "Progress of Bagging Model:") # minimum update interval: 5 second    
 		cumulativeWeight=0.0
