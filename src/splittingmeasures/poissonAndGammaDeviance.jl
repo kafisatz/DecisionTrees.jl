@@ -210,16 +210,14 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
         @inbounds wi = weight[count]
-        #todo see if ifelse is more efficient here!
-        #possibly an explicit if (to avoid an undefined log) is faster than xlogy here! 
 		@inbounds eli=elementsInLeftChildBV[idx]
-        if eli
-            #dl += (xlogy(ni, ni / (wi*current_meanl)) - (ni - wi*current_meanl))
-            dl += (ni*log(ni / (wi*current_meanl)) - (ni - wi*current_meanl))
-		else
-            #dr += (xlogy(ni, ni / (wi*current_meanr)) - (ni - wi*current_meanr))
-            dr += (ni*log(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
-		end
+        wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)
+        addition = ni*log(ni / wiTimesMean) - (ni - wiTimesMean)
+        if eli            
+            dl += addition
+        else            
+            dr += addition
+        end
 	end
 	return dl,dr
 end
@@ -235,13 +233,13 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
 		@inbounds ni = numerator[count]
         @inbounds wi = weight[count]
         @inbounds eli=elementsInLeftChildBV[idx]
+        wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)
+        addition = -log(ni / wiTimesMean) - (ni - wiTimesMean)/wiTimesMean
         if eli            
-            #poisson: dl += (ni*log(ni / (wi*current_meanl)) - (ni - wi*current_meanl))
-            dl += (-log(ni / (wi*current_meanl)) - (ni - wi*current_meanl)/(wi*current_meanl))
-		else            
-            #poisson: dr += (ni*logy(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
-            dr += (-log(ni / (wi*current_meanr)) - (ni - wi*current_meanr)/(wi*current_meanr))
-		end
+            dl += addition
+        else            
+            dr += addition
+        end
 	end
 	return dl,dr
 end
