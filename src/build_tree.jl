@@ -17,7 +17,6 @@ function sample_data_and_build_tree!(trnidx::Vector{Int},validx::Vector{Int},fit
 			thistree=build_tree!(sampleVector,validx,candMatWOMaxValues,mappings,deepcopy(settings),numerator,denominator,weight,features,fitted_values_all_data_this_vector_is_modified_by_build_tree,T_Uint8_or_UInt16)
 	#apply tree to ooBagSample
 			leaves_of_tree=create_leaves_array(thistree.rootnode)
-			#ooBagEstimates,leafNrooBag=eval(parse(settings.chosen_apply_tree_fn))(unusedSamplePart,leaves_of_tree,thistree.rootnode,features)
             apply_tree_by_leaf!(fitted_values_all_data_this_vector_is_modified_by_build_tree,reused_fitted_leafnr_vector,unusedSamplePart,thistree.rootnode,features)
 		#Determine Goodness of Fit
 			#I think it is best to consider the goodness of fit per leaf here

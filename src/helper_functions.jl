@@ -1811,7 +1811,8 @@ function printover(io::IO, s::AbstractString, color::Symbol = :green)
         print(io, "\r" * s)
     else
         print(io, "\u1b[1G")   # go to first column
-        print_with_color(color, io, s)
+        #print_with_color(color, io, s)
++		printstyled(io,s,color=color)
         print(io, "\u1b[K")    # clear the rest of the line
     end
 end
@@ -5126,7 +5127,7 @@ number_of_nodes(l::Leaf)=0
 
 function sendto_module(m::Module,p::Int; args...)
 	for (nm, val) in args;
-		Distributed.@spawnat(p, eval(m, Expr(:(=), nm, val)))
+		Distributed.@spawnat(p, Core.eval(m, Expr(:(=), nm, val)))
 	end
 end
 function sendto_module(m::Module,ps::Vector{Int}; args...)
@@ -5137,7 +5138,7 @@ end
 
 function sendto(p::Int; args...)
       for (nm, val) in args
-          Distributed.@spawnat(p, eval(Main, Expr(:(=), nm, val)))
+          Distributed.@spawnat(p, Core.eval(Main, Expr(:(=), nm, val)))
       end
 end
 

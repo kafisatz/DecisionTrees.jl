@@ -26,6 +26,7 @@ export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!
 include("PooledArraysDTM.jl")
 import .PooledArraysDTM: PooledArray
 
+import Core 
 import Dates
 import Random
 import Distributed

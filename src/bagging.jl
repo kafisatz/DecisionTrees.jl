@@ -89,7 +89,7 @@ end
 			#note the individual trees were constructed on a part of the training data, here we apply them to the full training data set
 			apply_tree_by_leaf!(currentEstimateOfIndividualTree,leafNumbersThisTree,trnidx,vecTreesWErrs[iter].tree.rootnode,features)		
 			apply_tree_by_leaf!(currentEstimateOfIndividualTree,leafNumbersThisTree,validx,vecTreesWErrs[iter].tree.rootnode,features)		
-			#currentEstimateOfIndividualTree[:],leafNumbersThisTree[:]=eval(parse(sett.chosen_apply_tree_fn))(vectorOfRulePathsToLeavesArrays[iter+1],vecTreesWErrs[iter].tree.rootnode,numfeatures,charfeatures)
+			#currentEstimateOfIndividualTree[:],leafNumbersThisTree[:]=Core.eval(parse(sett.chosen_apply_tree_fn))(vectorOfRulePathsToLeavesArrays[iter+1],vecTreesWErrs[iter].tree.rootnode,numfeatures,charfeatures)
 			#error("BK continue here")
 			#vectorOfLeafNumbersTrn[:,iter+1]=leafNumbersThisTree			
 		#update weights
@@ -115,7 +115,7 @@ end
 		end
 		#	maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,scores,uniqueRelativitiesSorted,nscoresPotentiallyReduced=constructANDderiveScores(estimatedRatio,currentRelativity,sett.nscores,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett.smoothEstimates,sett.print_details)
 		#Apply this iteration to the validation data set
-			#currentEstimateOfIndividualTreeVAL[:],leafNumbersThisTreeVAL[:]=eval(parse(sett.chosen_apply_tree_fn))(vectorOfLeafArrays[iter+1],vecTreesWErrs.tree[iter.rootnode,numfeaturesVAL,charfeaturesVAL)
+			#currentEstimateOfIndividualTreeVAL[:],leafNumbersThisTreeVAL[:]=Core.eval(parse(sett.chosen_apply_tree_fn))(vectorOfLeafArrays[iter+1],vecTreesWErrs.tree[iter.rootnode,numfeaturesVAL,charfeaturesVAL)
 		#derive current cumulative estimate
 			#estimatedRatioVAL[:]=(estimatedRatioVAL.*cumulativeWeight+currentEstimateOfIndividualTreeVAL.*wi)./(cumulativeWeight+wi)
 			#currentRelativityVAL[:]=estimatedRatioVAL./trn_meanobservedvalue
@@ -223,7 +223,6 @@ function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here
 			thistree=build_tree!(sampleVector,unusedSamplePart,candMatWOMaxValues,mappings,deepcopy(sett),numerator,denominator,weight,features,fitted_values_all_data_this_vector_is_modified_by_build_tree,T_Uint8_or_UInt16)
 	#apply tree to ooBagSample
 			leaves_of_tree=create_leaves_array(thistree.rootnode)
-			#ooBagEstimates,leafNrooBag=eval(parse(settings.chosen_apply_tree_fn))(unusedSamplePart,leaves_of_tree,thistree.rootnode,features)
 			apply_tree_by_leaf!(fitted_values_all_data_this_vector_is_modified_by_build_tree,reused_fitted_leafnr_vector,sampleVector,thistree.rootnode,features)
 			if length(unusedSamplePart)>0
 				apply_tree_by_leaf!(fitted_values_all_data_this_vector_is_modified_by_build_tree,reused_fitted_leafnr_vector,unusedSamplePart,thistree.rootnode,features)
@@ -267,8 +266,7 @@ function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here
 					#apply_tree_by_leaf!(fitted_values_all_data_this_vector_is_modified_by_build_tree,reused_fitted_leafnr_vector,sampleVector,thistree.rootnode,features)
 					#MatrixOfLeafNumbers[:,iter+1]=deepcopy(reused_fitted_leafnr_vector) #leaf_numbers(vectorOfLeafArrays[1+iter],obs) #TODO / TBD adjust this for subsampling. this may not work properly, as each tree will use a different amount of data AND DIFFERENT OBSERVATIONS! thus we cannot rely on the *.idx field of the leaves!			
 				#end	
-				#ooBagEstimates[:],leafNrooBag[:]=eval(parse(sett.chosen_apply_tree_fn))(leaves_of_tree,thistree.rootnode,ooBagnumf,ooBagcharf)
-				#Determine Goodness of Fit
+                #Determine Goodness of Fit
 					#I think it is best to consider the goodness of fit per leaf here
 					#ooBagEstNumerator=ooBagEstimates.*ooBagdenom
 					
