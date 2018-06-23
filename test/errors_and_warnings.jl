@@ -29,6 +29,7 @@ mapToOther!(vnew,keep,9999999)
 
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
+@test_throws AssertionError prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numocl="LOSS20HALF",trnvalcol="does_not_exist",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 @test_throws AssertionError prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 @test_throws AssertionError prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="does_not_exist",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 

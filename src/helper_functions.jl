@@ -1595,8 +1595,8 @@ function createZipFile(zipFilename::T,filelist::Array{U,1},silent::Bool=false) w
     #mx5 is compression level 5 http://sevenzip.osdn.jp/chm/cmdline/ http://sevenzip.osdn.jp/chm/cmdline/switches/method.htm#LZMA2
 	cmd=`7z a -mx5 -m0=LZMA2:d=25 $(zipFilename) $(filelist)`
 	if silent
-		tmptxt="tmplog.log"
-		tmperr="tmperr.log"
+		tmptxt="tmp_TMP_29x31_log.log"
+		tmperr="tmp_TMP_29x31_err.log"
 		pip=pipeline(cmd, stdout=tmptxt, stderr=tmperr)
 		rc=run(pip)
 		isfile(tmperr)&&rm(tmperr)

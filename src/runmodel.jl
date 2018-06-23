@@ -766,7 +766,7 @@ end #end distinction between three model types
 #NOTE: the option boolCreateZipFile should be disabled when code is run through grails
 #as the *.7z file will be created by the listener (because the *.log file will only exist when run_model terminated
 
-#this code applis to all model types
+#this code applies to all model types
    #Create ZIP file
      #Push Log file to file list
 	 #println("\n")
@@ -774,7 +774,7 @@ end #end distinction between three model types
 	 prnt&&println("Modelling finished. Time: $(Dates.now()) - Total time was $(round(elapsed_until_this_point,digits=1))s = $(round(elapsed_until_this_point/60,digits=1))m")
 	 if sett.boolCreateZipFile
 		 logfile=string(path_and_fn_wo_extension,".log")
-		 tmplogfile="c:\\temp\\julia_logfile.log";isfile(tmplogfile)&&rm(tmplogfile)
+		 tmplogfile=string(path_and_fn_wo_extension,".zip.log");isfile(tmplogfile)&&rm(tmplogfile)
 		 try
 			isfile(logfile)&&isreadable(logfile)&&cp(logfile,tmplogfile)
 		 catch error_while_copying_log

@@ -12,6 +12,7 @@ fi="data1Small.csv"
 thisfile=joinpath(datadir,fi)
 @test isfile(thisfile)
 @time df_tmp=CSV.read(thisfile,allowmissing=:none,types=eltypesData1,categorical=false,rows_for_type_detect=10000);
+df_tmp_orig=deepcopy(df_tmp)
 
 selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 
@@ -162,6 +163,18 @@ sett.minw=-0.51
 strs,resm6=dtm(dtmtable,sett)
 @test typeof(resm6.modelstats)==DataFrame
 
+#for coverage 
+#empty keycol
+prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],keycol="",numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
+df_tmp2=deepcopy(df_tmp_orig)
+df_tmp2[:PREMIUM66][1:20].=-20.1
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+df_tmp2[:PREMIUM66][1:20].=0.0
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+df_tmp2[:LOSS20HALF][1:20].=0.0
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+df_tmp2[:LOSS20HALF][1:20].=-20
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
 
 sett.minw=oldminw
