@@ -4,6 +4,7 @@
 
 import Random: rand,randstring
 
+tolForTheseTests=1e-15
 ##################################################
 #Read the data
 ##################################################
@@ -38,6 +39,12 @@ updateSettingsMod!(sett,minw=-0.03,model_type="build_tree",boolCalculatePoissonE
 ##############################
 
 resultingFiles,resM=dtm(dtmtable,sett)
+stats1=resM.exceldata.sheets[2].data[63:end,1:2]
+@test isapprox(stats1[1,2],0.9902398642839035,atol=tolForTheseTests)
+@test isapprox(stats1[5,2],7.893600119119564,atol=tolForTheseTests)
+@test isapprox(stats1[6,2],9.585992687936427,atol=tolForTheseTests)
+@test isapprox(stats1[19,2],0.31235075486038566,atol=tolForTheseTests)
+@test isapprox(stats1[20,2],0.322243286637449,atol=tolForTheseTests)
 @warn("todo: add tests on lift, poisson error, etc.")
 
 ##################################################
@@ -49,6 +56,22 @@ sett.mf=0.1
 sett.model_type="boosted_tree"
 strs,resm2=dtm(dtmtable,sett)
 @test typeof(resm2.modelstats)==DataFrame
-@test 1==1
+hdr=resm2.exceldata.sheets[3].data[1,:] 
+hdr2=map(x->hdr[x][1],1:length(hdr))
+liftvalc=indexin(["Lift Val"],hdr2)[1]
+lifttrnc=indexin(["Lift Trn"],hdr2)[1]
+@test !(liftvalc==nothing)
+@test !(lifttrnc==nothing)
+if liftvalc!=nothing
+    @test liftvalc>0
+    liv=resm2.exceldata.sheets[3].data[sett.niter+1,liftvalc]
+end
+if lifttrnc!=nothing
+    @test lifttrnc>0
+    lit=resm2.exceldata.sheets[3].data[sett.niter+1,lifttrnc]
+end
+@test abs(liv-6.332896484066747) <tolForTheseTests
+@test abs(lit-6.610306331060652) <tolForTheseTests
+
 
 end #testset
