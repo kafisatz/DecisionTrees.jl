@@ -17,7 +17,7 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
     #@assert subs_size<255 #todo tbd: we can remove this later on
 
   #pass on over the data:
-  #get mean of left chlid and right child for each possible split
+  #get mean of left child and right child for each possible split
   #@warn("find out if we need/want freq or claimcount here!") #currently we are using the frequencies which are then multiplied with the exposure -> poisson deviance is evaluated on the number of claims  n_i~poisson(lambda_i * exposure_i)
   meansl=zeros(subs_size) #mean (frequency or possibly claim count) of the left node in case we go for split 'number' i
   meansr=zeros(subs_size) #same for right child
@@ -74,7 +74,7 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
       #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
       @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
       #calc deviances for the given split (which is defined by elementsInLeftChildBV)
-      sumwl=weightsl[counter]
+      @inbounds sumwl=weightsl[counter]
       #we can skip the calculation of the deviance, if we know that the leaves will be "too small"
       if (sumwl>minweight)&&(weighttot_minw>sumwl)        
         @inbounds deviancel,deviancer=get_deviances(a,meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
@@ -212,7 +212,8 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
         @inbounds wi = weight[count]
         #todo see if ifelse is more efficient here!
         #possibly an explicit if (to avoid an undefined log) is faster than xlogy here! 
-		if elementsInLeftChildBV[idx]
+		@inbounds eli=elementsInLeftChildBV[idx]
+        if eli
             #dl += (xlogy(ni, ni / (wi*current_meanl)) - (ni - wi*current_meanl))
             dl += (ni*log(ni / (wi*current_meanl)) - (ni - wi*current_meanl))
 		else
@@ -233,12 +234,13 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
         @inbounds wi = weight[count]
-        if elementsInLeftChildBV[idx]            
+        @inbounds eli=elementsInLeftChildBV[idx]
+        if eli            
             #poisson: dl += (ni*log(ni / (wi*current_meanl)) - (ni - wi*current_meanl))
             dl += (-log(ni / (wi*current_meanl)) - (ni - wi*current_meanl)/(wi*current_meanl))
 		else            
             #poisson: dr += (ni*logy(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
-            dl += (-log(ni / (wi*current_meanr)) - (ni - wi*current_meanr)/(wi*current_meanr))
+            dr += (-log(ni / (wi*current_meanr)) - (ni - wi*current_meanr)/(wi*current_meanr))
 		end
 	end
 	return dl,dr
