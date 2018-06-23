@@ -31,4 +31,5 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 * Consider a nicer representation (such as https://github.com/sisl/D3Trees.jl)
 * Add more unit tests to trigger errors and warnings (see also the Julia docs on testing)
 * Add meaningful unit tests, e.g. check the lift on trn and val for a given single tree and boosting (for a given seed)
+* For Poisson / Gamma deviances we are calculating the means for each split in advance. We can save time, if we only do this for splits which are 'large enough'.
 * 'Remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)
