@@ -56,7 +56,9 @@ for splitCrit in ["difference","poissondeviance","gammadeviance"]
     try 
         strs,resmT=dtm(dtmtable,sett)        
         @test typeof(resmT.modelstats)==DataFrame
-    catch 
+    catch thisErr
+        @show stacktrace()
+        @show thisErr        
         @test "this one failed->"==splitCrit
     end
 end

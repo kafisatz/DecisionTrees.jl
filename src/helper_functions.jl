@@ -1812,7 +1812,7 @@ function printover(io::IO, s::AbstractString, color::Symbol = :green)
     else
         print(io, "\u1b[1G")   # go to first column
         #print_with_color(color, io, s)
-+		printstyled(io,s,color=color)
+		printstyled(io,s,color=color)
         print(io, "\u1b[K")    # clear the rest of the line
     end
 end
