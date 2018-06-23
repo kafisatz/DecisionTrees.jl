@@ -2,10 +2,6 @@
 
 @testset "Smoketests" begin
 
-
-###
-#test hashing (for 32 bit windows executable)
-###
 import Random: rand,randstring
 
 ##################################################
@@ -50,6 +46,16 @@ strs,resm2=dtm(dtmtable,sett)
 @test typeof(resm2.modelstats)==DataFrame
 @test 1==1
 
+#reduce niter for the remaining tests
+sett.niter=3
+
+#try different splitting criteria
+for splitCrit in ["difference","poissondeviance","gammadeviance"]
+    updateSettingsMod!(sett,crit=splitCrit)
+    strs,resmT=dtm(dtmtable,sett)
+    @test typeof(resmT.modelstats)==DataFrame
+end
+updateSettingsMod!(sett,crit="difference")
 
 ##################################################
 #run bagging
@@ -101,7 +107,7 @@ statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 #set some default settings
 updateSettingsMod!(sett,
-niter=4,
+niter=3,
 model_type="boosted_tree",
 nscores="1000",
 write_statistics="true",
@@ -124,6 +130,10 @@ performanceMeasure="Average Poisson Error Val"
 
 strs,resm3=dtm(dtmtable,sett)
 @test typeof(resm3.modelstats)==DataFrame
+#test if files exist 
+for fi in strs
+    @test isfile(fi)
+end
 
 #more smoketests
 sett.subsampling_prop=0.7

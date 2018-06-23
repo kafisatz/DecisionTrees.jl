@@ -224,7 +224,7 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
 end
 
 
-function get_deviances(a::GammaDevianceSplit,,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
+function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
     #dr and dl are 'reused' by each iteration
 	dr=0.0
 	dl=0.0

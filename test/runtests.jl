@@ -32,6 +32,7 @@ datadir=joinpath(pkgdir,"data")
     
     include("smoketests.jl")
     include("errors_and_warnings.jl")
+    include("functionalityTests.jls")
 
     println("DTM: Testing finished.")
 end
