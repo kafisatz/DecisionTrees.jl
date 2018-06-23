@@ -11,8 +11,6 @@ julia:
   - nightly  
 notifications:
   email: false
-install:
-     unzip /tmp/onewire_source.zip -d /tmp/
 script: 
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; 
   - unzip /home/travis/build/kafisatz/DecisionTrees.jl/data/freMTPL2/freMTPL2.zip -d /home/travis/build/kafisatz/DecisionTrees.jl/data/freMTPL2/
