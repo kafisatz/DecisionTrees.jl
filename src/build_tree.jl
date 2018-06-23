@@ -282,7 +282,7 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 	#countsort!(labellist_sorted)
     #this may need improvement:
 	if (crit_type==DifferenceSplit||crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
-		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat=build_listOfMeanResponse(crit,trnidx,validx,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
+    		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat=build_listOfMeanResponse(crit,trnidx,validx,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	elseif (crit_type==NormalDevianceSplit)
 		#@info "in the works..."
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass=build_listOfMeanResponse(crit,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
