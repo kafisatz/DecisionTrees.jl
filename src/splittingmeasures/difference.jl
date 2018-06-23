@@ -47,7 +47,7 @@ if isfinite(val)
   #warning: if the labellist is not sorted 1:n we need to be careful here!
   chosen_subset=labellist[chosen_subset_bitarray]
 else
-  chosen_subset=Array{UInt}(undef,0)
+  chosen_subset=Array{T}(undef,0)
 end
 return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
@@ -65,7 +65,7 @@ denomtot=sum(sumdenominator)
 weighttot=sum(sumweight)
 weighttot_minw=weighttot-minweight
 sumnl=sumdl=sumwl=0.0
-this_splitlist=Array{Splitdef}(undef,0)
+this_splitlist=Array{Splitdef{T}}(undef,0)
 
 for i in subs
     #i is an index, it indicates which element of labellist will flip sides for the next calculation
@@ -87,7 +87,7 @@ for i in subs
     if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
       valnew=abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))	  
       feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id)+number_of_num_features : feature_column_id
-	  push!(this_splitlist,Splitdef(feature_column_id,feature_column_id2,fname,labellist[elementsInLeftChildBV],valnew,sumwl,weighttot-sumwl))
+	  push!(this_splitlist,Splitdef{T}(feature_column_id,feature_column_id2,fname,labellist[elementsInLeftChildBV],valnew,sumwl,weighttot-sumwl))
     end
 end
 return this_splitlist

@@ -143,16 +143,16 @@ if length(gvloc)<1 #|| length(graph_as_string)<1
     return nothing
 else
     if !isfile(gvloc)
-        warn("DTM: GraphViz executable not found at: \n $(gvloc)")
+        @warn("DTM: GraphViz executable not found at: \n $(gvloc)")
     else
         if !isfile(dot_txt_file)
-            warn("DTM: GraphViz dot file not found at: \n $(dot_txt_file)")
+            @warn("DTM: GraphViz dot file not found at: \n $(dot_txt_file)")
         else
             if format=="pdf"
                 command="-Tpdf"
                 # "dot mytree.dot.txt -Tpdf -o c:\temp\mt.pdf"
             else
-                warn("DTM: invalid format for GraphViz was specified. Format = $(format)")
+                @warn("DTM: invalid format for GraphViz was specified. Format = $(format)")
             end
         end
     end
@@ -169,11 +169,11 @@ else
 			println("Graph was visualized in the file: \n $(outputfilename)")				
         catch e
             @show actual_command
-            warn("DTM: GraphViz failed to crate a graph.")
+            @warn("DTM: GraphViz failed to crate a graph.")
             @show e
         end
     else
-        warn("DTM: Inexistent location specified for graph file: $(chosen_dir)")
+        @warn("DTM: Inexistent location specified for graph file: $(chosen_dir)")
     end
 
 return nothing

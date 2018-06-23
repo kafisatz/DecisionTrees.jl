@@ -14,8 +14,10 @@ t0=time_ns()
 cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 #@info("You may want to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
-@everywhere using Revise
-@everywhere using CSV,DataFrames
+#@everywhere using Revise
+@everywhere import CSV
+@everywhere import DataFrames
+@everywhere import DataFrames: DataFrame
 
 @everywhere using DecisionTrees  
 
@@ -73,7 +75,7 @@ end
 #dfprepped is an intermediary dataframe which is generally not needed
 dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 #consider 
-fieldnames(dtmtable)
+fieldnames(typeof(dtmtable))
 dtmtable.key #an identifier (String type), ideally it is a unique identifier for each row
 dtmtable.numerator #a vector
 dtmtable.denominator #a vector

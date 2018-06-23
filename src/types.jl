@@ -4,7 +4,7 @@ import Base: length,start,next,done,eltype,==,hash
 export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree
 export ModelSettings,copySettingsToCurrentType
 
-struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
+#struct pdaMod end #this is a legacy type. It is only defined here, because we have some 'old' unused functions in the code which have a singature with this type (and the signature needs an update....)
     
 #Splitting Criterions use multiple dispatch
 	abstract type SplittingCriterion  end
@@ -19,6 +19,9 @@ struct pdaMod end #this is a legacy type. It is only defined here, because we ha
 	struct RankOptSplit         <: SplittingCriterion end
 	struct ROptMinRLostPctSplit	   <: SplittingCriterion end
 	struct ROptMinRLostSplit	   <: SplittingCriterion end
+    
+    PoissonOrGamma = Union{PoissonDevianceSplit,GammaDevianceSplit}
+    
 #sortby options for categorical splits
 	abstract type SortBy end
 	struct SortByMean 	<: SortBy end
@@ -146,7 +149,7 @@ end
 Base.size(d::DTMTable) = size(d.features)
 
 function Base.getindex(r::DTMTable,idx,compact_features=false)
-    warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")    
+    @warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")    
     
     key=r.key[idx]
     one_to_n=collect(1:length(r.weight))
@@ -165,14 +168,14 @@ function Base.getindex(r::DTMTable,idx,compact_features=false)
         #"compact" features, it is possible that we could do this in a better/faster way
         for i=tmp_number_of_num_features+1:size(features,2)
             if eltype(features[i])!=UInt8
-                features[i]=PooledArray(Array(features[i]))
+                features[i]=DecisionTrees.PooledArraysDTM.PooledArray(Array(features[i]))
             end
         end    
 	end 
     
     mp=deepcopy(r.mappings)
     #mp=deepcopy(map(i->features[i].pool,tmp_number_of_num_features+1:size(features,2)))
-	warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")
+	@warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")
     #error("this does not work properly. we NEED to update candmatmatrix otherwise we get a modelling error later on....")
     #for now candMatWOMaxValues is left as it was...
     dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),mp)
@@ -222,24 +225,24 @@ function hash(x::Rulepath,h::UInt)
   return h
 end
 
-mutable struct Leaf #leafs are mutable, since we determine the number of the leaf a posteriori
+mutable struct Leaf{T<:Unsigned} #leafs are mutable, since we determine the number of the leaf a posteriori
     #NOTE: the idx array can have an unexpected meaning/size in the case where we perform subsampling!
 	rowcount::Int #number of observations of the training data set that fell into thta leaf
     mean::Float64
     fitted::Float64 #this is usually identical to the mean, but can be different for some instances
   	size::Float64 #  this is equal to sum(weight)
     depth::Int
-    rule_path::Array{Rulepath,1}
+    rule_path::Array{Rulepath{T},1}
 	sumnumerator::Float64
 	sumdenominator::Float64
     id::Int #a number 1<=id<=#number of leaves in the tree
-    function Leaf()        
-        rp=Vector{Rulepath{UInt8}()}
-        return new(0,0.0,0.0,0.0,0,rp,0.0,0.0,0)
+end
+function Leaf{T}() where T
+        rp=Vector{Rulepath{T}}(undef,0)
+        return Leaf{T}(0,0.0,0.0,0.0,0,rp,0.0,0.0,0)
     end
-    function Leaf(rowc,me,fi,sz,depth,rp,sumn,sumd,id)
-        return new(rowc,me,fi,sz,depth,rp,sumn,sumd,id)
-    end
+function Leaf(rowc,me,fi,sz,depth,rp::Vector{Rulepath{T}},sumn,sumd,id) where T
+    return Leaf{T}(rowc,me,fi,sz,depth,rp,sumn,sumd,id)
 end
 ==(x::Leaf,y::Leaf)= (x.rowcount==y.rowcount) && (x.mean==y.mean) && (x.fitted==y.fitted)  && (x.size==y.size)  && (x.depth==y.depth)  && (x.rule_path==y.rule_path)  && (x.sumnumerator==y.sumnumerator)  && (x.sumdenominator==y.sumdenominator) && (x.id==y.id)
 hash(x::Leaf)=hash(x,UInt(9))
@@ -262,9 +265,9 @@ struct Node{T<:Unsigned}
     featid_new_positive::Int
     #we have redundance in the tree structure, the rulepath contains the same information as the members of the node; todo - remove it!
     subset::Array{T,1}
-    left::Union{Leaf,Node{UInt8},Node{UInt16}}
-    right::Union{Leaf,Node{UInt8},Node{UInt16}}
-    rule_path::Array{Rulepath,1}
+    left::Union{Leaf{T},Node{T}} #,Node{UInt16}}
+    right::Union{Leaf{T},Node{T}} #,Node{UInt16}}
+    rule_path::Array{Rulepath{T},1}
 end
 
 mutable struct ModelSettings
@@ -277,33 +280,12 @@ mutable struct ModelSettings
 	mf::Float64 #7 moderationfactor
 	nscores::Int #8
 	adaptiveLearningRate::Float64 #9
-	number_of_tariffs::Int #10
 	prem_buffer::Int #11
 	BoolStartAtMean::Bool #12
 	bool_write_tree::Bool #13	
 	number_of_num_features::Int #14
-	parallel_tree_construction::Bool #15
-	using_local_variables::Bool #16
-	parallel_level_threshold::Int #17
-	parallel_weight_threshold::Int #18
-	nthreads::Int #19
-	dataIdentifier::String #20
-	algorithmsFolder::String #21
-	startime::String #22
-	indata::String #23
-	var_dep::String #24
-	indepcount::Int #25
 	spawnsmaller::Bool #26
-	recursivespawning::Bool #27
-	pminweightfactor::Float64 #28
-	pminrelpctsize::Float64 #29
-	pflipspawnsmalllargedepth::Int #30
-	juliaprogfolder::String #31
-	boolMDFPerLeaf::Bool #32
-	ranks_lost_pct::Float64 #33
-	variable_mdf_pct::Float64 #34
-	boolRankOptimization::Bool #35
-	bROSASProduceRkOptStats::Bool #36
+    boolRankOptimization::Bool #35  
 	boolRandomizeOnlySplitAtTopNode::Bool #37
 	subsampling_prop::Float64 #38 #NOTE Friedman suggests to sample without replacement see Friedman 2002 Stochastic Gradient Boosting,” Computational Statistics and Data Analysis 38(4):367-378
 	subsampling_features_prop::Float64 #39
@@ -316,8 +298,7 @@ mutable struct ModelSettings
 	smoothEstimates::String #46
 	deriveFitPerScoreFromObservedRatios::Bool #deriveFitPerScoreFromObservedRatios::Bool (if this is true then the fit per score will be based on the observed ratio per score (instead of the fitted ratio per score)) . Note that this does not influence the structure of the tree, but only the fitted ratio per score (and scoreband)
     roptForcedPremIncr::Bool #47
-    premStep::Float64 #48
-	write_sas_code::Bool #49
+    write_sas_code::Bool #49
 	write_iteration_matrix::Bool #50
 	write_result::Bool #51
 	write_statistics::Bool #52
@@ -347,8 +328,6 @@ mutable struct ModelSettings
 	fitForStatsAndCharts::String
 
 	#the following are treated specially
-	ncolsdfIndata::Int
-	ishift::Int
 	df_name_vector::Array{String,1}
     number_of_char_features::Int #this is calculated by Julia from number_of_num_features and ncolsdfIndata (which is defined by the data)
 
@@ -366,37 +345,16 @@ mutable struct ModelSettings
 	mf=0.1 #7
 	nscores=1000 #8
 	adaptiveLearningRate=1.0 #9
-	number_of_tariffs=-1 #10
 	prem_buffer=0 #11
 	BoolStartAtMean=true #12
 	bool_write_tree=true #13
-	number_of_num_features=-1 #14
-	parallel_tree_construction=false #15
-	using_local_variables=true #16
-	parallel_level_threshold=-1 #17
-	parallel_weight_threshold=-1 #18
-	nthreads=0 #19
-	dataIdentifier="uninitialized" #20
-	algorithmsFolder="uninitialized" #21
-	starttime=string(now()) #22
-	indata="uninitialized" #23
-	var_dep="uninitialized" #24
-	indepcount=-1 #25
+	number_of_num_features=-1 #14    
 	spawnsmaller=true #26
-	recursivespawning=false #27
-	pminweightfactor=0.1 #28
-	pminrelpctsize=0.1 #29
-	pflipspawnsmalllargedepth=10000 #30
-	juliaprogfolder="uninitialized" #31
-	boolMDFPerLeaf=false #32
-	ranks_lost_pct=0.05 #33
-	variable_mdf_pct=0.1 #34
 	boolRankOptimization=false #35
-	bROSASProduceRkOptStats=false #36
 	boolRandomizeOnlySplitAtTopNode=true #37
 	subsampling_prop=1.0 #38
 	subsampling_features_prop=1.0 #39
-	version="uninitialized" #40
+	version="not_initialized" #40
 	preppedJLDFileExists=false #41
 	catSortByThreshold=7 #42
 	catSortBy=SortByMean() #43
@@ -405,8 +363,7 @@ mutable struct ModelSettings
 	smoothEstimates="1" #46 this is a string for now (as there could be different smoothing methods specified by this string)
 	deriveFitPerScoreFromObservedRatios=true
 	roptForcedPremIncr=false #47
-    premStep=-0.01 #48
-	write_sas_code=true #49
+    write_sas_code=true #49
 	write_iteration_matrix=false#50
 	write_result=true #51
 	write_statistics=true #52
@@ -437,15 +394,13 @@ mutable struct ModelSettings
 	fitForStatsAndCharts="rawRelativities" #rawRelativities,unsmoothedPerScore,smoothedPerScore
 
 	#the following are treated specially
-	ncolsdfIndata=-1 #
-	ishift=0 #
 	df_name_vector=Array{String}(undef,0) #
     number_of_char_features=-1 #
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
 
-	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,number_of_tariffs,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,parallel_tree_construction,using_local_variables,parallel_level_threshold,parallel_weight_threshold,nthreads,dataIdentifier,algorithmsFolder,starttime,indata,var_dep,indepcount,spawnsmaller,recursivespawning,pminweightfactor,pminrelpctsize,pflipspawnsmalllargedepth,juliaprogfolder,boolMDFPerLeaf,ranks_lost_pct,variable_mdf_pct,boolRankOptimization,bROSASProduceRkOptStats,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,premStep,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolNumeratorStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini,boolCalculatePoissonError,performanceMeasure,fitForStatsAndCharts
-	 ,ncolsdfIndata,ishift,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
+	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,spawnsmaller,boolRankOptimization,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolNumeratorStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini,boolCalculatePoissonError,performanceMeasure,fitForStatsAndCharts
+	 ,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
   end  # ModelSettings()
 
 end #type definition
@@ -460,7 +415,7 @@ if col=="statsbyvariables"&&length(stringValue)>0
 	chosenvars=[lowercase(x) for x in split(stringValue,' ')]
 	integerindices=findall(in(chosenvars), [lowercase(x) for x in s.df_name_vector])
 	if length(integerindices)!=length(chosenvars)
-		warn("some variables of statsbyvariables were not found in the data")
+		@warn("some variables of statsbyvariables were not found in the data")
 		@show s.df_name_vector
 		@show chosenvars
 		@show stringValue
@@ -479,131 +434,12 @@ end
 return stringValue
 end
 
-"""
-updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int,const_shift_cols::Int,columnnames::Array{String,1})
-
-this is NOT the user facing function of updatedSettings!
-consider updateSettingsMod! instead
-"""
-function updateSettings!(dataFilename::String,s::ModelSettings,settings::Array{String,2},ncolsdfIndata::Int,const_shift_cols::Int,columnnames::Array{String,1})
-	dataisJLD=lowercase(dataFilename[end-3:end])==".jld2"
-	s.ncolsdfIndata=ncolsdfIndata
-	#@show columnnames
-	s.df_name_vector=copy(columnnames)
-	@assert size(settings,1)==2
-	snames=fieldnames(s)
-	snamesStringLowercase=[lowercase(string(x)) for x in snames]
-	headerLowercase=[lowercase(x) for x in copy(settings[1,:])]
-	if size(headerLowercase)!=size(unique(headerLowercase)) #"Error: Header of settings file is not unique (there are duplicate column names). Abort."
-		mycount=map(j->sum(headerLowercase[j].==headerLowercase),1:length(headerLowercase))
-		idx=(mycount.>=2)
-		@show unique(headerLowercase[idx])
-		@assert size(headerLowercase)==size(unique(headerLowercase)) "Error: Header of settings file is not unique (there are duplicate column names). Abort."
-	end
-	values=settings[2,:]
-	#todo/tbd check if we should prohibit that some settings are changed
-	#todo/tbd max_splitting_points_num cannot be changed if a *.JLD2 is provided
-	#check for mandatory settings
-	@assert checkForMandatorySettings(headerLowercase)==nothing "Settings are missing some mandatory fields."
-	valConverted=oldValue=0
-
-	for i=1:size(settings,2)
-		#a note on smoothEstimates, the user may change this setting. It will affect the *.stats.csv file
-		col=headerLowercase[i]
-		stringValue=values[i] #this should always be a String
-		if col=="max_splitting_points_num"&&dataisJLD
-			warn("max_splitting_points_num setting cannot be changed if a *.jld2 file is provided.")
-		end
-		@assert col!="moderationvector" "Moderationvector is currently disabled."
-		#@assert col!="chosen_apply_tree_fn" "You are not allowed to modify the setting chosen_apply_tree_fn"
-		found=findall(in([col]), snamesStringLowercase)
-		@assert length(found)>0 "Invalid or unknown setting: $(col) (Value: $(stringValue) Column $(i))"
-		@assert size(found)==(1,) "Error while updating settings column $(col):$(i) (non  unique match)"
-		colnumber=found[1]
-		#convert string statsByVariables to integer values
-		#@info "complete this step" #also add the resulting plots and tables (for the named variables and also the randomly generated groups)
-		stringValue=edit_statsByVariables(col,stringValue,s)
-		#if scorebandsstartingpoints is a single integer, define n equally spaced bands
-			if col=="scorebandsstartingpoints"
-				if !contains(stringValue,",")
-					@assert canbeint(stringValue) "scorebandsstartingpoints is neither an integer nor a list of comma separated integers"
-					stringValue
-					nscorebands=parse(Int,stringValue)
-					#read nscores from settingscsv if provided
-					ff=findall(in(["nscores"]), headerLowercase)
-					if length(ff)>0
-						@assert length(values[ff])==1
-						try
-							tmpnscores=parse(Int,values[ff][1])
-						catch eri
-							@show eri
-							@assert false "nscores in settings csv cannot be parsed as integer."
-						end
-					else
-						tmpnscores=s.nscores
-					end
-					@assert nscorebands<=tmpnscores #nscores is maybe not yet defined here.
-					this_stepsize=tmpnscores/nscorebands
-					scorebandsstartingpointsArr=Int[convert(Int,round(x)) for x in 1:this_stepsize:tmpnscores]
-					if scorebandsstartingpointsArr[end]==tmpnscores
-						pop!(scorebandsstartingpointsArr)
-					end
-					stringValue=string(scorebandsstartingpointsArr)[2:end-1]
-				end
-			end
-		#@show stringValue,col,found,colnumber
-		try
-			oldValue=getfield(s,snames[colnumber])
-			valConverted=convertFromString(oldValue,stringValue)
-			setfield!(s,snames[colnumber],valConverted)
-		catch err
-			@info "\n\nUnable to set value $(stringValue) for settings column $(i):$(col)"
-			@show stringValue
-			@show typeof(stringValue)
-			@show valConverted
-			@show typeof(valConverted)
-			@show oldValue
-			@show typeof(oldValue)
-			@show colnumber
-			@show snames[colnumber]
-			@show i
-			@show err
-			error("Abort. See above.")
-			#error("Unable to set value $(stringValue) for settings column $(i):$(col)")
-		end
-	end
-
-	if !in("chosen_apply_tree_fn",headerLowercase)
-		if s.roptForcedPremIncr
-			s.chosen_apply_tree_fn="apply_tree_by_leaf" #previously this was set to apply_tree_by_row
-		  else
-		  if s.boolRankOptimization
-			if s.boolMDFPerLeaf
-			 s.chosen_apply_tree_fn="apply_tree_by_row"
-			else
-			 s.chosen_apply_tree_fn="apply_tree_additiv"
-			end
-		  else
-			#chosen_apply_tree_fn="apply_tree_by_row" #"apply_tree_by_leaf"
-			s.chosen_apply_tree_fn="apply_tree_by_leaf" #this function is faster than apply_tree_by_row (at least for trees where we have a normal amount of leaves (say less than 100))
-		  end
-		end
-	end
-	s.moderationvector=[s.mf]
-	s.number_of_char_features=ncolsdfIndata-const_shift_cols-s.number_of_num_features-s.ishift
-	@assert s.number_of_char_features>=0 "Number_of_char_features is negative. Please check the value of number_of_num_features and the number of columns in the data!"
-
-	res=checkIfSettingsAreValid(s)
-	@assert res==nothing "Some settings are invalid! Abort."
-	return nothing
-end
-
 function copySettingsToCurrentType(oldSetting)
 	s=ModelSettings()
-	newfields=fieldnames(s)
-	oldfields=fieldnames(oldSetting)    
+	newfields=fieldnames(typeof(s))
+	oldfields=fieldnames(typeof(oldSetting))    
 	
-	for field in fieldnames(oldSetting)
+	for field in fieldnames(typeof(oldSetting))
 		if in(field,newfields)
 			v=getfield(oldSetting,field)
 			setfield!(s,field,v)
@@ -731,6 +567,7 @@ function checkForMandatorySettings(headerLowercase)
 end
 
 function checkIfSettingsAreValid(s::ModelSettings)
+	  #@assert in(method,globalConstAllowableMethodsForDefineCandidates)
 	  @assert in(s.fitForStatsAndCharts,globalValidfitForStatsAndCharts) 	  
       @assert s.statsRandomByVariable<typemax(UInt8) #more than 255 random groups is really not meaningful; we do work with a UInt8 list later on
 	  @assert in(s.model_type,["boosted_tree" "build_tree" "bagged_tree" "bagged_boosted_tree"])
@@ -768,16 +605,14 @@ function checkIfSettingsAreValid(s::ModelSettings)
       @assert (s.mf>=0 && s.mf<=1)
 	  #end
       @assert (s.adaptiveLearningRate<=1.0 && s.adaptiveLearningRate>=0.0)
-      @assert s.using_local_variables==true
-      @assert s.variable_mdf_pct<=1.0
       #@assert s.subsampling_prop<=1.0 #positive value => without replacement
 	  @assert s.subsampling_prop>=-1.0 #negative value => with replacement, smaller than -1 is not possible wherease larger than 1 is possible
 	  if s.subsampling_prop<1.0
-		warn("Subsampling of the data is enabled. Ensure the value of subsampling_prop=$(s.subsampling_prop) has a meaningful value relative to minw=$(s.minw)")
+		@warn("Subsampling of the data is enabled. Ensure the value of subsampling_prop=$(s.subsampling_prop) has a meaningful value relative to minw=$(s.minw)")
 	  end
-	  #if (s.model_type!="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);warn("Subsampling with Boosting methods is experimental!");end
+	  #if (s.model_type!="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);@warn("Subsampling with Boosting methods is experimental!");end
 	  #todo/tbd need to fix this! see goodnessOfFit
-		if (s.model_type=="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);warn("Bagging is currently EXPERIMENTAL!") ;end
+		if (s.model_type=="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);@warn("Bagging is currently EXPERIMENTAL!") ;end
       #@assert (abs(s.subsampling_prop)==1.0)||(s.model_type=="bagged_tree") "ERROR: (bk) Sumbsampling is currently only available for Bagging, as it will require the usage of apply tree after each iteration (since not all estimates are available after the construction of the tree)! Thus (for now) you need to set subsampling_prop to 1.0."
       @assert (abs(s.subsampling_features_prop>0) && abs(s.subsampling_features_prop<=1))
 	  @assert s.scorebandsstartingpoints[1]==1
@@ -793,7 +628,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
 		@assert (s.crit==ROptMinRLostPctSplit()||s.crit==ROptMinRLostSplit())
 	end
 	@assert !s.boolRankOptimization "this is currently not working in this version of the Code"
-	@assert s.ishift==0 #is zero for normal models (historically this was 1 for rkoptmodels (labels_orig and so on....)
+	#@assert s.ishift==0 #is zero for normal models (historically this was 1 for rkoptmodels (labels_orig and so on....)
 	#@show s.df_name_vector
 	#@show s.number_of_char_features,s.number_of_num_features
 	if length(s.df_name_vector)!=(s.number_of_char_features+s.number_of_num_features)
@@ -827,7 +662,7 @@ mutable struct Tree <: DTModel
 		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata,fp)
 	end
 	function Tree()		
-        rootnode=Leaf()
+        rootnode=Leaf{UInt8}()
         intVarsUsed=Int[]
         candMatWOMaxValues=[Float64[]]
         charMappings=[String[]]

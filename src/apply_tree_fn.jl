@@ -1,7 +1,7 @@
 export predict
 
 #Bagging 
-function apply_tree_by_leaf(idx::Vector{Int},leaves_of_tree::Array{Leaf,1},t::Tree,features::DataFrame)	
+function apply_tree_by_leaf(idx::Vector{Int},leaves_of_tree,t::Tree,features::DataFrame)	
 	return apply_tree_by_leaf(idx,leaves_of_tree,t.rootnode,features)
 end
 

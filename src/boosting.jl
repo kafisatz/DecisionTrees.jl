@@ -10,7 +10,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	candMatWOMaxValues=dtmtable.candMatWOMaxValues
 	obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,boolProduceEstAndLeafMatrices=initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominator,sett)
 	#trn_meanobservedvalue is the mean observed RATIO, i.e. sum(numerator)/sum(denominator) for the training data
-	obs=obstrn+obsval
+	T_Uint8_or_UInt16=find_max_type(features)
+    obs=obstrn+obsval
 	current_error=0.0
     moderationfactor=moderationvector[1]
 	if (size(moderationvector,1)!=iterations && size(moderationvector,1)!=1)
@@ -35,10 +36,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
     sortvec_reused_trn_only=zeros(Int,length(trnidx))
     intVarsUsed=Array{Array{Array{Int,1},1}}(undef,0);sizehint!(intVarsUsed,iterations)
 	inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(inds_considered,iterations)
-	#intCharVarsUsed=Array{Array{Array{Int,1},1}}(undef,0);sizehint!(intCharVarsUsed,iterations)
-	#char_inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(char_inds_considered,iterations)
 	
-	res=Array{Union{Leaf,Node{UInt8},Node{UInt16}}}(undef,iterations)
+	res=Array{Union{Leaf{T_Uint8_or_UInt16},Node{UInt8},Node{UInt16}}}(undef,iterations)
 	if boolProduceEstAndLeafMatrices
 		est_matrix=Array{Float64}(undef,obs,iterations+1)
 		est_matrixFromScores=deepcopy(est_matrix)
@@ -54,10 +53,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	
 	scores=zeros(Int,obs)	
 	estFromScores=zeros(obs)
-	#vectorOfRulePathsToLeavesArrays=Array{Array{Array{Rulepath,1},1}}(iterations+1)
-	#vectorOfRulePathsToLeavesArrays[1]=Array{Array{Rulepath,1}}(undef,0) #the first entry is not defined	
-	vectorOfLeafArrays=Array{Array{Leaf,1}}(undef,iterations+1)
-	vectorOfLeafArrays[1]=Array{Leaf}(undef,0) #the first entry is not defined		
+	vectorOfLeafArrays=Array{Array{Leaf{T_Uint8_or_UInt16},1}}(undef,iterations+1)
+	vectorOfLeafArrays[1]=Array{Leaf{T_Uint8_or_UInt16}}(undef,0) #the first entry is not defined		
 	
     p = ProgressMeter.Progress(iterations, 2, "Progress of Boosting Model:") # minimum update interval: x seconds (2)
     ((adaptiveLearningRate>=1.0)||(adaptiveLearningRate<=0.0)) ? (BoolAdaptiveLearningRate=false) : (BoolAdaptiveLearningRate=true)
@@ -80,20 +77,20 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	for iter=1:iterations
         @timeConditional(showTimeUsedByEachIteration, begin
 		#Build Iteration iter
-			#showTimeUsedByEachIteration&&println("Calculating iteration $(iter). Time: $(now())")
+			#showTimeUsedByEachIteration&&println("Calculating iteration $(iter). Time: $(Dates.now())")
 			current_mdf=moderationvector[min(iter,size(moderationvector,1))] #mdf remains constant if a vector of size 1 was provided (instead of a vector of size iterations)			
 			
 			if showTimeUsedByEachIteration
 			#todo tbd: this can be done more efficiently: We can avoid the tmpTree object (also we do not need to call "sometreesettings" every time!, improve this
-				@time 	tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
+				@time 	tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
 			else
-						tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
+						tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
 			end
 			#indicatedRelativity
 			if (!sett.bINTERNALignoreNegRelsBoosting)&&(minimum(indicatedRelativityForApplyTree_reused)<0.0)
 				#todo/tbd check this: if there are negative indicated relativites the boosting approach is not meaningful.
-				warn("The boosting model encountered negative indicated realtivities for some leaves.")
-				warn("This should not happen if you have only positive values for numerator and denominator.")
+				@warn("The boosting model encountered negative indicated realtivities for some leaves.")
+				@warn("This should not happen if you have only positive values for numerator and denominator.")
 				error("Abort.")
 			end
 			#todo/tbd check this: what if a fitted value in a leaf is 0? what will the indicatedRelativityForApplyTree_reused be? will the boosting work as expected?
@@ -157,10 +154,10 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 				push!(xlData.charts,deepcopy(thischart))
 		end	)
 		if showProgressBar_time #TimeUsedByEachIteration
-			next!(p)
+			ProgressMeter.next!(p)
 		end
     end
-	gc_enable(true)	
+	GC.enable(true)	#to check: is this needed? is there any benefit to it?
 	#todo/tbd: note that we have at least three different estimates should we add all of them to the output?
 	
 	#one of these vectors is acutally identical to estFromScores and would not need to be recalculated
@@ -212,7 +209,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	xlData.sheets=[modelsettingsSheet,overviewSheet,statsSheet,scoresSheet,predictorsSheet,validationSheet]
 #add boolNumeratorStats if requested
 	if sett.boolNumeratorStats
-		warn("tariff est stats are not updated for DTM2: this needs review")
+		@warn("tariff est stats are not updated for DTM2: this needs review")
 			errors_num_estimates=addTariffEstimationStatsAndGraphs!(xlData,trnidx,validx,actualNumerator,estimatedRatioUnsmoothed,estimatedRatioSmoothed,estimateRatioFromRelativities,est_matrix,est_matrixFromScores)
 		#attach errors per iteration to modelStatistics== statsSheet (Excel file)
 			statsSheetINDEX=findall(in([nameOfModelStatisticsSheet]), [x.name for x in xlData.sheets])
@@ -224,7 +221,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	end
 	z=deepcopy(stats[1:sett.niter+1,:])
 	modelstats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
-	names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
+	DataFrames.names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
 #resulting BT
 	#create trnidx
 	@assert issorted(trnidx)

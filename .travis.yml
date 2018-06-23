@@ -1,9 +1,9 @@
 language: julia
 os:
-  #- osx 
   #OSX is complaining about │    could not load library "libcholmod"
   #ErrorException("could not load library "libopenblas64_"
   - linux
+  #- osx
 julia:
   #- 0.7.0-alpha
   #- 0.7.0-alpha.154  
@@ -11,11 +11,17 @@ julia:
   - nightly  
 notifications:
   email: false
-script: # the default script is equivalent to the following
+script: 
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'try;import Pkg;Pkg.clone(pwd());println("Building PyCall for Travis...");ENV["PYTHON"]="";println("1");Pkg.build("PyCall");println("2");using PyCall;println("3");global const pyModPandas = PyNULL();global const pyModxlsxwriter = PyNULL();copy!(pyModPandas, pyimport_conda("pandas","pandas"));copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"));writer=pyModPandas[:ExcelWriter]("blabla_deletme.xlsx", engine = "xlsxwriter");@show typeof(writer);println("if this worked, then pandas and xlsxwriter should be installed");println("Done building PyCall.Restarting Julia...");catch;end;exit();'
+  - unzip /home/travis/build/kafisatz/DecisionTrees.jl/data/freMTPL2/freMTPL2.zip -d /home/travis/build/kafisatz/DecisionTrees.jl/data/freMTPL2/
+  #- julia -e 'try;import Pkg;Pkg.clone(pwd());println("Building PyCall for Travis...");ENV["PYTHON"]="";println("1");Pkg.build("PyCall");println("2");using PyCall;println("3");global const pyModPandas = PyNULL();global const pyModxlsxwriter = PyNULL();copy!(pyModPandas, pyimport_conda("pandas","pandas"));copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"));writer=pyModPandas[:ExcelWriter]("blabla_deletme.xlsx", engine = "xlsxwriter");@show typeof(writer);println("if this worked, then pandas and xlsxwriter should be installed");println("Done building PyCall.Restarting Julia...");catch e;println("this did not work");@show e;end;exit();'
+  - julia -e '@assert isfile("data/freMTPL2/freMTPL2.csv")'
+  - julia -e 'try;import Pkg;println("");println("Building PyCall for Travis...");ENV["PYTHON"]="";println("1");Pkg.build("PyCall");println("2");using PyCall;println("3");global const pyModPandas = PyNULL();global const pyModxlsxwriter = PyNULL();copy!(pyModPandas, pyimport_conda("pandas","pandas"));copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"));writer=pyModPandas[:ExcelWriter]("blabla_deletme.xlsx", engine = "xlsxwriter");@show typeof(writer);println("if this worked, then pandas and xlsxwriter should be installed");println("Done building PyCall.Restarting Julia...");catch e;println("this did not work");@show e;end;exit();'
   #- julia -e 'Pkg.clone(pwd()); Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)';
   #- julia -e 'Pkg.clone(pwd());Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)';
-  - julia -e 'import Pkg; Pkg.develop(pwd()); Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)'
+  #- julia -e 'Pkg.clone(pwd());Pkg.build("DecisionTrees"); Pkg.test("DecisionTrees"; coverage=true)';  
+  - julia -e 'import Pkg; @show 1;@show pwd();@show 2;Pkg.build("DecisionTrees"); @show 3;Pkg.test("DecisionTrees"; coverage=true)' 
+  #- julia -e 'import Pkg; @show 1;@show pwd();Pkg.add("DecisionTrees"); @show 2;Pkg.build("DecisionTrees"); @show 3;Pkg.test("DecisionTrees"; coverage=true)'   
+  #- julia -e 'import Pkg; @show 1;@show pwd();Pkg.develop(pwd()); @show 2;Pkg.build("DecisionTrees"); @show 3;Pkg.test("DecisionTrees"; coverage=true)'      
 after_success:
-  - julia -e 'import Pkg; cd(Pkg.dir("DecisionTrees")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
+  - julia -e 'import Pkg; cd(Pkg.dir("DecisionTrees")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder());Codecov.submit(Codecov.process_folder())';
