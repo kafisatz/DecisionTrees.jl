@@ -12,6 +12,8 @@ import JLD2
 import OnlineStats
 import ProgressMeter
 import StatsBase
+import DataStreams
+import CSV
 
 #try PyCall
 global const pyAB = PyCall.PyNULL()
