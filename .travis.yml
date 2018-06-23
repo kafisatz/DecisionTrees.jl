@@ -24,4 +24,4 @@ script:
   #- julia -e 'import Pkg; @show 1;@show pwd();Pkg.add("DecisionTrees"); @show 2;Pkg.build("DecisionTrees"); @show 3;Pkg.test("DecisionTrees"; coverage=true)'   
   #- julia -e 'import Pkg; @show 1;@show pwd();Pkg.develop(pwd()); @show 2;Pkg.build("DecisionTrees"); @show 3;Pkg.test("DecisionTrees"; coverage=true)'      
 after_success:
-  - julia -e 'import Pkg; cd(Pkg.dir("DecisionTrees")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
+  - julia -e 'import Pkg; cd(Pkg.dir("DecisionTrees")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder());Codecov.submit(Codecov.process_folder())';
