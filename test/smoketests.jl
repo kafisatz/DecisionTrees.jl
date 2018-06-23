@@ -2,6 +2,7 @@
 
 @testset "Smoketests" begin
 
+import DataFrames
 import Random: rand,randstring
 
 ##################################################
