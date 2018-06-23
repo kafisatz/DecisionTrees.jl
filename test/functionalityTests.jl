@@ -12,7 +12,24 @@ tolForTheseTests=1e-15
 datafile=joinpath(datadir,"freMTPL2","freMTPL2.csv")
 @test isfile(datafile)
 if !isfile(datafile)
+    @info("Data not found. Trying to unzip the data: $(datafile)")
+    try 
+        pathToZip=string(splitext(datafile)[1],".zip") 
+        unzipLoc=splitdir(pathToZip)[1]        
+        if Sys.iswindows()            
+            cmd=`powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('$(pathToZip)', '$(unzipLoc)'); }"`
+        else 
+            cmd=`unzip $(pathToZip) -d $(unzipLoc)`
+        end
+        run(cmd)
+    catch erO
+        @warn("Failed to unzip data. Some tests will not run.")
+        @show erO        
+    end
+end
+if !isfile(datafile)
     @test "CSV DATA NOT FOUND"=="freMTPL2.csv was not found. Functionality tests not run."
+    @warn("You may want to manually unzip the zip file in this location $(splitdir(datafile)[1]) as some of the tests rely on that CSV file.")
 else
     @time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
