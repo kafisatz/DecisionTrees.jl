@@ -1,4 +1,5 @@
 using Coverage
+import DataFrames
 import DelimitedFiles
 
 thisFolder="C:\\Users\\bernhard.konig.ROOT_MILLIMAN\\Documents\\async\\home\\code\\julia\\memHistory"
@@ -9,7 +10,8 @@ for i=2:length(mr2)
 	mr3=hcat(mr3,mr2[i])
 end
 mr4=permutedims(mr3,[2,1]);
-srtp=sortperm(convert(Vector{Int},mr4[:,1]),rev=true)
+#mr4=readcsv("C:\\temp\\alloc.csv")
+
 
 function list_of_files(;fldr=pwd(),ext=".jl")
     li=Vector{Vector{String}}()
@@ -22,7 +24,7 @@ function list_of_files(;fldr=pwd(),ext=".jl")
         for file in files
             thisf=joinpath(root, file)
             if !occursin(".git",thisf)&&(lowercase(thisf[end-length(ext)+1:end])==lowercase(ext))
-                println(thisf) # path to files
+                #println(thisf) # path to files
                 fn_only=splitdir(thisf)[2]
                 wo_fldr=replace(thisf,fldr=>"")
                 if wo_fldr[1]=='\\'||wo_fldr[1]=='/'
@@ -103,10 +105,16 @@ end
 fnOnly=map(x->x[2],splitdir.(mr5[:,4]))
 mr6=hcat(mr5,fnOnly)
 
+#sort data 
+srtp=sortperm(convert(Vector{Int},mr6[:,1]),rev=true)
+
+#define header
 hdr=["Allocations" "MemFile" "LineNumber" "CodeFile" "CodeInThatLine" "FileName Only"]
 mr7=vcat(hdr,mr6)
 
+#change columns 
 tmp=mr7[:,4]
 mr7[:,4]=mr7[:,3]
 mr7[:,3]=tmp
-DelimitedFiles.writedlm("C:\\temp\\alloc2.csv",mr7,',');
+
+DelimitedFiles.writedlm("C:\\temp\\allocation.csv",mr7,',');

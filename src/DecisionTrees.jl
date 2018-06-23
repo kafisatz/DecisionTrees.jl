@@ -35,12 +35,9 @@ import PyCall
 import DataFrames
 import DataFrames: DataFrame
 import JLD2
-#import FileIO #do we need this at all?
 import OnlineStats
 import ProgressMeter
 import StatsBase
-#import PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
-#for the 'precompile files', we need some additional packages
 #import DataStreams
 
 #import MySQL, # temporarily disabled 
@@ -112,10 +109,10 @@ global const CSHARP_VALID_CHARS="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 
 function __init__()
 	#the following lines may trigger the installation of the respective python packages
-	if true #temporarily disable this
+	#if true #temporarily disable this
         copy!(pyModPandas, PyCall.pyimport_conda("pandas","pandas"))
         copy!(pyModxlsxwriter, PyCall.pyimport_conda("xlsxwriter","xlsxwriter"))
-    end
+    #end
 end
 
 function get_sha1()

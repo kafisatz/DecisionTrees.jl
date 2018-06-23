@@ -108,9 +108,13 @@ a,b,allmodels=dtm(dtmtable,settV)
 #Cross validation
 ##################################################
 cvsampler=CVOptions(-3,0.0,true)
-#this will run 5 models and thus might take some time
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
+cvsampler=CVOptions(3,0.65,true)
+statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+
+yetAnotherCVsampler=CVOptions(3,0.5,false)
+statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 #set some default settings
 updateSettingsMod!(sett,
