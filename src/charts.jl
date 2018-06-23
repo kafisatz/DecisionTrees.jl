@@ -87,6 +87,11 @@ function writeDFtoExcel(excelData::ExcelData,existingFile::T,row::Int,col::Int,w
 	#@assert isfile(existingFile)
 	@assert min(row,col)>=0
 	#write all data    
+    #@show pyModPandas
+    #@show typeof(pyModPandas)
+    #dump(pyModPandas)
+    #@show fieldnames(pyModPandas)
+    #@show pyModPandas.o
     writer=pyModPandas[:ExcelWriter](existingFile, engine = "xlsxwriter")
     
 	for xlSheet in excelData.sheets

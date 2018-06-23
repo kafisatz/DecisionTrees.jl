@@ -111,7 +111,7 @@ global const CSHARP_VALID_CHARS="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 
 function __init__()
 	#the following lines may trigger the installation of the respective python packages
-	if false #temporarily disable this
+	if true #temporarily disable this
         copy!(pyModPandas, PyCall.pyimport_conda("pandas","pandas"))
         copy!(pyModxlsxwriter, PyCall.pyimport_conda("xlsxwriter","xlsxwriter"))
     end
