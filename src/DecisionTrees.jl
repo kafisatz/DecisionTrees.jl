@@ -40,7 +40,7 @@ import ProgressMeter
 import StatsBase
 #import PyCall,DataFrames,JLD2,FileIO,OnlineStats,StatsBase,StatsFuns,ProgressMeter
 #for the 'precompile files', we need some additional packages
-import DataStreams
+#import DataStreams
 
 #import MySQL, # temporarily disabled 
 #import SQLite #disabled as it uses DataFrames 0.11
