@@ -28,8 +28,9 @@ end
 """
 prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 """
-function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}(),methodForSplittingPointsSelection::String="basedOnWeightVector")
 	@assert isdir(directory)
+    @assert in(methodForSplittingPointsSelection,globalConstAllowableMethodsForDefineCandidates)
 	
 	@time (df_prepped,sett)=prepareDF!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
 
@@ -37,7 +38,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
 		sett.boolSaveJLDFile=false
 		
 	fn=joinpath(directory,"DTMResult.csv")
-	dtmtable=prep_data_from_df(df_prepped,sett,fn)
+	dtmtable=prep_data_from_df(df_prepped,sett,fn,methodForSplittingPointsSelection=methodForSplittingPointsSelection)
 
 	return dtmtable,sett,df_prepped
 end
@@ -219,8 +220,7 @@ function is_categorical_column(x,nm)
     return elt <:AbstractString
 end
 
-function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_ext::String)
-#warn: this function has a lot of redundancies with another function in this file ->prep_data_from_df
+function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_ext::String;methodForSplittingPointsSelection::String="basedOnWeightVector")
 	datafilename,ext=splitext(fn_with_ext) #actually one can provide fn_with_ext="c:\\temp\\my folder\\out" (so no extension is necessary)
 	datafolder,outfileStringOnly=splitdir(datafilename)
 	if length(outfileStringOnly)==0
@@ -283,7 +283,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	
 	print("Preparing numeric variables...")
 	#this function modifies features -> the num features are added as pdas!
-	candMatWOMaxValues=add_coded_numdata!(dfIndata,sett,trn_val_idx,sett.max_splitting_points_num,features)
+	candMatWOMaxValues=add_coded_numdata!(dfIndata,sett,trn_val_idx,sett.max_splitting_points_num,features,weight,methodForSplittingPointsSelection)
 	println(" done.")
 	#IMPORTANT convention  numerical data 'comes first' (i.e. first x columns are numerical), then categorical
 	print("Preparing character variables...")
@@ -317,7 +317,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	wlo,whi=extrema(weight)
 	if wlo!=whi
 		print("Max weight is $(whi), min weight is $(wlo)")
-		@info("Currently the automatic choice of splitting points does not consider the weight distribution!")
+		#@info("Currently the automatic choice of splitting points does not consider the weight distribution!")
 	end
 	
 	pools=map(i->features[i].pool,1:size(features,2)) 

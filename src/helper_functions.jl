@@ -1632,9 +1632,10 @@ end
 """adds numerical explanatory variables as PooledArrays to the input DataFrame wholeDF
 add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame)
 """
-function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame) #Version where no candidates are supplied -> Julia chooses the candidates
+function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame,weight::Vector{Float64},methodForSplittingPointsSelection) #Version where no candidates are supplied -> Julia chooses the candidates
   nobs=length(trn_val_idx)
   cols=sett.number_of_num_features 
+  freqweights=StatsBase.fweights(weight) #Frequency Weights
   
   local this_column #need to initialize the variable here otherwise it will only exist locally in the try loop
   candMatWOMaxValues=Array{Array{Float64,1}}(undef,0)
@@ -1657,7 +1658,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 		this_column=original_data_vector
 	end
 	#Generate candidate list
-	candlist=define_candidates_equidistant(this_column,max_splitting_points_num)
+	candlist=defineCandidates(this_column,max_splitting_points_num,freqweights,method=methodForSplittingPointsSelection)
 	if max_splitting_points_num>500
 		@warn("DTM: max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
 		if max_splitting_points_num>2000
@@ -1689,15 +1690,28 @@ function map_numdata_to_candidates(this_column,candlist)
 	return mapped_vec
 end
 
-function define_candidates_equidistant(feature_column,max_splitting_points_num::Int)
-	#step 1: get quantiles of data
-	domain_i = unique(quantile(feature_column, range(0.5/Float64(max_splitting_points_num), stop=1.0-0.5/Float64(max_splitting_points_num), length=max_splitting_points_num)))
+
+"""
+defineCandidates(feature_column,max_splitting_points_num::Int)
+returns a candidate list of split values which considers the distribution of the data where each 
+data point has the same weight (i.e. the weight/exposure vector of dtmtable is NOT used for this function)
+"""
+function defineCandidates(feature_column,max_splitting_points_num::Int,fw::T;topAndBottomCutoff=0.5,method="basedOnWeightVector") where T<:StatsBase.FrequencyWeights
+    @assert in(method,globalConstAllowableMethodsForDefineCandidates)
+    #step 1: get quantiles of data
+    local domain_i
+    if method=="equalWeight"
+        domain_i = unique(quantile(feature_column, range(topAndBottomCutoff/Float64(max_splitting_points_num), stop=1.0-topAndBottomCutoff/Float64(max_splitting_points_num), length=max_splitting_points_num)))
+    else 
+        #wt=fweights
+        domain_i = unique(StatsBase.quantile(feature_column, fw,range(topAndBottomCutoff/Float64(max_splitting_points_num), stop=1.0-topAndBottomCutoff/Float64(max_splitting_points_num), length=max_splitting_points_num)))  
+    end
 	@assert size(domain_i,1)<=max_splitting_points_num #that should not happen
 
 	#step 2 ensure each element of domain_i corresponds to an observation
 	uq_obs=unique(feature_column);
 	sort!(uq_obs);
-	result=fill!(similar(domain_i), 0)#zeros(domain_i)
+	result=fill!(similar(domain_i), 0)
 	for tmploopvar=1:length(domain_i)
 		thisval=domain_i[tmploopvar]
 		idx2=searchsortedfirst(uq_obs,thisval)
@@ -1711,6 +1725,19 @@ function define_candidates_equidistant(feature_column,max_splitting_points_num::
 	result_unique=unique(result)
 	return result_unique #NOTE! the length of domain_i may be smaller than max_splitting_points_num
 end
+#=
+    this_column=fullData[:Density]
+    weights=fullData[:Exposure]
+    fw=fweights(weights)
+    max_splitting_points_num=250
+    candlist1=defineCandidates(this_column,10,fw)
+    candlist2=defineCandidates(this_column,10,fw,method="basedOnWeightVector")
+    hcat(candlist1,candlist2)
+    t1=map(x->[sum(this_column.<x),sum(weights[this_column.<x])],candlist1)
+    t2=map(x->[sum(this_column.<x),sum(weights[this_column.<x])],candlist1)
+    @assert sum(t1,1)==sum(t2,1)
+    @show sum(t1,1)
+=#
 
 function deleteAllOutputFiles(datafolder::AbstractString,outfilename::AbstractString)
 	#deleteIfExists(string(datafolder,outfilename,".log"))

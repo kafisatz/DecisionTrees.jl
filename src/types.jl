@@ -567,6 +567,7 @@ function checkForMandatorySettings(headerLowercase)
 end
 
 function checkIfSettingsAreValid(s::ModelSettings)
+	  #@assert in(method,globalConstAllowableMethodsForDefineCandidates)
 	  @assert in(s.fitForStatsAndCharts,globalValidfitForStatsAndCharts) 	  
       @assert s.statsRandomByVariable<typemax(UInt8) #more than 255 random groups is really not meaningful; we do work with a UInt8 list later on
 	  @assert in(s.model_type,["boosted_tree" "build_tree" "bagged_tree" "bagged_boosted_tree"])

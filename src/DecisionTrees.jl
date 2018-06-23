@@ -68,6 +68,7 @@ include("show.jl")
 global const pyModPandas = PyCall.PyNULL()
 global const pyModxlsxwriter = PyCall.PyNULL()
 
+global const globalConstAllowableMethodsForDefineCandidates=("equalWeight","basedOnWeightVector")
 global const UInt8VECTORemptySplitDef = Vector{Splitdef{UInt8}}(undef,0)
 global const UInt16VECTORemptySplitDef = Vector{Splitdef{UInt16}}(undef,0)
 global const UInt8emptySplitDef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0) #formerly const_default_splitdef
