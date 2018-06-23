@@ -9,7 +9,7 @@ tolForTheseTests=1e-15
 #Read the data
 ##################################################
 
-datafile=joinpath(datadir,"freMTPL2\\freMTPL2.csv")
+datafile=joinpath(datadir,"freMTPL2","freMTPL2.csv")
 @test isfile(datafile);
 @time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
