@@ -296,8 +296,8 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 		end		
 	  try
 		colnumber=global_const_shift_cols+sett.number_of_num_features+i
-		thisname=Symbol(df_names[i+sett.number_of_num_features]) #df_names[colnumber]
-		thiscol_as_utf8=dfIndata[thisname] #view(dfIndata,:,colnumber)
+		thisname=Symbol(df_names[i+sett.number_of_num_features]) 
+		thiscol_as_utf8=dfIndata[thisname] 
 		if eltype(thiscol_as_utf8)!=String
 			thiscol_as_utf8=convert(Array{String,1},thiscol_as_utf8)
 		end

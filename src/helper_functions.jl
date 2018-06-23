@@ -1629,7 +1629,9 @@ return "miro"
 end
 
 
-"""adds numerical explanatory vars as PDAs to the DF f"""
+"""adds numerical explanatory variables as PooledArrays to the input DataFrame wholeDF
+add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame)
+"""
 function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame) #Version where no candidates are supplied -> Julia chooses the candidates
   nobs=length(trn_val_idx)
   cols=sett.number_of_num_features 
@@ -1639,8 +1641,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
   for i=1:cols
 	thisname=Symbol(sett.df_name_vector[i])	
 	original_data_vector=wholeDF[thisname] 	
-	#thiscol_as_utf8=view(dfIndata,:,colnumber)
-    header=deepcopy(sett.df_name_vector) #[string(x) for x in names(numfeatures)]
+	header=deepcopy(sett.df_name_vector) 
     elt=eltype(original_data_vector)
 	@assert (elt<:Number) "Datatype of numeric predictor $(i):$(header[i]) is not numeric in the CSV. Please check the order of the columns in the data, their type and the value of number_of_num_features in the settings!" #the assert is probably not needed here, as we try to convert afterwards anyway
 	cond2=(typeof(original_data_vector)<:AbstractVector{Float64})	 
@@ -1656,7 +1657,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 		this_column=original_data_vector
 	end
 	#Generate candidate list
-	candlist=define_candidates(this_column,max_splitting_points_num)
+	candlist=define_candidates_equidistant(this_column,max_splitting_points_num)
 	if max_splitting_points_num>500
 		@warn("DTM: max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
 		if max_splitting_points_num>2000
@@ -1688,7 +1689,7 @@ function map_numdata_to_candidates(this_column,candlist)
 	return mapped_vec
 end
 
-function define_candidates(feature_column,max_splitting_points_num::Int)
+function define_candidates_equidistant(feature_column,max_splitting_points_num::Int)
 	#step 1: get quantiles of data
 	domain_i = unique(quantile(feature_column, range(0.5/Float64(max_splitting_points_num), stop=1.0-0.5/Float64(max_splitting_points_num), length=max_splitting_points_num)))
 	@assert size(domain_i,1)<=max_splitting_points_num #that should not happen
