@@ -5342,15 +5342,15 @@ end
 
 
 function deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
-	@show maxValue=maximum(scoreEndPoints)
-    @show sEndIdx=searchsortedfirst(scoreEndPoints[1:end-1],maxValue)
-    if true 
-        @warn("remove this once tests are ok")
-        v1=view(obsPerScore,sEndIdx+1:length(vectorWeightPerScore))
-        v2=view(vectorWeightPerScore,sEndIdx+1:length(vectorWeightPerScore))
-        @assert abs(sum(v1))<eps(vectorWeightPerScore[1])
-        @assert abs(sum(v2))<3*eps(vectorWeightPerScore[1])
-    end 
+	maxValue=maximum(scoreEndPoints)
+    sEndIdx=searchsortedfirst(scoreEndPoints[1:end-1],maxValue)
+    #if true 
+     #   @warn("remove this once tests are ok")
+      #  v1=view(obsPerScore,sEndIdx+1:length(vectorWeightPerScore))
+       # v2=view(vectorWeightPerScore,sEndIdx+1:length(vectorWeightPerScore))
+        #@assert abs(sum(v1))<eps(vectorWeightPerScore[1])
+        #@assert abs(sum(v2))<3*eps(vectorWeightPerScore[1])
+    #end 
     originalLength=length(scoreEndPoints)
     if sEndIdx>=originalLength
         return originalLength

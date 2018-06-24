@@ -103,18 +103,30 @@ strs,resm2b=dtm(dtmtable,sett)
 ##################################################
 
 ##################################################
-#Multirun
+#Multirun Boosting
 ##################################################
 settV=createGridSearchSettings(sett,    
     minw=[-0.1,-0.2]
     ,mf=[0.1,0.05],niter=[2])
+settVBoosting=deepcopy(settV)
 a,b,allmodels=dtm(dtmtable,settV)
 @test typeof(allmodels[1].modelstats)==DataFrame
     
 
 ##################################################
+#Multirun buildtree
+##################################################
+sett.model_type="build_tree"
+settV=createGridSearchSettings(sett,    
+    minw=[-0.1,-0.2]
+    ,mf=[0.1,0.05],niter=[2])
+a,b,allmodels=dtm(dtmtable,settV)
+#@test typeof(allmodels[1].modelstats)==DataFrame
+
+##################################################
 #Cross validation
 ##################################################
+sett.model_type="boosted_tree"
 cvsampler=CVOptions(-3,0.0,true)
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
@@ -123,6 +135,18 @@ statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 yetAnotherCVsampler=CVOptions(3,0.5,false)
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+
+#multithreaded CV
+@test Distributed.nprocs()==1 #we generally expect that tests are run on only 1 thread
+if Distributed.nprocs()<2
+    Distributed.addprocs(2)
+end
+statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+#same for multirun 
+a,b,allmodels=dtm(dtmtable,settV)
+dtm(dtmtable,settVBoosting)
+#remove workers again
+Distributed.rmprocs(workers())
 
 #set some default settings
 updateSettingsMod!(sett,
