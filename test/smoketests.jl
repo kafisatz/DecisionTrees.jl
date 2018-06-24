@@ -136,18 +136,6 @@ statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 yetAnotherCVsampler=CVOptions(3,0.5,false)
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
-#multithreaded CV
-@test Distributed.nprocs()==1 #we generally expect that tests are run on only 1 thread
-if Distributed.nprocs()<2
-    Distributed.addprocs(2)
-end
-statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
-#same for multirun 
-a,b,allmodels=dtm(dtmtable,settV)
-dtm(dtmtable,settVBoosting)
-#remove workers again
-Distributed.rmprocs(workers())
-
 #set some default settings
 updateSettingsMod!(sett,
 niter=3,
@@ -218,5 +206,23 @@ dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_
 sett.minw=oldminw
 #example with weights.==1 and denominator.==1
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
-    
-   end #testset
+   
+
+#multithreaded runs
+if false  #currently disabled
+    @test Distributed.nprocs()==1 #we generally expect that tests are run on only 1 thread
+    dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+    sett.model_type="boosted_tree"
+    if Distributed.nprocs()<2
+        Distributed.addprocs(2)
+        @everywhere using Decisiontrees
+    end
+    statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+    #same for multirun 
+    a,b,allmodels=dtm(dtmtable,settV)
+    dtm(dtmtable,settVBoosting)
+    #remove workers again
+    Distributed.rmprocs(workers())
+end
+
+end #testset
