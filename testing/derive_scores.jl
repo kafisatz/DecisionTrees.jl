@@ -133,9 +133,6 @@ scoreEndPoints[end]=size(weight_srt,1)
 vectorWeightPerScore=Array{Float64}(nscoresPotentiallyReduced)
 cumulativeNumberOfDistinctRawRelativitesPerScore=zeros(Int,nscoresPotentiallyReduced)
 
-#=
-    @code_warntype derive_scores_main_aggregation_step!(wperscore,uniqueRelativitiesSorted,weightPerUniqueRelativity,rowCountPerUniqueRelativity,cumulativeNumberOfDistinctRawRelativitesPerScore,scoreEndPoints,vectorWeightPerScore)
-=#
 nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(wperscore,uniqueRelativitiesSorted,weightPerUniqueRelativity,rowCountPerUniqueRelativity,cumulativeNumberOfDistinctRawRelativitesPerScore,scoreEndPoints,vectorWeightPerScore)
 
 obsPerScore=copy(scoreEndPoints)

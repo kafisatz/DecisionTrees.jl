@@ -2,8 +2,10 @@ using Coverage
 import DataFrames
 import DelimitedFiles
 
-thisFolder="C:\\Users\\bernhard.konig.ROOT_MILLIMAN\\Documents\\async\\home\\code\\julia\\memHistory"
-mr=analyze_malloc(thisFolder);
+thisFolder=Pkg.dir("DecisionTrees")
+thisFolder=joinpath(thisFolder,"..","memHist","2018 06 23")
+isdir(thisFolder)
+mr=analyze_malloc(thisFolder)
 mr2=map(x->[x.bytes,x.filename,x.linenumber],mr);
 mr3=deepcopy(mr2[1])
 for i=2:length(mr2)
@@ -117,4 +119,4 @@ tmp=mr7[:,4]
 mr7[:,4]=mr7[:,3]
 mr7[:,3]=tmp
 
-DelimitedFiles.writedlm("C:\\temp\\allocation.csv",mr7,',');
+DelimitedFiles.writedlm("C:\\temp\\allocations.csv",mr7,',');

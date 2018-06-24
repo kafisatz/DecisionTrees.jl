@@ -17,11 +17,18 @@ if !isfile(datafile)
         pathToZip=string(splitext(datafile)[1],".zip") 
         unzipLoc=splitdir(pathToZip)[1]        
         if Sys.iswindows()            
-            cmd=`powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('$(pathToZip)', '$(unzipLoc)'); }"`
+            cmd=`powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('$(pathToZip)', '$(unzipLoc)'); }"
+            cmd2=`7z e $(pathToZip) -o$(unzipLoc)`
+            try
+                run(cmd2)
+            catch
+            end
         else 
             cmd=`unzip $(pathToZip) -d $(unzipLoc)`
         end
-        run(cmd)
+        if !isfile(datafile)
+            run(cmd)
+        end
     catch erO
         @warn("Failed to unzip data. Some tests will not run.")
         @show erO        
