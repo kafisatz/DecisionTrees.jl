@@ -1,5 +1,5 @@
 __precompile__()
-VERSION >= v"0.7-"
+true
 
 #note on v0.7 alpha precompilation through 'using' (i.e. when the code was not precomipled before) takes about 800 seconds
 #once precompilation is done, the using statement might need around 500 seconds. 

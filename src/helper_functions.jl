@@ -3009,7 +3009,7 @@ function print_tree(tree::Node{T},sett::ModelSettings,candMatWOMaxValues::Array{
 end
 
 #write Tree Fn
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,number_of_num_features::Int,indent::Int=0,fileloc="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where {E <: Ensemble}
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,number_of_num_features::Int,indent::Int=0,fileloc="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where {E <: Ensemble}
   iterations=size(ensemble.trees,1)
   sz=length(df_name_vector)
   onedimintvec_sum=zeros(Float64,sz)
@@ -3073,14 +3073,14 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,nu
   return nothing
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Tree,number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,fileloc::String,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Tree,number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,fileloc::String,df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
 	#version which opens fileloc
 	f=open(fileloc,"a+")
 		write_tree(candMatWOMaxValues,tree.rootnode,number_of_num_features,var_imp1d_str_arr,var_imp2d_str_arr,indent,f,df_name_vector,mappings)
     close(f)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
 #function in the special case where the whole tree is in fact a single leaf
 	#version which uses f::IOStream as input
 	write(f,"\r\n1 dimensional predictor 'frequency':")
@@ -3099,7 +3099,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,num
     write_tree(candMatWOMaxValues,tree,number_of_num_features, indent + 1,f,df_name_vector,mappings)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where T<:Unsigned 
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int,var_imp1d_str_arr::Array{String,2},var_imp2d_str_arr::Array{String,2},indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where T<:Unsigned 
 	#version which uses f::IOStream as input
 	write(f,"\r\n1 dimensional predictor 'frequency':")
 	my_write(f,var_imp1d_str_arr);
@@ -3122,7 +3122,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},
     write_tree(candMatWOMaxValues,tree.right,number_of_num_features, indent + 1,f,df_name_vector,mappings)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int, indent::Int=0,fileloc::String="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int, indent::Int=0,fileloc::String="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
     @warn("This should not happen. Opening file $(fileloc) to write Leaf information.")
 	#This should only happen when the whole tree is a leaf.
 	#We should by any means avoid to open and close the file for each leaf.
@@ -3131,11 +3131,11 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,num
     close(f)
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
     write(f,"L|S$(round(nodesize(tree), digits=1)),Fit$(round(tree.fitted, digits=2)),D$(tree.depth)\r\n")
 end
 
-function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int, indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where T<:Unsigned 
+function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int, indent::Int,f::IOStream,df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0)) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
     orig_id>0 ? write(f,"N|F$(this_id)  $(df_name_vector[this_id]),T$(round(candMatWOMaxValues[this_id][tree.subset[end]], sigdigits=5)),Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))") : write(f,"N|F$(this_id)  $(df_name_vector[this_id]),[$(join(mappings[-orig_id][[convert(Int,z) for z in tree.subset]],","))],Fit$(round(fittedratio(tree), digits=2)),S$(round(nodesize(tree), digits=1)))")
@@ -3336,7 +3336,7 @@ end
 close(fiostream)
 end
 
-function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int, indent::Int,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0) where T<:Unsigned 
+function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},number_of_num_features::Int, indent::Int,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0) where T<:Unsigned 
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 	notsign=convert(String,"not")
@@ -3364,7 +3364,7 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
 	end
 end
 
-function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,indent::Int,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0)
+function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int,indent::Int,fiostream::IOStream,df_name_vector::Array{String,1}=Array{String}(undef, 1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),leafvarname::String=convert(String,"leaf"),mdf::Float64=1.0)
 	writecomments=false
   if writecomments
     add=" *Nodesize: $(round(nodesize(tree), digits=1)), Fitted Value: $(round(tree.fitted, digits=2)), Depth: $(tree.depth);\r\n"

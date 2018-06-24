@@ -202,7 +202,7 @@ end
 function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here::Vector{Int},sampleSizeCanBeNEGATIVE::Int,trn_meanobservedvalue::Float64,candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},sett::ModelSettings,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::DataFrame)
 #function create_bagged_trees(iterationsPerCore[ii],sampleSizeForEachTreeCanBeNEG,trn_meanobservedvalue,candMatWOMaxValues,mappings,sett,actualNumerator,denominator,weight,features)	
 	res=Array{TreeWithErrorStats}(itr)
-	resFitted=Array{Array{Float64,1}}(1)
+	resFitted=Array{Array{Float64,1}}(undef, 1)
 		
 	abssampleSize,sampleVector=initBootstrapSample(sampleSizeCanBeNEGATIVE) 
 	#abssampleSize,sampleVector,num,denom,w,numf,charf,ooBagnum,ooBagdenom,ooBagw,ooBagnumf,ooBagcharf,ooBagsize=initBoostrapSample(sampleSizeCanBeNEGATIVE,numerator,denominator,weight,charfeatures,numfeatures)
