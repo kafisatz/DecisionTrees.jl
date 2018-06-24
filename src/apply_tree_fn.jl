@@ -41,6 +41,7 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
         subset=t.subset   
         if isContiguous(subset)
             idxlInteger,idxrInteger=lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
+            @assert lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)==lrIndices(idx,features[t.featid_new_positive],subset)
         else
             idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)
         end

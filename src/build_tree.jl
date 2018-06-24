@@ -114,7 +114,8 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
         column=features[id2]
     	matched_strings=column.pool[subset]
         if isContiguous(subset)
-            l,r=lrIndicesForContiguousSubset(trnidx,column,subset)
+			l,r=lrIndicesForContiguousSubset(trnidx,column,subset)
+			@assert lrIndicesForContiguousSubset(trnidx,column,subset)==lrIndices(trnidx,column,subset)
         else
             l,r=lrIndices(trnidx,column,subset)
         end
