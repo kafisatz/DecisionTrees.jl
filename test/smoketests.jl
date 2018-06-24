@@ -58,6 +58,10 @@ strs,resm2=dtm(dtmtable,sett)
 #reduce niter for the remaining tests
 sett.niter=3
 
+sett.statsByVariables=Int[1,2]
+strs,resm2=dtm(dtmtable,sett)
+sett.statsByVariables=Int[]
+
 #try different splitting criteria
 for splitCrit in ["difference","poissondeviance","gammadeviance"]
     updateSettingsMod!(sett,crit=splitCrit)
@@ -224,5 +228,7 @@ if false  #currently disabled
     #remove workers again
     Distributed.rmprocs(workers())
 end
+
+DecisionTrees.absrel(rand(3),rand(3))
 
 end #testset
