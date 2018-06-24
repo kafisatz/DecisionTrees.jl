@@ -3,7 +3,7 @@ import DataFrames
 import DelimitedFiles
 
 thisFolder=Pkg.dir("DecisionTrees")
-thisFolder=joinpath(thisFolder,"..","memHist","2018 06 23")
+thisFolder=joinpath(thisFolder,"..","memHist","2018 06 23b")
 isdir(thisFolder)
 mr=analyze_malloc(thisFolder)
 mr2=map(x->[x.bytes,x.filename,x.linenumber],mr);
@@ -120,3 +120,7 @@ mr7[:,4]=mr7[:,3]
 mr7[:,3]=tmp
 
 DelimitedFiles.writedlm("C:\\temp\\allocations.csv",mr7,',');
+
+#=
+include(joinpath(Pkg.dir("DecisionTrees"),"testing","allocation_coverage_analysis.jl"))
+=#
