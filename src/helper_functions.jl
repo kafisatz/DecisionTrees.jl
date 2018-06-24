@@ -3940,8 +3940,9 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
     #check consistency of scoreEndPoints
     #for i=1:length(scoreEndPoints)
     #    @show sum(view(weight_srt,1:scoreEndPoints[i]))-sum(vectorWeightPerScore2[1:i])
-    #end
-    
+	#end
+	nred=deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
+    nscoresPotentiallyReducedTWOTimes=nred
 	#aggregate scores
 	numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore=aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
 	#smooth scores		
@@ -5347,3 +5348,24 @@ function mapToOther!(v,keepvals::Vector{T},newValue::T) where T
     #mapToOther!(vnew,keep,"rare_value")
 end
 
+
+function deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
+	@show maxValue=maximum(scoreEndPoints)
+    @show sEndIdx=searchsortedfirst(scoreEndPoints[1:end-1],maxValue)
+    if true 
+        @warn("remove this once tests are ok")
+        v1=view(obsPerScore,sEndIdx+1:length(vectorWeightPerScore))
+        v2=view(vectorWeightPerScore,sEndIdx+1:length(vectorWeightPerScore))
+        @assert abs(sum(v1))<eps(vectorWeightPerScore[1])
+        @assert abs(sum(v2))<3*eps(vectorWeightPerScore[1])
+    end 
+    originalLength=length(scoreEndPoints)
+    if sEndIdx>=originalLength
+        return originalLength
+    else 
+        deleteat!(scoreEndPoints,sEndIdx+1:originalLength)
+        deleteat!(vectorWeightPerScore,sEndIdx+1:originalLength)
+        deleteat!(obsPerScore,sEndIdx+1:originalLength)
+        return length(obsPerScore)
+    end
+end
