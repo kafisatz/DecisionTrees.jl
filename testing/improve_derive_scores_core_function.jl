@@ -106,6 +106,9 @@ wperscore=wtot/nscores
 qtls=quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nscores,stop=1,length=nscores))
 qtls=unique(qtls)
 nscoresPotentiallyReducedTWOTimes=length(qtls)
+obsPerScore=zeros(Int,nscoresPotentiallyReducedTWOTimes)
+scoreEndPoints=zeros(Int,nscoresPotentiallyReducedTWOTimes)
+vectorWeightPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
 
 thisI=1
 thisJ=1
@@ -126,14 +129,15 @@ while thisI<=length(relativitiesSorted)
     thisI+=1
 end
 
-obsPerScore2=deepcopy(obsPerScore)
-vectorWeightPerScore2=deepcopy(vectorWeightPerScore)
-scoreEndPoints2=deepcopy(scoreEndPoints)
-
 #check consistency of scoreEndPoints
 for i=1:length(scoreEndPoints)
     @show sum(view(weight_srt,1:scoreEndPoints[i]))-sum(vectorWeightPerScore2[1:i])
 end
+
+
+obsPerScore2=deepcopy(obsPerScore)
+vectorWeightPerScore2=deepcopy(vectorWeightPerScore)
+scoreEndPoints2=deepcopy(scoreEndPoints)
 
     
 obsPerScore=copy(scoreEndPoints)
