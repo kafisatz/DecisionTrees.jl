@@ -174,16 +174,13 @@ function Base.getindex(r::DTMTable,idx,compact_features=false)
 	end 
     
     mp=deepcopy(r.mappings)
-    #mp=deepcopy(map(i->features[i].pool,tmp_number_of_num_features+1:size(features,2)))
-	@warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")
-    #error("this does not work properly. we NEED to update candmatmatrix otherwise we get a modelling error later on....")
-    #for now candMatWOMaxValues is left as it was...
+    @warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")
     dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),mp)
     return dt
 end
 
 #todo check the difference between immutable and type!! are we using immutables correctly here?
-struct Splitdef{T<:Unsigned} #Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
+struct Splitdef{T<:Unsigned} 
 	featid::Int
 	featid_new_positive::Int
     featurename::Symbol

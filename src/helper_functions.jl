@@ -1495,9 +1495,8 @@ end
 
 """
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
-This verison of the function is for String / Categorical variables
 """
-function lrIndices(trnidx::Vector{Int},f,subset::Array)
+function lrIndices(trnidx::Vector{Int},f,subset::Array) where T<:Unsigned
 	l=Vector{Int}(undef,0)
 	r=Vector{Int}(undef,0)
 	sizehint!(l,length(trnidx))
@@ -1513,28 +1512,82 @@ function lrIndices(trnidx::Vector{Int},f,subset::Array)
 	return l,r
 end
 
+
 """
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
-This verison of the function is for numerical variables
+Here subset needs to be of the form collect(m:n)
 """
 function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array)
+	if (length(subset)>0)&&(isone(subset[1]))
+    	return lrIndicesForContiguousSubsetStartingAtONE(trnidx,f,subset)
+	else 
+		return lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx,f,subset)
+	end
+end
+
+"""
+returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+Here subset needs to be of the form collect(1:n)
+"""
+function lrIndicesForContiguousSubsetStartingAtONE(trnidx::Vector{Int},f,subset::Array)
 	l=Vector{Int}(undef,0)
 	r=Vector{Int}(undef,0)
 	sizehint!(l,length(trnidx))
 	sizehint!(r,length(trnidx))
+    subsetEnd=subset[end]
 	for i in trnidx
 		@inbounds thisref=f.refs[i]
-		#warn("this can be done much more efficiently for  numerical variables! <=")
-        #if !(in(thisref,subset)==(thisref<=subset[end]))
-        #    error("I did not expect this....")
-        #end
-		if  thisref<=subset[end] # this should be equivalent to 'in(thisref,subset)' by construction
+		if thisref<=subsetEnd
 			push!(l,i)
 		else
 			push!(r,i)
 		end
 	end
 	return l,r
+end
+
+
+"""
+returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+Here subset needs to be of the form collect(m:n)
+"""
+function lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx::Vector{Int},f,subset::Array)
+	l=Vector{Int}(undef,0)
+	r=Vector{Int}(undef,0)
+	sizehint!(l,length(trnidx))
+	sizehint!(r,length(trnidx))
+	subsetEnd=subset[end]
+	subsetStart=subset[1]
+	for i in trnidx
+		@inbounds thisref=f.refs[i]
+		if (thisref<=subsetEnd)&&(thisref>=subsetStart)
+			push!(l,i)
+		else
+			push!(r,i)
+		end
+	end
+	return l,r
+end
+
+
+
+"""
+returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+Here we only consier splits of numerical variables!
+"""
+function lrIndicesForNumericalVar(trnidx::Vector{Int},f,subset::Array)
+	#NOTE: subset may not necessarily start at one (becuase values are missing?)
+	#still, the definition of the split should be of the form x<subset[end] -> go left (otherwise go right)
+	return lrIndicesForContiguousSubsetStartingAtONE(trnidx,f,subset)
+end
+
+"""
+isContiguous(v) returns true if the vector v is of the form collect(n:m)
+"""
+function isContiguous(subset::Vector)
+    mi=subset[1]
+    ma=subset[end]
+    return (length(subset)==(ma-mi+1))&&issorted(subset)
 end
 
 function update_part_of_this_vector!(idx::Vector{Int},read::Vector{T},write::Vector{T}) where T<:Number
@@ -2273,7 +2326,7 @@ function get_firstpos(v::Array{T,1}) where {T}
   #return value is the a vector containing the first positions of element k in an ordered set
   firstpos=zeros(Int,length(v))
   firstpos[1]=1
-
+  #@show "gaht nöd...."
   for i=2:length(v)
       firstpos[i]=firstpos[i-1]+v[i-1]
   end
@@ -3051,7 +3104,7 @@ write(fiostream,"; \r\nset runmodel;\r\nvariables_have_unknown_values=0;\r\nvari
 indexOfLastCharVarUsed=0
 #data prep and check
 	for i in 1:length(mappings)
-		#upcase f�r char vars
+		#upcase für char vars
 		vname=df_name_vector[number_of_num_features+i]
 		if boolListVarsUsed[number_of_num_features+i]
 			indexOfLastCharVarUsed=max(i,indexOfLastCharVarUsed)
@@ -3644,7 +3697,7 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
   #@warn("it matters if we start at the bottom or top end! which ones is better?")
   nscores=size(estimatedRatioPerScore,1)
   if (nscores<=2) #for 2 or less scores smoothing is not meaningful
-	@warn("DTM: nscores was less than 3. No smoothing performed")
+	@info("DTM: nscores was less than 3. No smoothing performed")
 	return nothing
   end
   intSpan=convert(Int,ceil((nscores)*span))
@@ -3846,6 +3899,7 @@ return maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeig
 end
 
 function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vector{Int},validx::Vector{Int},srt::Vector{Int},estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nscores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
+	#@assert nscores>=nscoresPotentiallyReduced
 	maxItersForSmoothing=0
     #todo,tbd this can probably be done more efficiently
 	raw_rel=view(raw_rel_full_vec,trnidx)	
@@ -3867,16 +3921,28 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt	
 	wtot=sum(weight_srt)
 	wperscore=wtot/nscores
-	scoreEndPoints=zeros(Int,nscores)
-	scoreEndPoints[end]=size(weight_srt,1)
-	vectorWeightPerScore=Array{Float64}(undef,nscores)
-
-	nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nscores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
+	#scoreEndPoints=zeros(Int,nscores)
+	#scoreEndPoints[end]=size(weight_srt,1)
+	#vectorWeightPerScore=Array{Float64}(undef,nscores)	#nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nscores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
+	#obsPerScore=copy(scoreEndPoints)
+	#cumulativeToIncremental!(obsPerScore)
+	#cumulativeToIncremental!(vectorWeightPerScore)        
+        
+    qtls=quantile(raw_rel_srt,StatsBase.fweights(weight_srt),range(1/nscores,stop=1,length=nscores))
+    qtls=unique(qtls)
+    nscoresPotentiallyReducedTWOTimes=length(qtls)
+    obsPerScore=zeros(Int,nscoresPotentiallyReducedTWOTimes)
+    scoreEndPoints=zeros(Int,nscoresPotentiallyReducedTWOTimes)
+    scoreEndPoints[end]=size(weight_srt,1)
+    vectorWeightPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
 	
-	obsPerScore=copy(scoreEndPoints)
-	cumulativeToIncremental!(obsPerScore)
-	cumulativeToIncremental!(vectorWeightPerScore)
-
+	calcWeightandObsPerScoreAndEndpoints!(qtls,raw_rel_srt,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
+    #check consistency of scoreEndPoints
+    #for i=1:length(scoreEndPoints)
+    #    @show sum(view(weight_srt,1:scoreEndPoints[i]))-sum(vectorWeightPerScore2[1:i])
+	#end
+	nred=deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
+    nscoresPotentiallyReducedTWOTimes=nred
 	#aggregate scores
 	numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore=aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
 	#smooth scores		
@@ -3887,6 +3953,29 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	insert_gaps_to_scores!(wtot,nscores,nscoresPotentiallyReducedTWOTimes,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
 
 	return aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore
+end
+
+function calcWeightandObsPerScoreAndEndpoints!(qtls,relativitiesSorted,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
+	@warn("add inbounds when tests run successfully")
+	thisI=1
+    thisJ=1
+    while thisI<=length(relativitiesSorted)
+        @inbounds reli=relativitiesSorted[thisI]
+        @inbounds wi=weight_srt[thisI]
+        if reli<=qtls[thisJ]
+            obsPerScore[thisJ]+=1
+            vectorWeightPerScore[thisJ]+=wi        
+        else 
+            if thisJ<length(obsPerScore)
+                thisJ+=1
+            end
+            obsPerScore[thisJ]+=1
+            vectorWeightPerScore[thisJ]+=wi
+        end 
+        scoreEndPoints[thisJ]=thisI 
+        thisI+=1
+	end
+	return nothing 
 end
 
 function derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
@@ -3933,8 +4022,8 @@ current_score+=1
 			break
 		end
  	end
-	vectorWeightPerScore[current_score]=current_cumulW
-	scoreEndPoints[current_score]=current_idx
+	@inbounds vectorWeightPerScore[current_score]=current_cumulW
+	@inbounds scoreEndPoints[current_score]=current_idx
 	stillRunning=current_score<length(scoreEndPoints)
 end
 
@@ -3983,7 +4072,7 @@ function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabl
 		estimatedRatioPerScore=copy(rawObservedRatioPerScore)
 	
 		if print_details&&(length(estimatedRatioPerScore)<=2)
-			printover("length(estimatedRatioPerScore) is 2 or less! No smoothing performed.")
+			@info("length(estimatedRatioPerScore) is 2 or less! No smoothing performed.")
 		else
 			span=0.0
 			if length(estimatedRatioPerScore)>1000
@@ -4854,7 +4943,6 @@ End Function
 	@assert length(boolListNum)==length(candMatWOMaxValues) #todo/tbd we could even check here whether each bool list has the right size (then again it should be fulfilled
 	boolListChar=write_and_create_boollist_char_vba(fiostream,mappings,df_name_vector,number_of_num_features,boolCharVarsUsedByModel)
 	@assert length(boolListChar)==length(mappings)
-	#error("bk continue here")
 	#csharp_write_RequiredElementsProvided(fiostream,df_name_vector,boolVariablesUsed)
 	@warn("todo, what if some variables are not as expected (unseen values for instance). Improve this / error handling similar to the generated SAS Code!")
 	vba_write_booleans(fiostream,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,boolCharVarsUsedByModel,boolNumVarsUsedByModel,boolVariablesUsed)
@@ -5252,11 +5340,24 @@ function mapToOther!(v,keepvals::Vector{T},newValue::T) where T
     #mapToOther!(vnew,keep,"rare_value")
 end
 
-"""
-isContiguous(v) returns true if the vector v is of the form collect(n:m)
-"""
-function isContiguous(subset::Vector)
-    mi=subset[1]
-    ma=subset[end]
-    return (length(subset)==(ma-mi+1))&&issorted(subset)
+
+function deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
+	maxValue=maximum(scoreEndPoints)
+    sEndIdx=searchsortedfirst(scoreEndPoints[1:end-1],maxValue)
+    #if true 
+     #   @warn("remove this once tests are ok")
+      #  v1=view(obsPerScore,sEndIdx+1:length(vectorWeightPerScore))
+       # v2=view(vectorWeightPerScore,sEndIdx+1:length(vectorWeightPerScore))
+        #@assert abs(sum(v1))<eps(vectorWeightPerScore[1])
+        #@assert abs(sum(v2))<3*eps(vectorWeightPerScore[1])
+    #end 
+    originalLength=length(scoreEndPoints)
+    if sEndIdx>=originalLength
+        return originalLength
+    else 
+        deleteat!(scoreEndPoints,sEndIdx+1:originalLength)
+        deleteat!(vectorWeightPerScore,sEndIdx+1:originalLength)
+        deleteat!(obsPerScore,sEndIdx+1:originalLength)
+        return length(obsPerScore)
+    end
 end

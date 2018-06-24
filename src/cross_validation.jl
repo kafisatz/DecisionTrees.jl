@@ -259,7 +259,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         sendto_module(DecisionTrees,Distributed.workers(),local_data_dict=deepcopy(di))
         
         #run all models in parallel
-        @warn("this is currently terribly slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
+        #@warn("this is currently terribly slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
             pmapresult=Distributed.pmap(iLoop -> run_cvsample_on_a_process(iLoop,local_data_dict),1:length(cvsampler))
                        
         #2. run models   

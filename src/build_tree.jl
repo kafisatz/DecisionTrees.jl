@@ -88,7 +88,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
   #this can happen (EVEN AT THE TOP NODE) if subsampling (of data and or features) is enabled: it may be that there is in fact no split possible (e.g. if all variables are constant)
   if id == 0
 	if (depth==0)
-		printover("No split was found at the top node. This may cause errors later on in the code!")
+		@warn("No split was found at the top node. This is generally not expected and may cause errors later on in the code!")
 	end
 		trnsumn=sum(view(numerator,trnidx))
 		trnsumd=sum(view(denominator,trnidx))
@@ -101,7 +101,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 		this_right_rp=deepcopy(parent_rp);
 		push!(this_left_rp,Rulepath(id,subset,true));
 		push!(this_right_rp,Rulepath(id,subset,false));
-		if id<0
+		if id<0 #(id<0 == !isa(features[id2].pool[1],Number)) #pool cannot be empty here, thus accessing the first element should be fine alternatively eltype(x)<:Number might be faster..
 			#split by character variable       
             for u in subset
                 intVarsUsed[-id+settings.number_of_num_features][u]+=1
@@ -112,9 +112,26 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
             intVarsUsed[id][subset[end]]+=1 #set this value to true to indicate, that is is used by the tree
         end
         column=features[id2]
-    	matched_strings=column.pool[subset]
-        @warn("improve this! fn contiguousSubset should be considered")
-        l,r=lrIndices(trnidx,column,subset)
+    	#matched_strings=column.pool[subset]
+		if id<0 
+			#char split
+			if isContiguous(subset)
+				l,r=lrIndicesForContiguousSubset(trnidx,column,subset)
+				#if  !( lrIndicesForContiguousSubset(trnidx,column,subset)==lrIndices(trnidx,column,subset))
+				#	@show subset
+				#	@show trnidx[1:100]
+				#	@show column[1:100]
+				#	@show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
+				#	@show lrIndices(idx,features[t.featid_new_positive],subset)
+				#	@assert false 
+				#end
+			else
+				l,r=lrIndices(trnidx,column,subset)
+			end
+		else 
+			#numerical split
+			l,r=lrIndicesForNumericalVar(trnidx,column,subset) #this could be done nicer (multiple dispatch based on the type of column...)
+		end
 
     countl=size(l,1)
     countr=size(r,1)
@@ -318,7 +335,6 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures)
 	end
-    #error("the next step may be incorrect")
     if isfinite(tmp_result[1])
         feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id) + number_of_num_features : feature_column_id
       return [Splitdef(feature_column_id,feature_column_id2,fname,Vector{T}(tmp_result[2]),tmp_result[1],tmp_result[3],tmp_result[4])]::Vector{Splitdef{T}}
@@ -337,18 +353,9 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,feature_column_id,moments_per_pdaclass)
 	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit)
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures,feature_column_id)
-		#error("PoissonDevianceSplit is not yet implemented for randomw>0")
     end
     
-    return tmpres::Vector{Splitdef{T}}
-    #if length(tmpres)<1
-    #    return [tmpres]::Vector{Splitdef{T}}
-    #end
-	#if eltype(tmpres[1].subset)==T
-	#	return [tmpres]::Vector{Splitdef{T}}
-	#else
-	#	return convert(Vector{Splitdef{T}},tmpres)::Vector{Splitdef{T}}
-	#end
+    return tmpres::Vector{Splitdef{T}}    
   end
 end
 end

@@ -38,11 +38,25 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
        return nothing
 	 end
 	 featid=t.featid
-   subset=t.subset   
-   @warn("improve this! fn contiguousSubset should be considered")
-   idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)   
+        subset=t.subset 
+    if featid<0        
+        if isContiguous(subset)
+            #@warn("remove this")
+            idxlInteger,idxrInteger=lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
+            #if !(lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)==lrIndices(idx,features[t.featid_new_positive],subset))
+             # @show subset
+              #@show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
+              #@show lrIndices(idx,features[t.featid_new_positive],subset)
+              #@assert false 
+            #end
+        else
+            idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)
+        end
+        else 
+        #numerical split
+			idxlInteger,idxrInteger=lrIndicesForNumericalVar(idx,features[t.featid_new_positive],subset) #this could be done nicer (multiple dispatch based on the type of column...)
+        end
        #here each iteration will write on certain elements of the two vectors fit and leaf
-     #@code_warntype apply_tree_by_leaf_iteration!(idxlInteger,rpvector,t.left,features,fit,leaf)
       apply_tree_by_leaf_iteration!(idxlInteger,t.left,features,fit,leaf)
       apply_tree_by_leaf_iteration!(idxrInteger,t.right,features,fit,leaf)
     return nothing 
