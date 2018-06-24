@@ -1497,7 +1497,7 @@ end
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
 This verison of the function is for String / Categorical variables
 """
-function lrIndices(trnidx::Vector{Int},f,subset::Array) where T<:Unsigned
+function lrIndices(trnidx::Vector{Int},f,subset::Array)
 	l=Vector{Int}(undef,0)
 	r=Vector{Int}(undef,0)
 	sizehint!(l,length(trnidx))
