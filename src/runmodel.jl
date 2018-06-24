@@ -373,7 +373,7 @@ run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 """
 function run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 #this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
-
+t0RunModel0=time_ns()
 sett=deepcopy(input_setttings)
 @assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
 if sett.boolCalculateGini
@@ -769,8 +769,7 @@ end #end distinction between three model types
 #this code applies to all model types
    #Create ZIP file
      #Push Log file to file list
-	 #println("\n")
-	 elapsed_until_this_point=0.0
+	 elapsed_until_this_point=(t0RunModel0-time_ns())/1e9
 	 prnt&&println("Modelling finished. Time: $(Dates.now()) - Total time was $(round(elapsed_until_this_point,digits=1))s = $(round(elapsed_until_this_point/60,digits=1))m")
 	 if sett.boolCreateZipFile
 		 logfile=string(path_and_fn_wo_extension,".log")

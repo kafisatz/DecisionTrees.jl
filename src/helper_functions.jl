@@ -3878,10 +3878,7 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	estimatedRatioPerRow_srt=view(estimatedRatioPerRow,srt)	
 	denominator_srt=view(denominator,srt)
 	numerator_srt=view(numerator,srt)
-
-	#rowCountPerUniqueRelativity::Vector{Int},weightPerUniqueRelativity::Vector{Float64}=deriveRowCountAndWeight(weight_srt,raw_rel_srt,uniqueRelativitiesSorted)
-	weightPerUniqueRelativity=weight_srt
-	
+	weightPerUniqueRelativity=weight_srt	
 	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt	
 	wtot=sum(weight_srt)
 	wperscore=wtot/nscores
@@ -3889,7 +3886,6 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	scoreEndPoints[end]=size(weight_srt,1)
 	vectorWeightPerScore=Array{Float64}(undef,nscores)
 
-	# derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 	nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nscores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
 	
 	obsPerScore=copy(scoreEndPoints)
@@ -3908,12 +3904,11 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	return aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore
 end
 
-#(nscores,wperscore,relativitiesSorted,weight_srt,cumulativeNumberOfDistinctRawRelativitesPerScore,scoreEndPoints,vectorWeightPerScore)
 function derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
-	#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
+#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
 
 #NOTE: (todo/tbd improve this) there are different ways to aggregate the relativities to scores. the approach below is a bottom up approach
-#issues can arise when there is a mass (of weight) for a certain releativity towards the end of the scores
+#issues can arise when there is a mass (of weight) for a certain relativity towards the end of the scores
 #because the approach below assigns at least one relativity to each score "one can run out of data" before all scores are filled up (in certain degenerate cases)
 #an alternative would be a "binary" split starting in the middle
 
@@ -3953,8 +3948,8 @@ current_score+=1
 			break
 		end
  	end
-	vectorWeightPerScore[current_score]=current_cumulW
-	scoreEndPoints[current_score]=current_idx
+	@inbounds vectorWeightPerScore[current_score]=current_cumulW
+	@inbounds scoreEndPoints[current_score]=current_idx
 	stillRunning=current_score<length(scoreEndPoints)
 end
 
@@ -3972,61 +3967,6 @@ else
 end
 
 scoreEndPoints[end]=min(length(weight_srt),scoreEndPoints[end])
-
-return nscoresPotentiallyReducedTWOTimes::Int
-end
-
-function derive_scores_main_aggregation_step_old!(nscoresPotentiallyReduced,wperscore,uniqueRelativitiesSorted,weightPerUniqueRelativity,rowCountPerUniqueRelativity,cumulativeNumberOfDistinctRawRelativitesPerScore,scoreEndPoints,vectorWeightPerScore)
-	#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
-
-#NOTE: (todo/tbd improve this) there are different ways to aggregate the relativities to scores. the approach below is a bottom up approach
-#issues can arise when there is a mass (of weight) for a certain releativity towards the end of the scores
-#because the approach below assigns at least one relativity to each score "one can run out of data" before all scores are filled up (in certain degenerate cases)
-#an alternative would be a "binary" split starting in the middle
-
-#note: if the estimates and the weight are degenerated then the vector scoreEndPoints can have the same value multiple times (i.e. it is constant for a few indices)
-uniqueRelativitiesSortedCounter=current_score=current_idx=0;current_cumulW=0.0;startPoint=1
-# assert size(rowCountPerUniqueRelativity)==size(weightPerUniqueRelativity) #this is to avoid errors due to the inbounds macro below
-stillRunning=true
-weightOfThisRelativity=weightPerUniqueRelativity[1]
-thisrowcount=rowCountPerUniqueRelativity[1]
-while stillRunning
-current_score+=1
-  while uniqueRelativitiesSortedCounter<size(uniqueRelativitiesSorted,1)
-	uniqueRelativitiesSortedCounter+=1
-	@inbounds thisrowcount=rowCountPerUniqueRelativity[uniqueRelativitiesSortedCounter]
-	current_idx+=thisrowcount
-	@inbounds weightOfThisRelativity::Float64=weightPerUniqueRelativity[uniqueRelativitiesSortedCounter]::Float64 #um(view(weight_srt,startPoint:current_idx))
-	current_cumulW::Float64 += weightOfThisRelativity::Float64
-	if current_cumulW>wperscore*current_score
-	  #decrease index by 1 if this puts us closer to the "expected" exposure for this score
-	  if (current_idx-thisrowcount>startPoint) && (abs(current_cumulW-wperscore*current_score)>abs(current_cumulW-weightOfThisRelativity-wperscore*current_score))
-		uniqueRelativitiesSortedCounter-=1
-		current_cumulW-=weightOfThisRelativity
-		current_idx-=thisrowcount
-	  end
-	  break
-	end
-  end
-	cumulativeNumberOfDistinctRawRelativitesPerScore[current_score]=uniqueRelativitiesSortedCounter
-	vectorWeightPerScore[current_score]=current_cumulW
-	scoreEndPoints[current_score]=current_idx
-	startPoint=current_idx+1
-	stillRunning=current_score<length(scoreEndPoints)
-end
-
-nscoresPotentiallyReducedTWOTimes::Int=0
-if (length(scoreEndPoints)>1)&&(scoreEndPoints[end-1]>=scoreEndPoints[end])
-#@warn("Failed to uniformly distribute the scores! Scores will be degenerated. \r\nThis usually indicates that: (i) there are too many scores compared to the granularity of the model or (ii) the data is 'degenerated' (i.e. there is a mass of exposure for certain risk details)")
-#Reduce the number of Scores again
-	thismax=maximum(scoreEndPoints)
-	endlocation::Int=searchsortedfirst(scoreEndPoints,convert(eltype(scoreEndPoints),thismax))
-	resize!(scoreEndPoints,endlocation) #drop the tail end
-	resize!(vectorWeightPerScore,endlocation) #drop the tail end
-	nscoresPotentiallyReducedTWOTimes=length(scoreEndPoints)
-else
-	nscoresPotentiallyReducedTWOTimes=nscoresPotentiallyReduced::Int
-end
 
 return nscoresPotentiallyReducedTWOTimes::Int
 end
@@ -5208,7 +5148,7 @@ estimatedNumerator is the estimated Numerator
 """
 function poissonError(trueNumerator,estimatedNumerator)
     n=length(trueNumerator)
-    @assert n==length(estimatedNumerator)
+    #@assert n==length(estimatedNumerator)
     res=zeros(Float64,n)
     for i=1:n
         @inbounds t=trueNumerator[i]
