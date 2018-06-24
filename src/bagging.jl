@@ -81,16 +81,12 @@ end
 		local fristRowOfThisTable
 	for iter=1:iterations
 	error("BK: TODO, need to port the functionality regarding sett.fitForStatsAndCharts to bagging")
-		#fit current tree
-			#@info "remove this"
-			#	print_tree(vecTreesWErrs.tree[iter.rootnode,sett,candMatWOMaxValues,mappings,0)			
+		#fit current tree			
 			vectorOfLeafArrays[iter+1]=create_leaves_array(vecTreesWErrs[iter].tree)	
-			#vectorOfRulePathsToLeavesArrays[iter+1]=[x.rule_path for x in vectorOfLeafArrays[iter+1]]			
 			#note the individual trees were constructed on a part of the training data, here we apply them to the full training data set
 			apply_tree_by_leaf!(currentEstimateOfIndividualTree,leafNumbersThisTree,trnidx,vecTreesWErrs[iter].tree.rootnode,features)		
 			apply_tree_by_leaf!(currentEstimateOfIndividualTree,leafNumbersThisTree,validx,vecTreesWErrs[iter].tree.rootnode,features)		
 			#currentEstimateOfIndividualTree[:],leafNumbersThisTree[:]=Core.eval(parse(sett.chosen_apply_tree_fn))(vectorOfRulePathsToLeavesArrays[iter+1],vecTreesWErrs[iter].tree.rootnode,numfeatures,charfeatures)
-			#error("BK continue here")
 			#vectorOfLeafNumbersTrn[:,iter+1]=leafNumbersThisTree			
 		#update weights
 			wi=weightPerTree[iter]
@@ -233,9 +229,6 @@ function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here
 				#ooBagEstNumerator=ooBagEstimates.*ooBagdenom
 				#fittedPerLeaf=Float64[x.fitted for x in leaves_of_tree]
 				#ooBagcntperLeaf,ooBagsumnumeratorEST,ooBagsumnumerator,ooBagsumdenominator,ooBagsumweight=aggregateByLeafNr(leafNrooBag,ooBagEstNumerator,ooBagnum,ooBagdenom,ooBagw)
-				#todo tbd check this!
-				#thisError=calcErrorStats(fittedPerLeaf,ooBagsumnumerator./ooBagsumdenominator,ooBagsumweight)
-				#thisError=goodnessOfFit(ooBagEstimates,ooBagnum,ooBagdenom,ooBagw,meanobservedvalue,ngroupsInput)
 				relativities=fitted_values_all_data_this_vector_is_modified_by_build_tree./trn_meanobservedvalue
 				estimatedRatio=fitted_values_all_data_this_vector_is_modified_by_build_tree
 				resFitted[1]=fitted_values_all_data_this_vector_is_modified_by_build_tree			

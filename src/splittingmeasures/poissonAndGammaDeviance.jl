@@ -14,11 +14,8 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
 
   #step 1: find out how 'big' subs is
   subs_size=length(subs)
-    #@assert subs_size<255 #todo tbd: we can remove this later on
-
   #pass on over the data:
   #get mean of left child and right child for each possible split
-  #@warn("find out if we need/want freq or claimcount here!") #currently we are using the frequencies which are then multiplied with the exposure -> poisson deviance is evaluated on the number of claims  n_i~poisson(lambda_i * exposure_i)
   meansl=zeros(subs_size) #mean (frequency or possibly claim count) of the left node in case we go for split 'number' i
   meansr=zeros(subs_size) #same for right child
   #same for weights
@@ -120,11 +117,8 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
 
   #step 1: find out how 'big' subs is
   subs_size=length(subs)
-  #@assert subs_size<255 #todo tbd: we can remove this later on
-
   #pass on over the data:
   #get mean of left chlid and right child for each possible split
-  #@warn("find out if we need/want freq or claimcount here!")
   meansl=zeros(subs_size) #mean (frequency or possibly claim count) of the left node in case we go for split 'number' i
   meansr=zeros(subs_size) #same for right child
   #same for weights

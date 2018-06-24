@@ -4943,7 +4943,6 @@ End Function
 	@assert length(boolListNum)==length(candMatWOMaxValues) #todo/tbd we could even check here whether each bool list has the right size (then again it should be fulfilled
 	boolListChar=write_and_create_boollist_char_vba(fiostream,mappings,df_name_vector,number_of_num_features,boolCharVarsUsedByModel)
 	@assert length(boolListChar)==length(mappings)
-	#error("bk continue here")
 	#csharp_write_RequiredElementsProvided(fiostream,df_name_vector,boolVariablesUsed)
 	@warn("todo, what if some variables are not as expected (unseen values for instance). Improve this / error handling similar to the generated SAS Code!")
 	vba_write_booleans(fiostream,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,boolCharVarsUsedByModel,boolNumVarsUsedByModel,boolVariablesUsed)

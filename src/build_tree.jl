@@ -335,7 +335,6 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures)
 	end
-    #error("the next step may be incorrect")
     if isfinite(tmp_result[1])
         feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id) + number_of_num_features : feature_column_id
       return [Splitdef(feature_column_id,feature_column_id2,fname,Vector{T}(tmp_result[2]),tmp_result[1],tmp_result[3],tmp_result[4])]::Vector{Splitdef{T}}
@@ -354,18 +353,9 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,feature_column_id,moments_per_pdaclass)
 	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit)
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures,feature_column_id)
-		#error("PoissonDevianceSplit is not yet implemented for randomw>0")
     end
     
-    return tmpres::Vector{Splitdef{T}}
-    #if length(tmpres)<1
-    #    return [tmpres]::Vector{Splitdef{T}}
-    #end
-	#if eltype(tmpres[1].subset)==T
-	#	return [tmpres]::Vector{Splitdef{T}}
-	#else
-	#	return convert(Vector{Splitdef{T}},tmpres)::Vector{Splitdef{T}}
-	#end
+    return tmpres::Vector{Splitdef{T}}    
   end
 end
 end
