@@ -180,7 +180,7 @@ function Base.getindex(r::DTMTable,idx,compact_features=false)
 end
 
 #todo check the difference between immutable and type!! are we using immutables correctly here?
-struct Splitdef{T<:Unsigned} #Splitdef(feature_column_id,feature_column_id2,fname,tmp_result[2],tmp_result[1],tmp_result[3],tmp_result[4])]
+struct Splitdef{T<:Unsigned} 
 	featid::Int
 	featid_new_positive::Int
     featurename::Symbol

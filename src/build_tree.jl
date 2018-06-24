@@ -88,7 +88,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
   #this can happen (EVEN AT THE TOP NODE) if subsampling (of data and or features) is enabled: it may be that there is in fact no split possible (e.g. if all variables are constant)
   if id == 0
 	if (depth==0)
-		printover("No split was found at the top node. This may cause errors later on in the code!")
+		@warn("No split was found at the top node. This is generally not expected and may cause errors later on in the code!")
 	end
 		trnsumn=sum(view(numerator,trnidx))
 		trnsumd=sum(view(denominator,trnidx))
@@ -117,14 +117,14 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 			#char split
 			if isContiguous(subset)
 				l,r=lrIndicesForContiguousSubset(trnidx,column,subset)
-				if  !( lrIndicesForContiguousSubset(trnidx,column,subset)==lrIndices(trnidx,column,subset))
-					@show subset
-					@show trnidx[1:100]
-					@show column[1:100]
-					@show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
-					@show lrIndices(idx,features[t.featid_new_positive],subset)
-					@assert false 
-				end
+				#if  !( lrIndicesForContiguousSubset(trnidx,column,subset)==lrIndices(trnidx,column,subset))
+				#	@show subset
+				#	@show trnidx[1:100]
+				#	@show column[1:100]
+				#	@show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
+				#	@show lrIndices(idx,features[t.featid_new_positive],subset)
+				#	@assert false 
+				#end
 			else
 				l,r=lrIndices(trnidx,column,subset)
 			end

@@ -3697,7 +3697,7 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
   #@warn("it matters if we start at the bottom or top end! which ones is better?")
   nscores=size(estimatedRatioPerScore,1)
   if (nscores<=2) #for 2 or less scores smoothing is not meaningful
-	@warn("DTM: nscores was less than 3. No smoothing performed")
+	@info("DTM: nscores was less than 3. No smoothing performed")
 	return nothing
   end
   intSpan=convert(Int,ceil((nscores)*span))
@@ -4072,7 +4072,7 @@ function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabl
 		estimatedRatioPerScore=copy(rawObservedRatioPerScore)
 	
 		if print_details&&(length(estimatedRatioPerScore)<=2)
-			printover("length(estimatedRatioPerScore) is 2 or less! No smoothing performed.")
+			@info("length(estimatedRatioPerScore) is 2 or less! No smoothing performed.")
 		else
 			span=0.0
 			if length(estimatedRatioPerScore)>1000
