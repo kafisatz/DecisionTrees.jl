@@ -3867,16 +3867,27 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt	
 	wtot=sum(weight_srt)
 	wperscore=wtot/nscores
-	scoreEndPoints=zeros(Int,nscores)
-	scoreEndPoints[end]=size(weight_srt,1)
-	vectorWeightPerScore=Array{Float64}(undef,nscores)
-
-	nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nscores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
-	
-	obsPerScore=copy(scoreEndPoints)
-	cumulativeToIncremental!(obsPerScore)
-	cumulativeToIncremental!(vectorWeightPerScore)
-
+	#scoreEndPoints=zeros(Int,nscores)
+	#scoreEndPoints[end]=size(weight_srt,1)
+	#vectorWeightPerScore=Array{Float64}(undef,nscores)	#nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nscores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
+	#obsPerScore=copy(scoreEndPoints)
+	#cumulativeToIncremental!(obsPerScore)
+	#cumulativeToIncremental!(vectorWeightPerScore)        
+        
+    qtls=quantile(raw_rel_srt,StatsBase.fweights(weight_srt),range(1/nscores,stop=1,length=nscores))
+    qtls=unique(qtls)
+    nscoresPotentiallyReducedTWOTimes=length(qtls)
+    obsPerScore=zeros(Int,nscoresPotentiallyReducedTWOTimes)
+    scoreEndPoints=zeros(Int,nscoresPotentiallyReducedTWOTimes)
+    scoreEndPoints[end]=size(weight_srt,1)
+    vectorWeightPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
+    
+    calcWeightandObsPerScoreAndEndpoints!(raw_rel_srt,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
+    #check consistency of scoreEndPoints
+    #for i=1:length(scoreEndPoints)
+    #    @show sum(view(weight_srt,1:scoreEndPoints[i]))-sum(vectorWeightPerScore2[1:i])
+    #end
+    
 	#aggregate scores
 	numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore=aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
 	#smooth scores		
@@ -3887,6 +3898,28 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	insert_gaps_to_scores!(wtot,nscores,nscoresPotentiallyReducedTWOTimes,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
 
 	return aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore
+end
+
+function calcWeightandObsPerScoreAndEndpoints!(qtls,relativitiesSorted,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
+    thisI=1
+    thisJ=1
+    while thisI<=length(relativitiesSorted)
+        @inbounds reli=relativitiesSorted[thisI]
+        @inbounds wi=weight_srt[thisI]
+        if reli<=qtls[thisJ]
+            obsPerScore[thisJ]+=1
+            vectorWeightPerScore[thisJ]+=wi        
+        else 
+            if thisJ<length(obsPerScore)
+                thisJ+=1
+            end
+            obsPerScore[thisJ]+=1
+            vectorWeightPerScore[thisJ]+=wi
+        end 
+        scoreEndPoints[thisJ]=thisI 
+        thisI+=1
+    end
+    return nothing 
 end
 
 function derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
