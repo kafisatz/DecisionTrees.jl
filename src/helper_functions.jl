@@ -2273,7 +2273,7 @@ function get_firstpos(v::Array{T,1}) where {T}
   #return value is the a vector containing the first positions of element k in an ordered set
   firstpos=zeros(Int,length(v))
   firstpos[1]=1
-  #@show "gaht nöd...."
+
   for i=2:length(v)
       firstpos[i]=firstpos[i-1]+v[i-1]
   end
@@ -3051,7 +3051,7 @@ write(fiostream,"; \r\nset runmodel;\r\nvariables_have_unknown_values=0;\r\nvari
 indexOfLastCharVarUsed=0
 #data prep and check
 	for i in 1:length(mappings)
-		#upcase für char vars
+		#upcase f�r char vars
 		vname=df_name_vector[number_of_num_features+i]
 		if boolListVarsUsed[number_of_num_features+i]
 			indexOfLastCharVarUsed=max(i,indexOfLastCharVarUsed)
