@@ -3961,26 +3961,17 @@ function aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPo
 	maxRawRelativityPerScoreSorted=Float64[(raw_rel_srt[scoreEndPoints[i]]+raw_rel_srt[min(obs,scoreEndPoints[i]+1)])/2 for i=1:size(scoreEndPoints,1)]
 	numPerScore::Vector{Float64},denomPerScore::Vector{Float64}=sumByIncreasingIndex(numerator_srt,denominator_srt,scoreEndPoints)
 	#I think the weight should not influence the averaging process here (as it was already relevant to derive the raw_estimated_relativities during the construction of the trees)
-	#raw_num_est_srt=raw_rel_srt.*denominator_srt*meanobservedvalue
 	rawObservedRatioPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
 	aggregatedModelledRatioPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
-	#aggregatedModelledRatioPerScore_new=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
 	previdx=1
 	for i=1:nscoresPotentiallyReducedTWOTimes
-		nextidx=scoreEndPoints[i]
+		@inbounds nextidx=scoreEndPoints[i]
 		if nextidx>previdx
-		  #todo/tbd check with somebody if this approach is meaningful (are there better alternatives to derive a smoothed estimate?)
-		  #rawObservedRatioPerScore[i]=			sum(view(numerator_srt,previdx:nextidx))/sum(view(denominator_srt,previdx:nextidx))
-		  #aggregatedModelledRatioPerScore[i]=	sum(view(numeratorEstimatedPerRow_srt,previdx:nextidx))/sum(view(denominator_srt,previdx:nextidx)) #todo/tbd someone should check whether we do not have any redundancy here
-		  sum_up_ratios!(rawObservedRatioPerScore,aggregatedModelledRatioPerScore,i,numerator_srt,numeratorEstimatedPerRow_srt,denominator_srt,previdx,nextidx)		 
-		  #dd= aggregatedModelledRatioPerScore_new.-aggregatedModelledRatioPerScore
-		  # dd[1:min(length(dd),200)]
-		  # @assert maximum(abs.(dd))<1e-11 #aggregatedModelledRatioPerScore_new,aggregatedModelledRatioPerScore)
+		  #todo/tbd this may need review
+		  sum_up_ratios!(rawObservedRatioPerScore,aggregatedModelledRatioPerScore,i,numerator_srt,numeratorEstimatedPerRow_srt,denominator_srt,previdx,nextidx)
 		end
 		previdx=scoreEndPoints[i]
 	end
-	#@show 1,extrema(numeratorEstimatedPerRow_srt.-numerator_srt) #these are different
-	#@show 2,extrema(aggregatedModelledRatioPerScore.-rawObservedRatioPerScore) #these are different
 	return numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore
 end
 

@@ -2,6 +2,20 @@ using StatsBase
 using BenchmarkTools
 
 
+function cumulativeToIncremental!(x::Vector{T}) where {T <: Number}
+	for i=length(x):-1:2
+		x[i]-=x[i-1]
+	end
+	return nothing
+end
+
+function incrementalToCumulative!(x::Vector{T}) where {T <: Number}
+	for i=2:length(x)
+		x[i]+=x[i-1]
+	end
+	return nothing
+end
+
 function derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 #todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
 
@@ -70,21 +84,65 @@ return nscoresPotentiallyReducedTWOTimes::Int
 end
 
 #generate some data
-nnn=200000
+nnn=20
 relativitiesSorted=sample(rand(nnn),nnn,replace=true)
+sort!(relativitiesSorted)
 weight_srt=201*rand(nnn)+130*rand(nnn)
-nscores=floor(Int,min(1000,nnn/2))
+
+nscores=floor(Int,min(100,nnn/2))
 scoreEndPoints=zeros(Int,nscores)
+obsPerScore=zeros(Int,nscores)
 scoreEndPoints[end]=size(weight_srt,1)
-vectorWeightPerScore=Array{Float64}(undef,nscores)
+vectorWeightPerScore=zeros(Float64,nscores) #Array{Float64}(undef,nscores)
 wtot=sum(weight_srt)
 wperscore=wtot/nscores
 
-@btime derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
+#@btime derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 
-@code_warntype derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
+#@code_warntype derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 
-@btime quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nscores,stop=1-1/nscores,length=nscores))
+#@btime quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nscores,stop=1-1/nscores,length=nscores))
+
+qtls=quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nscores,stop=1,length=nscores))
+qtls=unique(qtls)
+nscoresPotentiallyReducedTWOTimes=length(qtls)
+
+thisI=1
+thisJ=1
+while thisI<=length(relativitiesSorted)
+    @inbounds reli=relativitiesSorted[thisI]
+    @inbounds wi=weight_srt[thisI]
+    if reli<=qtls[thisJ]
+        obsPerScore[thisJ]+=1
+        vectorWeightPerScore[thisJ]+=wi        
+    else 
+        if thisJ<length(obsPerScore)
+            thisJ+=1
+        end
+        obsPerScore[thisJ]+=1
+        vectorWeightPerScore[thisJ]+=wi
+    end 
+    scoreEndPoints[thisJ]=thisI 
+    thisI+=1
+end
+
+obsPerScore2=deepcopy(obsPerScore)
+vectorWeightPerScore2=deepcopy(vectorWeightPerScore)
+scoreEndPoints2=deepcopy(scoreEndPoints)
+
+#check consistency of scoreEndPoints
+for i=1:length(scoreEndPoints)
+    @show sum(view(weight_srt,1:scoreEndPoints[i]))-sum(vectorWeightPerScore2[1:i])
+end
+
+    
+obsPerScore=copy(scoreEndPoints)
+cumulativeToIncremental!(obsPerScore)
+cumulativeToIncremental!(vectorWeightPerScore)
+
+obsPerScore2.-obsPerScore
+vectorWeightPerScore2.-vectorWeightPerScore
+scoreEndPoints2.-scoreEndPoints
 
 #=
 include(joinpath(pwd(),"testing","improve_derive_scores_core_function.jl"))
