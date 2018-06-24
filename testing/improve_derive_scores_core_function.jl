@@ -82,6 +82,10 @@ wperscore=wtot/nscores
 
 @btime derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 
+@code_warntype derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
+
+@btime quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nscores,stop=1-1/nscores,length=nscores))
+
 #=
 include(joinpath(pwd(),"testing","improve_derive_scores_core_function.jl"))
 =#
