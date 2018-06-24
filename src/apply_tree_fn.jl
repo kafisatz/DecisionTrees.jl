@@ -40,8 +40,14 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
 	 featid=t.featid
         subset=t.subset   
         if isContiguous(subset)
+            @warn("remove this")
             idxlInteger,idxrInteger=lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
-            @assert lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)==lrIndices(idx,features[t.featid_new_positive],subset)
+            if !(lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)==lrIndices(idx,features[t.featid_new_positive],subset))
+              #@show subset
+              @show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
+              @show lrIndices(idx,features[t.featid_new_positive],subset)
+              @assert false 
+            end
         else
             idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)
         end
