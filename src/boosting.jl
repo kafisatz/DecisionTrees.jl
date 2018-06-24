@@ -31,7 +31,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	
 	estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
 	
-	indicatedRelativityForApplyTree_reused=zeros(obs)
+	estimatedNumeratorForStats=zeros(obs)
+    indicatedRelativityForApplyTree_reused=zeros(obs)
 	reused_fitted_leafnr_vector=zeros(Int,obs)
     sortvec_reused_trn_only=zeros(Int,length(trnidx))
     intVarsUsed=Array{Array{Array{Int,1},1}}(undef,0);sizehint!(intVarsUsed,iterations)
@@ -137,7 +138,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			else 
 				selectedEstimatedRatioForStats=estFromScores::Vector{Float64} #smooth or unsmooth has been defined/"selected" above already
 			end
-			estimatedNumeratorForStats=selectedEstimatedRatioForStats.*denominator
+			estimatedNumeratorForStats.=selectedEstimatedRatioForStats.*denominator
 			
 			statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,iter,sett.scorebandsstartingpoints,view(actualNumerator,trnidx),view(denominator,trnidx),view(weight,trnidx),view(selectedEstimatedRatioForStats,trnidx),view(scores,trnidx),view(actualNumerator,validx),view(denominator,validx),view(weight,validx),view(selectedEstimatedRatioForStats,validx),view(scores,validx),sett)			
 			statsPerIteration=vcat(statsPerIteration,singleRowWithKeyMetrics)
