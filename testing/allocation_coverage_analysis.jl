@@ -3,7 +3,7 @@ import DataFrames
 import DelimitedFiles
 
 thisFolder=Pkg.dir("DecisionTrees")
-thisFolder=joinpath(thisFolder,"..","memHist","2018 06 24b")
+thisFolder=joinpath(thisFolder,"..","memHist","2018 06 24c")
 isdir(thisFolder)
 mr=analyze_malloc(thisFolder)
 mr2=map(x->[x.bytes,x.filename,x.linenumber],mr);
