@@ -1515,8 +1515,21 @@ end
 
 """
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+Here subset needs to be of the form collect(m:n)
 """
-function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array) where T<:Unsigned
+function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array)
+	if (length(subset)>0)&&(isone(subset[1]))
+    	return lrIndicesForContiguousSubsetStartingAtONE(trnidx,f,subset)
+	else 
+		return lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx,f,subset)
+	end
+end
+
+"""
+returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+Here subset needs to be of the form collect(1:n)
+"""
+function lrIndicesForContiguousSubsetStartingAtONE(trnidx::Vector{Int},f,subset::Array)
 	l=Vector{Int}(undef,0)
 	r=Vector{Int}(undef,0)
 	sizehint!(l,length(trnidx))
@@ -1524,14 +1537,46 @@ function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array) where
     subsetEnd=subset[end]
 	for i in trnidx
 		@inbounds thisref=f.refs[i]
-		#if in(thisref,subset)
-        if thisref<=subsetEnd
+		if thisref<=subsetEnd
 			push!(l,i)
 		else
 			push!(r,i)
 		end
 	end
 	return l,r
+end
+
+
+"""
+returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+Here subset needs to be of the form collect(m:n)
+"""
+function lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx::Vector{Int},f,subset::Array)
+	l=Vector{Int}(undef,0)
+	r=Vector{Int}(undef,0)
+	sizehint!(l,length(trnidx))
+	sizehint!(r,length(trnidx))
+	subsetEnd=subset[end]
+	subsetStart=subset[1]
+	for i in trnidx
+		@inbounds thisref=f.refs[i]
+		if (thisref<=subsetEnd)&&(thisref>=subsetStart)
+			push!(l,i)
+		else
+			push!(r,i)
+		end
+	end
+	return l,r
+end
+
+
+"""
+isContiguous(v) returns true if the vector v is of the form collect(n:m)
+"""
+function isContiguous(subset::Vector)
+    mi=subset[1]
+    ma=subset[end]
+    return (length(subset)==(ma-mi+1))&&issorted(subset)
 end
 
 function update_part_of_this_vector!(idx::Vector{Int},read::Vector{T},write::Vector{T}) where T<:Number
@@ -5284,12 +5329,3 @@ function mapToOther!(v,keepvals::Vector{T},newValue::T) where T
     #mapToOther!(vnew,keep,"rare_value")
 end
 
-
-"""
-isContiguous(v) returns true if the vector v is of the form collect(n:m)
-"""
-function isContiguous(subset::Vector)
-    mi=subset[1]
-    ma=subset[end]
-    return (length(subset)==(ma-mi+1))&&issorted(subset)
-end
