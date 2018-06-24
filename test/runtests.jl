@@ -36,6 +36,7 @@ Random.srand(1239946)
     include("smoketests.jl")
     include("errors_and_warnings.jl")
     include("functionalityTests.jl")
+    include("helperfunctions.jl")
 
     println("DTM: Testing finished. Time needed:")
     TimeForTesting = (time_ns()-t0runtests)/1e9

@@ -38,10 +38,13 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
        return nothing
 	 end
 	 featid=t.featid
-   subset=t.subset   
-   idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)   
+        subset=t.subset   
+        if isContiguous(subset)
+            idxlInteger,idxrInteger=lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
+        else
+            idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)
+        end
        #here each iteration will write on certain elements of the two vectors fit and leaf
-     #@code_warntype apply_tree_by_leaf_iteration!(idxlInteger,rpvector,t.left,features,fit,leaf)
       apply_tree_by_leaf_iteration!(idxlInteger,t.left,features,fit,leaf)
       apply_tree_by_leaf_iteration!(idxrInteger,t.right,features,fit,leaf)
     return nothing 

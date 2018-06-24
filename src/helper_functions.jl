@@ -1493,19 +1493,6 @@ macro timeConditional(bool,ex)
 	return :(if $(esc(bool));@time ($(esc(ex)));else;$(esc(ex));end)
 end
 
-#=
-    function leaf_numbers(leaves,trnsize::Int)
-        leafnr=zeros(Int,trnsize)
-        for i=1:length(leaves)
-            thisid=leaves[i].id
-            for j in leaves[i].idx
-                leafnr[j]=thisid
-            end
-        end
-        return leafnr
-    end
-=#
-
 """
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
 This verison of the function is for String / Categorical variables
@@ -1526,23 +1513,21 @@ function lrIndices(trnidx::Vector{Int},f::PooledArray{String,T,1},subset::Array)
 	return l,r
 end
 
+
 """
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
-This verison of the function is for numerical variables
+This verison of the function is for String / Categorical variables
 """
-function lrIndices(idx::Vector{Int},f,subset::Array) 
-	#todo tbd, we could restrict the input to U<:Number and T<:Unsigned for the pda f
+function lrIndicesForContiguousSubset(trnidx::Vector{Int},f::PooledArray{String,T,1},subset::Array) where T<:Unsigned
 	l=Vector{Int}(undef,0)
 	r=Vector{Int}(undef,0)
-	sizehint!(l,length(idx))
-	sizehint!(r,length(idx))
-	for i in idx
+	sizehint!(l,length(trnidx))
+	sizehint!(r,length(trnidx))
+    subsetEnd=subset[end]
+	for i in trnidx
 		@inbounds thisref=f.refs[i]
-		#warn("this can be done much more efficiently for  numerical variables! <=")
-        #if !(in(thisref,subset)==(thisref<=subset[end]))
-        #    error("I did not expect this....")
-        #end
-		if  thisref<=subset[end] # this should be equivalent to 'in(thisref,subset)' by construction
+		#if in(thisref,subset)
+        if thisref<=subsetEnd
 			push!(l,i)
 		else
 			push!(r,i)
@@ -5276,3 +5261,12 @@ function mapToOther!(v,keepvals::Vector{T},newValue::T) where T
     #mapToOther!(vnew,keep,"rare_value")
 end
 
+
+"""
+isContiguous(v) returns true if the vector v is of the form collect(n:m)
+"""
+function isContiguous(subset::Vector)
+    mi=subset[1]
+    ma=subset[end]
+    return (length(subset)==(ma-mi+1))&&issorted(subset)
+end
