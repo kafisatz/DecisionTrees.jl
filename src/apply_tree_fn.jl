@@ -40,6 +40,7 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
 	 featid=t.featid
    subset=t.subset   
    idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)   
+   #@show size(idxlInteger),size(idxrInteger)
        #here each iteration will write on certain elements of the two vectors fit and leaf
      #@code_warntype apply_tree_by_leaf_iteration!(idxlInteger,rpvector,t.left,features,fit,leaf)
       apply_tree_by_leaf_iteration!(idxlInteger,t.left,features,fit,leaf)

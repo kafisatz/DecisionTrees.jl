@@ -81,8 +81,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 	
 	tmpsn=sum(view(numerator,trnidx))
     tmpsd=sum(view(denominator,trnidx))
-    #todo/tbd check if this "sort!(subset)" is necessary and find out why.... is it intended?
-	sort!(subset)
+    sort!(subset) #if subset is always sorted, we can do the lookups faster in lrIndices (i.e. in(x,subset))
 
 	#check if no split was found
   #this can happen (EVEN AT THE TOP NODE) if subsampling (of data and or features) is enabled: it may be that there is in fact no split possible (e.g. if all variables are constant)
@@ -114,6 +113,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
         column=features[id2]
     	matched_strings=column.pool[subset]
         l,r=lrIndices(trnidx,column,subset)
+        #@show size(l),size(r)
 
     countl=size(l,1)
     countr=size(r,1)
