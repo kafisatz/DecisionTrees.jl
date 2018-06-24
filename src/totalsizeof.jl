@@ -18,7 +18,7 @@ function totalsizeof(x, ptr_cache = Set())
 
   # Check if type has names method
   try
-    this_names = fieldnames(x)
+    this_names = fieldnames(typeof(x))
   catch
     this_names = []
   end

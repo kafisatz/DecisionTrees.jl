@@ -35,7 +35,7 @@ SOFTWARE.
 
 
 
-export PooledArray
+export PooledArray #,levels
 
 ##############################################################################
 ##
@@ -450,6 +450,11 @@ function Base.vcat(a::PooledArray, b::PooledArray)
     T = types[tidx]
     newrefs = Base.typed_vcat(T, a.refs, refs2)
     return PooledArray(RefArray(newrefs), newpool)
+end
+
+#it is critical to define levels properly for PooledArray
+function levels(x::PooledArray)
+    return deepcopy(x.pool)
 end
 
 end

@@ -1,7 +1,7 @@
 export predict
 
 #Bagging 
-function apply_tree_by_leaf(idx::Vector{Int},leaves_of_tree::Array{Leaf,1},t::Tree,features::DataFrame)	
+function apply_tree_by_leaf(idx::Vector{Int},leaves_of_tree,t::Tree,features::DataFrame)	
 	return apply_tree_by_leaf(idx,leaves_of_tree,t.rootnode,features)
 end
 
@@ -39,6 +39,7 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
 	 end
 	 featid=t.featid
    subset=t.subset   
+   @warn("improve this! fn contiguousSubset should be considered")
    idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)   
        #here each iteration will write on certain elements of the two vectors fit and leaf
      #@code_warntype apply_tree_by_leaf_iteration!(idxlInteger,rpvector,t.left,features,fit,leaf)

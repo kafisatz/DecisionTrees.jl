@@ -14,7 +14,7 @@ function Base.show(io::IO,x::Union{DecisionTrees.Tree,DecisionTrees.Leaf,Decisio
     #println(io,"")
     println(io,elt)
     #println(io,"")
-    show(io,fieldnames(typeof(x)))
+    show(io,fieldnames(x))
     #println(io,"")
     #println(io,"")
     #println(io,"Use the dump() function to see the whole content of the object.")

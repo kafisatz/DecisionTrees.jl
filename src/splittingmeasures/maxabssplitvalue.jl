@@ -110,7 +110,7 @@ function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,la
 return max(abs(sumr/Float64(countr)),abs(suml/Float64(countl))), Float64(countl),Float64(countr)
 end
 
-function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::pdaMod,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int, moderationfactor::Float64)
+function calculateSplitValue(a::MaxAbsValueSplit,number_of_char_features::Int,labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::PooledArray,subset::Array{UInt8,1},minweight::Float64,prem_buffer::Int, moderationfactor::Float64)
   suml=sumr=0.0
   countl=countr=0
     for i in 1:length(features.pda)

@@ -1,8 +1,10 @@
+import CSV
+import DataFrames
+import DataFrames: DataFrame
 
 using DecisionTrees
-using CSV
-using DataFrames
 using Profile
+using Pkg
 
 pkgdir=Pkg.dir("DecisionTrees") #how long will this remain supported?
 testdir=joinpath(pkgdir,"test")

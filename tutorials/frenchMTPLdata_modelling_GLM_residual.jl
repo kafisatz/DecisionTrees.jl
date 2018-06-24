@@ -4,8 +4,10 @@ t0=time_ns()
 cd(joinpath(GLOBAL_julia_code_folder,"DecisionTrees.jl"))
 #@info("You may want to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
-@everywhere using Revise
-@everywhere using CSV,DataFrames
+#@everywhere using Revise
+@everywhere import CSV
+@everywhere import DataFrames
+@everywhere import DataFrames: DataFrame
 
 @everywhere using DecisionTrees  
 

@@ -12,7 +12,7 @@ function run_model(ARGS;nrows::Int=-1)
 		if typeof(result_of_runmodel)==Array{String,1}
 			return result_of_runmodel
 		else
-			warn("Unexpected Model result:")
+			@warn("Unexpected Model result:")
 			@show typeof(result_of_runmodel)
 			@show result_of_runmodel
 			dump(result_of_runmodel)
@@ -20,7 +20,7 @@ function run_model(ARGS;nrows::Int=-1)
 		end
    catch model_error
 		@show model_error
-		warn("An error occurred during modelling phase. See above.")
+		@warn("An error occurred during modelling phase. See above.")
 		return failed_return_value
    end
 end
@@ -28,8 +28,9 @@ end
 """
 prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 """
-function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}(),methodForSplittingPointsSelection::String="basedOnWeightVector")
 	@assert isdir(directory)
+    @assert in(methodForSplittingPointsSelection,globalConstAllowableMethodsForDefineCandidates)
 	
 	@time (df_prepped,sett)=prepareDF!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
 
@@ -37,7 +38,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
 		sett.boolSaveJLDFile=false
 		
 	fn=joinpath(directory,"DTMResult.csv")
-	dtmtable=prep_data_from_df(df_prepped,sett,fn)
+	dtmtable=prep_data_from_df(df_prepped,sett,fn,methodForSplittingPointsSelection=methodForSplittingPointsSelection)
 
 	return dtmtable,sett,df_prepped
 end
@@ -159,7 +160,7 @@ removeUnionTypes!(dfin,independent_vars)
 	n_char=length(char_features)
 	n_num=length(num_features)
 
-  #warn("this might benefit from optimization. I am not entirely sure, how the code performs for larger data sets")
+  #@warn("this might benefit from optimization. I am not entirely sure, how the code performs for larger data sets")
     if n_num>0        
         dfres[num_features]=dfin[num_features]
     end
@@ -208,7 +209,7 @@ return nothing
 end
 
 function is_categorical_column(x,nm)
-	#warn("BK need to ensure that there are NO union types!, especially we do not want the missing tpiye (for now)!")
+	#@warn("BK need to ensure that there are NO union types!, especially we do not want the missing tpiye (for now)!")
     elt=eltype(x)
     typeOfElt=typeof(elt)
     if typeOfElt!=DataType  
@@ -219,8 +220,7 @@ function is_categorical_column(x,nm)
     return elt <:AbstractString
 end
 
-function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_ext::String)
-#warn: this function has a lot of redundancies with another function in this file ->prep_data_from_df
+function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_ext::String;methodForSplittingPointsSelection::String="basedOnWeightVector")
 	datafilename,ext=splitext(fn_with_ext) #actually one can provide fn_with_ext="c:\\temp\\my folder\\out" (so no extension is necessary)
 	datafolder,outfileStringOnly=splitdir(datafilename)
 	if length(outfileStringOnly)==0
@@ -246,12 +246,12 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 		
 	count_neg_denom=sum(denominator.<=0)
 	if count_neg_denom>0 
-		warn("denominator contains observations with values <= 0.0")
+		@warn("denominator contains observations with values <= 0.0")
 		tot_sz=length(denominator)
-		warn("negative rowcount: $(count_neg_denom) of $(tot_sz). I.e. a proportion of $(count_neg_denom/tot_sz)")
+		@warn("negative rowcount: $(count_neg_denom) of $(tot_sz). I.e. a proportion of $(count_neg_denom/tot_sz)")
 	end
 	if any(denominator.==0) 
-	  warn("denominator[trn] contains observations with values 0.0")
+	  @warn("denominator[trn] contains observations with values 0.0")
 	  foundobs=findfirst(denominator,0.0)
 	  foundk=key[foundobs]
 	  println("First observation: key=$(foundk), rownumber_trn=$(foundobs), value=$(denominator[foundobs])")
@@ -261,15 +261,15 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	end
 	strNegativeRatioWarning="Negative Ratios may lead to errors during the modelling process for models which rely on multiplicative residuals! \nIt is suggested that you adjust the data such that no negative values occur!"
 	if any(x->x<0.0,denominator)
-	  warn("There are training obsevations with negative values in the denominator column!")
-	  warn(strNegativeRatioWarning)
+	  @warn("There are training obsevations with negative values in the denominator column!")
+	  @warn(strNegativeRatioWarning)
 	end
 	#obsratiotrn=numeratortrn./denominatortrn
 	if any(numerator.<0)
-		warn("There are negative observed ratios!")
-		warn(strNegativeRatioWarning)
+		@warn("There are negative observed ratios!")
+		@warn(strNegativeRatioWarning)
 		if sett.boolCalculatePoissonError
-			warn("DTM: Setting boolCalculatePoissonError to false!")
+			@warn("DTM: Setting boolCalculatePoissonError to false!")
 			sett.boolCalculatePoissonError=false
 		end		
 		if typeof(sett.crit) == PoissonDevianceSplit
@@ -283,28 +283,28 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	
 	print("Preparing numeric variables...")
 	#this function modifies features -> the num features are added as pdas!
-	candMatWOMaxValues=add_coded_numdata!(dfIndata,sett,trn_val_idx,sett.max_splitting_points_num,features)
+	candMatWOMaxValues=add_coded_numdata!(dfIndata,sett,trn_val_idx,sett.max_splitting_points_num,features,weight,methodForSplittingPointsSelection)
 	println(" done.")
 	#IMPORTANT convention  numerical data 'comes first' (i.e. first x columns are numerical), then categorical
 	print("Preparing character variables...")
 	for i=1:sett.number_of_char_features
-		if !(eltype(dfIndata[global_const_shift_cols+i+sett.ishift+sett.number_of_num_features])<:AbstractString) 
-			@show eltype(dfIndata[global_const_shift_cols+i+sett.ishift+sett.number_of_num_features])
-			@show dfIndata[1:min(10,size(dfIndata,1)),global_const_shift_cols+i+sett.ishift+sett.number_of_num_features]
+		if !(eltype(dfIndata[global_const_shift_cols+i+sett.number_of_num_features])<:AbstractString) 
+			@show eltype(dfIndata[global_const_shift_cols+i+sett.number_of_num_features])
+			@show dfIndata[1:min(10,size(dfIndata,1)),global_const_shift_cols+i+sett.number_of_num_features]
 			error("Character variable $(i) = $(sett.df_name_vector[i+sett.number_of_num_features]) is not <:AbstractString in the dataframe.")
-			#warn("It may be that the variable was exported as character (by SAS) even though it is infact an integer. Please check!")			
+			#@warn("It may be that the variable was exported as character (by SAS) even though it is infact an integer. Please check!")			
 		end		
 	  try
-		colnumber=global_const_shift_cols+sett.ishift+sett.number_of_num_features+i
-		thisname=Symbol(df_names[i+sett.number_of_num_features]) #df_names[colnumber]
-		thiscol_as_utf8=dfIndata[thisname] #view(dfIndata,:,colnumber)
+		colnumber=global_const_shift_cols+sett.number_of_num_features+i
+		thisname=Symbol(df_names[i+sett.number_of_num_features]) 
+		thiscol_as_utf8=dfIndata[thisname] 
 		if eltype(thiscol_as_utf8)!=String
 			thiscol_as_utf8=convert(Array{String,1},thiscol_as_utf8)
 		end
-		features[thisname]=PooledArray(thiscol_as_utf8)
+		features[thisname]=DecisionTrees.PooledArraysDTM.PooledArray(thiscol_as_utf8)
 		if length(features[thisname].pool)>255
 			@show nlevels=length(features[thisname].pool)
-			warn("DTM: Variable $(string(thisname)) has more than 255 levels, namely $(nlevels)\nThe tree may take very long to be constructed.")			
+			@warn("DTM: Variable $(string(thisname)) has more than 255 levels, namely $(nlevels)\nThe tree may take very long to be constructed.")			
 		end
 	  catch this_error
 		@show this_error
@@ -317,7 +317,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	wlo,whi=extrema(weight)
 	if wlo!=whi
 		print("Max weight is $(whi), min weight is $(wlo)")
-		warn("Currently the automatic choice of splitting points does not consider the weight distribution!")
+		#@info("Currently the automatic choice of splitting points does not consider the weight distribution!")
 	end
 	
 	pools=map(i->features[i].pool,1:size(features,2)) 
@@ -373,10 +373,12 @@ run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 """
 function run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 #this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
-
+t0RunModel0=time_ns()
 sett=deepcopy(input_setttings)
 @assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
-
+if sett.boolCalculateGini
+    @warn("Gini and RSS metrics are experimental and need to be reviewed and thoroughly checked (e.g. are they evaluated only for the numerator or for the ratio=numerator/denominator?")
+end
 x=checkIfSettingsAreValid(input_setttings)
 if !(x==nothing)
 	@warn "DTM: You may have provided invalid or inconsistent model settings. The model run may fail."
@@ -454,11 +456,11 @@ for x=1:size(features,2)
 	s00=hash(features[x],s00)
 end
 srandInt=floor(Int,1/3*hash(931,s00))
-srand(srandInt)
-	#srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
+Random.srand(srandInt)
+	#Random.srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
 	#@show rand();@show rand();@show rand(); #check reproducability
 if sett.subsampling_prop <1.0 
-	warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")
+	@warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")
 end
 
 #there are at least two ways to derive estimates for hold out data: either loop through the leaves of the tree or loop over the rows of the validation data setting
@@ -467,11 +469,11 @@ sumwtrn=sum(view(weight,trnidx))
 sumwval=sum(view(weight,validx))
 minweighttmp = sett.minw < 0.0 ? sumwtrn*(-max(-1.0,sett.minw)) : sett.minw
 @assert minweighttmp>=0
-sumwtrn>=2*minweighttmp||warn("DTM: Specified minweight is larger than half of the total training weight!! No split is possible!")
+sumwtrn>=2*minweighttmp||@warn("DTM: Specified minweight is larger than half of the total training weight!! No split is possible!")
 
 someInteger=sumwtrn/minweighttmp
 if someInteger>100000
-	warn("DTM: Total training weight is: $(sumwtrn) and you specified minw=$(minweighttmp). The tree might become very large")
+	@warn("DTM: Total training weight is: $(sumwtrn) and you specified minw=$(minweighttmp). The tree might become very large")
 end
 
 prnt=sett.print_details
@@ -483,7 +485,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	max_n0=maximum(num_levels)
 	max_levels_uint8=typemax(UInt8)
 	if max(max_c0,max_n0)>max_levels_uint8
-		warn("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")		
+		@info("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")		
 	end	
 	@assert max_c0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
 	@assert max_n0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
@@ -528,7 +530,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	  #model_setting_string=convert(String,string(model_setting_string, "\n\n", "Names:Levels: \n",join(permutedims(names_and_levels, (2, 1)),":")))
       model_setting_string=convert(String,string(model_setting_string, "\n", "Folder of Julia code (decisiontree.jl): \n", dirname(@__FILE__)))
 	  #model_setting_string=convert(String,string(model_setting_string, "\n", "Julia started at: \n not_available "))
-      model_setting_string=convert(String,string(model_setting_string, "\n", "Julia (Modelling) start time: \n$(now()) "))
+      model_setting_string=convert(String,string(model_setting_string, "\n", "Julia (Modelling) start time: \n$(Dates.now()) "))
 
 prnt&&println("---Model Settings--------------------------------------------------------------")
       if sett.boolRankOptimization && "build_tree"==sett.model_type
@@ -543,23 +545,24 @@ prnt&&println("---Model Settings------------------------------------------------
 			  println("NumMaxSplitPoints: $(sett.max_splitting_points_num), Criterion: $(replace(string(sett.crit),"DecisionTrees."=>""))")
 			  println(stars)
 			  println(string(""))
-			  println(string("Building Tree... Time: $(now())"))
+			  println(string("Building Tree... Time: $(Dates.now())"))
 		  end
 		  obsvalcols=1
 		  if sett.randomw>0
-			warn("Running single tree with positive random weight:$(sett.randomw)")
+			@warn("Running single tree with positive random weight:$(sett.randomw)")
 		  end
 
 	#build a simple tree
-		fitted_values_tree=zero(numerator)		
+		fitted_values_tree=zero(numerator)	
+        T_Uint8_or_UInt16=find_max_type(features)
 		if prnt
-			@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
+			@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
 		else
-			tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree)
+			tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
 		end
 		
 		resulting_model=tree
-		prnt&&println("Deriving Trn Estimates... Time: $(now())")
+		prnt&&println("Deriving Trn Estimates... Time: $(Dates.now())")
 		leaves_of_tree=create_leaves_array(tree)
         leaf_number_vector=zeros(Int,length(fitted_values_tree))
         #todo/tbd possibly improve this by only applying the function once!
@@ -568,7 +571,7 @@ prnt&&println("---Model Settings------------------------------------------------
         if length(validx)>0
             apply_tree_by_leaf!(fitted_values_tree,leaf_number_vector,validx,tree.rootnode,features)
 		end		
-		 prnt&&println("Preparing output... Time: $(now())")
+		 prnt&&println("Preparing output... Time: $(Dates.now())")
          #1-dim Variable Importance
           var_imp1d_str_arr,var_imp2d_str_arr,onedimintvec_unused,twodimintvec_unused=variable_importance(leaves_of_tree,sett.df_name_vector,sett.number_of_num_features)
           nleaves=Int(size(leaves_of_tree,1))
@@ -583,18 +586,18 @@ prnt&&println("---Model Settings------------------------------------------------
 			#z=transpose(overallstats) #this should work, but it somehow doesnt.... https://discourse.julialang.org/t/transpose-not-working-on-array-any-2/6510
 			z=permutedims(overallstats,(2,1))
 			dfStats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
-			names!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
+			DataFrames.names!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
 			resulting_model.modelstats=dfStats
 			if sett.boolSaveResultAsJLDFile
 				println("Saving results to jld2 file: \n $(jldresultsfile)")
 				isfile(jldresultsfile)&&rm(jldresultsfile)
-				@time @save jldresultsfile xlData res leaves_of_tree trnidx validx fitted_values_tree tree var_imp1d_str_arr var_imp2d_str_arr onedimintvec_unused twodimintvec_unused
+				@time JLD2.@save jldresultsfile xlData res leaves_of_tree trnidx validx fitted_values_tree tree var_imp1d_str_arr var_imp2d_str_arr onedimintvec_unused twodimintvec_unused
 				push!(filelistWithFilesToBeZipped,jldresultsfile)
 			end
 
 		 #print_tree(tree)
 		 dot_graph=graph(resulting_model)
-         model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(now()) \n"))
+         model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n"))
 		 if sett.write_dot_graph
 			println("Writing DOT tree structure to file: \n $(dot_graph_TXT_file)")
 			isfile(dot_graph_TXT_file)&&rm(dot_graph_TXT_file)
@@ -645,7 +648,7 @@ prnt&&println("---Model Settings------------------------------------------------
 				xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultEnsemble=boosted_tree(dtmtable,sett)
 			end)
 			
-			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(now()) \n "))
+			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
 			#this line is for  the sas,vba and csharp code
 			estimatesPerScoreForCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
 			
@@ -676,12 +679,12 @@ prnt&&println("---Model Settings------------------------------------------------
 		elseif "bagged_tree"==sett.model_type
 			#bagging
 			@timeConditional(sett.print_details,begin
-			warn("bagging is not yet updated for dtm2! This will most likely fail!")
+			@warn("bagging is not yet updated for dtm2! This will most likely fail!")
 				xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultEnsemble=bagged_tree(dtmtable,sett)
 				#xlData,vectorOfLeafNumbersTrn,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,est_matrixFromScoresVAL,stats,scoresval,est_matrix_val,estimateUnsmoothedVal,estimateSmoothedVal,estimateFromRelativitiesVal,estimateUnsmoothedTrn,estimateSmoothedTrn,estimateFromRelativitiesTrn,resultEnsemble=bagged_tree(mappings,candMatWOMaxValues,sett,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,numeratorval,denominatorval,weightval,val_numfeatures,val_charfeatures_PDA)
 			end)
 			#
-			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(now()) \n "))
+			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
 		else
 			error("Unknown Model Type: $(sett.model_type) (Within Bagging/Boosting loop)")
 		end #end bagging or boosting
@@ -695,7 +698,7 @@ end
 if sett.boolSaveResultAsJLDFile
 	println("Saving results to jld2 file: \n $(jldresultsfile)")
 	isfile(jldresultsfile)&&rm(jldresultsfile)
-	@time @save jldresultsfile xlData dtmtable trnidx validx vectorOfLeafNumbers vectorOfLeafArrays rawObservedRatioPerScore est_matrixFromScores stats estimateUnsmoothed estimateSmoothed estimateFromRelativities resultEnsemble
+	@time JLD2.@save jldresultsfile xlData dtmtable trnidx validx vectorOfLeafNumbers vectorOfLeafArrays rawObservedRatioPerScore est_matrixFromScores stats estimateUnsmoothed estimateSmoothed estimateFromRelativities resultEnsemble
 	push!(filelistWithFilesToBeZipped,jldresultsfile)
 end
 
@@ -763,15 +766,14 @@ end #end distinction between three model types
 #NOTE: the option boolCreateZipFile should be disabled when code is run through grails
 #as the *.7z file will be created by the listener (because the *.log file will only exist when run_model terminated
 
-#this code applis to all model types
+#this code applies to all model types
    #Create ZIP file
      #Push Log file to file list
-	 #println("\n")
-	 elapsed_until_this_point=0.0
-	 prnt&&println("Modelling finished. Time: $(now()) - Total time was $(round(elapsed_until_this_point,digits=1))s = $(round(elapsed_until_this_point/60,digits=1))m")
+	 elapsed_until_this_point=(t0RunModel0-time_ns())/1e9
+	 prnt&&println("Modelling finished. Time: $(Dates.now()) - Total time was $(round(elapsed_until_this_point,digits=1))s = $(round(elapsed_until_this_point/60,digits=1))m")
 	 if sett.boolCreateZipFile
 		 logfile=string(path_and_fn_wo_extension,".log")
-		 tmplogfile="c:\\temp\\julia_logfile.log";isfile(tmplogfile)&&rm(tmplogfile)
+		 tmplogfile=string(path_and_fn_wo_extension,".zip.log");isfile(tmplogfile)&&rm(tmplogfile)
 		 try
 			isfile(logfile)&&isreadable(logfile)&&cp(logfile,tmplogfile)
 		 catch error_while_copying_log
@@ -843,12 +845,14 @@ end
 
 #function if dictionary from *.jld2 was loaded
 function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)	
-	oldsettings=di["oldsettings"]
-	sett=ModelSettings() #default model settings
-	updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
-    telapsed=0.0	
-    sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
-    return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
+	error("this function is not supported anymore.")
+    #specifically we have deleted the field sett.ncolsdfIndata
+    #oldsettings=di["oldsettings"]
+	#sett=ModelSettings() #default model settings
+	#updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
+    #telapsed=0.0	
+    #sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
+    #return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
 end
 
 function prepare_non_jld_data(dataFilename::String,settingsArray::Array{String,2},datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int,nrows::Int,number_of_num_features::Int)
@@ -856,7 +860,7 @@ local eltypev,dfIndata
 	if lowercase(dataFilename)[end-2:end]==".db"
 		@info "todo: Test *.DB Sqlite functionality."
 		@info "the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')"
-		warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
+		@warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
 		println("Importing data from SQLiteDB file: \n $(dataFilename)")
 		try
 			@info "check if disabling gc speeds this up"
@@ -867,8 +871,8 @@ local eltypev,dfIndata
 		end
 	elseif lowercase(dataFilename)[end-2:end]=="sql"
 		print("Importing data from SQL db.")
-		warn("If this uses to  much memory implement limit 100,300 !!")
-		warn("like this we can read stepwise and append to the df in julia!")
+		@warn("If this uses to  much memory implement limit 100,300 !!")
+		@warn("like this we can read stepwise and append to the df in julia!")
 		try
 			dfIndata=readDFfromSQLDB()
 		catch eri
@@ -883,10 +887,10 @@ local eltypev,dfIndata
 		  try
 			eltypev=define_eltypevector(DataFrames.readtable(dataFilename,nrows=100),const_shift_cols,number_of_num_features)
 		  catch eri
-			warn("Readtable failed! Check the size of the *.CSV: $(dataFilename)") #sometimes the file only consists of the header (e.g. if the SAS export failed), then readtable will fail.
+			@warn("Readtable failed! Check the size of the *.CSV: $(dataFilename)") #sometimes the file only consists of the header (e.g. if the SAS export failed), then readtable will fail.
 			fz=0
 			fz=filesize(dataFilename)/1024
-			warn("Filesize is $(fz) KB")
+			@warn("Filesize is $(fz) KB")
 			@show eri
 			@assert false
 		  end
@@ -939,12 +943,12 @@ function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::St
 			allsettings=Array{Any,2}(length(settingsvec),nsetts)			
 		else			
 			if !all(header.==desc)
-				warn("Model run $(i) returned an unexpected results vector:")
+				@warn("Model run $(i) returned an unexpected results vector:")
 				@show desc
 				@show header
 			end
 			if !all(header_settings.==desc_settingsvec)
-				warn("Model run $(i) returned an unexpected results vector:")
+				@warn("Model run $(i) returned an unexpected results vector:")
 				@show desc_settingsvec
 				@show header_settings
 			end
@@ -955,9 +959,9 @@ function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::St
 	end	
 
 	statsdf=DataFrame(transpose(allstats))
-	names!(statsdf,Symbol.(header))
+	DataFrames.names!(statsdf,Symbol.(header))
 	settsdf=DataFrame(permutedims(allsettings,[2,1]))
-	names!(settsdf,Symbol.(header_settings))
+	DataFrames.names!(settsdf,Symbol.(header_settings))
 
 	@show fld,namestr=splitdir(path_and_fn_wo_extension)
 	filen=string(fld,"multistats.xlsx")

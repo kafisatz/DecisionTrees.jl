@@ -2,21 +2,18 @@ t0=time_ns()
 cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 @warn("You may need to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
-using Revise
+#using Revise
 
-#these lines are primarly to test the precompliation of the dependency packages
-using FileIO
-using DataFrames
-using PyCall 
-using CSV 
-using Compat
-using OnlineStats 
-using StatsBase
-#using Distributions
-using ProgressMeter
-using JLD2
-using FileIO
-using StatsFuns 
+#these lines are primarily to test the precompilation of the dependency packages
+import DataFrames
+import PyCall 
+import CSV 
+import OnlineStats 
+import StatsBase
+import ProgressMeter
+#import JLD2
+#import FileIO
+import StatsFuns 
 
 using DecisionTrees  
 

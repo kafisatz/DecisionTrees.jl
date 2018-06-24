@@ -2,36 +2,18 @@
 
 @testset "Smoketests" begin
 
-###
-#test hashing (for 32 bit windows executable)
-###
-using DataFrames
+import DataFrames
 import Random: rand,randstring
-let
-rows=700000;
-w=rand(rows);
-d=rand(rows);
-n=rand(rows);
-f1=map(i->randstring(1+i%8),collect(1:rows))
-f2=rand(rows)
-f3=rand(Int,rows)
-df=DataFrame(a=f1,b=f2,c=f3)
-try
-    @test floor(Int,.25*hash(2231,hash(df,hash(n,hash(d,hash(w))))))>0
-catch
-    @test 1==0
-end
-end
 
 ##################################################
 #Read the data
 ##################################################
-elt=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
 
 fi="data1Small.csv"
 thisfile=joinpath(datadir,fi)
 @test isfile(thisfile)
-@time df_tmp=CSV.read(thisfile,allowmissing=:none,types=elt,categorical=false,rows_for_type_detect=10000);
+@time df_tmp=CSV.read(thisfile,allowmissing=:none,types=eltypesData1,categorical=false,rows_for_type_detect=10000);
+df_tmp_orig=deepcopy(df_tmp)
 
 selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 
@@ -66,6 +48,22 @@ strs,resm2=dtm(dtmtable,sett)
 @test typeof(resm2.modelstats)==DataFrame
 @test 1==1
 
+#reduce niter for the remaining tests
+sett.niter=3
+
+#try different splitting criteria
+for splitCrit in ["difference","poissondeviance","gammadeviance"]
+    updateSettingsMod!(sett,crit=splitCrit)
+    try 
+        strs,resmT=dtm(dtmtable,sett)        
+        @test typeof(resmT.modelstats)==DataFrame
+    catch thisErr
+        @show stacktrace()
+        @show thisErr        
+        @test "this one failed->"==splitCrit
+    end
+end
+updateSettingsMod!(sett,crit="difference")
 
 ##################################################
 #run bagging
@@ -111,13 +109,17 @@ a,b,allmodels=dtm(dtmtable,settV)
 #Cross validation
 ##################################################
 cvsampler=CVOptions(-3,0.0,true)
-#this will run 5 models and thus might take some time
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
+cvsampler=CVOptions(3,0.65,true)
+statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+
+yetAnotherCVsampler=CVOptions(3,0.5,false)
+statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 #set some default settings
 updateSettingsMod!(sett,
-niter=4,
+niter=3,
 model_type="boosted_tree",
 nscores="1000",
 write_statistics="true",
@@ -140,6 +142,10 @@ performanceMeasure="Average Poisson Error Val"
 
 strs,resm3=dtm(dtmtable,sett)
 @test typeof(resm3.modelstats)==DataFrame
+#test if files exist 
+for fi in strs
+    @test isfile(fi)
+end
 
 #more smoketests
 sett.subsampling_prop=0.7
@@ -164,6 +170,18 @@ sett.minw=-0.51
 strs,resm6=dtm(dtmtable,sett)
 @test typeof(resm6.modelstats)==DataFrame
 
+#for coverage 
+#empty keycol
+prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],keycol="",numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
+df_tmp2=deepcopy(df_tmp_orig)
+df_tmp2[:PREMIUM66][1:20].=-20.1
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+df_tmp2[:PREMIUM66][1:20].=0.0
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+df_tmp2[:LOSS20HALF][1:20].=0.0
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+df_tmp2[:LOSS20HALF][1:20].=-20
+dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
 
 sett.minw=oldminw

@@ -2,7 +2,7 @@ __precompile__()
 VERSION >= v"0.7-"
 #note on v0.7 alpha precompilation through 'using' (i.e. when the code was not precomipled before) takes about 800 seconds
 #once precompilation is done, the using statement might need around 500 seconds. 
-@warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou should start julia with --depwarn=no option (in case there are still unfixed deprecations), otherwise the algorithms might be further slowed down. I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
+@warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou may want to start julia with --depwarn=no option (in case there are still deprecation warnings in this package or its dependencies). I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
 
 #=
 @info "DTM: BK Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
@@ -24,23 +24,27 @@ export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!
 
 #include PooledArraysDTM module
 include("PooledArraysDTM.jl")
-using .PooledArraysDTM 
+import .PooledArraysDTM: PooledArray
 
-using Dates,Random
+import Core 
+import Dates
+import Random
 import Distributed
 import DelimitedFiles
-import Core
+import PyCall
+import DataFrames
+import DataFrames: DataFrame
+import JLD2
+import OnlineStats
+import ProgressMeter
+import StatsBase
 
-#todo switch from 'using' to 'import' and use 'explicit calls', i.e. ProgressMeter.Progress instead of Progress 
-using PyCall,DataFrames,JLD2,FileIO,OnlineStats,ProgressMeter,StatsBase
+import DataStreams #We do not really need DataStreams (explicitly) but CSV keeps failing (in tests) if this is not here (on 0.7alpha)
 
-#for precompile files, we need some additional packages
-using DataStreams
+#import MySQL, # temporarily disabled 
+#import SQLite #disabled as it uses DataFrames 0.11
 
-#using MySQL, # temporarily disabled 
-#using SQLite #disabled as it uses DataFrames 0.11
-
-srand(1234)
+Random.srand(1234)
 
 #include("check_if_python_packages_are_installed.jl")
 include("types.jl")
@@ -60,19 +64,26 @@ include("roc.jl")
 include("cross_validation.jl")
 include("show.jl")
 
-global const pyModPandas = PyNULL()
-global const pyModxlsxwriter = PyNULL()
+global const pyModPandas = PyCall.PyNULL()
+global const pyModxlsxwriter = PyCall.PyNULL()
 
-global const_default_splitdef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0)
+global const globalConstAllowableMethodsForDefineCandidates=("equalWeight","basedOnWeightVector")
+global const UInt8VECTORemptySplitDef = Vector{Splitdef{UInt8}}(undef,0)
+global const UInt16VECTORemptySplitDef = Vector{Splitdef{UInt16}}(undef,0)
+global const UInt8emptySplitDef=Splitdef(0,0,Symbol(),Vector{UInt8}(),-Inf,0.0,0.0) #formerly const_default_splitdef
+global const UInt16emptySplitDef=Splitdef(0,0,Symbol(),Vector{UInt16}(),-Inf,0.0,0.0) 
 global const defaultModelName="dtmresult"
 global const defaultModelNameWtihCSVext=string(defaultModelName,".csv")
-global nLevelsThreshold=2000
+global nLevelsThreshold=2002
 global const global_number_of_num_f_warning_mandatory_field="Abort. Settings do not contain any value for number_of_num_features (which is mandatory)."
 global const stars="*******************************************************************************"
-global const emptyRulepath=Array{Rulepath}(undef,0)
-global const emptyLeaf=Leaf(0,NaN,NaN,NaN,-1,emptyRulepath,NaN,NaN,0)
-global const emptyNode=Node(0,0,Array{UInt8}(undef,0),deepcopy(emptyLeaf),deepcopy(emptyLeaf),deepcopy(emptyRulepath))
-global const global_const_shift_cols=5+1-1
+global const UInt8emptyRulepath=Array{Rulepath{UInt8}}(undef,0)
+global const UInt16emptyRulepath=Array{Rulepath{UInt16}}(undef,0)
+global const UInt8emptyLeaf=Leaf(0,NaN,NaN,NaN,-1,UInt8emptyRulepath,NaN,NaN,0)
+global const UInt16emptyLeaf=Leaf(0,NaN,NaN,NaN,-1,UInt16emptyRulepath,NaN,NaN,0)
+global const UInt8emptyNode=Node(0,0,Array{UInt8}(undef,0),deepcopy(UInt8emptyLeaf),deepcopy(UInt8emptyLeaf),deepcopy(UInt8emptyRulepath))
+global const UInt16emptyNode=Node(0,0,Array{UInt16}(undef,0),deepcopy(UInt16emptyLeaf),deepcopy(UInt16emptyLeaf),deepcopy(UInt16emptyRulepath))
+global const global_const_shift_cols=5
 global const global_pldamod_valid_types=[String,Float64]	
 
 global const global_nameOfSettingsSheet="ModelSettings"
@@ -99,8 +110,10 @@ global const CSHARP_VALID_CHARS="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 
 function __init__()
 	#the following lines may trigger the installation of the respective python packages
-	copy!(pyModPandas, pyimport_conda("pandas","pandas"))
-	copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"))	
+	#if true #temporarily disable this
+        copy!(pyModPandas, PyCall.pyimport_conda("pandas","pandas"))
+        copy!(pyModxlsxwriter, PyCall.pyimport_conda("xlsxwriter","xlsxwriter"))
+    #end
 end
 
 function get_sha1()

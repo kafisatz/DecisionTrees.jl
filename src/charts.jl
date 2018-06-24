@@ -4,7 +4,7 @@ export write_statistics
 function create_dataframe(arr::Array{U,2},header::Array{T,1}) where {T <: AbstractString,U <: Any}
 	res=convert(DataFrame,arr)
 	hsym=Symbol[x for x in header]
-	names!(res,hsym)
+	DataFrames.names!(res,hsym)
 	return res
 end
 
@@ -17,15 +17,15 @@ function create_custom_dict(df::DataFrame)
 	return d
 end
 
-function addChartToWorkbook!(workbook::PyObject,worksheet::PyObject,chartDict::Dict{AbstractString,Dict{AbstractString,Any}},location::AbstractString) #;properties=["set_x_axis", "set_y_axis","set_legend"])
-	chart = pycall(workbook["add_chart"],PyAny,chartDict["add_chart"])
+function addChartToWorkbook!(workbook::PyCall.PyObject,worksheet::PyCall.PyObject,chartDict::Dict{AbstractString,Dict{AbstractString,Any}},location::AbstractString) #;properties=["set_x_axis", "set_y_axis","set_legend"])
+	chart = PyCall.pycall(workbook["add_chart"],PyCall.PyAny,chartDict["add_chart"])
 	stopboolean=true
 	i=1
 	local thiskey
 	while stopboolean
 		thiskey=string("series",i)
 		if haskey(chartDict,thiskey)
-			pycall(chart["add_series"],PyAny,chartDict[thiskey])
+			PyCall.pycall(chart["add_series"],PyCall.PyAny,chartDict[thiskey])
 		else
 			stopboolean=false
 			break #if there is no series2 then we assume there is no series 3 to n either
@@ -37,11 +37,11 @@ function addChartToWorkbook!(workbook::PyObject,worksheet::PyObject,chartDict::D
 	i2=1
 	stopboolean=true
 	if haskey(chartDict,thiskey)
-		second_chart = pycall(workbook["add_chart"],PyAny,chartDict[thiskey])
+		second_chart = PyCall.pycall(workbook["add_chart"],PyCall.PyAny,chartDict[thiskey])
 		while stopboolean
 			thiskey=string("series_comb",i2)
 			if haskey(chartDict,thiskey)
-				pycall(second_chart["add_series"],PyAny,chartDict[thiskey])
+				PyCall.pycall(second_chart["add_series"],PyCall.PyAny,chartDict[thiskey])
 			else
 				stopboolean=false
 				break #if there is no series2 then we assume there is no series 3 to n either
@@ -49,7 +49,7 @@ function addChartToWorkbook!(workbook::PyObject,worksheet::PyObject,chartDict::D
 			i2+=1
 		end
 		#combine the charts
-		pycall(chart["combine"],PyAny,second_chart)		
+		PyCall.pycall(chart["combine"],PyCall.PyAny,second_chart)		
 	end
 	#set other properties
 	for x in keys(chartDict)
@@ -58,10 +58,10 @@ function addChartToWorkbook!(workbook::PyObject,worksheet::PyObject,chartDict::D
 		append!(fieldsWhichAreAlreadySet,["add_series","add_chart"])
 		append!(fieldsWhichAreAlreadySet,resevedKeywords)		
 		if !in(x,fieldsWhichAreAlreadySet)
-			pycall(chart[x],PyAny,chartDict[x])	
+			PyCall.pycall(chart[x],PyCall.PyAny,chartDict[x])	
 		end			
 	end
-	pycall(worksheet["insert_chart"],PyAny,location, chart)
+	PyCall.pycall(worksheet["insert_chart"],PyCall.PyAny,location, chart)
 	#writer[:save]()
 end
 
@@ -87,8 +87,11 @@ function writeDFtoExcel(excelData::ExcelData,existingFile::T,row::Int,col::Int,w
 	#@assert isfile(existingFile)
 	@assert min(row,col)>=0
 	#write all data    
-	#writer = pyModPandas.ExcelWriter(existingFile, engine = "xlsxwriter")
-    #pyModPandas[:ExcelWriter]
+    #@show pyModPandas
+    #@show typeof(pyModPandas)
+    #dump(pyModPandas)
+    #@show fieldnames(pyModPandas)
+    #@show pyModPandas.o
     writer=pyModPandas[:ExcelWriter](existingFile, engine = "xlsxwriter")
     
 	for xlSheet in excelData.sheets
@@ -97,15 +100,14 @@ function writeDFtoExcel(excelData::ExcelData,existingFile::T,row::Int,col::Int,w
 		#create python dataframe	
 		dataDict = create_custom_dict(df)
 		dataDict = create_custom_dict(df)
-		#pyDF = pyModPandas.DataFrame(dataDict,columns=names(df)) #this was working under 0.4 but in 0.5 is converted to a julia dict (instead of being a python DF)
-		pyDF=pycall(pyModPandas[:DataFrame], PyObject, dataDict,columns=names(df))		
-		pycall(pyDF["to_excel"],PyAny,writer, header=write_header,index=write_index, sheet_name = sheet,startrow=row, startcol=col, encoding="utf-8")  #index=false suppress the rowcount		
+		pyDF=PyCall.pycall(pyModPandas[:DataFrame], PyCall.PyObject, dataDict,columns=names(df))		
+		PyCall.pycall(pyDF["to_excel"],PyCall.PyAny,writer, header=write_header,index=write_index, sheet_name = sheet,startrow=row, startcol=col, encoding="utf-8")  #index=false suppress the rowcount		
 	end
 	#DataFrame.to_excel(excel_writer, sheet_name='Sheet1', na_rep='', float_format=None, columns=None, header=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf')
 	#writer[:save]()
 	return writer
 	#book = pyModOpenpyxl.load_workbook(excel_file)
-	#snames=pycall(book["get_sheet_names"],PyAny)
+	#snames=PyCall.pycall(book["get_sheet_names"],PyCall.PyAny)
 	#pyeval("df.to_excel(writer,sheet_name='Sheet1',startrow=5,startcol=3)",df=pyDF,writer=writer)
 	#writer[:sheets]=pyeval("dict((ws.title, ws) for ws in book.worksheets)",book=book,writer=writer)
 end

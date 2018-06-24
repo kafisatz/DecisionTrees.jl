@@ -18,7 +18,7 @@ df_tmp=readtable(tmpf);
 expl=["AFF_MM" "FLG_BERSANI" "f_anz_cli_Rca" "f_citt" "anno" "f_cod_fraz" "f_flg_rinnovo_new" "f_num_gar" "F_rin_cons" "f_num_pol_att" "anno_pat" "fonte" "FLG_CNT_INT" "f_can_pol" "f_profes" "f_flg_cla_tpgu" "f_sex" "f_eta" "f_anz_cli_Zuco" "f_etavei" "f_alim" "F_stat_civ_gran" "f_pagamento_new" "f_att_na_old" "f_att_pulito" "f_cod_marc" "f_ant_rit" "f_reg" "COND_ABI" "UT_AUTO" "KM_AN" "SG_PR" "numpol_att_motor" "Ass" "Rit" "inc_fur" "tut" "Nat" "Soc" "ktot" "Crist" "Inf" "bluk" "eta_conseg_patente" "anni_di_patente"][:]
 
 #prep df
-warn("add option forced_categorical_variables to specify columns which are interpreted as categorical variables even if they are numerical (e.g. [1 2 4 9 1][:] ...)")
+@warn("add option forced_categorical_variables to specify columns which are interpreted as categorical variables even if they are numerical (e.g. [1 2 4 9 1][:] ...)")
 @time (df_prepped,this_sett)=prepare_dataframe_for_dtm(df_tmp,numcol="n_claims_artificial",denomcol="exposure",independent_vars=expl);
 
 #remove all rows which have some NA entries

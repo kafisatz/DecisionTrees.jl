@@ -7,23 +7,19 @@ export createZipFile
 
 #this could certainly be done nice
 #tries to find the 'max' type of the refs (which is likely UInt8 or UInt16)
-function find_max_type(x::DataFrame)
+function find_max_type(x::DataFrame)::DataType #T where T<:Union{UInt8,UInt16}
+    #for col in 1:size(x,2)
+    #    if eltype(x[col].refs)==UInt32 
+    #        return UInt32
+    #    end
+    #end
     for col in 1:size(x,2)
-        if eltype(x[col].refs)==UInt32 
-            return UInt32
-        end
-    end
-    for col in 1:size(x,2)
-        if eltype(x[col].refs)==UInt16
+        @inbounds xi=x[col]
+        if eltype(xi.refs)==UInt16
             return UInt16
         end
     end
     return UInt8
-end
-
-#it is critical to define levels properly for PooledArray
-function Missings.levels(x::PooledArray)
-    return deepcopy(x.pool)
 end
 
 function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
@@ -32,7 +28,7 @@ function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
 	sz=length(x.weight)
 	trnsz=round(Int,trnprop*sz)
 	trnsz=max(1,min(sz,trnsz))
-	t=sample(1:sz,trnsz,replace=false,ordered=true)
+	t=StatsBase.sample(1:sz,trnsz,replace=false,ordered=true)
 	v=setdiff(1:sz,t)
 	@assert issorted(t)
 	@assert issorted(v)
@@ -43,8 +39,6 @@ function resample_trnvalidx!(x::DTMTable,trnprop::Float64)
 end
 
 function get_stats(model::Tree;perfMeasure::String="not_applicable_for_singe_tree")
-	#typeof(b)==Tree
-	#fieldnames(b)
 	statsdf=model.exceldata.sheets[2].data
 	#find the last rows of the results sheet
 	str="Correlation"
@@ -199,7 +193,7 @@ function frequency_count(actual::Array{Int,1},estimate::Array{Int,1})
 	#NOTE: what do we do if the observed range of actual is limited, e.g. if there is no actual with value 1? shall we start at 2?
 	#I assume that this is a rare case
 	if lo!=1
-		warn("Lo of actual is not equal to 1: lo=$(lo), hi=$(hi)")
+		@warn("Lo of actual is not equal to 1: lo=$(lo), hi=$(hi)")
 	end
 	ooo=one(lo)-lo
 	vecsize=hi+ooo
@@ -331,18 +325,18 @@ function select_best_model(itercol,metric_col,modelnrcol,i)
 	return val,m[loc]
 end
 
-function eta_before(t0::DateTime,model_i_which_starts_now::Int,nmodels::Int)
+function eta_before(t0::Dates.DateTime,model_i_which_starts_now::Int,nmodels::Int)
 	#here the model with number model_i_which_starts_now is just starting (thus it is not yet completed)
-	elapsed=(now()-t0)
+	elapsed=(Dates.now()-t0)
 	elapsed_s=elapsed.value/1000
 	elapsed_m=elapsed_s/60
 	eta=elapsed_s/max(1,model_i_which_starts_now-1)*(nmodels-model_i_which_starts_now-1)
 	return eta
 end
 
-function eta_after(t0::DateTime,model_i_which_is_completed::Int,nmodels::Int)
+function eta_after(t0::Dates.DateTime,model_i_which_is_completed::Int,nmodels::Int)
 	#here the model with number model_i_which_is_completed has just starting completed
-	elapsed=(now()-t0)
+	elapsed=(Dates.now()-t0)
 	elapsed_s=elapsed.value/1000
 	elapsed_m=elapsed_s/60
 	eta=elapsed_s/model_i_which_is_completed*(nmodels-model_i_which_is_completed)
@@ -374,7 +368,7 @@ function readSettings(settingsFilename)
 end
 
 function convert(t::Type{Array},setti::ModelSettings)
-	fn=fieldnames(setti)
+	fn=fieldnames(typeof(setti))
 	res=Array{Any}(2,length(fn))
 	i=0
 	for f in fn
@@ -1001,10 +995,10 @@ function writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
 		isfile(statsfileExcel)&&rm(statsfileExcel)
 		@time write_statistics(xlData,statsfileExcel,false,false)
 		push!(filelistWithFilesToBeZipped,statsfileExcel)
-	catch e
-        @show e
-        dump(e)
-		warn("DTM: Failed to create Excel Statistics file. \r\n $(statsfileExcel)")
+	catch ePyCallWriteExcel
+        @show ePyCallWriteExcel
+        dump(ePyCallWriteExcel)
+		@warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(statsfileExcel)")
 	end
 	return nothing
 end
@@ -1023,7 +1017,7 @@ end
 
 
 function writeAllFields(f::IOStream,s)
-	for x in fieldnames(s)
+	for x in fieldnames(typeof(s))
 		write(f,x,"\r\n  ",string(getfield(s,x)),"\r\n")
 	end
 	return nothing
@@ -1031,14 +1025,14 @@ end
 
 function writeAllFieldsToString(s)
 	res=string()
-	for x in fieldnames(s)
+	for x in fieldnames(typeof(s))
 		res=string(res,x,"\r\n  ",string(getfield(s,x)),"\r\n")
 	end
 	return res
 end
 
 function writeAllFieldsToArray(s)
-	#nn=fieldnames(s)
+	#nn=fieldnames(typeof(s))
 	nn=fieldnames(typeof(s))
 	res=Array{AbstractString}(undef,length(nn),2)
 	i=0
@@ -1297,7 +1291,7 @@ function aggregateByLeafNr(leafNrVector::Array{Int,1},numeratorEST::Array{Float6
 end
 
 
-function corw(x::Array{T,1},y::Array{U,1},wvec::W) where {T <: Number,U <: Number,W <: AbstractWeights}
+function corw(x::Array{T,1},y::Array{U,1},wvec::W) where {T <: Number,U <: Number,W <: StatsBase.AbstractWeights}
   @assert length(x)==length(y)==length(wvec)
   #todo this can be done more efficiently
   #soon it will probably be available in StatsBase or in some other package
@@ -1419,14 +1413,14 @@ function calcIterationsPerCore2(ntot::Int,ncores::Int)
 	end
 end
 
-function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) #,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1},smp::Array{Int,1},n::Array{Float64,1},d::Array{Float64,1},w::Array{Float64,1},numf::Array{pdaMod,1},charf::Array{pdaMod,1},un::Array{Float64,1},ud::Array{Float64,1},uw::Array{Float64,1},unumf::Array{pdaMod,1},ucharf::Array{pdaMod,1})
+function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) 
 #this version should (does it?) allocate less memory
 		repl=(samplesize<0)
 		@assert repl==false "DTM: Sampling without replacement is currently not supported." #bk -> tbd/todo check how we can make this work
 		#e.g. fitted_values_all_data_this_vector_is_modified_by_build_tree must possibly look different if replace=true 
 		#currently a CRITICAL assumption is that validx and trnidx are disjoint and unique(validx)==validx . The same must holde for the sample and oobag sample
 		@assert length(smp)==abs(samplesize)
-		sample!(trnidx,smp,replace=repl)
+		StatsBase.sample!(trnidx,smp,replace=repl)
 	#define unused part of data
 		repl==false ? smpUniqueSorted=smp : smpUniqueSorted=unique(smp)
 		sort!(smpUniqueSorted) 
@@ -1443,9 +1437,9 @@ function sampleData!(trnidx::Vector{Int},samplesize::Int,smp::Vector{Int}) #,num
 return smpUnusedPart
 end
 
-function sampleData(samplesize::Int,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1})
+function sampleData(samplesize::Int,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{PooledArray,1},charfeatures::Array{PooledArray,1})
 		repl=!(samplesize<0)
-		smp=sample(1:size(numerator,1),abs(samplesize),replace=repl)
+		smp=StatsBase.sample(1:size(numerator,1),abs(samplesize),replace=repl)
 	#draw sample from data, this currently creates a COPY of the data
 		n=numerator[smp]
 		d=denominator[smp]
@@ -1455,7 +1449,7 @@ function sampleData(samplesize::Int,numerator::Array{Float64,1},denominator::Arr
 return smp,n,d,w,numf,charf
 end
 
-function sampleData(prop::Float64,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{pdaMod,1},charfeatures::Array{pdaMod,1})
+function sampleData(prop::Float64,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}, numfeatures::Array{PooledArray,1},charfeatures::Array{PooledArray,1})
 	samplesize=convert(Int,round(prop*size(numerator,1)))
 	return sampleData(samplesize,numerator,denominator,weight,numfeatures,charfeatures)
 end
@@ -1495,34 +1489,9 @@ function initExcelData()
 return nameOflistofpredictorsSheet,nameOfpredictorsSheet,global_nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,global_nameOfSettingsSheet,global_nameOfTWOWayValidationSheet,xlData
 end
 
-macro nogc(ex)
-  quote
-    try
-      gc_disable()
-      local val = $(esc(ex))
-    finally
-      gc_enable()
-    end
-    val
-  end
-end
-
 macro timeConditional(bool,ex)
 	return :(if $(esc(bool));@time ($(esc(ex)));else;$(esc(ex));end)
 end
-
-#=
-    function leaf_numbers(leaves::Array{Leaf,1},trnsize::Int)
-        leafnr=zeros(Int,trnsize)
-        for i=1:length(leaves)
-            thisid=leaves[i].id
-            for j in leaves[i].idx
-                leafnr[j]=thisid
-            end
-        end
-        return leafnr
-    end
-=#
 
 """
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
@@ -1548,8 +1517,7 @@ end
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
 This verison of the function is for numerical variables
 """
-function lrIndices(idx::Vector{Int},f,subset::Array) 
-	#todo tbd, we could restrict the input to U<:Number and T<:Unsigned for the pda f
+function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array) where T<:Unsigned
 	l=Vector{Int}(undef,0)
 	r=Vector{Int}(undef,0)
 	sizehint!(l,length(idx))
@@ -1603,7 +1571,7 @@ function createZipFile(zipFilename::T,filelist::Array{U,1},silent::Bool=false) w
       rm(zipFilename)
     catch err
       @show err
-      warn("Unable to delete file $(zipFilename)!")
+      @warn("Unable to delete file $(zipFilename)!")
     end
   end
 
@@ -1611,8 +1579,8 @@ function createZipFile(zipFilename::T,filelist::Array{U,1},silent::Bool=false) w
     #mx5 is compression level 5 http://sevenzip.osdn.jp/chm/cmdline/ http://sevenzip.osdn.jp/chm/cmdline/switches/method.htm#LZMA2
 	cmd=`7z a -mx5 -m0=LZMA2:d=25 $(zipFilename) $(filelist)`
 	if silent
-		tmptxt="tmplog.log"
-		tmperr="tmperr.log"
+		tmptxt="tmp_TMP_29x31_log.log"
+		tmperr="tmp_TMP_29x31_err.log"
 		pip=pipeline(cmd, stdout=tmptxt, stderr=tmperr)
 		rc=run(pip)
 		isfile(tmperr)&&rm(tmperr)
@@ -1645,18 +1613,20 @@ return "miro"
 end
 
 
-"""adds numerical explanatory vars as PDAs to the DF f"""
-function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame) #Version where no candidates are supplied -> Julia chooses the candidates
+"""adds numerical explanatory variables as PooledArrays to the input DataFrame wholeDF
+add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame)
+"""
+function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame,weight::Vector{Float64},methodForSplittingPointsSelection) #Version where no candidates are supplied -> Julia chooses the candidates
   nobs=length(trn_val_idx)
   cols=sett.number_of_num_features 
+  freqweights=StatsBase.fweights(weight) #Frequency Weights
   
   local this_column #need to initialize the variable here otherwise it will only exist locally in the try loop
   candMatWOMaxValues=Array{Array{Float64,1}}(undef,0)
   for i=1:cols
 	thisname=Symbol(sett.df_name_vector[i])	
 	original_data_vector=wholeDF[thisname] 	
-	#thiscol_as_utf8=view(dfIndata,:,colnumber)
-    header=deepcopy(sett.df_name_vector) #[string(x) for x in names(numfeatures)]
+	header=deepcopy(sett.df_name_vector) 
     elt=eltype(original_data_vector)
 	@assert (elt<:Number) "Datatype of numeric predictor $(i):$(header[i]) is not numeric in the CSV. Please check the order of the columns in the data, their type and the value of number_of_num_features in the settings!" #the assert is probably not needed here, as we try to convert afterwards anyway
 	cond2=(typeof(original_data_vector)<:AbstractVector{Float64})	 
@@ -1672,9 +1642,9 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 		this_column=original_data_vector
 	end
 	#Generate candidate list
-	candlist=define_candidates(this_column,max_splitting_points_num)
+	candlist=defineCandidates(this_column,max_splitting_points_num,freqweights,method=methodForSplittingPointsSelection)
 	if max_splitting_points_num>500
-		warn("DTM: max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
+		@warn("DTM: max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
 		if max_splitting_points_num>2000
 			error("DTM: max_splitting_points_num too large max_splitting_points_num=$(max_splitting_points_num)")
 		end
@@ -1704,15 +1674,28 @@ function map_numdata_to_candidates(this_column,candlist)
 	return mapped_vec
 end
 
-function define_candidates(feature_column,max_splitting_points_num::Int)
-	#step 1: get quantiles of data
-	domain_i = unique(quantile(feature_column, range(0.5/Float64(max_splitting_points_num), stop=1.0-0.5/Float64(max_splitting_points_num), length=max_splitting_points_num)))
+
+"""
+defineCandidates(feature_column,max_splitting_points_num::Int)
+returns a candidate list of split values which considers the distribution of the data where each 
+data point has the same weight (i.e. the weight/exposure vector of dtmtable is NOT used for this function)
+"""
+function defineCandidates(feature_column,max_splitting_points_num::Int,fw::T;topAndBottomCutoff=0.5,method="basedOnWeightVector") where T<:StatsBase.FrequencyWeights
+    @assert in(method,globalConstAllowableMethodsForDefineCandidates)
+    #step 1: get quantiles of data
+    local domain_i
+    if method=="equalWeight"
+        domain_i = unique(quantile(feature_column, range(topAndBottomCutoff/Float64(max_splitting_points_num), stop=1.0-topAndBottomCutoff/Float64(max_splitting_points_num), length=max_splitting_points_num)))
+    else 
+        #wt=fweights
+        domain_i = unique(StatsBase.quantile(feature_column, fw,range(topAndBottomCutoff/Float64(max_splitting_points_num), stop=1.0-topAndBottomCutoff/Float64(max_splitting_points_num), length=max_splitting_points_num)))  
+    end
 	@assert size(domain_i,1)<=max_splitting_points_num #that should not happen
 
 	#step 2 ensure each element of domain_i corresponds to an observation
 	uq_obs=unique(feature_column);
 	sort!(uq_obs);
-	result=fill!(similar(domain_i), 0)#zeros(domain_i)
+	result=fill!(similar(domain_i), 0)
 	for tmploopvar=1:length(domain_i)
 		thisval=domain_i[tmploopvar]
 		idx2=searchsortedfirst(uq_obs,thisval)
@@ -1726,6 +1709,19 @@ function define_candidates(feature_column,max_splitting_points_num::Int)
 	result_unique=unique(result)
 	return result_unique #NOTE! the length of domain_i may be smaller than max_splitting_points_num
 end
+#=
+    this_column=fullData[:Density]
+    weights=fullData[:Exposure]
+    fw=fweights(weights)
+    max_splitting_points_num=250
+    candlist1=defineCandidates(this_column,10,fw)
+    candlist2=defineCandidates(this_column,10,fw,method="basedOnWeightVector")
+    hcat(candlist1,candlist2)
+    t1=map(x->[sum(this_column.<x),sum(weights[this_column.<x])],candlist1)
+    t2=map(x->[sum(this_column.<x),sum(weights[this_column.<x])],candlist1)
+    @assert sum(t1,1)==sum(t2,1)
+    @show sum(t1,1)
+=#
 
 function deleteAllOutputFiles(datafolder::AbstractString,outfilename::AbstractString)
 	#deleteIfExists(string(datafolder,outfilename,".log"))
@@ -1759,12 +1755,12 @@ end
 function deleteIfExists(f::AbstractString)
 	!isfile(f)&&(return nothing)
 	if !my_iswriteable(f)
-		warn("No write access to file $(f)")
+		@warn("No write access to file $(f)")
 	else
 	try
 		rm(f)
 	catch err
-		warn("Unable to delete file $(f) It might be open by another application.\r\n\r\n\r\n")
+		@warn("Unable to delete file $(f) It might be open by another application.\r\n\r\n\r\n")
 		@show err
 	end
 	end
@@ -1895,8 +1891,8 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 			gini_single_argval=gini_single_argument(ratioEstval.*denominatorval)			
 			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,ratioEsttrn) 
 			normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,ratioEstval)
-			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,ratioEsttrn,denominatortrn)
-			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,ratioEstval,denominatorval)		
+			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,ratioEsttrn.*denominatortrn,denominatortrn)
+			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,ratioEstval.*denominatorval,denominatorval)		
 		else
 			gini_single_argtrn=1.0
 			gini_single_argval=1.0
@@ -1945,32 +1941,25 @@ function calc_sum_squares(num_actual,num_estimate,denom)
 	for i=1:sz
 		@inbounds act=num_actual[i]
 		@inbounds den=denom[i]
-		#(for boosting) WE NEED TO MULTIPLY THE NUMERATOR WITH THE DENOMINATOR HERE \ TBD, TODO: SOMEONE NEEDS TO REVIEW THIS
-		@inbounds est=num_estimate[i]*den
-		ssres+=abs2(est-act)
+		@inbounds estimatedNum=num_estimate[i] #*den
+		ssres+=abs2(estimatedNum-act)
 		sstot+=abs2(act-mean_act) #THIS SHOULD BE CACHED (be careful as the training data set may change over time)! todo, tbd
 
-		ssres_ratio+=ifelse(den==0,0.0,abs2((est-act)/den))
-		sstot_ratio+=ifelse(den==0,0.0,abs2(act/den-mean_ratio_pointwise))		
-		#if i<3
-		#	@show mean(num_actual),mean(num_estimate),mean(denom),sum(num_actual),sum(num_estimate),sum(denom)
-		#	@show i,act,est,abs2(est-act),abs2(act-mean_act),abs2((est-act)/den),abs2(act/den-mean_ratio_pointwise)
-		#end
+		ssres_ratio+=ifelse(den==0,0.0,abs2((estimatedNum-act)/den))
+		sstot_ratio+=ifelse(den==0,0.0,abs2(act/den-mean_ratio_pointwise))
 	end
 		
 	#@show sstot,ssres,sstot_ratio,ssres_ratio
 	return sstot,ssres,sstot_ratio,ssres_ratio
 end
 
-#createSingleTreeExcel(trnidx,validx,sett,tree,leaves_of_tree,fitted_values_tree,leaf_number_vector,numerator,denominator,weight)
-function createSingleTreeExcel(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function createSingleTreeExcel(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,tree::Tree,leaves_of_tree,est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
 	nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData=initExcelData()
 	overallstats=createTrnValStats!(trnidx,validx,sett,nameOfModelStatisticsSheet,nameOfSettingsSheet,xlData,tree,leaves_of_tree,est,leafNumbers,numerator,denominator,weight)
 return xlData,overallstats
 end
 
-#,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
-function createTrnValStats!(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,nameOfModelStatisticsSheet::T,nameOfSettingsSheet::T,xlData,tree::Tree,leaves_of_tree::Vector{Leaf},est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}) where {T <: AbstractString}
+function createTrnValStats!(trnidx::Vector{Int},validx::Vector{Int},sett::ModelSettings,nameOfModelStatisticsSheet::T,nameOfSettingsSheet::T,xlData,tree::Tree,leaves_of_tree,est::Vector{Float64},leafNumbers::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1}) where {T <: AbstractString}
 t=tree.rootnode
 #function for SINGLE Tree
 	nClasses=length(leaves_of_tree)
@@ -2025,7 +2014,7 @@ t=tree.rootnode
         total_sum_squares_of_numeratorTrn=residual_sum_squares_of_numeratorTrn=total_sum_squares_of_ratioTrn=residual_sum_squares_of_ratioTrn=1.0
         total_sum_squares_of_numeratorVal=residual_sum_squares_of_numeratorVal=total_sum_squares_of_ratioVal=residual_sum_squares_of_ratioVal=1.0
     end
-    warn("need to review/amend the rsquared and rss which are not correct!")
+    @warn("need to review/amend the rsquared and rss which are not correct!")
     r2_of_numeratortrn=1.0-residual_sum_squares_of_numeratorTrn/total_sum_squares_of_numeratorTrn
     r2_of_ratiotrn=1.0-residual_sum_squares_of_ratioTrn/total_sum_squares_of_ratioTrn
     r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
@@ -2109,7 +2098,7 @@ end
 function buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
 	relativitytrn=(sumnumeratortrn./sumdenominatortrn)/(sum(sumnumeratortrn)/sum(sumdenominatortrn))
 	relativityval=(sumnumeratorval./sumdenominatorval)/(sum(sumnumeratorval)/sum(sumdenominatorval)) #todo/tbd this can be improved: sum(sumnumeratorval)/sum(sumdenominatorval) will never change through the full boosting model, thus we do not need to calculate it all the time
-	correlation=cor(relativitytrn,relativityval)
+	correlation=StatsBase.cor(relativitytrn,relativityval)
 	#this is not meaningful if we have reversals!
     #mi,ma=extrema(relativitytrn);lifttrn=ma/mi
     #mi,ma=extrema(relativityval);liftval=ma/mi
@@ -2266,15 +2255,15 @@ function countsort!(a::Array{T,1}) where {T <: Integer}
 #     b = zeros(T, length(a))
     cnt = zeros(Int, hi - lo + 1)
     for i in a
-     cnt[i - lo + 1] += 1
+        @inbounds cnt[i - lo + 1] += 1
     end
 
     z = one(Int)
     for i in lo:hi
-        while cnt[i - lo + 1] > 0
-            a[z] = i
+        @inbounds while cnt[i - lo + 1] > 0
+            @inbounds a[z] = i
             z += 1
-            cnt[i - lo + 1] -= 1
+            @inbounds cnt[i - lo + 1] -= 1
         end
     end
 end
@@ -2291,14 +2280,14 @@ function get_firstpos(v::Array{T,1}) where {T}
   return firstpos
 end
 
-function aggregate_data(f::pdaMod,scores::Array{Int,1},numeratorEst::Array{Float64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function aggregate_data(f::PooledArray,scores::Array{Int,1},numeratorEst::Array{Float64,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     #this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
 	#most of the time is spent here, if we can improve the for loop below, that would improve performance greatly!
 	#one possibility would be to introduce parallelization here (which is not straightforward, I think....)
 	a= f.pda.refs
 	#this should hold by definition/construction
-	(lo, hi) = extrema(levels(f))
+	(lo, hi) = extrema(PooledArraysDTM.levels(f))
 	ooo=one(lo)-lo
 	vecsize=hi+ooo
 	@assert length(f.ids)<=vecsize #need to investigate if it can happen that this does not hold true (tod/tbd)
@@ -2347,7 +2336,7 @@ function aggregate_data(f::PooledArray,scores,numeratorEst,numerator,denominator
 	ooo=one(lo)-lo
 	vecsize=hi+ooo
 
-	valuelist=levels(f) #we should not use levels here, it is the wrong function
+	valuelist=PooledArraysDTM.levels(f) #we should not use levels here, it is the wrong function
     cnt = zeros(Int, vecsize)
     sumnumerator = zeros(Float64, vecsize)
 	sumnumeratorEst = zeros(Float64, vecsize)
@@ -2369,7 +2358,7 @@ function aggregate_data(f::PooledArray,scores,numeratorEst,numerator,denominator
 	for i=vecsize:-1:1
 		@inbounds if cnt[i]==0
 	#if length(f.values)!=vecsize #delete some rows
-			#warn("BK, I am not sure if this works as anticipated")
+			#@warn("BK, I am not sure if this works as anticipated")
 		#for i in rows_to_be_deleted
 			deleteat!(cnt,i)
 			deleteat!(sumscores,i)
@@ -2397,7 +2386,7 @@ function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array
 	sumdenominator = zeros(Float64, vecsize)
 	sumweight= zeros(Float64, vecsize)
 
-	#warn("BK: need to add inbounds here as soon as things work.... ")
+	#@warn("BK: need to add inbounds here as soon as things work.... ")
 	 @inbounds for count in f.indices[1]
 	#for count=1:length(a)
 		#@inbounds idx=a[count] + ooo
@@ -2432,9 +2421,9 @@ function myfindinInt(big::Array{T,1},small::Array{T,1}) where {T}
 	return res
 end
 
-function aggregate_data_rklostcount(f::pdaMod,increasedPremiumVector::Array{Float64,1},intRanksLostVector::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function aggregate_data_rklostcount(f::PooledArray,increasedPremiumVector::Array{Float64,1},intRanksLostVector::Array{Int,1},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     a=f.pda.refs
-    (lo, hi) = extrema(levels(f))
+    (lo, hi) = extrema(PooledArraysDTM.levels(f))
     lengtha=length(a)
     cnt = zeros(Int, hi - lo + 1)
 	intSumrklost = zeros(Int, hi - lo + 1)
@@ -2450,7 +2439,7 @@ function aggregate_data_rklostcount(f::pdaMod,increasedPremiumVector::Array{Floa
   return cnt,intSumrklost,sumweight
 end
 
-function build_listOfMeanResponse(crit::MaxValueSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::MaxValueSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64)
   #todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
   ncategories=length(feature_levels)
   #countlist,sumobservedlist=aggregate_data_diff(features,numerator,denominator,weight)
@@ -2468,7 +2457,7 @@ function build_listOfMeanResponse(crit::MaxValueSplit,numerator::Array{Float64,1
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
-function build_listOfMeanResponse(crit::MaxMinusValueSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::MaxMinusValueSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64)
   #todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
   ncategories=length(feature_levels)
   #countlist,sumobservedlist=aggregate_data_diff(features,numerator,denominator,weight)
@@ -2487,7 +2476,7 @@ return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
 
-function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64)
   ncategories=length(feature_levels)
   #calc variance for each "isolated" category
   countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(features,numerator,denominator,weight)
@@ -2505,7 +2494,8 @@ function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Flo
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass
 end
 
-function build_listOfMeanResponse(crit::PoissonDevianceSplit,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64)
+#this fn is identical for Difference, Gamma and Poisson
+function build_listOfMeanResponse(crit::T,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64) where T<:Union{PoissonDevianceSplit,GammaDevianceSplit}
     return build_listOfMeanResponse(DifferenceSplit(),trnidx,validx,numerator,denominator,weight,features,feature_levels,minweight)
 end 
 
@@ -2526,10 +2516,10 @@ function build_listOfMeanResponse(crit::DifferenceSplit,trnidx::Vector{Int},vali
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
-function build_listOfMeanResponse_mse(labels::Array{Float64,1},features::pdaMod,feature_levels::Array{UInt8,1},minweight::Float64,lcwiowatt::Array{Float64,1})
+function build_listOfMeanResponse_mse(labels::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64,lcwiowatt::Array{Float64,1})
   #todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
   error("this is currently not working properly")
-  warn("ensure that this does not modify features!!")
+  @warn("ensure that this does not modify features!!")
   ncategories=length(feature_levels)
   features_sorted=deepcopy(features)#   vol,labels_sorted=custom_countsort!(features_sorted,labels,lcwiowatt)
   countlist,firstindices=custom_countsort!(features_sorted,labels,labels_sorted)
@@ -2562,11 +2552,11 @@ function rand_bool_idx(n::Int,p::Float64)
   return res
 end
 
-function dynamic_increment(residuals::Array{Float64,1},current_mdf::Float64,ranks_lost_pct::Float64,variable_mdf_pct::Float64)
-    incr=quantile(residuals,ranks_lost_pct)
-    incr*=variable_mdf_pct
-  return incr
-end
+#function dynamic_increment(residuals::Array{Float64,1},current_mdf::Float64,ranks_lost_pct::Float64,variable_mdf_pct::Float64)
+#    incr=quantile(residuals,ranks_lost_pct)
+#    incr*=variable_mdf_pct
+#  return incr
+#end
 
 function full_indices(parentidx,left)
   obs=size(parentidx,1)
@@ -2597,7 +2587,7 @@ function my_write(f::IOStream,arr::AbstractArray;sep::Char=',')
   nothing
 end
 
-function variable_importance_internal(leaves_array::Array{Leaf,1},namevec::Array{String,1},number_of_num_features::Int)
+function variable_importance_internal(leaves_array,namevec::Array{String,1},number_of_num_features::Int)
 #number_of_num_features=length(intNumVarsUsed)
 	sz=length(namevec)
 	nleaves=length(leaves_array)
@@ -2643,7 +2633,7 @@ function variable_importance_internal(leaves_array::Array{Leaf,1},namevec::Array
 	return onedimcount,twodimcount
 end
 
-function variable_importance(leaves_array::Array{Leaf,1},namevec::Array{String,1},number_of_num_features::Int)
+function variable_importance(leaves_array,namevec::Array{String,1},number_of_num_features::Int)
   sz=length(namevec)
   nleaves=length(leaves_array)
   onedimcount,twodimcount=variable_importance_internal(leaves_array,namevec,number_of_num_features)
@@ -2697,80 +2687,6 @@ function twodimIndex(variable1::Int,variable2::Int,nvars::Int)
 	return idx
 end
 
-function variable_importance_OLD(leaves_array::Array{Leaf,1},namevec::Array{String,1},number_of_num_features::Int)
-  #tbd/todo improve the performance of this code; better yet: construct the variable_importance during the tree building process!
-  sz=length(namevec)
-  nleaves=length(leaves_array)
-  depth=0
-  for i=1:nleaves
-    depth=max(depth,length(leaves_array[i].rule_path))
-  end
-  list_of_featureids_on_path_to_leaves=Array{Int}(undef,nleaves,depth)
-  fill!(list_of_featureids_on_path_to_leaves,0)
-    for i=1:nleaves
-      for k=1:length(leaves_array[i].rule_path)
-        this_featid=leaves_array[i].rule_path[k].featid
-        if this_featid<0
-          this_featid=-this_featid+number_of_num_features
-        end
-        list_of_featureids_on_path_to_leaves[i,k]=this_featid
-      end
-  end
-
-  onedimcount=zeros(Int,sz)
-  for j=1:sz, k=1:nleaves
-   if in(j,view(list_of_featureids_on_path_to_leaves,k,:))
-      onedimcount[j]+=1
-   end
-  end
-
-  twodimcount=Array{Int}(undef,div(sz*(sz-1),2))
-  fill!(twodimcount,0)
-  #todo/tbd twodimcount and onedimcount can be created much more efficiently
-  #we do not need to loop through all the variables, but only through the ones which are actually used by the tree!
-  #"for i=1:used_by_tree, j=1:used_by_tree; if i!=j; i&j used in conjunction? ;end;end;"
-  count=0
-  #@info "check if this works as intended!"
-  for i=1:sz, j=i+1:sz
-      count+=1
-	  if min(onedimcount[j],onedimcount[i])>0 #both variables need to be used in the tree
-		  for k=1:nleaves
-		   this_tmp=view(list_of_featureids_on_path_to_leaves,k,:) #this line and the next take up quite some time
-		   if in(i,this_tmp) && in(j,this_tmp) #both indices appear on the path to leaf k
-			twodimcount[count]+=1
-		   end
-	   end
-    end
-  end
-  twodimcountfloat=Float64(twodimcount/sum(twodimcount))
-
-  res1dim=Array{String}(undef,sz,2)
-  res2dim=Array{String}(undef,div(sz*(sz-1),2),3)
-  count=0
-  for i=1:sz, j=i+1:sz
-    count+=1
-    res2dim[count,1]=namevec[i]
-    res2dim[count,2]=namevec[j]
-    res2dim[count,3]=string(twodimcountfloat[count])
-  end
-
-  res1dim[:,1]=deepcopy(namevec)
-  onedimcountfloat=float(onedimcount/sum(onedimcount))
-  for j=1:sz
-    res1dim[j,2]=string(Float64(onedimcountfloat[j]))
-  end
-  dropzero=onedimcountfloat.>0
-  res1dim=res1dim[dropzero,:]
-  onedimcountfloat=deepcopy(onedimcountfloat[dropzero])
-  srt=sortperm(onedimcountfloat,rev=true,alg=QuickSort)
-
-  dropzero=twodimcountfloat.>0
-  twodimcountfloatdropz=deepcopy(twodimcountfloat[dropzero])
-  res2dim=res2dim[dropzero,:]
-  srt2=sortperm(twodimcountfloatdropz,rev=true,alg=QuickSort)
-  return res1dim[srt,:],res2dim[srt2,:],onedimcount,twodimcount
-end
-
 function some_tree_settings(trnidx,validx,fixedinds::Array{Int,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},mw::Float64,weight::Array{Float64,1},subsampling_features_prop::Float64,n::Int)
 	if abs(subsampling_features_prop)<1.0
 		@assert length(fixedinds)==0 "subsampling_features_prop must be 1.0 (i.e. disabled) if fixed subsets of features are provided!"
@@ -2791,18 +2707,14 @@ function some_tree_settings(trnidx,validx,fixedinds::Array{Int,1},candMatWOMaxVa
 		minweight= totalweight*(-minweight)
 	end
     @assert !(minweight<0)
-	nLeavesEstimate=Int(round(max(1,0.5*(totalweight/minweight+0.5*totalweight/minweight))))
-	nDepthEstimate=ceil(log(2,nLeavesEstimate))
-	#this Depthestimate is about 3 times too low as we create very granular trees!
-	nDepthToStartParallelization=Int(round(max(1,min(nDepthEstimate-1,log(2,Distributed.nprocs())))))
-
+		
 	if length(fixedinds) >0 #features are pre set
 		inds=deepcopy(fixedinds);
 	else
 		inds=randomFeatureSelection(n,subsampling_features_prop)
 	end
 	#end
-	return intVarsUsed,inds,minweight,nDepthToStartParallelization
+	return intVarsUsed,inds,minweight
 end
 
 function randomFeatureSelection(n_features::Int,subsampling_features_prop::Float64)
@@ -2818,7 +2730,7 @@ function randomFeatureSelection(n_features::Int,subsampling_features_prop::Float
 		if subsampling_features_prop>0.0
 			candidates=collect(1:n_features)
 			m=Int(cld(size(candidates,1),1/subsampling_features_prop)) #m should always be >0 with this definition
-			inds=sample(candidates,m,replace=false)			
+			inds=StatsBase.sample(candidates,m,replace=false)			
 		elseif (subsampling_features_prop<0.0)&&(subsampling_features_prop>-1.0)
 			for i=1:n_features
 			  if rand()<subsampling_features_prop;push!(inds,copy(i));end;  #copy statment is obsolete here, as we work with a value in this case
@@ -2988,7 +2900,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},ensemble::E,nu
 	  onedimintvec_sum+=onedimintvec
 	  twodimintvec_sum+=twodimintvec
 	write_tree(candMatWOMaxValues,ensemble.trees[i],number_of_num_features,var_imp1d_str_arr,var_imp2d_str_arr,0,f,df_name_vector,mappings)
-	next!(p)
+	ProgressMeter.next!(p)
   end
 
   #close(f) #todo/tbd check if we can comment this line and the line below which opens the file again. ideally the file is only opened once and closed once.
@@ -3086,7 +2998,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},
 end
 
 function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Leaf,number_of_num_features::Int, indent::Int=0,fileloc::String="c:\\temp\\myt.txt",df_name_vector::Array{String,1}=Array{String}(1),mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
-    warn("This should not happen. Opening file $(fileloc) to write Leaf information.")
+    @warn("This should not happen. Opening file $(fileloc) to write Leaf information.")
 	#This should only happen when the whole tree is a leaf.
 	#We should by any means avoid to open and close the file for each leaf.
 	f=open(fileloc,"a+")
@@ -3186,7 +3098,7 @@ end
 
 #write tree code
     for i=1:iterations
-		if typeof(bt.trees[i])!=Leaf
+		if in(typeof(bt.trees[i]),(Node{UInt16},Node{UInt8}))
 			orig_id=bt.trees[i].featid
 			orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 			write(fiostream,"\r\n\r\n*Iteration $(i);\r\n")
@@ -3267,7 +3179,7 @@ fiostream=open(fileloc,"w")
     write(fiostream,"data sas_tree;format ",leafvarname,";set runmodel;;")
     write(fiostream,"\r\n")
 
-if (typeof(tree)!=Leaf)  #in an earlier version we had ==Node ; however now node has a paramter -> (x==Node{UInt8}||x==Node{UInt16})
+    if in(typeof(tree),(Node{UInt16},Node{UInt8}))  #in an earlier version we had ==Node ; however now node has a parameter -> (x==Node{UInt8}||x==Node{UInt16})
 	orig_id=tree.featid
 	orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
 
@@ -3286,11 +3198,9 @@ if (typeof(tree)!=Leaf)  #in an earlier version we had ==Node ; however now node
 	end
 else
 	#"Tree is not a node (hence it must be a Leaf). Code to write SAS code for a single leaf is not yet implemented"
-	#@assert typeof(tree)==Leaf
 	@info "DTM: Tree was a single leaf. No proper SAS Code was produced."
 	@assert false
 	write(fiostream," /*ERROR; the tree was a single leaf*/")
-	#write_tree_at_each_node!(candMatWOMaxValues,tree,number_of_num_features,indent,fiostream,df_name_vector,mappings,leafvarname,mdf)
 end
   #write rest of SAS code
   write(fiostream,"run; \r\nproc summary data=sas_tree missing;class ",leafvarname,";var &var_dep.;types ",leafvarname,";output out=_summary_( rename=(_freq_=n)) sum=;");
@@ -3338,13 +3248,12 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
   end
 	write(fiostream," " ^ indent,leafvarname,"=$(tree.id); $(add)")
     #this row is only meaningful for boosted multiplicative trees
-	#warn("check if this definition of val is accurate for a boosted tree (e.g. lr model)"
+	#@warn("check if this definition of val is accurate for a boosted tree (e.g. lr model)"
 	val=_moderate(tree.fitted,mdf)
-	#val=tree.fitted
 	write(fiostream," " ^ indent,"rel_mod_",leafvarname,"=$(val);\r\n")
 end
 
-function write_sas_code(leaves::Array{Leaf,1},number_of_num_features::Int,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
+function write_sas_code(leaves,number_of_num_features::Int,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
 	error("BK: This function should not be used anymore. (right?)")	
 	#open file
 fiostream=open(fileloc,"w")
@@ -3367,7 +3276,7 @@ fiostream=open(fileloc,"w")
 close(fiostream)
 end
 
-function write_rules_to_file(leaves::Array{Leaf,1},f::IOStream,namevec::Array{String,1},number_of_num_features,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
+function write_rules_to_file(leaves,f::IOStream,namevec::Array{String,1},number_of_num_features,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
   for i=1:size(leaves,1)
     if i==1
       write(f,"if ")
@@ -3380,7 +3289,7 @@ function write_rules_to_file(leaves::Array{Leaf,1},f::IOStream,namevec::Array{St
   end
 end
 
-function rulpath_vector_to_str(rp::Array{Rulepath,1},namevec::Array{String,1},number_of_num_features::Int,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
+function rulpath_vector_to_str(rp,namevec::Array{String,1},number_of_num_features::Int,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0))
   result=convert(String,"")
   for i=1:size(rp,1)
     if i>1
@@ -3554,7 +3463,7 @@ function subset_splitlist(sd::Vector{Splitdef{T}},minweight::Float64) where T<:U
 	return res
 end
 
-function index_vector_from_rulepath(rpArray::Array{Rulepath,1},numfeatures::Array{Float64,2},charfeatures::Array{String,2})
+function index_vector_from_rulepath(rpArray,numfeatures::Array{Float64,2},charfeatures::Array{String,2})
   nobs=max(size(numfeatures,1),size(charfeatures,1))
   res=Array{Bool}(nobs)
   fill!(res,true)
@@ -3601,7 +3510,7 @@ end
 		idx=ismissing(dfIndata[ii])
 		narows=findall(idx)
 		@assert length(narows)>0 "this should not have happend" #narows should be >0 by definition
-		warn("Missing values detected. Rows= $(narows[1]), Column=$(ii):$(namevec[ii])")
+		@warn("Missing values detected. Rows= $(narows[1]), Column=$(ii):$(namevec[ii])")
         error("ABORT.")
         return false
       end
@@ -3662,7 +3571,7 @@ function return_file_and_folders(ARGS)
 	   try parse(Int,ASCIIStringARGS[1])
 		  #these are the settings if Julia is run in Juno or via the console
 		   @show ASCIIStringARGS
-		   warn("Using default input parameters!\r\n\r\n")
+		   @warn("Using default input parameters!\r\n\r\n")
 		   println("$(fallback_inputSettingsFile)")
 		   println("$(fallback_inputDataFile)")
 		   settingsFilename=fallback_inputSettingsFile
@@ -3681,7 +3590,7 @@ function return_file_and_folders(ARGS)
     end
   else
     #these are the settings if Julia is run in Juno or via the console
-     warn("Using default input parameters!\r\n\r\n")
+     @warn("Using default input parameters!\r\n\r\n")
 	 println("$(fallback_inputSettingsFile)")
 	 println("$(fallback_inputDataFile)")
 	 settingsFilename=fallback_inputSettingsFile
@@ -3732,7 +3641,7 @@ end
 function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Float64) #,linearregressionfn::Function)
   #Perform LOWESS/LOESS with degree 1 / weighted linear regression  estimatedRatioPerScore=copy(rawObservedRatioPerScore)
   @assert span>0.0
-  #warn("it matters if we start at the bottom or top end! which ones is better?")
+  #@warn("it matters if we start at the bottom or top end! which ones is better?")
   nscores=size(estimatedRatioPerScore,1)
   if (nscores<=2) #for 2 or less scores smoothing is not meaningful
 	@warn("DTM: nscores was less than 3. No smoothing performed")
@@ -3826,7 +3735,7 @@ end
 	return mylinreg(x,y,FrequencyWeights(w))
 end
 =#
-function mylinreg(x::Array{Float64,1},y::Array{Float64,1},w::W) where {W <: AbstractWeights}	
+function mylinreg(x::Array{Float64,1},y::Array{Float64,1},w::W) where {W <: StatsBase.AbstractWeights}	
 	meanx=0.0
 	meany=0.0
 	meanxy=0.0
@@ -3955,10 +3864,7 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	estimatedRatioPerRow_srt=view(estimatedRatioPerRow,srt)	
 	denominator_srt=view(denominator,srt)
 	numerator_srt=view(numerator,srt)
-
-	#rowCountPerUniqueRelativity::Vector{Int},weightPerUniqueRelativity::Vector{Float64}=deriveRowCountAndWeight(weight_srt,raw_rel_srt,uniqueRelativitiesSorted)
-	weightPerUniqueRelativity=weight_srt
-	
+	weightPerUniqueRelativity=weight_srt	
 	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt	
 	wtot=sum(weight_srt)
 	wperscore=wtot/nscores
@@ -3966,7 +3872,6 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	scoreEndPoints[end]=size(weight_srt,1)
 	vectorWeightPerScore=Array{Float64}(undef,nscores)
 
-	# derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 	nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nscores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
 	
 	obsPerScore=copy(scoreEndPoints)
@@ -3985,12 +3890,11 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	return aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore
 end
 
-#(nscores,wperscore,relativitiesSorted,weight_srt,cumulativeNumberOfDistinctRawRelativitesPerScore,scoreEndPoints,vectorWeightPerScore)
 function derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
-	#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
+#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
 
 #NOTE: (todo/tbd improve this) there are different ways to aggregate the relativities to scores. the approach below is a bottom up approach
-#issues can arise when there is a mass (of weight) for a certain releativity towards the end of the scores
+#issues can arise when there is a mass (of weight) for a certain relativity towards the end of the scores
 #because the approach below assigns at least one relativity to each score "one can run out of data" before all scores are filled up (in certain degenerate cases)
 #an alternative would be a "binary" split starting in the middle
 
@@ -4053,86 +3957,22 @@ scoreEndPoints[end]=min(length(weight_srt),scoreEndPoints[end])
 return nscoresPotentiallyReducedTWOTimes::Int
 end
 
-function derive_scores_main_aggregation_step_old!(nscoresPotentiallyReduced,wperscore,uniqueRelativitiesSorted,weightPerUniqueRelativity,rowCountPerUniqueRelativity,cumulativeNumberOfDistinctRawRelativitesPerScore,scoreEndPoints,vectorWeightPerScore)
-	#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
-
-#NOTE: (todo/tbd improve this) there are different ways to aggregate the relativities to scores. the approach below is a bottom up approach
-#issues can arise when there is a mass (of weight) for a certain releativity towards the end of the scores
-#because the approach below assigns at least one relativity to each score "one can run out of data" before all scores are filled up (in certain degenerate cases)
-#an alternative would be a "binary" split starting in the middle
-
-#note: if the estimates and the weight are degenerated then the vector scoreEndPoints can have the same value multiple times (i.e. it is constant for a few indices)
-uniqueRelativitiesSortedCounter=current_score=current_idx=0;current_cumulW=0.0;startPoint=1
-# assert size(rowCountPerUniqueRelativity)==size(weightPerUniqueRelativity) #this is to avoid errors due to the inbounds macro below
-stillRunning=true
-weightOfThisRelativity=weightPerUniqueRelativity[1]
-thisrowcount=rowCountPerUniqueRelativity[1]
-while stillRunning
-current_score+=1
-  while uniqueRelativitiesSortedCounter<size(uniqueRelativitiesSorted,1)
-	uniqueRelativitiesSortedCounter+=1
-	@inbounds thisrowcount=rowCountPerUniqueRelativity[uniqueRelativitiesSortedCounter]
-	current_idx+=thisrowcount
-	@inbounds weightOfThisRelativity::Float64=weightPerUniqueRelativity[uniqueRelativitiesSortedCounter]::Float64 #um(view(weight_srt,startPoint:current_idx))
-	current_cumulW::Float64 += weightOfThisRelativity::Float64
-	if current_cumulW>wperscore*current_score
-	  #decrease index by 1 if this puts us closer to the "expected" exposure for this score
-	  if (current_idx-thisrowcount>startPoint) && (abs(current_cumulW-wperscore*current_score)>abs(current_cumulW-weightOfThisRelativity-wperscore*current_score))
-		uniqueRelativitiesSortedCounter-=1
-		current_cumulW-=weightOfThisRelativity
-		current_idx-=thisrowcount
-	  end
-	  break
-	end
-  end
-	cumulativeNumberOfDistinctRawRelativitesPerScore[current_score]=uniqueRelativitiesSortedCounter
-	vectorWeightPerScore[current_score]=current_cumulW
-	scoreEndPoints[current_score]=current_idx
-	startPoint=current_idx+1
-	stillRunning=current_score<length(scoreEndPoints)
-end
-
-nscoresPotentiallyReducedTWOTimes::Int=0
-if (length(scoreEndPoints)>1)&&(scoreEndPoints[end-1]>=scoreEndPoints[end])
-#warn("Failed to uniformly distribute the scores! Scores will be degenerated. \r\nThis usually indicates that: (i) there are too many scores compared to the granularity of the model or (ii) the data is 'degenerated' (i.e. there is a mass of exposure for certain risk details)")
-#Reduce the number of Scores again
-	thismax=maximum(scoreEndPoints)
-	endlocation::Int=searchsortedfirst(scoreEndPoints,convert(eltype(scoreEndPoints),thismax))
-	resize!(scoreEndPoints,endlocation) #drop the tail end
-	resize!(vectorWeightPerScore,endlocation) #drop the tail end
-	nscoresPotentiallyReducedTWOTimes=length(scoreEndPoints)
-else
-	nscoresPotentiallyReducedTWOTimes=nscoresPotentiallyReduced::Int
-end
-
-return nscoresPotentiallyReducedTWOTimes::Int
-end
-
 function aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
 	#NOTE: we consider the mean of two values here, to avoid floating point issues (there are no issues within Julia, but the C# Module may lead to slightly different results)
 	maxRawRelativityPerScoreSorted=Float64[(raw_rel_srt[scoreEndPoints[i]]+raw_rel_srt[min(obs,scoreEndPoints[i]+1)])/2 for i=1:size(scoreEndPoints,1)]
 	numPerScore::Vector{Float64},denomPerScore::Vector{Float64}=sumByIncreasingIndex(numerator_srt,denominator_srt,scoreEndPoints)
 	#I think the weight should not influence the averaging process here (as it was already relevant to derive the raw_estimated_relativities during the construction of the trees)
-	#raw_num_est_srt=raw_rel_srt.*denominator_srt*meanobservedvalue
 	rawObservedRatioPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
 	aggregatedModelledRatioPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
-	#aggregatedModelledRatioPerScore_new=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
 	previdx=1
 	for i=1:nscoresPotentiallyReducedTWOTimes
-		nextidx=scoreEndPoints[i]
+		@inbounds nextidx=scoreEndPoints[i]
 		if nextidx>previdx
-		  #todo/tbd check with somebody if this approach is meaningful (are there better alternatives to derive a smoothed estimate?)
-		  #rawObservedRatioPerScore[i]=			sum(view(numerator_srt,previdx:nextidx))/sum(view(denominator_srt,previdx:nextidx))
-		  #aggregatedModelledRatioPerScore[i]=	sum(view(numeratorEstimatedPerRow_srt,previdx:nextidx))/sum(view(denominator_srt,previdx:nextidx)) #todo/tbd someone should check whether we do not have any redundancy here
-		  sum_up_ratios!(rawObservedRatioPerScore,aggregatedModelledRatioPerScore,i,numerator_srt,numeratorEstimatedPerRow_srt,denominator_srt,previdx,nextidx)		 
-		  #dd= aggregatedModelledRatioPerScore_new.-aggregatedModelledRatioPerScore
-		  # dd[1:min(length(dd),200)]
-		  # @assert maximum(abs.(dd))<1e-11 #aggregatedModelledRatioPerScore_new,aggregatedModelledRatioPerScore)
+		  #todo/tbd this may need review
+		  sum_up_ratios!(rawObservedRatioPerScore,aggregatedModelledRatioPerScore,i,numerator_srt,numeratorEstimatedPerRow_srt,denominator_srt,previdx,nextidx)
 		end
 		previdx=scoreEndPoints[i]
 	end
-	#@show 1,extrema(numeratorEstimatedPerRow_srt.-numerator_srt) #these are different
-	#@show 2,extrema(aggregatedModelledRatioPerScore.-rawObservedRatioPerScore) #these are different
 	return numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore
 end
 
@@ -4170,7 +4010,7 @@ function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabl
 						rev=reversals(estimatedRatioPerScore)
 						sumrev=sum(rev)
 					end
-					#maxiterNotReached ? println("Smoothing of estimates finished after $(i) recursions.") :  warn("Smoothing process aborted after $(i) iterations. There were still $(sumrev) reversals.")
+					#maxiterNotReached ? println("Smoothing of estimates finished after $(i) recursions.") :  @warn("Smoothing process aborted after $(i) iterations. There were still $(sumrev) reversals.")
 					if print_details&&boolSmoothingEnabled #if smoothing is disabled this will not be of interest to the modeller
 						maxiterNotReached ? nothing :  @info "Smoothing stopped after $(i) passes: $(sumrev) reversals remained."
 					end
@@ -4247,9 +4087,9 @@ function createPredictorData(idx::Vector{Int},nameOfpredictorsSheet,mappings,can
 			lastchartrow=currentchartrow			
 			vname=deepcopy(sett.df_name_vector[i])
 			feat=features[i]
-			thischart=defineUnivariateChart(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol,currentchartrow)),vname,length(levels(feat)),1,8,2,headerrow)
+			thischart=defineUnivariateChart(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol,currentchartrow)),vname,length(DataFrames.levels(feat)),1,8,2,headerrow)
 			predictorCharts[i]=deepcopy(thischart)
-			thischart=defineUnivariateChartWith2Lines(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol2,currentchartrow)),vname,length(levels(feat)),1,5,6,2,headerrow)
+			thischart=defineUnivariateChartWith2Lines(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol2,currentchartrow)),vname,length(DataFrames.levels(feat)),1,5,6,2,headerrow)
 			predictorCharts[nfeat+i]=deepcopy(thischart)
 			#todo,tbd maybe this can be replaced with feat.parent.pool
 		    mp = features[i].pool  #this is the FULL pool, in the selected data only a subset might exist.		
@@ -4447,24 +4287,8 @@ boollist=Array{Array{String,1}}(undef,0)
 end
 
 function vba_write_writeIterations(indent::Int,fiostream::IOStream,iteration::Int,bt::BoostedTree,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features)
-	#write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n{\r\n")
-	tree=bt.trees[iteration]
-	#orig_id=tree.featid
-	#orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
-	#write(fiostream," " ^ indent)
-	#if orig_id>0
-	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n{\r\n")
-	#else
-#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n{\r\n")
-#	end
+            tree=bt.trees[iteration]
 			vba_write_writeIterations_recursive(bt.moderationvector[iteration],indent,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-#		write(fiostream," " ^ (indent-1))
-#		write(fiostream," }\r\nelse\r\n{\r\n")
-#			vba_write_writeIterations_recursive(indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings)
-#		write(fiostream," " ^ (indent-1))
-#		write(fiostream,"}\r\n")
-
-	#write(fiostream,"return dRawscore;\r\n}\r\n\r\n")
 	return nothing
 end
 
@@ -4477,21 +4301,10 @@ function vba_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostream:
 	else
 		write(fiostream,repeat("\t",indent),"If (",join(boolListChar[-orig_id][collect(tree.subset)]," Or "),") Then\r\n")
 	end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
-		#write(fiostream,"EndIf\r\n")
 			vba_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.left,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-		#if typeof(tree.left)!=Leaf
-		#	write(fiostream," " ^ (indent-1))
 			write(fiostream,repeat("\t",indent),"Else\r\n")
-		#end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
-		#write(fiostream,"\r\n")
 				vba_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-		#if typeof(tree.right)!=Leaf
-#		write(fiostream,"\r\n{") : write(fiostream,'{')
-		#	write(fiostream," " ^ (indent-1))
 			write(fiostream,repeat("\t",indent),"EndIf\r\n")
-		#end
 	return nothing
 end
 
@@ -4933,20 +4746,8 @@ end
 function csharp_write_writeIterations(indent::Int,fiostream::IOStream,iteration::Int,bt::BoostedTree,boolListNum::Array{Array{String,1},1},boolListChar::Array{Array{String,1},1},df_name_vector::Array{String,1},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},number_of_num_features)
 	write(fiostream,"private double Iteration$(iteration)(double dRawscore)\r\n{\r\n")
 	tree=bt.trees[iteration]
-	#orig_id=tree.featid
-	#orig_id<0 ? this_id=number_of_num_features-orig_id : this_id=orig_id
-	#write(fiostream," " ^ indent)
-	#if orig_id>0
-	#	write(fiostream,"if (",boolListNum[this_id][tree.subset[end]],")\r\n{\r\n")
-	#else
-#		write(fiostream,"if (",join(boolListChar[-orig_id][[tree.subset]],"||"),")\r\n{\r\n")
-#	end
-			csharp_write_writeIterations_recursive(bt.moderationvector[iteration],indent+1,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-#		write(fiostream," " ^ (indent-1))
-#		write(fiostream," }\r\nelse\r\n{\r\n")
-#			csharp_write_writeIterations_recursive(indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings)
-#		write(fiostream," " ^ (indent-1))
-#		write(fiostream,"}\r\n")
+	
+    csharp_write_writeIterations_recursive(bt.moderationvector[iteration],indent+1,fiostream,tree,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
 
 	write(fiostream,"return dRawscore;\r\n}\r\n\r\n")
 	return nothing
@@ -4961,21 +4762,12 @@ function csharp_write_writeIterations_recursive(mdf::Float64,indent::Int,fiostre
 	else
 		write(fiostream,"\r\nif (",join(boolListChar[-orig_id][collect(tree.subset)],"||"),")")
 	end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
 		write(fiostream,'{')
 			csharp_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.left,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-		#if typeof(tree.left)!=Leaf
-		#	write(fiostream," " ^ (indent-1))
 			write(fiostream," }\r\nelse")
-		#end
-		#typeof(tree.left)!=Leaf ? write(fiostream,"\r\n{") : write(fiostream,'{')
 		write(fiostream,'{')
 				csharp_write_writeIterations_recursive(mdf,indent+1,fiostream,tree.right,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,number_of_num_features)
-		#if typeof(tree.right)!=Leaf
-#		write(fiostream,"\r\n{") : write(fiostream,'{')
-		#	write(fiostream," " ^ (indent-1))
 			write(fiostream,"}\r\n")
-		#end
 	return nothing
 end
 
@@ -5027,7 +4819,7 @@ function determine_used_variables(bt::BoostedTree)
 return boolVariablesUsed,boolNumVarsUsedByModel,boolCharVarsUsedByModel
 end
 
-function write_vba_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function write_vba_code(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -5053,7 +4845,7 @@ End Function
 	write(fiostream,'(')	
 	write(fiostream,sigstr)
 	write(fiostream,")\r\n")	
-	write(fiostream,"\r\n'Boosted Tree produced by Julia. Time: $(now())\r\n")
+	write(fiostream,"\r\n'Boosted Tree produced by Julia. Time: $(Dates.now())\r\n")
 	#generate_csharpheader(fiostream)	
 	write(fiostream,"\r\n")
 	boolVariablesUsed,boolNumVarsUsedByModel,boolCharVarsUsedByModel=determine_used_variables(bt)
@@ -5065,7 +4857,7 @@ End Function
 	@assert length(boolListChar)==length(mappings)
 	#error("bk continue here")
 	#csharp_write_RequiredElementsProvided(fiostream,df_name_vector,boolVariablesUsed)
-	warn("todo, what if some variables are not as expected (unseen values for instance). Improve this / error handling similar to the generated SAS Code!")
+	@warn("todo, what if some variables are not as expected (unseen values for instance). Improve this / error handling similar to the generated SAS Code!")
 	vba_write_booleans(fiostream,boolListNum,boolListChar,df_name_vector,candMatWOMaxValues,mappings,boolCharVarsUsedByModel,boolNumVarsUsedByModel,boolVariablesUsed)
 	
 	#for i=1:length(df_name_vector)
@@ -5100,7 +4892,7 @@ End Function
 end	
 
 
-function write_csharp_code(vectorOfLeafArrays::Array{Array{Leaf,1},1},estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function write_csharp_code(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -5274,9 +5066,9 @@ end
 function get_feature_pools(f::DataFrame)
 	fp=Vector{Union{Vector{String},Vector{Float64}}}(undef,0)
 	@inbounds for i in 1:size(f,2)
-		push!(fp,deepcopy(f[i].pool))
+		push!(fp,f[i].pool)
 	end
-	return fp
+	return fp::Vector{Union{Vector{String},Vector{Float64}}}
 end
 
 
@@ -5333,7 +5125,7 @@ estimatedNumerator is the estimated Numerator
 """
 function poissonError(trueNumerator,estimatedNumerator)
     n=length(trueNumerator)
-    @assert n==length(estimatedNumerator)
+    #@assert n==length(estimatedNumerator)
     res=zeros(Float64,n)
     for i=1:n
         @inbounds t=trueNumerator[i]
@@ -5411,7 +5203,7 @@ function getCounts(x;threshold::T=-0.01) where T<:Number
     if threshold<0
         @assert abs(threshold)<1 "DTM: abs(threshold) must be <1 (or positive and integer)"
     end    
-    d=countmap(x);    
+    d=StatsBase.countmap(x);    
     vals=collect(values(d));
     sumk=sum(vals);
     if sumk==length(x)
@@ -5461,3 +5253,11 @@ function mapToOther!(v,keepvals::Vector{T},newValue::T) where T
     #mapToOther!(vnew,keep,"rare_value")
 end
 
+"""
+isContiguous(v) returns true if the vector v is of the form collect(n:m)
+"""
+function isContiguous(subset::Vector)
+    mi=subset[1]
+    ma=subset[end]
+    return (length(subset)==(ma-mi+1))&&issorted(subset)
+end
