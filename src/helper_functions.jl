@@ -3051,7 +3051,7 @@ write(fiostream,"; \r\nset runmodel;\r\nvariables_have_unknown_values=0;\r\nvari
 indexOfLastCharVarUsed=0
 #data prep and check
 	for i in 1:length(mappings)
-		#upcase für char vars
+		#upcase fï¿½r char vars
 		vname=df_name_vector[number_of_num_features+i]
 		if boolListVarsUsed[number_of_num_features+i]
 			indexOfLastCharVarUsed=max(i,indexOfLastCharVarUsed)
@@ -3846,7 +3846,6 @@ return maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeig
 end
 
 function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vector{Int},validx::Vector{Int},srt::Vector{Int},estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nscores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
-	#@assert nscores>=nscoresPotentiallyReduced
 	maxItersForSmoothing=0
     #todo,tbd this can probably be done more efficiently
 	raw_rel=view(raw_rel_full_vec,trnidx)	
