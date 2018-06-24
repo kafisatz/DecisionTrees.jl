@@ -3879,8 +3879,9 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
     scoreEndPoints=zeros(Int,nscoresPotentiallyReducedTWOTimes)
     scoreEndPoints[end]=size(weight_srt,1)
     vectorWeightPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
-    
-    calcWeightandObsPerScoreAndEndpoints!(raw_rel_srt,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
+	
+	#calcWeightandObsPerScoreAndEndpoints!(qtls,relativitiesSorted,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
+    calcWeightandObsPerScoreAndEndpoints!(qtls,raw_rel_srt,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
     #check consistency of scoreEndPoints
     #for i=1:length(scoreEndPoints)
     #    @show sum(view(weight_srt,1:scoreEndPoints[i]))-sum(vectorWeightPerScore2[1:i])
@@ -3899,7 +3900,8 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 end
 
 function calcWeightandObsPerScoreAndEndpoints!(qtls,relativitiesSorted,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
-    thisI=1
+	@warn("add inbounds when tests run successfully")
+	thisI=1
     thisJ=1
     while thisI<=length(relativitiesSorted)
         @inbounds reli=relativitiesSorted[thisI]
