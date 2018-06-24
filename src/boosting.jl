@@ -138,7 +138,9 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			else 
 				selectedEstimatedRatioForStats=estFromScores::Vector{Float64} #smooth or unsmooth has been defined/"selected" above already
 			end
-			estimatedNumeratorForStats.=selectedEstimatedRatioForStats.*denominator
+            for ij=1:length(estimatedNumeratorForStats) # a.=b.*c seemed to allocate memory ..... (see memhist of June 24 2018)
+                @inbounds  estimatedNumeratorForStats[ij]=selectedEstimatedRatioForStats[ij]*denominator[ij]
+            end
 			
 			statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,iter,sett.scorebandsstartingpoints,view(actualNumerator,trnidx),view(denominator,trnidx),view(weight,trnidx),view(selectedEstimatedRatioForStats,trnidx),view(scores,trnidx),view(actualNumerator,validx),view(denominator,validx),view(weight,validx),view(selectedEstimatedRatioForStats,validx),view(scores,validx),sett)			
 			statsPerIteration=vcat(statsPerIteration,singleRowWithKeyMetrics)

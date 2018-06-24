@@ -83,10 +83,10 @@ else
     sett.model_type="boosted_tree"
     strs,resm2=dtm(dtmtable,sett)
     @test typeof(resm2.modelstats)==DataFrame
-    hdr=resm2.exceldata.sheets[3].data[1,:] 
-    hdr2=map(x->hdr[x][1],1:length(hdr))
-    liftvalc=indexin(["Lift Val"],hdr2)[1]
-    lifttrnc=indexin(["Lift Trn"],hdr2)[1]
+    headr=resm2.exceldata.sheets[3].data[1,:] 
+    headr2=map(x->headr[x][1],1:length(headr))
+    liftvalc=indexin(["Lift Val"],headr2)[1]
+    lifttrnc=indexin(["Lift Trn"],headr2)[1]
     @test !(liftvalc==nothing)
     @test !(lifttrnc==nothing)
     if liftvalc!=nothing

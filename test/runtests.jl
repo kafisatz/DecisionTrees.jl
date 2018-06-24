@@ -44,7 +44,7 @@ Random.srand(1239946)
     end
     println("DTM: Testing finished. Time needed:")
     TimeForTesting = (time_ns()-t0runtests)/1e9
-    println((round(TimeForTesting,0)),"s")
-    println(round(TimeForTesting/60,1),"m")
-    println(round(TimeForTesting/3600,3),"h")
+    println((round(TimeForTesting,digits=0)),"s")
+    println(round(TimeForTesting/60,digits=1),"m")
+    println(round(TimeForTesting/3600,digits=3),"h")
 end

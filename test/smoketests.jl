@@ -219,7 +219,7 @@ if false  #currently disabled
     sett.model_type="boosted_tree"
     if Distributed.nprocs()<2
         Distributed.addprocs(2)
-        @everywhere using Decisiontrees
+        Distributed.@everywhere using Decisiontrees
     end
     statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
     #same for multirun 

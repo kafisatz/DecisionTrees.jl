@@ -1,10 +1,10 @@
+import Distributed
+#Distributed.@everywhere using Revise
+Distributed.@everywhere import CSV
+Distributed.@everywhere import DataFrames
+Distributed.@everywhere import DataFrames: DataFrame
 
-#@everywhere using Revise
-@everywhere import CSV
-@everywhere import DataFrames
-@everywhere import DataFrames: DataFrame
-
-@everywhere using DecisionTrees    
+Distributed.@everywhere using DecisionTrees    
 
 elt=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
 datafile="data\\data1small.csv"

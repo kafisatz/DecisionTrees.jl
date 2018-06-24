@@ -1960,15 +1960,19 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
 		if sett.boolCalculatePoissonError
-			poissonErrortrn=poissonError(numeratortrn,ratioEsttrn.*denominatortrn)::Vector{Float64}			
-            poissonErrorval=poissonError(numeratorval,ratioEstval.*denominatorval)::Vector{Float64}
-		else
-			poissonErrortrn=zeros(Float64,2)
-            poissonErrorval=zeros(Float64,2)
+			#poissonErrortrn=poissonError(numeratortrn,ratioEsttrn.*denominatortrn)::Vector{Float64}			
+            #poissonErrorval=poissonError(numeratorval,ratioEstval.*denominatorval)::Vector{Float64}
+            #poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
+            #poissonErrVal=sum(poissonErrorval)/length(weightval)
+            #@assert abs(poissonErrTrn-poissonErrorReduced(numeratortrn,ratioEsttrn.*denominatortrn))<1e-11
+            #@assert abs(poissonErrVal-poissonErrorReduced(numeratorval,ratioEstval.*denominatorval))<1e-11
+            poissonErrTrn=poissonErrorReduced(numeratortrn,ratioEsttrn.*denominatortrn)
+            poissonErrVal=poissonErrorReduced(numeratorval,ratioEstval.*denominatorval)
+        else
+			poissonErrTrn=0.0
+            poissonErrVal=0.0
 		end		
-		poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
-		poissonErrVal=sum(poissonErrorval)/length(weightval)		
-		        
+        		
 		qwkappaTrn=tryQWKappa(numeratortrn,ratioEsttrn)
 		qwkappaVal=tryQWKappa(numeratorval,ratioEstval)
 		observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
@@ -5228,7 +5232,54 @@ function poissonError(trueNumerator,estimatedNumerator)
     return res
 end
 
+"""
+see poissonError(a,b)
+this function does not create a vector as result but directly aggregates the avg error
+"""
+function poissonErrorReduced(trueNumerator,estimatedNumerator)
+    n=length(trueNumerator)
+    res=0.0 
+    err=0.0
+    for i=1:n
+        @inbounds t=trueNumerator[i]
+		@inbounds estf=estimatedNumerator[i]
+        tmp=estf-t
+		if iszero(t)
+			@inbounds res=2.0*tmp
+		else 
+            @inbounds res=2.0*(tmp+t*log(t/estf))
+        end
+        err+=res
+    end
+    if n>0 
+        err=err/n
+    end
+    return err
+end
 
+"""
+see poissonError(a,b)
+this function does not create a vector as result but directly aggregates the avg error
+"""
+function poissonError(trueNumerator,estimatedNumerator,idx)
+    err=0.0
+    res=0.0
+    for i in idx
+        @inbounds t=trueNumerator[i]
+		@inbounds estf=estimatedNumerator[i]
+        tmp=estf-t
+		if iszero(t)
+			@inbounds res=2.0*tmp
+		else 
+            @inbounds res=2.0*(tmp+t*log(t/estf))
+        end
+        err+=res
+    end
+    if length(idx)>0
+        err=err/length(idx)
+    end 
+    return err
+end
 
 """
  rawFittedValues,smoothedFittedValuesPerScore,unsmoothedFittedValuesPerScore=getFittedValues(bt::BoostedTree)

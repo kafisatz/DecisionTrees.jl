@@ -11,12 +11,13 @@ t0=time_ns()
 cd(joinpath(GLOBAL_julia_code_folder,"DecisionTrees.jl"))
 #@info("You may want to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
-#@everywhere using Revise
-@everywhere import CSV
-@everywhere import DataFrames
-@everywhere import DataFrames: DataFrame
+import Distributed
+#Distributed.@everywhere using Revise
+Distributed.@everywhere import CSV
+Distributed.@everywhere import DataFrames
+Distributed.@everywhere import DataFrames: DataFrame
 
-@everywhere using DecisionTrees  
+Distributed.@everywhere using DecisionTrees  
 
 tela = (time_ns()-t0)/1e9
 @show tela #precompilationcan take considerable time under Julia 0.7alpha (up to 15 minutes in some cases (as ofJune 11, 2018)), this should improve soon though 
