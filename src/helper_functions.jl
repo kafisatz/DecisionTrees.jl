@@ -3973,7 +3973,10 @@ function calcWeightandObsPerScoreAndEndpoints!(qtls,relativitiesSorted,weight_sr
         end 
         scoreEndPoints[thisJ]=thisI 
         thisI+=1
-    end
+	end
+	@show scoreEndPoints
+	@show obsPerScore
+	@show vectorWeightPerScore
     return nothing 
 end
 
@@ -4046,6 +4049,10 @@ end
 
 function aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
 	#NOTE: we consider the mean of two values here, to avoid floating point issues (there are no issues within Julia, but the C# Module may lead to slightly different results)
+	@show scoreEndPoints[1]
+	@show scoreEndPoints[end]
+	@show extrema(scoreEndPoints)
+	@assert issorted(scoreEndPoints)
 	maxRawRelativityPerScoreSorted=Float64[(raw_rel_srt[scoreEndPoints[i]]+raw_rel_srt[min(obs,scoreEndPoints[i]+1)])/2 for i=1:size(scoreEndPoints,1)]
 	numPerScore::Vector{Float64},denomPerScore::Vector{Float64}=sumByIncreasingIndex(numerator_srt,denominator_srt,scoreEndPoints)
 	#I think the weight should not influence the averaging process here (as it was already relevant to derive the raw_estimated_relativities during the construction of the trees)
