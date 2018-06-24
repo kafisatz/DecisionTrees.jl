@@ -3956,7 +3956,7 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 end
 
 function calcWeightandObsPerScoreAndEndpoints!(qtls,relativitiesSorted,weight_srt,obsPerScore,vectorWeightPerScore,scoreEndPoints)
-	@warn("add inbounds when tests run successfully")
+	#@warn("possibly add inbounds when tests run successfully")
 	thisI=1
     thisJ=1
     while thisI<=length(relativitiesSorted)
