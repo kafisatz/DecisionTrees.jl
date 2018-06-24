@@ -1570,6 +1570,17 @@ function lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx::Vector{Int},f,subs
 end
 
 
+
+"""
+returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+Here we only consier splits of numerical variables!
+"""
+function lrIndicesForNumericalVar(trnidx::Vector{Int},f,subset::Array)
+	#NOTE: subset may not necessarily start at one (becuase values are missing?)
+	#still, the definition of the split should be of the form x<subset[end] -> go left (otherwise go right)
+	return lrIndicesForContiguousSubsetStartingAtONE(trnidx,f,subset)
+end
+
 """
 isContiguous(v) returns true if the vector v is of the form collect(n:m)
 """

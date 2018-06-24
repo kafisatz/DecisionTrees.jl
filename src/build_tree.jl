@@ -101,7 +101,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 		this_right_rp=deepcopy(parent_rp);
 		push!(this_left_rp,Rulepath(id,subset,true));
 		push!(this_right_rp,Rulepath(id,subset,false));
-		if id<0
+		if id<0 #(id<0 == !isa(features[id2].pool[1],Number)) #pool cannot be empty here, thus accessing the first element should be fine alternatively eltype(x)<:Number might be faster..
 			#split by character variable       
             for u in subset
                 intVarsUsed[-id+settings.number_of_num_features][u]+=1
@@ -112,20 +112,26 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
             intVarsUsed[id][subset[end]]+=1 #set this value to true to indicate, that is is used by the tree
         end
         column=features[id2]
-    	matched_strings=column.pool[subset]
-        if isContiguous(subset)
-			l,r=lrIndicesForContiguousSubset(trnidx,column,subset)
-			if  !( lrIndicesForContiguousSubset(trnidx,column,subset)==lrIndices(trnidx,column,subset))
-				 @show subset
-				 @show trnidx[1:100]
-				 @show column[1:100]
-				@show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
-				@show lrIndices(idx,features[t.featid_new_positive],subset)
-				@assert false 
-			  end
-        else
-            l,r=lrIndices(trnidx,column,subset)
-        end
+    	#matched_strings=column.pool[subset]
+		if id<0 
+			#char split
+			if isContiguous(subset)
+				l,r=lrIndicesForContiguousSubset(trnidx,column,subset)
+				if  !( lrIndicesForContiguousSubset(trnidx,column,subset)==lrIndices(trnidx,column,subset))
+					@show subset
+					@show trnidx[1:100]
+					@show column[1:100]
+					@show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
+					@show lrIndices(idx,features[t.featid_new_positive],subset)
+					@assert false 
+				end
+			else
+				l,r=lrIndices(trnidx,column,subset)
+			end
+		else 
+			#numerical split
+			l,r=lrIndicesForNumericalVar(trnidx,column,subset) #this could be done nicer (multiple dispatch based on the type of column...)
+		end
 
     countl=size(l,1)
     countr=size(r,1)
