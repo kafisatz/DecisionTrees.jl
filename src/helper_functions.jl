@@ -1517,12 +1517,12 @@ end
 returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
 This verison of the function is for numerical variables
 """
-function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array) where T<:Unsigned
+function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array)
 	l=Vector{Int}(undef,0)
 	r=Vector{Int}(undef,0)
-	sizehint!(l,length(idx))
-	sizehint!(r,length(idx))
-	for i in idx
+	sizehint!(l,length(trnidx))
+	sizehint!(r,length(trnidx))
+	for i in trnidx
 		@inbounds thisref=f.refs[i]
 		#warn("this can be done much more efficiently for  numerical variables! <=")
         #if !(in(thisref,subset)==(thisref<=subset[end]))
