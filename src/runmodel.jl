@@ -547,11 +547,9 @@ prnt&&println("---Model Settings------------------------------------------------
 		fitted_values_tree=zero(numerator)	
         T_Uint8_or_UInt16=find_max_type(features)
 		if prnt
-            #note: deepcopy is only neede on trnidx (which is modified in place by lrindices!)
-            #for validx this does not happen
-			@time tree=build_tree!(deepcopy(trnidx),validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
+			@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
 		else
-			tree=build_tree!(deepcopy(trnidx),validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
+			tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
 		end
 		
 		resulting_model=tree

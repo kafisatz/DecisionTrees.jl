@@ -2,7 +2,7 @@ export predict
 
 #Bagging 
 function apply_tree_by_leaf(idxOrig::Vector{Int},leaves_of_tree,t::Tree,features::DataFrame)	
-	return apply_tree_by_leaf(copy(idxOrig),leaves_of_tree,t.rootnode,features)
+	return apply_tree_by_leaf(idxOrig,leaves_of_tree,t.rootnode,features)
 end
 
 ################################################################################################################
@@ -13,22 +13,17 @@ end
 This is the core apply_tree_by_leaf! function which is used for boosting (and other models)
 apply_tree_by_leaf!(fit::Vector{Float64},leaf::Vector{Int},idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt16}},features::DataFrame)  
 """
-function apply_tree_by_leaf!(fit::Vector{Float64},leaf::Vector{Int},idxOrig::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt16}},features::DataFrame)  
-  idx=copy(idxOrig)
+function apply_tree_by_leaf!(fit::Vector{Float64},leaf::Vector{Int},idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt16}},features::DataFrame)  
   nobs=size(features,1) 
-  #@show nobs,length(fit),length(leaf)
   @assert nobs==length(fit)==length(leaf)
-  #rpvector=[x.rule_path for x in leaves_of_tree] #rule_path of each leaf is used to identify a leaf in the following (this could probably be done more efficiently) todo/tbd
   apply_tree_by_leaf_iteration!(idx,t,features,fit,leaf)  
 return nothing
 end
   
-function apply_tree_by_leaf(idxOrig::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt16}},features::DataFrame)  
+function apply_tree_by_leaf(idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt16}},features::DataFrame)  
   #as we always supply an index here, the function will always return two arrays of length size(features,2)
   #thus the "training" observations will be empty if this function is called on a validation index only!!
-  idx=copy(idxOrig) #as we may modify idx in the later functions (lrIndices!(...))
   nobs=size(features,1) 
-  #rpvector=[x.rule_path for x in leaves_of_tree] #rule_path of each leaf is used to identify a leaf in the following (this could probably be done more efficiently) todo/tbd
   fit=zeros(Float64,nobs)
   leaf=zeros(Int,nobs)
   apply_tree_by_leaf_iteration!(idx,t,features,fit,leaf)  
@@ -41,12 +36,9 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
        return nothing
      end
     subset=t.subset 
-    #NOTE! here idx is modified!
-    idxrInteger=lrIndices!(idx,features[t.featid_new_positive],subset)  
-    idxlInteger=idx
-    
-      apply_tree_by_leaf_iteration!(idxlInteger,t.left,features,fit,leaf)
-      apply_tree_by_leaf_iteration!(idxrInteger,t.right,features,fit,leaf)
+    idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)  
+    apply_tree_by_leaf_iteration!(idxlInteger,t.left,features,fit,leaf)
+    apply_tree_by_leaf_iteration!(idxrInteger,t.right,features,fit,leaf)
     return nothing 
  end
  

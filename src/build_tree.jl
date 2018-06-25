@@ -1,6 +1,4 @@
-function sample_data_and_build_tree!(trnidxOrig::Vector{Int},validxOrig::Vector{Int},fitted_values_all_data_this_vector_is_modified_by_build_tree::Vector{Float64},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},settings::ModelSettings,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
-trnidx=copy(trnidxOrig) #we modify trnidx and validx in the following functions
-validx=copy(validxOrig)
+function sample_data_and_build_tree!(trnidx::Vector{Int},validx::Vector{Int},fitted_values_all_data_this_vector_is_modified_by_build_tree::Vector{Float64},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},settings::ModelSettings,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
 #NOTE: this function will call build_tree!()
 	#fitted_values_all_data_this_vector_is_modified_by_build_tree=zeros(numerator)
 	if abs(settings.subsampling_prop)>=1.0
@@ -12,7 +10,7 @@ validx=copy(validxOrig)
 		#sampleSizeCanBeNEGATIVE=convert(Int,round(settings.subsampling_prop*length(denominator)))
 		#note: this can probably be done more efficiently (see also bagging)
 		#abssampleSize,sampleVector,num,denom,w,numf,charf,ooBagnum,ooBagdenom,ooBagw,ooBagnumf,ooBagcharf,ooBagsize=initBoostrapSample(sampleSizeCanBeNEGATIVE,numerator,denominator,weight,charfeatures,numfeatures)
-		unusedSamplePart=sampleData!(copy(trnidxOrig),sampleSizeCanBeNEGATIVE,sampleVector)
+		unusedSamplePart=sampleData!(trnidx,sampleSizeCanBeNEGATIVE,sampleVector)
 		#build tree	on subsample of data
 			thistree=build_tree!(sampleVector,validx,candMatWOMaxValues,mappings,deepcopy(settings),numerator,denominator,weight,features,fitted_values_all_data_this_vector_is_modified_by_build_tree,T_Uint8_or_UInt16)
 	#apply tree to ooBagSample
@@ -111,10 +109,8 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
             #todo check performance of this and improve
             intVarsUsed[id][subset[end]]+=1 #set this value to true to indicate, that is is used by the tree
         end
-        #NOTE! here trnidx is modified in place!
-        r=lrIndices!(trnidx,features[id2],subset)
-        l=trnidx
-
+        l,r=lrIndices(trnidx,features[id2],subset)
+        
         countl=size(l,1)
         countr=size(r,1)
         sumwl=sum(view(weight,l))
