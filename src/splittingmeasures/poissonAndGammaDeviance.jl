@@ -2,7 +2,6 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
   #here randomweight==0
   #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
-@show 11.3
   #convention, in the beginning everything is on the right side
   elementsInLeftChildBV=BitVector(undef,length(labellist));
   fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
@@ -66,19 +65,22 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
 
   #second pass over data
   #calculate deviances for each possible split
-  @show counter=1
+  counter=1
+  #@show "morata"
   for i in subs
       #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
       @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
       #calc deviances for the given split (which is defined by elementsInLeftChildBV)
       @inbounds sumwl=weightsl[counter]
+      #@show sumwl,minweight,weighttot_minw
       #we can skip the calculation of the deviance, if we know that the leaves will be "too small"
       if (sumwl>minweight)&&(weighttot_minw>sumwl)        
         @inbounds deviancel,deviancer=get_deviances(a,meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
       #end
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        
+        #@show deviancel, deviancer
         valnew = -(deviancel+deviancer) #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
-        @show val,valnew
+        #@show val,valnew
         if valnew>val
           val=valnew
           chosen_subset_bitarray=copy(elementsInLeftChildBV)
@@ -207,7 +209,20 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
         @inbounds wi = weight[count]
 		@inbounds eli=elementsInLeftChildBV[idx]
         wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)
-        addition = ni*log(ni / wiTimesMean) - (ni - wiTimesMean)
+        addition = - (ni - wiTimesMean)
+        addition += ifelse(iszero(ni), 0.0,ni*log(ni / wiTimesMean)) 
+        #if eli
+#            #dl += (xlogy(ni, ni / (wi*current_meanl)) - (ni - wi*current_meanl))
+#            dl += (ni*log(ni / (wi*current_meanl)) - (ni - wi*current_meanl))
+#		else
+#            #dr += (xlogy(ni, ni / (wi*current_meanr)) - (ni - wi*current_meanr))
+#            dr += (ni*log(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
+#		end
+        #@show addition,wiTimesMean ,wi,current_meanl,current_meanr,ni,ni/wiTimesMean
+        #@show eli
+        #@show addition
+        #!isfinite(addition)&&error("oopsi, we had an error")
+        #@warn("remove this!!")
         if eli            
             dl += addition
         else            
@@ -229,7 +244,13 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
         @inbounds wi = weight[count]
         @inbounds eli=elementsInLeftChildBV[idx]
         wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)
-        addition = -log(ni / wiTimesMean) - (ni - wiTimesMean)/wiTimesMean
+        addition = - (ni - wiTimesMean)/wiTimesMean 
+        addition += ifelse(iszero(ni), 0.0,-log(ni / wiTimesMean)) 
+        #if eli
+           #dl += (-log(ni / (wi*current_meanl)) - (ni - wi*current_meanl)/(wi*current_meanl))
+#		else            
+#            dr += (-log(ni / (wi*current_meanr)) - (ni - wi*current_meanr)/(wi*current_meanr))
+		#end
         if eli            
             dl += addition
         else            

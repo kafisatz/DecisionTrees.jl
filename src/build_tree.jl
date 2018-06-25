@@ -306,15 +306,13 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 	end
 
 	if randomweight==0.0
-    #@show crit_type
-	if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+    if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs)
 	elseif (crit_type==NormalDevianceSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,moments_per_pdaclass)
 	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures)
-        @show tmp_result
-	end
+    end
     if isfinite(tmp_result[1])
         feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id) + number_of_num_features : feature_column_id
       return [Splitdef(feature_column_id,feature_column_id2,fname,Vector{T}(tmp_result[2]),tmp_result[1],tmp_result[3],tmp_result[4])]::Vector{Splitdef{T}}
