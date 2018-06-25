@@ -25,7 +25,7 @@ end
 datadir=joinpath(pkgdir,"data")
 
 Random.srand(1239946)
-@testset "DecisionTrees" begin
+DecisionTreesTests = @testset "DecisionTrees" begin
     t0runtests=time_ns()
     println("DTM: Running tests.") # Time = $(t0runtests)")
         
@@ -38,9 +38,8 @@ Random.srand(1239946)
     include("functionalityTests.jl")
     include("helperfunctions.jl")
 
-    @testset "Other Test" begin
+    @testset "Other Tests" begin
         @test 1==1
-        #@test "remove the asserts in LRindices in build and apply tree"=="mi"
     end
     println("DTM: Testing finished. Time needed:")
     TimeForTesting = (time_ns()-t0runtests)/1e9
@@ -48,3 +47,4 @@ Random.srand(1239946)
     println(round(TimeForTesting/60,digits=1),"m")
     println(round(TimeForTesting/3600,digits=3),"h")
 end
+#dump(DecisionTreesTests)
