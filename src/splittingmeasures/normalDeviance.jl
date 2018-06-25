@@ -91,7 +91,7 @@ chosen_sumwl=NaN
     if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
 	  #vold=valnew
       varl=value(momentsl.stats[2])
-      varr=value(momentsl.stats[2])
+      varr=value(momentsr.stats[2])
 	     valnew=varl+varr #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
        #if vold==valnew;@show i,valnew,sumnl,sumdl;end;
 	  if valnew>val
@@ -110,7 +110,6 @@ else
 end
 return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
-
 
 
 function aggregate_data_normal_deviance(f::PooledArray,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})

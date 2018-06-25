@@ -1,8 +1,7 @@
 #using Revise
 using Profile
-#using JLD2
-using CSV
-#using DataFrames
+import CSV
+import DataFrames
 using DecisionTrees  
 
 include(joinpath("..","test\\runtests.jl"))
