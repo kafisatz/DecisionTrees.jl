@@ -63,14 +63,14 @@ end
 		
 		if boolProduceEstAndLeafMatrices
 			est_matrix=Array{Float64}(undef,obs,iterations+1)
-			est_matrixFromScores=deepcopy(est_matrix)
+			est_matrixFromScores=copy(est_matrix)
 			MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
 			MatrixOfLeafNumbers[:,1]=0
 			est_matrix[:,1]=copy(transpose(estimatedRatio))
 			est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
 		else
 			est_matrix=Array{Float64}(undef,0,0)
-			est_matrixFromScores=deepcopy(est_matrix)
+			est_matrixFromScores=copy(est_matrix)
 			MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 		end
 		
@@ -232,7 +232,6 @@ function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here
 				relativities=fitted_values_all_data_this_vector_is_modified_by_build_tree./trn_meanobservedvalue
 				estimatedRatio=fitted_values_all_data_this_vector_is_modified_by_build_tree
 				resFitted[1]=fitted_values_all_data_this_vector_is_modified_by_build_tree			
-				#resFitted[1],thistree=build_tree(candMatWOMaxValues,mappings,deepcopy(sett),num,denom,w,numf,charf)
 			#derive scores				
 			maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nscoresPotentiallyReduced				=constructANDderiveScores!(sampleVector,
 			unusedSamplePart,sortvec_reused_trn_only,estimatedRatio,relativities,numerator,denominator,weight,trn_meanobservedvalue,itr,sett)
@@ -257,7 +256,7 @@ function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here
 				#	error("this has not yet been updated for bagging")
 					#todo/tbd this could possibly be optimized. We are calling apply_tree_by_leaf! twice (if boolProduceEstAndLeafMatrices==true), once for val and once for trn
 					#apply_tree_by_leaf!(fitted_values_all_data_this_vector_is_modified_by_build_tree,reused_fitted_leafnr_vector,sampleVector,thistree.rootnode,features)
-					#MatrixOfLeafNumbers[:,iter+1]=deepcopy(reused_fitted_leafnr_vector) #leaf_numbers(vectorOfLeafArrays[1+iter],obs) #TODO / TBD adjust this for subsampling. this may not work properly, as each tree will use a different amount of data AND DIFFERENT OBSERVATIONS! thus we cannot rely on the *.idx field of the leaves!			
+					#MatrixOfLeafNumbers[:,iter+1]=copy(reused_fitted_leafnr_vector) #leaf_numbers(vectorOfLeafArrays[1+iter],obs) #TODO / TBD adjust this for subsampling. this may not work properly, as each tree will use a different amount of data AND DIFFERENT OBSERVATIONS! thus we cannot rely on the *.idx field of the leaves!			
 				#end	
                 #Determine Goodness of Fit
 					#I think it is best to consider the goodness of fit per leaf here

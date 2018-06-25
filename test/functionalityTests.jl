@@ -85,24 +85,34 @@ else
     @test typeof(resm2.modelstats)==DataFrame
     headr=resm2.exceldata.sheets[3].data[1,:] 
     headr2=map(x->headr[x][1],1:length(headr))
-    liftvalc=indexin(["Lift Val"],headr2)[1]
-    lifttrnc=indexin(["Lift Trn"],headr2)[1]
-    @test !(liftvalc==nothing)
-    @test !(lifttrnc==nothing)
-    if liftvalc!=nothing
-        @test liftvalc>0
-        liv=resm2.exceldata.sheets[3].data[sett.niter+1,liftvalc]
+    hdrForLoop=["Correlation" "Std Dev Trn" "Std Dev Val" "Std Dev Ratio" "Lift Trn" "Lift Val" "Reversals Trn" "Reversals Val" "RelDiff TrnObs vs ValObs" "RelDiff ValObs vs TrnFitted" "Min Rel Trn" "Max Rel Trn" "Min Observed Ratio Trn" "Max Observed Ratio Trn" "Min Rel Val" "Max Rel Val" "Min Observed Ratio Val" "Max Observed Ratio Val" "Gini Num (Two Arg Fn) Unweighted Trn" "Gini Num (Two Arg Fn) Unweighted Val" "Gini Num Trn (Single Agrument Fn)" "Gini Num Val (Single Argument Fn)" "RSquared of Ratio Trn" "RSquared of Ratio Val" "RSquared of Numerator Trn" "RSquared of Numerator Val" "RSS of Ratio Trn" "RSS of Ratio Val" "RSS of Numerator Trn" "RSS of Numerator Val" "Average Poisson Error Trn" "Average Poisson Error Val"][:]
+    #note: you need to add digits in Excel when copy pasting (otherwise pasting "as text" will not show all digits)
+    expectedVals=[0.994468759282649000000 0.002375403930973750000 0.002352411531960320000 0.990320636118507000000 6.843274521630170000000 6.450831459366510000000 0.000000000000000000000 1.000000000000000000000 0.050588136489102300000 1.182553313076510000000 0.402697426194537000000 2.755769036603120000000 0.040359671328647100000 0.276192310504699000000 0.423331557393917000000 2.730840528179300000000 0.044077650881683200000 0.284337496962536000000 1.000000000000000000000 1.000000000000000000000 1.000000000000000000000 1.000000000000000000000 0.000000000000000000000 0.000000000000000000000 0.000000000000000000000 0.000000000000000000000 1.000000000000000000000 1.000000000000000000000 1.000000000000000000000 1.000000000000000000000 0.311428129785048000000 0.321224667652410000000][:]
+    @test size(expectedVals)==size(hdrForLoop)
+    for i=1:length(expectedVals)
+        location=indexin([hdrForLoop[i]],headr2)[1]
+        @test !(location==nothing)
+        if location!=nothing
+            @test location>0
+            value=resm2.exceldata.sheets[3].data[sett.niter+1,location]
+            @test isapprox(value,expectedVals[i])
+        end
     end
-    if lifttrnc!=nothing
-        @test lifttrnc>0
-        lit=resm2.exceldata.sheets[3].data[sett.niter+1,lifttrnc]
-    end
-    @show lit
-    @show liv
-    #@test abs(liv-6.332896484066747) <tolForTheseTests
-    #@test abs(lit-6.610306331060652) <tolForTheseTests
-    @test abs(liv-6.45083145936651) <tolForTheseTests
-    @test abs(lit-6.843274521630169) <tolForTheseTests   
+    #liftvalc=indexin(["Lift Val"],headr2)[1]
+    #lifttrnc=indexin(["Lift Trn"],headr2)[1]
+    #@test !(liftvalc==nothing)
+    #@test !(lifttrnc==nothing)
+    #if liftvalc!=nothing
+    #    @test liftvalc>0
+    #    liv=resm2.exceldata.sheets[3].data[sett.niter+1,liftvalc]
+    #end
+    #if lifttrnc!=nothing
+    #    @test lifttrnc>0
+    #    lit=resm2.exceldata.sheets[3].data[sett.niter+1,lifttrnc]
+    #end    
+    #@show lit,liv
+    #@test abs(liv-6.45083145936651) <tolForTheseTests
+    #@test abs(lit-6.843274521630169) <tolForTheseTests   
 end
 
 end #testset
