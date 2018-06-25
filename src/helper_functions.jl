@@ -2307,6 +2307,7 @@ function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Ar
 		return nothing
 end
 
+#=
 function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},intSumrklost::Array{Int,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1}) where T<:Unsigned
 	#function for sorting all the lists by the mean
 #	meanratioperclass=sumnumerator./sumdenominator
@@ -2319,6 +2320,7 @@ function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},intSumrklost::Ar
 	myresort!(countlistfloat,srt)
 	return nothing
 end
+=#
 
 function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},moments_per_pdaclass) where T<:Unsigned
 	#todo/tbd generalize this function for an arbitrary number of input vectors

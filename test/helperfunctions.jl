@@ -112,7 +112,7 @@ function test_mean_and_var_UNmerge(nloops,sizeofVectors)
 
 end
       
-srand(99231)
+Random.srand(99231)
 test_mean_and_var_merge(1000,1000)
 test_mean_and_var_UNmerge(1000,1000)
 

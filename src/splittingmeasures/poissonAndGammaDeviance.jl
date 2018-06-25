@@ -2,7 +2,7 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
   #here randomweight==0
   #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
-
+@show 11.3
   #convention, in the beginning everything is on the right side
   elementsInLeftChildBV=BitVector(undef,length(labellist));
   fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
@@ -66,7 +66,7 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
 
   #second pass over data
   #calculate deviances for each possible split
-  counter=1
+  @show counter=1
   for i in subs
       #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
       @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
@@ -78,6 +78,7 @@ function calculateSplitValue(a::PG,fname::Symbol,number_of_num_features::Int,lab
       #end
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        
         valnew = -(deviancel+deviancer) #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
+        @show val,valnew
         if valnew>val
           val=valnew
           chosen_subset_bitarray=copy(elementsInLeftChildBV)

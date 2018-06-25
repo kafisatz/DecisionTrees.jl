@@ -448,8 +448,7 @@ for x=1:size(features,2)
 end
 srandInt=floor(Int,1/3*hash(931,s00))
 Random.srand(srandInt)
-	#Random.srand(floor(Int,1/3*hash(931,hash(features,hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))))))
-	#@show rand();@show rand();@show rand(); #check reproducability
+
 if sett.subsampling_prop <1.0 
 	@warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")
 end
