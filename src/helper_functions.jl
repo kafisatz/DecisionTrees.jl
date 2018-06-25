@@ -2510,11 +2510,8 @@ function aggregate_data_diff(f::T,numerator::Array{Float64,1},denominator::Array
     sumnumerator = zeros(Float64, vecsize)
 	sumdenominator = zeros(Float64, vecsize)
 	sumweight= zeros(Float64, vecsize)
-
-	#@warn("BK: need to add inbounds here as soon as things work.... ")
-	 @inbounds for count in f.indices[1]
-	#for count=1:length(a)
-		#@inbounds idx=a[count] + ooo
+    
+	@inbounds for count in f.indices[1]
 		idx=f.parent.refs[count] + ooo
 		cnt[idx] += 1
 		sumnumerator[idx] += numerator[count]
@@ -2612,7 +2609,7 @@ function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Flo
 	 deleteat!(sumnumerator,zeroidx)
 	 deleteat!(sumdenominator,zeroidx)
 	 deleteat!(sumweight,zeroidx)
-	 deleteat!(moments_per_pdaclass,zeroidx) #I think the delelat! fn should be able to handle any kind of vector, thus this should work just fine
+	 deleteat!(moments_per_pdaclass,zeroidx) #I think the deleteat! fn should be able to handle any kind of vector, thus this should work just fine
   end
   countlistfloat=convert(Vector{Float64},countlist) #Float64[convert(Float64,x) for x in countlist]
   #sorting is not done here! if we want the data sorted, is suggest to do this in another function which uses the output from this fn
