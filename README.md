@@ -17,6 +17,11 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 
 ## Ideas for future improvements
 
+* Add MSE (normal deviance) as a splitting criterion
+* Implement Bagging
+* fix/add/improve certain error statistics; mainly the RSS and Gini
+
+Also: 
 * To fix this: the code should not rely on dtmtable.mappings and dtmtable.candmatwomax anymore (if possible). The pools have the equivalent information
 * Add more unit tests to trigger errors and warnings (see also the Julia docs on testing)
 * Add meaningful unit tests, e.g. check the lift on trn and val for a given single tree and boosting (for a given seed)
