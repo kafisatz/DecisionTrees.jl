@@ -508,15 +508,15 @@ function convertFromString(oldvalue::T,val) where {T <: SortBy}
 	return SortByMean()  #currently only mean is possible here
 end
 function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion}
-	local allowedinputstrings=[lowercase(x) for x in ["poissondeviance" "difference" "maxvalue" "maxabsvalue" "maxminusvalue" "ROptMinRLost" "ROptMinRLostPct"]]
+	local allowedinputstrings=[lowercase(x) for x in ["difference" "normal" "poisson" "gamma" "maxvalue" "maxabsvalue" "maxminusvalue" "ROptMinRLost" "ROptMinRLostPct"]]
 	critfnstr=lowercase(critfnstr)
-	if critfnstr=="difference"
+	if (critfnstr=="difference"||critfnstr=="default")
 		crit=DifferenceSplit()
-	elseif (critfnstr=="mse"||critfnstr=="normaldeviance" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
+	elseif (critfnstr=="mse"||critfnstr=="normaldeviance" ||critfnstr=="normal" ||critfnstr=="gaussian" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
 		crit=NormalDevianceSplit()
-	elseif critfnstr=="poissondeviance"
+	elseif (critfnstr=="poissondeviance"||critfnstr=="poisson")
 		crit=PoissonDevianceSplit()
-	elseif critfnstr=="gammadeviance"
+	elseif (critfnstr=="gammadeviance"||critfnstr=="gamma")
 		crit=GammaDevianceSplit()
 	elseif critfnstr=="maxvalue"
 		crit=MaxValueSplit()

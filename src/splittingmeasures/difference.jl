@@ -24,8 +24,8 @@ chosen_sumwl=NaN
 	@inbounds sumdl-=sumdenominator[i]
 	@inbounds sumwl-=sumweight[i]    
   else
-  #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-  @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
+      #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
+      @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
       #move class from right to left side    
       @inbounds sumnl+=sumnumerator[i]
       @inbounds sumdl+=sumdenominator[i]

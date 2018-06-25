@@ -2320,7 +2320,7 @@ function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},intSumrklost::Ar
 	return nothing
 end
 
-function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},moments_per_pdaclass::Array{Float64,1}) where T<:Unsigned
+function sortlists!(catSortBy::SortByMean,labellist::Array{T,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},moments_per_pdaclass) where T<:Unsigned
 	#todo/tbd generalize this function for an arbitrary number of input vectors
 		#function for sorting all the lists by the mean
 		meanratioperclass=sumnumerator./sumdenominator
@@ -2598,7 +2598,7 @@ return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
 
-function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::PooledArray,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64)
   ncategories=length(feature_levels)
   #calc variance for each "isolated" category
   countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(features,numerator,denominator,weight)
@@ -4010,9 +4010,9 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
     #for i=1:length(scoreEndPoints)
     #    @show sum(view(weight_srt,1:scoreEndPoints[i]))-sum(vectorWeightPerScore2[1:i])
 	#end
-	nred=deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
+    nred=deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
     nscoresPotentiallyReducedTWOTimes=nred
-	#aggregate scores
+    #aggregate scores
 	numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatioPerScore,rawObservedRatioPerScore=aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
 	#smooth scores		
 	#deriveFitPerScoreFromObservedRatios::Bool (if this is true then the fit per score will be based on the observed ratio per score (instead of the fitted ratio per score)) . Note that this does not influence the structure of the tree, but only the fitted ratio per score (and scoreband)	
@@ -4116,7 +4116,7 @@ end
 
 function aggregate_values_per_score(nscoresPotentiallyReducedTWOTimes,scoreEndPoints,raw_rel_srt,numerator_srt,denominator_srt,obs,numeratorEstimatedPerRow_srt)
 	#NOTE: we consider the mean of two values here, to avoid floating point issues (there are no issues within Julia, but the C# Module may lead to slightly different results)
-	maxRawRelativityPerScoreSorted=Float64[(raw_rel_srt[scoreEndPoints[i]]+raw_rel_srt[min(obs,scoreEndPoints[i]+1)])/2 for i=1:size(scoreEndPoints,1)]
+    maxRawRelativityPerScoreSorted=Float64[(raw_rel_srt[scoreEndPoints[i]]+raw_rel_srt[min(obs,scoreEndPoints[i]+1)])/2 for i=1:size(scoreEndPoints,1)]
 	numPerScore::Vector{Float64},denomPerScore::Vector{Float64}=sumByIncreasingIndex(numerator_srt,denominator_srt,scoreEndPoints)
 	#I think the weight should not influence the averaging process here (as it was already relevant to derive the raw_estimated_relativities during the construction of the trees)
 	rawObservedRatioPerScore=zeros(Float64,nscoresPotentiallyReducedTWOTimes)
@@ -5456,7 +5456,7 @@ end
 
 function deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
 	maxValue=maximum(scoreEndPoints)
-    sEndIdx=searchsortedfirst(scoreEndPoints[1:end-1],maxValue)
+    sEndIdx=findfirst(scoreEndPoints,maxValue)
     originalLength=length(scoreEndPoints)
     if sEndIdx>=originalLength
         return originalLength

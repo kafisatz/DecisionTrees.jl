@@ -1,28 +1,29 @@
 #this is in the works
-
-
-
-function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass)
-@warn("229 this will not work yet.....")
+#calculateSplitValue(::DecisionTrees.NormalDevianceSplit, ::Symbol, ::Int64, ::Array{UInt8,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Float64, ::DecisionTrees.MyIncreasingSubsets, ::Array{OnlineStats.Series,1})
+function calculateSplitValue(a::NormalDevianceSplit,fname::Symbol,number_of_char_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass) where T<:Unsigned
 #here randomweight==0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
-#convention, in the beginning everything is on the right side
+#convention: in the beginning everything is on the right side
 elementsInLeftChildBV=BitVector(undef,length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
 chosen_subset_bitarray=BitVector(undef,0)
-#momentstot=deepcopy(moments_per_pdaclass[1])
-#for idx=2:length(moments_per_pdaclass)
-#  merge!(momentstot,moments_per_pdaclass[idx])
-#end
-#vartot=value(momentstot.stats[2])
-#numtot=sum(sumnumerator)
-#denomtot=sum(sumdenominator)
+
+totalMeanAndVariance=copy(emptyMeanVarSeries)
+for idx=1:length(moments_per_pdaclass)
+    @inbounds  mi=moments_per_pdaclass[idx]
+    @inbounds statsI=mi.stats[1]
+    if statsI.n >0 #this is needed because of https://github.com/joshday/OnlineStats.jl/issues/125
+        @inbounds merge!(totalMeanAndVariance,mi)
+    end
+end
 
 weighttot=sum(sumweight)
 weighttot_minw=weighttot-minweight
 
 momentsl=copy(emptyMeanVarSeries) #Series(OnlineStats.Mean(),OnlineStats.Variance())
-momentsr=copy(emptyMeanVarSeries) #Series(OnlineStats.Mean(),OnlineStats.Variance())
+#momentsr needs to be the 'total' at the start of this.
+momentsr=totalMeanAndVariance #copy(emptyMeanVarSeries) #Series(OnlineStats.Mean(),OnlineStats.Variance())
+
 sumwl=0.0
 varl=varr=val=-Inf
 chosen_sumwl=NaN
@@ -34,11 +35,11 @@ chosen_sumwl=NaN
     #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
     @inbounds  elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
     #move class from left to right side
-    unmerge!(momentsl,switching_class)
-    merge!(momentsr,switching_class)
+    unmerge!(momentsl,switching_class) #switching_class is 'removed' from the left variance/mean statistcs momentsl
+    merge!(momentsr,switching_class) #switching_class is 'added' to the right variance/mean statistcs momentsl
     #sumnl-=sumnumerator[i]
-	  #sumdl-=sumdenominator[i]
-	  @inbounds  sumwl-=sumweight[i]
+    #sumdl-=sumdenominator[i]
+    @inbounds  sumwl-=sumweight[i]
   else
       #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
       @inbounds  elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
@@ -53,7 +54,8 @@ chosen_sumwl=NaN
 	  #vold=valnew
       @inbounds varl=momentsl.stats[2].σ2
       @inbounds varr=momentsr.stats[2].σ2
-	  valnew = -(varl+varr)
+	  #@show fname,sumwl,weighttot-sumwl
+      valnew = -(varl+varr)
       #if vold==valnew;@show i,valnew,sumnl,sumdl;end;
 	  if valnew>val
         val=valnew
@@ -81,15 +83,22 @@ function calculateSplitValue(a::NormalDevianceSplit,number_of_char_features::Int
 #convention, in the beginning everything is on the right side
 elementsInLeftChildBV=BitVector(undef,length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
 
-#momentstot=deepcopy(moments_per_pdaclass[1])
-#for idx=2:length(moments_per_pdaclass)
-#  merge!(momentstot,moments_per_pdaclass[idx])
-#end
-#vartot=value(momentstot.stats[2])
+totalMeanAndVariance=copy(emptyMeanVarSeries)
+for idx=1:length(moments_per_pdaclass)
+    @inbounds  mi=moments_per_pdaclass[idx]
+    @inbounds statsI=mi.stats[1]
+    if statsI.n >0 #this is needed because of https://github.com/joshday/OnlineStats.jl/issues/125
+        @inbounds merge!(totalMeanAndVariance,mi)
+    end
+end
+
 weighttot=sum(sumweight)
 weighttot_minw=weighttot-minweight
+
 momentsl=copy(emptyMeanVarSeries) #Series(OnlineStats.Mean(),OnlineStats.Variance())
-momentsr=copy(emptyMeanVarSeries) #Series(OnlineStats.Mean(),OnlineStats.Variance())
+#momentsr needs to be the 'total' at the start of this.
+momentsr=totalMeanAndVariance #copy(emptyMeanVarSeries) #Series(OnlineStats.Mean(),OnlineStats.Variance())
+
 sumwl=0.0
 this_splitlist=Array{Splitdef}(undef,0)
 
@@ -114,7 +123,7 @@ for i in subs
         @inbounds varl=momentsl.stats[2].σ2
         @inbounds varr=momentsr.stats[2].σ2
 	  	valnew=-(varl+varr)
-        @inbounds push!(this_splitlist,Splitdef(feature_column_id,labellist[elementsInLeftChildBV],valnew,sumwl,weighttot-sumwl))
+        @inbounds push!(this_splitlist,Splitdef{T}(feature_column_id,feature_column_id2,fname,labellist[elementsInLeftChildBV],valnew,sumwl,weighttot-sumwl))
     end
 end
 return this_splitlist

@@ -611,10 +611,14 @@ prnt&&println("---Model Settings------------------------------------------------
             end
 			if sett.write_sas_code
 				#write SAS Code
-				println("Writing SAS Code: \n $(sas_code_file)")
-				isfile(sas_code_file)&&rm(sas_code_file)
-				write_sas_code(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings,1.0)
-				push!(filelistWithFilesToBeZipped,sas_code_file)
+                if isa(tree.rootnode,Leaf)
+                    @warn("DTM: Tree is a single leaf. No SAS Code was produced.")
+                else 
+                    println("Writing SAS Code: \n $(sas_code_file)")
+                    isfile(sas_code_file)&&rm(sas_code_file)
+                    write_sas_code(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings,1.0)
+                    push!(filelistWithFilesToBeZipped,sas_code_file)
+                end
 			end		
 			if sett.write_result
 				println("Exporting Data: \n $(this_outfile)")
