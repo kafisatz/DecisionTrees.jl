@@ -162,7 +162,9 @@ boolCalculateGini="true",
 boolCalculatePoissonError="true",
 performanceMeasure="Average Poisson Error Val"
 )
-
+sett.model_type="build_tree"
+strs,resm3=dtm(dtmtable,sett)
+sett.model_type="boosted_tree"
 strs,resm3=dtm(dtmtable,sett)
 @test typeof(resm3.modelstats)==DataFrame
 #test if files exist 

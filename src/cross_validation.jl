@@ -17,12 +17,12 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     
     #during CV  we will overwrite trnidx and validx!
     #store orig indices
-    trnidx_orig=deepcopy(dtmtable.trnidx)
+    trnidx_orig=copy(dtmtable.trnidx)
     trnsize_orig=length(trnidx_orig)
     fullsize=length(dtmtable.weight)
-    validx_orig=deepcopy(dtmtable.validx)
-    minw_orig=deepcopy(sett.minw)
-    seed_orig=deepcopy(sett.seed)
+    validx_orig=copy(dtmtable.validx)
+    minw_orig=copy(sett.minw)
+    seed_orig=copy(sett.seed)
     minw_prop=minw_orig/trnsize_orig
     
 #set rnd state to make this function reporducible (irrespective of trn/val idx)
@@ -163,8 +163,8 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
 		@warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(filen)")
 	end        
     #restore indices
-    dtmtable.trnidx=deepcopy(trnidx_orig)
-    dtmtable.validx=deepcopy(validx_orig)  
+    dtmtable.trnidx=copy(trnidx_orig)
+    dtmtable.validx=copy(validx_orig)  
     sett.minw=deepcopy(minw_orig)
     sett.seed = seed_orig 
     
@@ -185,12 +185,12 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         
     #during CV  we will overwrite trnidx and validx!
     #store orig indices
-    trnidx_orig=deepcopy(dtmtable.trnidx)
+    trnidx_orig=copy(dtmtable.trnidx)
     trnsize_orig=length(trnidx_orig)
     fullsize=length(dtmtable.weight)
-    validx_orig=deepcopy(dtmtable.validx)
-    minw_orig=deepcopy(sett.minw)
-    seed_orig=deepcopy(sett.seed)
+    validx_orig=copy(dtmtable.validx)
+    minw_orig=copy(sett.minw)
+    seed_orig=copy(sett.seed)
     minw_prop=minw_orig/trnsize_orig
 
     #set rnd state to make this function reporducible (irrespective of trn/val idx)
@@ -317,8 +317,8 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             @warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(filen)")
         end        
         #restore indices
-        dtmtable.trnidx=deepcopy(trnidx_orig)
-        dtmtable.validx=deepcopy(validx_orig)  
+        dtmtable.trnidx=copy(trnidx_orig)
+        dtmtable.validx=copy(validx_orig)  
         sett.minw=deepcopy(minw_orig)
         sett.seed = seed_orig 
         

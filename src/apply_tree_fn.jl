@@ -1,8 +1,8 @@
 export predict
 
 #Bagging 
-function apply_tree_by_leaf(idx::Vector{Int},leaves_of_tree,t::Tree,features::DataFrame)	
-	return apply_tree_by_leaf(idx,leaves_of_tree,t.rootnode,features)
+function apply_tree_by_leaf(idxOrig::Vector{Int},leaves_of_tree,t::Tree,features::DataFrame)	
+	return apply_tree_by_leaf(idxOrig,leaves_of_tree,t.rootnode,features)
 end
 
 ################################################################################################################
@@ -16,7 +16,6 @@ apply_tree_by_leaf!(fit::Vector{Float64},leaf::Vector{Int},idx::Vector{Int},t::U
 function apply_tree_by_leaf!(fit::Vector{Float64},leaf::Vector{Int},idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt16}},features::DataFrame)  
   nobs=size(features,1) 
   @assert nobs==length(fit)==length(leaf)
-  #rpvector=[x.rule_path for x in leaves_of_tree] #rule_path of each leaf is used to identify a leaf in the following (this could probably be done more efficiently) todo/tbd
   apply_tree_by_leaf_iteration!(idx,t,features,fit,leaf)  
 return nothing
 end
@@ -25,7 +24,6 @@ function apply_tree_by_leaf(idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt
   #as we always supply an index here, the function will always return two arrays of length size(features,2)
   #thus the "training" observations will be empty if this function is called on a validation index only!!
   nobs=size(features,1) 
-  #rpvector=[x.rule_path for x in leaves_of_tree] #rule_path of each leaf is used to identify a leaf in the following (this could probably be done more efficiently) todo/tbd
   fit=zeros(Float64,nobs)
   leaf=zeros(Int,nobs)
   apply_tree_by_leaf_iteration!(idx,t,features,fit,leaf)  
@@ -33,32 +31,14 @@ function apply_tree_by_leaf(idx::Vector{Int},t::Union{Leaf,Node{UInt8},Node{UInt
 end
 
 function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::DataFrame,fit::Vector{Float64},leaf::Vector{Int}) where T<:Unsigned
-	 if length(idx)==0
+     if length(idx)==0
        #@info "DTM: No data (an empty index) was provided to apply tree function"
        return nothing
-	 end
-	 featid=t.featid
-        subset=t.subset 
-    if featid<0        
-        if isContiguous(subset)
-            #@warn("remove this")
-            idxlInteger,idxrInteger=lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
-            #if !(lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)==lrIndices(idx,features[t.featid_new_positive],subset))
-             # @show subset
-              #@show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
-              #@show lrIndices(idx,features[t.featid_new_positive],subset)
-              #@assert false 
-            #end
-        else
-            idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)
-        end
-        else 
-        #numerical split
-			idxlInteger,idxrInteger=lrIndicesForNumericalVar(idx,features[t.featid_new_positive],subset) #this could be done nicer (multiple dispatch based on the type of column...)
-        end
-       #here each iteration will write on certain elements of the two vectors fit and leaf
-      apply_tree_by_leaf_iteration!(idxlInteger,t.left,features,fit,leaf)
-      apply_tree_by_leaf_iteration!(idxrInteger,t.right,features,fit,leaf)
+     end
+    subset=t.subset 
+    idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)  
+    apply_tree_by_leaf_iteration!(idxlInteger,t.left,features,fit,leaf)
+    apply_tree_by_leaf_iteration!(idxrInteger,t.right,features,fit,leaf)
     return nothing 
  end
  
@@ -117,14 +97,14 @@ function predict(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool
 
   if boolProduceEstAndLeafMatrices
 		est_matrix=Array{Float64}(undef,obs,iterations+1)
-		est_matrixFromScores=deepcopy(est_matrix)
+		est_matrixFromScores=copy(est_matrix)
 		MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
 		MatrixOfLeafNumbers[:,1]=0
 		est_matrix[:,1]=copy(transpose(estimatedRatio))
 		est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
 	else
 		est_matrix=Array{Float64}(undef,0,0)
-		est_matrixFromScores=deepcopy(est_matrix)
+		est_matrixFromScores=copy(est_matrix)
 		MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 	end
 	
