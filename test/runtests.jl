@@ -4,10 +4,12 @@ import CSV
 import DataFrames
 import DataFrames: DataFrame
 import Random
+import OnlineStats
+import StatsBase
 using Test 
 using DecisionTrees 
 
-@show tela = (time_ns()-t0)/1e9
+println("Time for using & import: ",round((time_ns()-t0)/1e9,digits=3),"s")
 
 #set directories
 global pkgdir=""
@@ -31,7 +33,7 @@ DecisionTreesTests = @testset "DecisionTrees" begin
         
     global eltypesData1=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
     
-    @warn("So far only very rudimentary tests have been implemented!")
+    @warn("DTM: So far only very rudimentary tests have been implemented!")
     
     include("smoketests.jl")
     include("errors_and_warnings.jl")

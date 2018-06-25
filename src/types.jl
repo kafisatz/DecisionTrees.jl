@@ -512,7 +512,7 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 	critfnstr=lowercase(critfnstr)
 	if critfnstr=="difference"
 		crit=DifferenceSplit()
-	elseif (critfnstr=="normaldeviance" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
+	elseif (critfnstr=="mse"||critfnstr=="normaldeviance" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
 		crit=NormalDevianceSplit()
 	elseif critfnstr=="poissondeviance"
 		crit=PoissonDevianceSplit()

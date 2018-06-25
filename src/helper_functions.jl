@@ -2139,7 +2139,7 @@ t=tree.rootnode
         total_sum_squares_of_numeratorTrn=residual_sum_squares_of_numeratorTrn=total_sum_squares_of_ratioTrn=residual_sum_squares_of_ratioTrn=1.0
         total_sum_squares_of_numeratorVal=residual_sum_squares_of_numeratorVal=total_sum_squares_of_ratioVal=residual_sum_squares_of_ratioVal=1.0
     end
-    @warn("need to review/amend the rsquared and rss which are not correct!")
+    @warn("need to review/amend the rsquared and rss metrics which are not correct!")
     r2_of_numeratortrn=1.0-residual_sum_squares_of_numeratorTrn/total_sum_squares_of_numeratorTrn
     r2_of_ratiotrn=1.0-residual_sum_squares_of_ratioTrn/total_sum_squares_of_ratioTrn
     r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal

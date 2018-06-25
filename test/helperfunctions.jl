@@ -17,8 +17,8 @@ function test_mean_and_var_merge(nloops,sizeofVectors)
         sort!(trni)
         strArr=[randstring(1) for i=1:nn]
         floatArr=float.(abs.(rand(Int,nn).%9))
-        pdStr=PooledArray(strArr)
-        pdFloat=PooledArray(floatArr)
+        pdStr=DecisionTrees.PooledArray(strArr)
+        pdFloat=DecisionTrees.PooledArray(floatArr)
 
         if rand()<.5
             pd=pdStr
@@ -27,9 +27,9 @@ function test_mean_and_var_merge(nloops,sizeofVectors)
         end 
 
         thispd=view(pd,trni)
-        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(thispd,num,denom,weight)
+        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=DecisionTrees.aggregate_data_normal_deviance(thispd,num,denom,weight)
         #check if the 'merge!' of all compoments matches the total
-        total=Series(OnlineStats.Mean(),OnlineStats.Variance())
+        total=OnlineStats.Series(OnlineStats.Mean(),OnlineStats.Variance())
         for i=1:length(moments_per_pdaclass)
             if moments_per_pdaclass[i].stats[1].n >0 #this is needed because of https://github.com/joshday/OnlineStats.jl/issues/125
                 merge!(total,moments_per_pdaclass[i])
@@ -60,8 +60,8 @@ function test_mean_and_var_UNmerge(nloops,sizeofVectors)
         sort!(trni)
         strArr=[randstring(1) for i=1:nn]
         floatArr=float.(abs.(rand(Int,nn).%9))
-        pdStr=PooledArray(strArr)
-        pdFloat=PooledArray(floatArr)
+        pdStr=DecisionTrees.PooledArray(strArr)
+        pdFloat=DecisionTrees.PooledArray(floatArr)
 
         if rand()<.5
             pd=pdStr
@@ -70,9 +70,9 @@ function test_mean_and_var_UNmerge(nloops,sizeofVectors)
         end 
 
         thispd=view(pd,trni)
-        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(thispd,num,denom,weight)
+        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=DecisionTrees.aggregate_data_normal_deviance(thispd,num,denom,weight)
         #check if the 'merge!' of all compoments matches the total
-        total=Series(OnlineStats.Mean(),OnlineStats.Variance())
+        total=OnlineStats.Series(OnlineStats.Mean(),OnlineStats.Variance())
         for i=1:length(moments_per_pdaclass)
             if moments_per_pdaclass[i].stats[1].n >0 #this is needed because of https://github.com/joshday/OnlineStats.jl/issues/125
                 merge!(total,moments_per_pdaclass[i])
@@ -86,12 +86,12 @@ function test_mean_and_var_UNmerge(nloops,sizeofVectors)
         reducedTotal=deepcopy(total)
         if pick
             el1=StatsBase.sample(1:length(moments_per_pdaclass))
-            unmerge!(reducedTotal,moments_per_pdaclass[el1])
+            DecisionTrees.unmerge!(reducedTotal,moments_per_pdaclass[el1])
             valuesRemaining=ratioOfND[trni][(pd[trni].!=pd.pool[el1])]
         else 
             (el1,el2)=StatsBase.sample(1:length(moments_per_pdaclass),2,replace=false)
-            unmerge!(reducedTotal,moments_per_pdaclass[el1])
-            unmerge!(reducedTotal,moments_per_pdaclass[el2])  
+            DecisionTrees.unmerge!(reducedTotal,moments_per_pdaclass[el1])
+            DecisionTrees.unmerge!(reducedTotal,moments_per_pdaclass[el2])  
             idx1=(pd.refs.!=pd.pool[2]).&(pd.refs.!=pd.pool[4])
             valuesRemaining=ratioOfND[trni][(pd[trni].!=pd.pool[el1]).&(pd[trni].!=pd.pool[el2])]
         end   

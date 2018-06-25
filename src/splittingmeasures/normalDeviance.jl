@@ -145,7 +145,7 @@ function aggregate_data_normal_deviance(f,numerator::Array{Float64,1},denominato
         @inbounds this_denom = denominator[count]
         @inbounds sumdenominator[idx] += this_denom
         @inbounds sumweight[idx] += weight[count]
-        @inbounds fit!(moments_per_pdaclass[idx],this_num/this_denom)
+        @inbounds OnlineStats.fit!(moments_per_pdaclass[idx],this_num/this_denom)
     end
   return cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass
 end
