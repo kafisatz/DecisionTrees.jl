@@ -12,6 +12,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	#trn_meanobservedvalue is the mean observed RATIO, i.e. sum(numerator)/sum(denominator) for the training data
 	T_Uint8_or_UInt16=find_max_type(features)
     obs=obstrn+obsval
+    #@show obsval,obstrn
 	current_error=0.0
     moderationfactor=moderationvector[1]
 	if (size(moderationvector,1)!=iterations && size(moderationvector,1)!=1)
@@ -19,9 +20,9 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
     end
 	if size(moderationvector,1)==1
 		actual_moderationvector=Array{Float64}(undef,iterations)
-		fill!(actual_moderationvector,deepcopy(moderationvector[1]))
+		fill!(actual_moderationvector,copy(moderationvector[1]))
 	else
-		actual_moderationvector=deepcopy(moderationvector)
+		actual_moderationvector=copy(moderationvector)
 	end
 	if BoolStartAtMean
 		estimatedRatio=ones(length(weight)).*trn_meanobservedvalue
@@ -32,6 +33,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
 	
 	estimatedNumeratorForStats=zeros(obs)
+    #@show "obs original" 
+    #@show obs,size(features)
     indicatedRelativityForApplyTree_reused=zeros(obs)
 	reused_fitted_leafnr_vector=zeros(Int,obs)
     sortvec_reused_trn_only=zeros(Int,length(trnidx))
@@ -41,14 +44,14 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	res=Array{Union{Leaf{T_Uint8_or_UInt16},Node{UInt8},Node{UInt16}}}(undef,iterations)
 	if boolProduceEstAndLeafMatrices
 		est_matrix=Array{Float64}(undef,obs,iterations+1)
-		est_matrixFromScores=deepcopy(est_matrix)
+		est_matrixFromScores=copy(est_matrix)
 		MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
 		MatrixOfLeafNumbers[:,1].=0
 		est_matrix[:,1]=copy(transpose(estimatedRatio))
 		est_matrixFromScores[:,1]=copy(transpose(estimatedRatio))		
 	else
 		est_matrix=Array{Float64}(undef,0,0)
-		est_matrixFromScores=deepcopy(est_matrix)
+		est_matrixFromScores=copy(est_matrix)
 		MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 	end
 	

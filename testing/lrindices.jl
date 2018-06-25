@@ -6,61 +6,93 @@ using .PooledArraysDTM
 
 
 """
-returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
-Here subset needs to be of the form collect(m:n)
+function lrIndices!(trnidx::Vector{Int},f,subset::Array)
+modifies trnidx to 'become' the left child index, returns r
+l and r are defined by subset. l corresponds to the observations 'in' subset
 """
-function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array)
-	if (length(subset)>0)&&(isone(subset[1]))
-    	return lrIndicesForContiguousSubsetStartingAtONE(trnidx,f,subset)
-	else 
-		return lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx,f,subset)
-	end
+function lrIndices!(trnidx::Vector{Int},f,subset::Array)
+if eltype(f.pool)<:Number
+    #NOTE: subset may not necessarily start at one here (because after a few splits, certain 'middle' values of the pool may not exist in the current node)
+    #still, the definition of the split should be of the form x<subset[end] -> go left (otherwise go right)
+    #therefore we can consider this function for numerical variables
+    return lrIndicesForContiguousSubsetStartingAtONE!(trnidx,f,subset)
+else
+    if isContiguous(subset)
+        if (length(subset)>0)&&(isone(subset[1]))
+            return lrIndicesForContiguousSubsetStartingAtONE!(trnidx,f,subset)
+        else 
+            return lrIndicesForContiguousSubsetNOTStartingAtONE!(trnidx,f,subset)
+        end
+    else
+        return lrIndicesDefault!(trnidx,f,subset)
+    end
+end
 end
 
 """
-returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+function lrIndices!(trnidx::Vector{Int},f,subset::Array)
+modifies trnidx to 'become' the left child index, returns r
+l and r are defined by subset. l corresponds to the observations 'in' subset
+"""
+function lrIndicesDefault!(trnidx::Vector{Int},f,subset::Array)
+	r=Vector{Int}(undef,0)
+	sizehint!(r,length(trnidx))
+	indexSize=length(trnidx)
+    for jj=indexSize:-1:1
+        @inbounds i=trnidx[jj]
+		@inbounds thisref=f.refs[i]
+		if !in(thisref,subset)
+			pushfirst!(r,i)
+			deleteat!(trnidx,jj)
+		end
+	end
+	return r
+end
+
+"""
+function lrIndicesForContiguousSubsetStartingAtONE!(trnidx::Vector{Int},f,subset::Array)
+this is a similar function as lrIndices! (->see the docs of lrIndices!)
 Here subset needs to be of the form collect(1:n)
 """
-function lrIndicesForContiguousSubsetStartingAtONE(trnidx::Vector{Int},f,subset::Array)
-	l=Vector{Int}(undef,0)
+function lrIndicesForContiguousSubsetStartingAtONE!(trnidx::Vector{Int},f,subset::Array)
 	r=Vector{Int}(undef,0)
-	sizehint!(l,length(trnidx))
 	sizehint!(r,length(trnidx))
     subsetEnd=subset[end]
-	for i in trnidx
+    indexSize=length(trnidx)
+    for jj=indexSize:-1:1
+        @inbounds i=trnidx[jj]
 		@inbounds thisref=f.refs[i]
-		if thisref<=subsetEnd
-			push!(l,i)
-		else
-			push!(r,i)
+		if !(thisref<=subsetEnd)
+			pushfirst!(r,i)
+			deleteat!(trnidx,jj)
 		end
 	end
-	return l,r
+	return r
 end
 
 
 """
-returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+this is a similar function as lrIndices! (->see the docs of lrIndices!)
 Here subset needs to be of the form collect(m:n)
 """
-function lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx::Vector{Int},f,subset::Array)
-	l=Vector{Int}(undef,0)
+function lrIndicesForContiguousSubsetNOTStartingAtONE!(trnidx::Vector{Int},f,subset::Array)
 	r=Vector{Int}(undef,0)
-	sizehint!(l,length(trnidx))
 	sizehint!(r,length(trnidx))
+    subsetEnd=subset[end]
+    indexSize=length(trnidx)    
 	subsetEnd=subset[end]
 	subsetStart=subset[1]
-	for i in trnidx
+    for jj=indexSize:-1:1
+        @inbounds i=trnidx[jj]
 		@inbounds thisref=f.refs[i]
-		if (thisref<=subsetEnd)&&(thisref>=subsetStart)
-			push!(l,i)
-		else
-			push!(r,i)
+		#if !((thisref<=subsetEnd)&&(thisref>=subsetStart))
+        if (thisref>subsetEnd)||(thisref<subsetStart)
+			pushfirst!(r,i)
+			deleteat!(trnidx,jj)
 		end
 	end
-	return l,r
+	return r
 end
-
 
 """
 isContiguous(v) returns true if the vector v is of the form collect(n:m)
@@ -75,42 +107,49 @@ import Random
 
 ntest=0
 whereStartsAtONE=0
-nn=300
+nn=15
 trni=sample(1:nn,floor(Int,.4*nn),replace=false)
 sort!(trni)
 strArr=[randstring(1) for i=1:nn]
-pd=PooledArray(strArr)
+floatArr=float.(abs.(rand(Int,nn).%9))
+pdStr=PooledArray(strArr)
+pdFloat=PooledArray(floatArr)
 
-for klU=1:4000000
+for klU=1:400000
+    #@show klU
+    pd = rand()<.5 ? pdStr : pdFloat
 
-subsetStr=sample(pd.pool,4,replace=false)
-subset=convert(Vector{eltype(pd.refs)},findall((in)(subsetStr),pd.pool))
-sort!(subset)
+    subsetStrOrFloat=sample(pd.pool,4,replace=false)
+    subset=convert(Vector{eltype(pd.refs)},findall((in)(subsetStrOrFloat),pd.pool))
+    sort!(subset)
 
-#subsetContiguous=convert(Vector{UInt8},5:ceil(Int,rand()*length(pd.pool)))
-#subset=subsetContiguous 
-    
-#isC=true #rand()<.5
-if isContiguous(subset)
-   
-whereStartsAtONE+=isone(subset[1])
-ntest+=1
+    #if isContiguous(subset)
+           
+        whereStartsAtONE+=isone(subset[1])
+        ntest+=1
 
+        trniWillBeModified=deepcopy(trni)
+        rrr=lrIndices!(trniWillBeModified,pd,subset)
+        if eltype(pd.pool)==Float64
+            ll2,rr2=DecisionTrees.lrIndicesForContiguousSubsetStartingAtONE(trni,pd,subset)
+        else
+            ll2,rr2=DecisionTrees.lrIndices(trni,pd,subset)
+        end
+        #=
+        @show ll2,rr2
+        @show subset
+        @show pd
+        @show pd.pool
+        @show sort!(unique(pd.refs))
+        @show ll2
+        @show rrr
+        @show trni
+        @show trniWillBeModified
+        =#
+        @assert ll2==trniWillBeModified 
+        @assert rr2==rrr
 
-lll,rrr=lrIndices(trni,pd,subset)
-ll2,rr2=lrIndicesForContiguousSubset(trni,pd,subset)
-@assert lrIndicesForContiguousSubset(trni,pd,subset)==lrIndices(trni,pd,subset)
-
-#@btime lrIndices($trni,$pd,$subset)
-#@btime lrIndices2($trni,$pd,$subset)
+        #@btime lrIndices($trni,$pd,$subset)
+        #@btime lrIndices2($trni,$pd,$subset)
+    #end
 end
-end
-@show ntest,whereStartsAtONE
-
-@assert isContiguous(collect(1:23))
-@assert isContiguous(collect(22:23))
-@assert isContiguous(collect(23:23))
-@assert !isContiguous([1,9,3])
-@assert !isContiguous([1,3,2])
-
-

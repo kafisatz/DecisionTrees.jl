@@ -171,7 +171,7 @@ removeUnionTypes!(dfin,independent_vars)
     this_sett=ModelSettings()
 
     this_sett.df_name_vector=names(dfres)[1+global_const_shift_cols:end]
-    updateSettingsMod!(this_sett,number_of_num_features=n_num,number_of_char_features=n_char) #model_type="build_tree",minw=.91,randomw=0,mf=.05,subsampling_features_prop=1.0,niter=10,subsampling_prop=1.00)
+    updateSettingsMod!(this_sett,number_of_num_features=n_num,number_of_char_features=n_char) 
     @info "Data initialization finished:"
     @show size(dfres)
     @show n_num,n_char
@@ -191,8 +191,7 @@ for v in independent_vars
     elt=eltype(col)
     typeOfelt=typeof(elt)
     if typeOfelt!=DataType
-        @info "DTM: Type of the eltype of $(v) is not a DataType but $(typeOfelt). The type of $(v) is $(elt)"
-        
+        @info "DTM: Type of the eltype of $(v) is not a DataType but $(typeOfelt). The type of $(v) is $(elt)"        
 		@info "DTM: Trying to convert the type..."		
 		try
 			a=elt.a
@@ -213,8 +212,7 @@ function is_categorical_column(x,nm)
     elt=eltype(x)
     typeOfElt=typeof(elt)
     if typeOfElt!=DataType  
-        sz=length(x)    
-        @show x[1:10]
+        #@show x[1:10]
         error("DTM: The type of variable $(nm) is not of type 'DataType' but '$(typeOfElt)'. The type of the variable is $(elt). Currently only DataTypes are supported.")
     end
     return elt <:AbstractString
@@ -224,11 +222,6 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	datafilename,ext=splitext(fn_with_ext) #actually one can provide fn_with_ext="c:\\temp\\my folder\\out" (so no extension is necessary)
 	datafolder,outfileStringOnly=splitdir(datafilename)
 	if length(outfileStringOnly)==0
-		@show fn_with_ext
-		@show datafilename
-		@show ext
-		@show datafolder
-		@show outfileStringOnly
 		error("fn_with_ext should be of the form C:\\some\\folder\\my_output.txt (the extension is irrelevant) \n You provided: $(fn_with_ext) \nAbort.")
 	end
 	dfIndata=df_userinput
@@ -254,10 +247,8 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	  @warn("denominator[trn] contains observations with values 0.0")
 	  foundobs=findfirst(denominator,0.0)
 	  foundk=key[foundobs]
-	  println("First observation: key=$(foundk), rownumber_trn=$(foundobs), value=$(denominator[foundobs])")
-	  println("Denominator needs to be nonzero (negative values are allowed)")
-	  println("Consider discarding or changing these values/rows.")
-	  error("Abort.")
+	  println("First observation: key=$(foundk), rownumber_trn=$(foundobs), value=$(denominator[foundobs])\r\nDenominator needs to be nonzero (negative values are allowed)\r\nConsider discarding or changing these values/rows.")
+	  error("DTM: Abort.")
 	end
 	strNegativeRatioWarning="Negative Ratios may lead to errors during the modelling process for models which rely on multiplicative residuals! \nIt is suggested that you adjust the data such that no negative values occur!"
 	if any(x->x<0.0,denominator)
@@ -556,9 +547,11 @@ prnt&&println("---Model Settings------------------------------------------------
 		fitted_values_tree=zero(numerator)	
         T_Uint8_or_UInt16=find_max_type(features)
 		if prnt
-			@time tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
+            #note: deepcopy is only neede on trnidx (which is modified in place by lrindices!)
+            #for validx this does not happen
+			@time tree=build_tree!(deepcopy(trnidx),validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
 		else
-			tree=build_tree!(trnidx,validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
+			tree=build_tree!(deepcopy(trnidx),validx,dtmtable.candMatWOMaxValues,dtmtable.mappings,sett,numerator,denominator,weight,features,fitted_values_tree,T_Uint8_or_UInt16)
 		end
 		
 		resulting_model=tree
@@ -583,7 +576,6 @@ prnt&&println("---Model Settings------------------------------------------------
 			if sett.write_statistics
 				writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
 			end
-			#z=transpose(overallstats) #this should work, but it somehow doesnt.... https://discourse.julialang.org/t/transpose-not-working-on-array-any-2/6510
 			z=permutedims(overallstats,(2,1))
 			dfStats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
 			DataFrames.names!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
@@ -793,195 +785,3 @@ end
 function dtm(dtmtable::DTMTable,sett::ModelSettings;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
     return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,file::String)
 end
-
-
-
-#=
-function run_model_main(settingsFilename::String,dataFilename::String,datafolder::String,outfilename::String,outfileStringOnly::String;nrows::Int=-1)
-	#this function distinguishes two cases: either a *.JLD file is loaded or a *.CSV file is converted to a *.jld file
-	@assert length(settingsFilename)>3
-	@assert length(dataFilename)>3
-	const_shift_cols=global_const_shift_cols #this was 6 in earlier versions where the settings column was column 6, now the settings column is separate
-	@assert isfile(settingsFilename) "Settings file $(settingsFilename) not found. Abort."
-	if !(lowercase(dataFilename)[end-2:end]=="sql")&&!isfile(dataFilename);error("Data file $(dataFilename) not found.");end; # Did you provide a *.csv instead of a *.jld2 file (or vice-versa)?");end;
-	#the next function is mainly here to avoid that there is a result from an old run, whis is interpreted as the result of the current run (which may have failed for instance)
-		#we should check how much time it needs and maybe disable it eventually
-		deleteAllOutputFiles(datafolder,outfileStringOnly)
-	#Read Settings
-		settingsArray,number_of_num_features=readSettings(settingsFilename)
-	if size(settingsArray,1)>2		
-		if lowercase(reverse(dataFilename)[1:4])!="dlj."
-			#prep data and create *.jld file #NOTE: the fact that we save the *.jld file to disk is obsolete here (could be improved in the future) todo/tbd
-			@info "Prepping data for multirow run"
-			settingsArrayTWOROWS=settingsArray[1:2,:]
-			key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArrayTWOROWS,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)
-			dataFilename,extp=splitext(dataFilename)
-			dataFilename=string(dataFilename,".jld2")
-			@info "this will probably fail with a *.db or mysql  input file/reference"
-			@assert isfile(dataFilename) "Something went wrong: dataFilename should be a prepped *.jld2 file here"
-		end
-		println("Loading Julia save file: \n $(dataFilename)")
-		dictOfVariables=load(dataFilename);
-		telapsed=0.0
-		@info "Time to read data: $(telapsed)"
-		return run_model_multirow_settings(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
-	end
-
-	#check if JLD or CSV was provided
-	if lowercase(reverse(dataFilename)[1:4])=="dlj." #dataFilename[end-4:end]
-		println("Loading Julia save file: \n $(dataFilename)")
-		dictOfVariables=load(dataFilename);
-		telapsed=0.0
-		@info "Time to read data: $(telapsed)"
-		return run_model_jld(dataFilename,settingsArray,dictOfVariables,datafolder,outfilename,outfileStringOnly,const_shift_cols)
-	#non jld file was provided
-	else
-		key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prepare_non_jld_data(dataFilename,settingsArray,datafolder,outfilename,outfileStringOnly,const_shift_cols,nrows,number_of_num_features)		
-        telapsed=0.0
-        sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
-        return run_model_actual(key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues,dataFilename)		
-	end
-end
-
-#function if dictionary from *.jld2 was loaded
-function run_model_jld(dataFilename::String,settingsArray::Array{String,2},di::Dict,datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int)	
-	error("this function is not supported anymore.")
-    #specifically we have deleted the field sett.ncolsdfIndata
-    #oldsettings=di["oldsettings"]
-	#sett=ModelSettings() #default model settings
-	#updateSettings!(dataFilename,sett,settingsArray,copy(oldsettings.ncolsdfIndata),const_shift_cols,copy(oldsettings.df_name_vector))
-    #telapsed=0.0	
-    #sett.print_details&&(!sett.preppedJLDFileExists)&&@info "Time to prepare data: $(telapsed)\n"
-    #return run_model_actual(di["key"],di["trn"],di["numeratortrn"],di["denominatortrn"],di["weighttrn"],di["trn_numfeatures"],di["trn_charfeatures_PDA"],di["keyval"],di["val"],di["val_numfeatures"],di["val_charfeatures_PDA"],di["numeratorval"],di["denominatorval"],di["weightval"],	di["mappings"],datafolder,outfilename,outfileStringOnly,const_shift_cols,sett,di["num_levels"],di["char_levels"],di["all_levels"],di["all_levels_as_string_vector"],di["names_and_levels"],di["candMatWOMaxValues"],dataFilename)
-end
-
-function prepare_non_jld_data(dataFilename::String,settingsArray::Array{String,2},datafolder::String,outfilename::String,outfileStringOnly::String,const_shift_cols::Int,nrows::Int,number_of_num_features::Int)
-local eltypev,dfIndata
-	if lowercase(dataFilename)[end-2:end]==".db"
-		@info "todo: Test *.DB Sqlite functionality."
-		@info "the current version may work, but it will likely fail if there are any non standard characters in the data (i.e. non \'1-9,a-Z\')"
-		@warn("This will not work properly if there are any non-standard characters (such as umlauts)!") #the sqlite driver has issues with ? and so on
-		println("Importing data from SQLiteDB file: \n $(dataFilename)")
-		try
-			@info "check if disabling gc speeds this up"
-			dfIndata=readDFfromSQLiteDB(dataFilename,const_shift_cols)
-		catch sqllitereaderr
-			@show sqllitereaderr
-			error("Unable to read from SQLiteDB. See above.")
-		end
-	elseif lowercase(dataFilename)[end-2:end]=="sql"
-		print("Importing data from SQL db.")
-		@warn("If this uses to  much memory implement limit 100,300 !!")
-		@warn("like this we can read stepwise and append to the df in julia!")
-		try
-			dfIndata=readDFfromSQLDB()
-		catch eri
-			@show eri
-			error("Unable to read from SQL DB. See above.")
-		end
-		println(" done.")
-	else
-		#CSV was provided, Reading Data
-			println("Importing CSV data: \n $(dataFilename)")
-        #Read only a few rows to determine AbstractString/Numeric columns
-		  try
-			eltypev=define_eltypevector(DataFrames.readtable(dataFilename,nrows=100),const_shift_cols,number_of_num_features)
-		  catch eri
-			@warn("Readtable failed! Check the size of the *.CSV: $(dataFilename)") #sometimes the file only consists of the header (e.g. if the SAS export failed), then readtable will fail.
-			fz=0
-			fz=filesize(dataFilename)/1024
-			@warn("Filesize is $(fz) KB")
-			@show eri
-			@assert false
-		  end
-		#Read whole dataset
-		try
-			dfIndata=readtable(dataFilename,eltypes=eltypev,nrows=nrows) #this currently uses by far to much memory on a 14m row file. The limitation is about a 7m row file with 77 columns
-		catch readerror
-			@show readerror
-			error("Unable to read file $(dataFilename)")
-		end
-	end
-
-	#at this point the data exists as a dataframe
-		telapsed=0.0
-		#println("Time to read data: $(telapsed)")
-
-	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues=prep_data_from_df(dataFilename,settingsArray,dfIndata,datafolder,outfilename,outfileStringOnly,const_shift_cols)
-return 	key,trn,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,keyval,val,val_numfeatures,val_charfeatures_PDA,numeratorval,denominatorval,weightval,mappings,sett,num_levels,char_levels,all_levels,all_levels_as_string_vector,names_and_levels,candMatWOMaxValues
-end
-
-
-
-"""
-If run_model_actual is called with an array of settings, the model is run on all settings.
-The model type (e.g. boosting/tree/bagging) needs to be the same for each entry of settings
-"""
-function run_model_actual(dtmtable::DTMTable,setts::Vector{ModelSettings},fn::String)
-	if length(unique(map(x->x.model_type,setts)))!=1 
-		uq_model_types = unique(map(x->x.model_type,setts))
-		error("DTM: model_type must be the same for all elements of the settings vector. You provided these model_types $(uq_model_types)")
-	end
-
-	path_and_fn_wo_extension="some"
-	header=Vector{String}(1)
-	header_settings=Vector{String}(1)
-	allstats=Array{Float64,2}
-	allsettings=Array{Any,2}
-	i=1
-	nsetts=length(setts)
-	for sett in setts 
-		path_and_fn_wo_extension,ext=splitext(fn)
-		path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
-		fnmod=string(path_and_fn_wo_extension_mod,ext)
-		somestrings,model=run_model_actual(dtmtable,sett,fnmod)
-		desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)
-		if i==1
-			header=deepcopy(desc)
-			header_settings=deepcopy(desc_settingsvec)
-			allstats=Array{Float64,2}(length(numbrs),nsetts)			
-			allsettings=Array{Any,2}(length(settingsvec),nsetts)			
-		else			
-			if !all(header.==desc)
-				@warn("Model run $(i) returned an unexpected results vector:")
-				@show desc
-				@show header
-			end
-			if !all(header_settings.==desc_settingsvec)
-				@warn("Model run $(i) returned an unexpected results vector:")
-				@show desc_settingsvec
-				@show header_settings
-			end
-		end
-		allstats[:,i].=deepcopy(numbrs)
-		allsettings[:,i].=deepcopy(settingsvec)
-		i+=1
-	end	
-
-	statsdf=DataFrame(transpose(allstats))
-	DataFrames.names!(statsdf,Symbol.(header))
-	settsdf=DataFrame(permutedims(allsettings,[2,1]))
-	DataFrames.names!(settsdf,Symbol.(header_settings))
-
-	@show fld,namestr=splitdir(path_and_fn_wo_extension)
-	filen=string(fld,"multistats.xlsx")
-	if isfile(filen)
-		@info "Deleting $(filen)."
-		rm(filen)
-	end
-
-	return statsdf,settsdf
-end
-
-function run_legacy(mld::String,fld::String)
-    @assert isdir(fld)
-    sett_file=string(fld,"\\",mld,".settings.csv")
-    @assert isfile(sett_file)
-    csv_file=string(fld,"\\",mld,".csv")
-    @assert isfile(csv_file)
-    args=[sett_file csv_file string(mld,"_out_")]
-    rs=run_model(args)
-    return rs
-end
-
-=#

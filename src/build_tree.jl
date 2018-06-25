@@ -1,6 +1,6 @@
-#trnidx,validx,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector)
-function sample_data_and_build_tree!(trnidx::Vector{Int},validx::Vector{Int},fitted_values_all_data_this_vector_is_modified_by_build_tree::Vector{Float64},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},settings::ModelSettings,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
-#todo: automatically ignore variables with no splitting points!
+function sample_data_and_build_tree!(trnidxOrig::Vector{Int},validxOrig::Vector{Int},fitted_values_all_data_this_vector_is_modified_by_build_tree::Vector{Float64},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},settings::ModelSettings,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
+trnidx=copy(trnidxOrig) #we modify trnidx and validx in the following functions
+validx=copy(validxOrig)
 #NOTE: this function will call build_tree!()
 	#fitted_values_all_data_this_vector_is_modified_by_build_tree=zeros(numerator)
 	if abs(settings.subsampling_prop)>=1.0
@@ -12,7 +12,7 @@ function sample_data_and_build_tree!(trnidx::Vector{Int},validx::Vector{Int},fit
 		#sampleSizeCanBeNEGATIVE=convert(Int,round(settings.subsampling_prop*length(denominator)))
 		#note: this can probably be done more efficiently (see also bagging)
 		#abssampleSize,sampleVector,num,denom,w,numf,charf,ooBagnum,ooBagdenom,ooBagw,ooBagnumf,ooBagcharf,ooBagsize=initBoostrapSample(sampleSizeCanBeNEGATIVE,numerator,denominator,weight,charfeatures,numfeatures)
-		unusedSamplePart=sampleData!(trnidx,sampleSizeCanBeNEGATIVE,sampleVector)
+		unusedSamplePart=sampleData!(copy(trnidxOrig),sampleSizeCanBeNEGATIVE,sampleVector)
 		#build tree	on subsample of data
 			thistree=build_tree!(sampleVector,validx,candMatWOMaxValues,mappings,deepcopy(settings),numerator,denominator,weight,features,fitted_values_all_data_this_vector_is_modified_by_build_tree,T_Uint8_or_UInt16)
 	#apply tree to ooBagSample
@@ -111,32 +111,14 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
             #todo check performance of this and improve
             intVarsUsed[id][subset[end]]+=1 #set this value to true to indicate, that is is used by the tree
         end
-        column=features[id2]
-    	#matched_strings=column.pool[subset]
-		if id<0 
-			#char split
-			if isContiguous(subset)
-				l,r=lrIndicesForContiguousSubset(trnidx,column,subset)
-				#if  !( lrIndicesForContiguousSubset(trnidx,column,subset)==lrIndices(trnidx,column,subset))
-				#	@show subset
-				#	@show trnidx[1:100]
-				#	@show column[1:100]
-				#	@show lrIndicesForContiguousSubset(idx,features[t.featid_new_positive],subset)
-				#	@show lrIndices(idx,features[t.featid_new_positive],subset)
-				#	@assert false 
-				#end
-			else
-				l,r=lrIndices(trnidx,column,subset)
-			end
-		else 
-			#numerical split
-			l,r=lrIndicesForNumericalVar(trnidx,column,subset) #this could be done nicer (multiple dispatch based on the type of column...)
-		end
+        #NOTE! here trnidx is modified in place!
+        r=lrIndices!(trnidx,features[id2],subset)
+        l=trnidx
 
-    countl=size(l,1)
-    countr=size(r,1)
-	sumwl=sum(view(weight,l))
-	sumwr=sum(view(weight,r))
+        countl=size(l,1)
+        countr=size(r,1)
+        sumwl=sum(view(weight,l))
+        sumwr=sum(view(weight,r))
 
 	leftchildwillbefurthersplit=sumwl<2*minweight
 	rightchildwillbefurthersplit=sumwr<2*minweight

@@ -510,7 +510,7 @@ end
 
 function gini_more_accurate_but_slower(a,estimate::Array{T,1},weight=ones(T,length(estimate))) where {T <: Number}
 	#@assert (size(actual)==size(estimate)==size(weight))&&(size(actual,2)==1) # I think it takes too much time to check this as we call this fn very often
-	actual=deepcopy(a)
+	actual=copy(a)
 	arrlen=length(actual)
 	srt=zeros(Int,arrlen) #pre allocation seems to incrase performance here (not sure why though....)
 	sortperm!(srt,estimate,rev=true)
@@ -791,7 +791,7 @@ locrow-=locincrement
 #loop through vars
 local loc,thismat,emptyline,resultingMatrix,statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn,strVarname,list,intVarnamePOSITIVE,feat,featVAL,outMatrix
 emptyOutMatrix=repeat([],0,16) #note the 16 is hardcoded here which is very bad programming, it is the width of the ouput "statsThisIteration" of the fn createTrnValStatsForThisIteration
-resultingMatrix=deepcopy(emptyOutMatrix)
+resultingMatrix=copy(emptyOutMatrix)
 integerVarlist=sett.statsByVariables
 validationCharts=Array{Chart}(undef,0)
 if sett.statsRandomByVariable>0
@@ -800,7 +800,7 @@ if sett.statsRandomByVariable>0
 end
 firstdatarow=4
 for intVarname in integerVarlist
-	outMatrix=deepcopy(emptyOutMatrix)
+	outMatrix=copy(emptyOutMatrix)
 	if intVarname==0 # 0 refers to the random group
 		strVarname=string("Random Group")
 		rng=1:sett.statsRandomByVariable
@@ -833,7 +833,7 @@ for intVarname in integerVarlist
 		statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,-1,sett.scorebandsstartingpoints,v1,v2,v3,v4,v5,v6,v7,v8,v9,v10,sett)
 		statsThisIteration[1,1]="Scoreband" #this cell has the value "Cumulative Stats n=-1" by default which is not useful here.
 		statsThisIteration=hcat(statsThisIteration[:,1],vcat([strVarname],repeat([strthresh],size(statsThisIteration,1)-1,1)),statsThisIteration[:,2:end])
-		outMatrix=vcat(deepcopy(outMatrix),deepcopy(statsThisIteration))
+		outMatrix=vcat(copy(outMatrix),copy(statsThisIteration))
 	end
 	#trn charts
 		thischartTRN=defineTwoWayCharts(nameOfValidationSheet,nameOfValidationSheet,string("Q",locrow+=locincrement),"line",firstdatarow,length(scoreBandLabels)-1,9,length(list),2,"Scoreband","Observed Ratio",string("Observed Ratio Trn by ",convert(typeof(nameOfValidationSheet),strVarname)))
@@ -846,8 +846,8 @@ for intVarname in integerVarlist
 		push!(validationCharts,deepcopy([thischartTRN thischartTRNexp thischartVAL thischartVALexp])...)
 		firstdatarow+=length(list)*(1+length(scoreBandLabels))+4
 	#add Header to data
-		thismat=deepcopy(outMatrix)
-		outMatrix=deepcopy(emptyOutMatrix) #reset the matrix
+		thismat=copy(outMatrix)
+		outMatrix=copy(emptyOutMatrix) #reset the matrix
 		hd=[string("Validation by ",strVarname)]
 		header=hcat(hd,repeat([""],1,size(thismat,2)-1))
 		emptyline=repeat([""],1,size(thismat,2))
@@ -951,32 +951,6 @@ function define_eltypevector(df::DataFrame,const_shift_cols::Int,number_of_num_f
 	=#
   end
   return eltypevector
-end
-
-function convertDFbooleanColsToUTF8String!(d::DataFrame)
-cols=size(d,2)
-for i=1:cols
-	@show i
-	#@show eltype(d[i])
-	#todo/tbd improve this
-	#this is nasty and probably inefficient hack
-	@show typeof(d[1,i])
-	@show eltype(d[i])
-	if typeof(d[1,i])==Bool
-		@show 1
-		dtmp=convert(Array,d[i])
-		#@show typeof(dtmp)
-		#@show eltype(dtmp)
-		@show 2
-		dtmp2=String[boolToUTF8String(x)  for x in dtmp]
-		@show 3
-		da=PooledArray(dtmp2)
-		@show 4
-		d[i]=deepcopy(da)
-		@show 5
-	end
-end
-return nothing
 end
 
 function boolToUTF8String(x::Bool)
@@ -1403,7 +1377,7 @@ function calcIterationsPerCore2(ntot::Int,ncores::Int)
 		res=res.+add_this
 		res[end]=ntot-sum(res[1:end-1])
 
-		col2=deepcopy(res)
+		col2=copy(res)
 		incrementalToCumulative!(col2)
 		pushfirst!(col2,0)
 		pop!(col2)
@@ -1494,91 +1468,92 @@ macro timeConditional(bool,ex)
 end
 
 """
-returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+function lrIndices!(trnidx::Vector{Int},f,subset::Array)
+modifies trnidx to 'become' the left child index, returns r
+l and r are defined by subset. l corresponds to the observations 'in' subset
 """
-function lrIndices(trnidx::Vector{Int},f,subset::Array)
-	l=Vector{Int}(undef,0)
+function lrIndices!(trnidx::Vector{Int},f,subset::Array)
+if eltype(f.pool)<:Number
+    #NOTE: subset may not necessarily start at one here (because after a few splits, certain 'middle' values of the pool may not exist in the current node)
+    #still, the definition of the split should be of the form x<subset[end] -> go left (otherwise go right)
+    #therefore we can consider this function for numerical variables
+    return lrIndicesForContiguousSubsetStartingAtONE!(trnidx,f,subset)
+else
+    if isContiguous(subset)
+        if (length(subset)>0)&&(isone(subset[1]))
+            return lrIndicesForContiguousSubsetStartingAtONE!(trnidx,f,subset)
+        else 
+            return lrIndicesForContiguousSubsetNOTStartingAtONE!(trnidx,f,subset)
+        end
+    else
+        return lrIndicesDefault!(trnidx,f,subset)
+    end
+end
+end
+
+"""
+function lrIndices!(trnidx::Vector{Int},f,subset::Array)
+modifies trnidx to 'become' the left child index, returns r
+l and r are defined by subset. l corresponds to the observations 'in' subset
+"""
+function lrIndicesDefault!(trnidx::Vector{Int},f,subset::Array)
 	r=Vector{Int}(undef,0)
-	sizehint!(l,length(trnidx))
 	sizehint!(r,length(trnidx))
-	for i in trnidx
+	indexSize=length(trnidx)
+    for jj=indexSize:-1:1
+        @inbounds i=trnidx[jj]
 		@inbounds thisref=f.refs[i]
-		if in(thisref,subset)
-			push!(l,i)
-		else
-			push!(r,i)
+		if !in(thisref,subset)
+			pushfirst!(r,i)
+			deleteat!(trnidx,jj)
 		end
 	end
-	return l,r
-end
-
-
-"""
-returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
-Here subset needs to be of the form collect(m:n)
-"""
-function lrIndicesForContiguousSubset(trnidx::Vector{Int},f,subset::Array)
-	if (length(subset)>0)&&(isone(subset[1]))
-    	return lrIndicesForContiguousSubsetStartingAtONE(trnidx,f,subset)
-	else 
-		return lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx,f,subset)
-	end
+	return r
 end
 
 """
-returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+function lrIndicesForContiguousSubsetStartingAtONE!(trnidx::Vector{Int},f,subset::Array)
+this is a similar function as lrIndices! (->see the docs of lrIndices!)
 Here subset needs to be of the form collect(1:n)
 """
-function lrIndicesForContiguousSubsetStartingAtONE(trnidx::Vector{Int},f,subset::Array)
-	l=Vector{Int}(undef,0)
+function lrIndicesForContiguousSubsetStartingAtONE!(trnidx::Vector{Int},f,subset::Array)
 	r=Vector{Int}(undef,0)
-	sizehint!(l,length(trnidx))
 	sizehint!(r,length(trnidx))
     subsetEnd=subset[end]
-	for i in trnidx
+    indexSize=length(trnidx)
+    for jj=indexSize:-1:1
+        @inbounds i=trnidx[jj]
 		@inbounds thisref=f.refs[i]
-		if thisref<=subsetEnd
-			push!(l,i)
-		else
-			push!(r,i)
+		if !(thisref<=subsetEnd)
+			pushfirst!(r,i)
+			deleteat!(trnidx,jj)
 		end
 	end
-	return l,r
+	return r
 end
 
 
 """
-returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
+this is a similar function as lrIndices! (->see the docs of lrIndices!)
 Here subset needs to be of the form collect(m:n)
 """
-function lrIndicesForContiguousSubsetNOTStartingAtONE(trnidx::Vector{Int},f,subset::Array)
-	l=Vector{Int}(undef,0)
+function lrIndicesForContiguousSubsetNOTStartingAtONE!(trnidx::Vector{Int},f,subset::Array)
 	r=Vector{Int}(undef,0)
-	sizehint!(l,length(trnidx))
 	sizehint!(r,length(trnidx))
+    subsetEnd=subset[end]
+    indexSize=length(trnidx)    
 	subsetEnd=subset[end]
 	subsetStart=subset[1]
-	for i in trnidx
+    for jj=indexSize:-1:1
+        @inbounds i=trnidx[jj]
 		@inbounds thisref=f.refs[i]
-		if (thisref<=subsetEnd)&&(thisref>=subsetStart)
-			push!(l,i)
-		else
-			push!(r,i)
+		#if !((thisref<=subsetEnd)&&(thisref>=subsetStart))
+        if (thisref>subsetEnd)||(thisref<subsetStart)
+			pushfirst!(r,i)
+			deleteat!(trnidx,jj)
 		end
 	end
-	return l,r
-end
-
-
-
-"""
-returns l and r indices (l corresponds to all elements of trnidx that 'match' subset)
-Here we only consier splits of numerical variables!
-"""
-function lrIndicesForNumericalVar(trnidx::Vector{Int},f,subset::Array)
-	#NOTE: subset may not necessarily start at one (becuase values are missing?)
-	#still, the definition of the split should be of the form x<subset[end] -> go left (otherwise go right)
-	return lrIndicesForContiguousSubsetStartingAtONE(trnidx,f,subset)
+	return r
 end
 
 """
@@ -1705,7 +1680,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 	(length(candlist)==1)&&(@info "DTM: Numeric column $(i):$(string(thisname)) (numeric) has zero splitting points.") #throw an error when not splitting point exists, was this intended? does this ever happen?
     sort!(candlist,alg=QuickSort) #although it should already be sorted
     mini,maxi=extrema(this_column) #it IS CRUCIAL that the maximum is taken from the whole vector here! (and not only the training part)
-	push!(candMatWOMaxValues,deepcopy(candlist))
+	push!(candMatWOMaxValues,copy(candlist))
     candlist[end]=max(candlist[end],maxi) #set the last value of candlist to the largest observed training (and validation) element -> all datapoints which are larger than the former maximum(candlist) will be identified with the maxi
     #@assert length(candlist)<255 "Currently at most 254 splitting points are supported. Please choose less splitting points for numeric column $(i):$(header[i])" #see note below
 	#prepare trn data	
@@ -2351,7 +2326,7 @@ function aggregate_data(f::PooledArray,scores::Array{Int,1},numeratorEst::Array{
 	if length(f.values)!=vecsize #need to investigate if it can happen that this does not hold true (tod/tbd)
 		rows_to_be_deleted=myfindinInt(collect(lo:hi),f.ids)
 	end
-	valuelist=deepcopy(f.values)
+	valuelist=copy(f.values)
 	#@assert vecsize==length(f.pda.
     cnt = zeros(Int, vecsize)
     sumnumerator = zeros(Float64, vecsize)
@@ -3182,7 +3157,7 @@ end
 	#for the code which is generated here the last entry of maxRawRelativityPerScoreSorted is modified to be 50% (50% is arbitrary here) higher than the value which was derived by Julia
 	#this means that any policy will get the maximal score if it is "worse" than any training policy
 	#but if it is much worse, it will get the default score of -1
-	modified_maxRawRelativityPerScoreSorted=deepcopy(bt.maxRawRelativityPerScoreSorted)
+	modified_maxRawRelativityPerScoreSorted=copy(bt.maxRawRelativityPerScoreSorted)
 	modified_maxRawRelativityPerScoreSorted[end]=modified_maxRawRelativityPerScoreSorted[end]*1.5
 	sas_write_ScoreMap(fiostream,modified_maxRawRelativityPerScoreSorted,estimatesPerScore)
 
@@ -4222,7 +4197,7 @@ function addPredictorData(listOfValues,colnames,sett::ModelSettings,scores,numer
 		@assert false "Critical Error: Sumscores contains NaN values" #probably the @inbounds macro led to an issue when aggregating the data
 	end
 	#replace 0 entries with 1s (otherwise we divde by zero)
-	cntmod=deepcopy(cnt)
+	cntmod=copy(cnt)
 	replace_in_vector!(cntmod,zero(eltype(cntmod)),one(eltype(cntmod)))
 	avgscores=Int[convert(Int,x) for x in round.(sumscores./cntmod)]
 	#listOfValues may contain values which do not occurr in the training data
@@ -4962,7 +4937,7 @@ End Function
 	#for the c# code the last entry of maxRawRelativityPerScoreSorted is modified to be 50% (50% is arbitrary here) higher than the value which was derived by Julia
 	#this means that any policy will get the maximal score if it is "worse" than any training policy
 	#but if it is much worse, it will get the default score of -1
-	modified_maxRawRelativityPerScoreSorted=deepcopy(bt.maxRawRelativityPerScoreSorted)
+	modified_maxRawRelativityPerScoreSorted=copy(bt.maxRawRelativityPerScoreSorted)
 	modified_maxRawRelativityPerScoreSorted[end]=modified_maxRawRelativityPerScoreSorted[end]*1.5
 	#csharp_write_GenerateScore(fiostream,bt)
 	write(fiostream,"Dim dRawscore as Double\r\n 'Initialize Raw Score \r\n dRawscore=1.0\r\n\r\n")
@@ -5014,7 +4989,7 @@ function write_csharp_code(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1
 	#for the c# code the last entry of maxRawRelativityPerScoreSorted is modified to be 50% (50% is arbitrary here) higher than the value which was derived by Julia
 	#this means that any policy will get the maximal score if it is "worse" than any training policy
 	#but if it is much worse, it will get the default score of -1
-	modified_maxRawRelativityPerScoreSorted=deepcopy(bt.maxRawRelativityPerScoreSorted)
+	modified_maxRawRelativityPerScoreSorted=copy(bt.maxRawRelativityPerScoreSorted)
 	modified_maxRawRelativityPerScoreSorted[end]=modified_maxRawRelativityPerScoreSorted[end]*1.5
 	csharp_write_ScoreMap(fiostream,modified_maxRawRelativityPerScoreSorted,estimatesPerScore)
 	csharp_write_GenerateScore(fiostream,bt)
@@ -5386,22 +5361,12 @@ function mapToOther!(v,keepvals::Vector{T},newValue::T) where T
         end
     end  
     return nothing
-    #counts,freqs,vals,keep=getCounts(v)
-    #vnew=deepcopy(v)
-    #mapToOther!(vnew,keep,"rare_value")
 end
 
 
 function deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
 	maxValue=maximum(scoreEndPoints)
     sEndIdx=searchsortedfirst(scoreEndPoints[1:end-1],maxValue)
-    #if true 
-     #   @warn("remove this once tests are ok")
-      #  v1=view(obsPerScore,sEndIdx+1:length(vectorWeightPerScore))
-       # v2=view(vectorWeightPerScore,sEndIdx+1:length(vectorWeightPerScore))
-        #@assert abs(sum(v1))<eps(vectorWeightPerScore[1])
-        #@assert abs(sum(v2))<3*eps(vectorWeightPerScore[1])
-    #end 
     originalLength=length(scoreEndPoints)
     if sEndIdx>=originalLength
         return originalLength
