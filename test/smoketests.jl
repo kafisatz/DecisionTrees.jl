@@ -71,7 +71,7 @@ for splitCrit in ["difference","poissondeviance","gammadeviance","mse"],modelTYP
     catch thisErr
         @show stacktrace()
         @show thisErr        
-        @test "This one failed->"==string("crit="splitCrit,"; model_type=",modelTYPE)
+        @test "This one failed->"==string("crit=",splitCrit,"; model_type=",modelTYPE)
     end
 end
 updateSettingsMod!(sett,crit="difference")
