@@ -508,7 +508,7 @@ function convertFromString(oldvalue::T,val) where {T <: SortBy}
 	return SortByMean()  #currently only mean is possible here
 end
 function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion}
-	local allowedinputstrings=[lowercase(x) for x in ["difference" "normal" "poisson" "gamma" "maxvalue" "maxabsvalue" "maxminusvalue" "ROptMinRLost" "ROptMinRLostPct"]]
+	local allowedinputstrings=[lowercase(x) for x in ["difference" "normal" "poisson" "gamma" "maxvalue" "maxabsvalue" "maxminusvalue"]]
 	critfnstr=lowercase(critfnstr)
 	if (critfnstr=="difference"||critfnstr=="default")
 		crit=DifferenceSplit()
@@ -518,11 +518,11 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 		crit=PoissonDevianceSplit()
 	elseif (critfnstr=="gammadeviance"||critfnstr=="gamma")
 		crit=GammaDevianceSplit()
-	elseif critfnstr=="maxvalue"
+	elseif critfnstr=="maxvalue" #pick the split which leads to the maximum average value (in either the right or left child)
 		crit=MaxValueSplit()
-	elseif critfnstr=="maxabsvalue"
+	elseif critfnstr=="maxabsvalue" #pick the split which leads to the absolute maximum average value (in either the right or left child)
 		crit=MaxAbsValueSplit()
-	elseif critfnstr=="maxminusvalue"
+	elseif critfnstr=="maxminusvalue" #pick the split which leads to the maximum negative value (in either the right or left child)
 		crit=MaxMinusValueSplit()
 	elseif critfnstr=="roptminrlostpct"
 		crit=ROptMinRLostPctSplit()
