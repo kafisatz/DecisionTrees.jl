@@ -29,10 +29,11 @@ datadir=joinpath(pkgdir,"data")
 Random.srand(1239946)
 DecisionTreesTests = @testset "DecisionTrees" begin
     t0runtests=time_ns()
-    println("DTM: Running tests.") # Time = $(t0runtests)")
+    println("DTM: Running tests...") # Time = $(t0runtests)")
         
     global eltypesData1=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
     
+    @info("DTM: Note that the tests produce a relatively long log and write a number of files in temporary directories. You can disregard the log, if all tests pass.")
     @warn("DTM: So far only very rudimentary tests have been implemented!")
     
     include("smoketests.jl")
