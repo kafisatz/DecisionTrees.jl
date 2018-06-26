@@ -8,7 +8,11 @@ julia:
   #- 0.7.0-alpha
   #- 0.7.0-alpha.154  
   - 0.7
-  - nightly  
+  - nightly 
+matrix:
+ allow_failures:
+ - julia: nightly
+ - os: osx
 notifications:
   email: false
 script: 
