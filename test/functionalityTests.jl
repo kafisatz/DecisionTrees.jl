@@ -30,12 +30,12 @@ if !isfile(datafile)
             run(cmd)
         end
     catch erO
-        @warn("Failed to unzip data. Some tests will not run.")
+        @warn("Failed to unzip data: $(pathToZip) \r\n Some tests will not run!")
         @show erO        
     end
 end
 if !isfile(datafile)
-    @test "CSV DATA NOT FOUND"=="freMTPL2.csv was not found. Functionality tests not run."
+    @test "CSV DATA NOT FOUND"=="$(datafile) was not found. Functionality tests not run."
     @warn("You may want to manually unzip the zip file in this location $(splitdir(datafile)[1]) as some of the tests rely on that CSV file.")
 else
     @time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);

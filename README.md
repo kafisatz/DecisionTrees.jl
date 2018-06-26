@@ -1,9 +1,7 @@
 # DecisionTrees.jl
-Julia Decision Tree Algorithms for Regression
+Decision Tree Algorithms for Regression
 
 This package is under development
-
-
 
 Linux: [![Build Status](https://travis-ci.org/kafisatz/DecisionTrees.jl.svg?branch=master)](https://travis-ci.org/kafisatz/DecisionTrees.jl)
 
@@ -13,11 +11,22 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 [![codecov.io](http://codecov.io/github/kafisatz/DecisionTrees.jl/coverage.svg?branch=master)](http://codecov.io/github/kafisatz/DecisionTrees.jl?branch=master)
 
 
+## Installation
 
+This package only works with Julia 0.7 or higher. 
+To install DecisionTrees.jl, run `using Pkg; pkg"add https://github.com/kafisatz/DecisionTrees.jl` at the REPL. Alternatively you enter package mode by typing `]`. In package mode you can simply run `add https://github.com/kafisatz/DecisionTrees.jl`.
+
+Note that, at the time of writing, precompilation and compilation of this package is slow. We hope to improve this for later releases.
+
+We note that this package uses PyCall to create Excel files of the model results. Therefore, there are anumber of dependencies (PyCall, Conda, Python). These should be installed automatically when you use the package for the first time.
+
+## Documentation
+
+This is in the works.
 
 ## Ideas for future improvements
 
-* Review spliting criteria (especially poisson,gamma and MSE): compare them to other implementations.
+* Review spliting criteria (especially poisson,gamma and mean squared error). Possibly compare them to other implementations.
 * Implement Bagging
 * fix/add/improve certain error statistics; mainly the RSS and Gini
 * Clean up the naming convention of the fieldnames of ModelSettings (bool_xy, BoolXY, ...)
