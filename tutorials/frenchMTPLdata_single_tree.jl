@@ -338,7 +338,7 @@ originalTrnValIndex
 #this increase the computation time considerably compared to the difference measure
 
 #We can set the poisson error as follows
-updateSettingsMod!(sett,crit="_poissondeviance")
+updateSettingsMod!(sett,crit="poissondeviance")
 resultingFiles,resM=dtm(dtmtable,sett)
 #For comparison reasons
 #on my machine the above model took 15.8 seconds (only the build tree operation)

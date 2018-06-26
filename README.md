@@ -17,9 +17,10 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 
 ## Ideas for future improvements
 
-* Add MSE (normal deviance) as a splitting criterion
+* Review spliting criteria (especially poisson,gamma and MSE): compare them to other implementations.
 * Implement Bagging
 * fix/add/improve certain error statistics; mainly the RSS and Gini
+* Clean up the naming convention of the fieldnames of ModelSettings (bool_xy, BoolXY, ...)
 
 Also: 
 * To fix this: the code should not rely on dtmtable.mappings and dtmtable.candmatwomax anymore (if possible). The pools have the equivalent information

@@ -63,15 +63,15 @@ strs,resm2=dtm(dtmtable,sett)
 sett.statsByVariables=Int[]
 
 #try different splitting criteria
-for splitCrit in ["difference","poissondeviance","gammadeviance"]
-    updateSettingsMod!(sett,crit=splitCrit)
+for splitCrit in ["difference","poissondeviance","gammadeviance","mse"],modelTYPE in ["build_tree","boosted_tree"]
+    updateSettingsMod!(sett,crit=splitCrit,model_type=modelTYPE)
     try 
         strs,resmT=dtm(dtmtable,sett)        
         @test typeof(resmT.modelstats)==DataFrame
     catch thisErr
         @show stacktrace()
         @show thisErr        
-        @test "this one failed->"==splitCrit
+        @test "This one failed->"==string("crit=",splitCrit,"; model_type=",modelTYPE)
     end
 end
 updateSettingsMod!(sett,crit="difference")
