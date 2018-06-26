@@ -7,7 +7,7 @@ os:
 julia:
   #- 0.7.0-alpha
   #- 0.7.0-alpha.154  
-  #- 0ffde2f2fc
+  - 0.7
   - nightly  
 notifications:
   email: false
