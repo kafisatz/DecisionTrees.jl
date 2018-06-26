@@ -10,8 +10,7 @@ datadir=joinpath(pkgdir,"data")
 
 elt=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
 
-fi="data1Small.csv"
-thisfile=joinpath(datadir,fi)
+thisfile=joinpath(datadir,"GermanMotorPremiums","data1Small.csv")
 @assert isfile(thisfile)
 @time df_tmp=CSV.read(thisfile,allowmissing=:none,types=elt,categorical=false,rows_for_type_detect=10000);
 

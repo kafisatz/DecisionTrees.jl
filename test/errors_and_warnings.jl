@@ -4,8 +4,7 @@
 @testset "errorTesting" begin
 
 
-fi="data1Small.csv"
-thisfile=joinpath(datadir,fi)
+thisfile=joinpath(datadir,"GermanMotorPremiums","data1Small.csv")
 @test isfile(thisfile)
 @time df_tmp=CSV.read(thisfile,allowmissing=:none,types=eltypesData1,categorical=false,rows_for_type_detect=10000);
 

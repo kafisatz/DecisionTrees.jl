@@ -7,7 +7,7 @@ Distributed.@everywhere import DataFrames: DataFrame
 Distributed.@everywhere using DecisionTrees    
 
 elt=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
-datafile="data\\data1small.csv"
+datafile=joinpath("data","GermanMotorPremiums","data1small.csv")
 @assert isfile(datafile);
 @time df_tmp=CSV.read(datafile,types=elt,rows_for_type_detect=20000,allowmissing=:none,categorical=false); 
 

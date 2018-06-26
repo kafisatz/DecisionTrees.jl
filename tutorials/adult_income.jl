@@ -12,7 +12,7 @@ tela = (time_ns()-t0)/1e9
 
 #elt=[Int,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	String,	Int,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
 header=["age","workclass","fnlwgt","education","education-num","marital-status","occupation","relationship","race","sex","capital-gain","capital-loss","hours-per-week","native-country","target"]
-#@time df_tmp=readtable(string("data\\data1mini.csv"),eltypes=elt); 
+#@time df_tmp=readtable(string("data\\GermanMotorPremiums\\data1mini.csv"),eltypes=elt); 
 @time dftrain=CSV.read(string("data\\adult\\adult.data"),header=header,rows_for_type_detect=10000,allowmissing=:none,categorical=false,rows=32561);
 @time dftest=CSV.read(string("data\\adult\\adult.test"),header=header,rows_for_type_detect=10000,allowmissing=:none,categorical=false,rows=16281);
 

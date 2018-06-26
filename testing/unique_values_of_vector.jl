@@ -6,7 +6,7 @@ elt=[Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	Stri
 
 fi="data1Medium.csv"
 fi="data1Small.csv"
-@time df_tmp=CSV.read(joinpath(datadir,fi),allowmissing=:none,types=elt,categorical=false,rows_for_type_detect=10000);
+@time df_tmp=CSV.read(joinpath(datadir,"GermanMotorPremiums",fi),allowmissing=:none,types=elt,categorical=false,rows_for_type_detect=10000);
 
 selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 
