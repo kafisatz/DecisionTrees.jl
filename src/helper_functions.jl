@@ -2254,8 +2254,8 @@ function buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,
 	reldiff=relativitytrn.-relativityval
 	sz_1=length(sumweighttrn)-1
 	@assert length(sumweighttrn)==length(sumweightval)==length(fittedratioval)==length(fittedratiotrn)==length(reldiff)==length(sumnumeratorEstimatetrn)
-	stddevtrn=sum(view(sumweighttrn,1:sz_1).*(view(fittedratiotrn,1:sz_1).-fittedratiotrn[end]).^2)/sumweighttrn[end]
-    stddevval=sum(view(sumweightval,1:sz_1).*(view(fittedratioval,1:sz_1).-fittedratioval[end]).^2)/sumweightval[end]
+	stddevtrn=sum(view(sumweighttrn,1:sz_1).*(view(observedratiotrn,1:sz_1).-observedratiotrn[end]).^2)/sumweighttrn[end]
+    stddevval=sum(view(sumweightval,1:sz_1).*(view(observedratioval,1:sz_1).-observedratioval[end]).^2)/sumweightval[end]
 	stddevratio=stddevval/stddevtrn
     
     relDiffTrnObsVSValObs=wAverage(abs.(view(reldiff,1:sz_1)),view(sumnumeratorEstimatetrn,1:sz_1))
