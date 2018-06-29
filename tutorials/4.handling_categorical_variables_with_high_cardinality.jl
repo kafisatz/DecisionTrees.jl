@@ -21,7 +21,7 @@ end
 uq=unique(df_tmp[:PLZ_WOHNORT])
 length(uq)
 
-#we can analze the frequency with this helper function
+#we can analyse the frequency with this helper function
 counts,freqs,vals,keep30=getCounts(df_tmp[:PLZ_WOHNORT],threshold=30)
 #keep is the 30 largest values
 
