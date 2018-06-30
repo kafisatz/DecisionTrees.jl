@@ -65,6 +65,7 @@ include("dot_graphs.jl")
 include("roc.jl")
 include("cross_validation.jl")
 include("show.jl")
+include("partialDependence.jl")
 
 global const pyModPandas = PyCall.PyNULL()
 global const pyModxlsxwriter = PyCall.PyNULL()

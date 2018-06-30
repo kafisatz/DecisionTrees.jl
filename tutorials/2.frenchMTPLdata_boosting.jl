@@ -363,3 +363,13 @@ bestSetting=settsdf[bestModel,:]
 #this data should be consistent with the data in the Excel output
 
     #crit::SplittingCriterion # fn version of 4
+
+
+############################################################
+#Partial Dependence Plots
+############################################################
+#this is currently in development and in need of review  
+#NOTE: the function is very slow. This will take a few minutes
+#pds=partialDependence(resM,dtmtable,listOfFeatures=[:Density,:VehGas])
+#pds["Density"]
+    

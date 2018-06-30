@@ -357,3 +357,13 @@ settV=createGridSearchSettings(sett,
     );
 
 gridResult=dtm(dtmtable,settV,file="R:\\temp\\13\\MTPLsingleTree.CSV")
+
+
+############################################################
+#Partial Dependence Plots
+############################################################
+#this is currently in development and in need of review  
+#NOTE: the function is very slow. This will take a few minutes
+#pds=partialDependence(resM,dtmtable,listOfFeatures=[:Density,:VehGas])
+#pds["Density"]
+    
