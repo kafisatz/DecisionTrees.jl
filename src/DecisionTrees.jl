@@ -66,6 +66,7 @@ include("roc.jl")
 include("cross_validation.jl")
 include("show.jl")
 include("partialDependence.jl")
+include("apply_tree_fn_unseen.jl")
 
 global const pyModPandas = PyCall.PyNULL()
 global const pyModxlsxwriter = PyCall.PyNULL()

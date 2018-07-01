@@ -1,6 +1,5 @@
-export predict
+#export predict
 
-#Bagging 
 function apply_tree_by_leaf(idxOrig::Vector{Int},leaves_of_tree,t::Tree,features::DataFrame)	
 	return apply_tree_by_leaf(idxOrig,leaves_of_tree,t.rootnode,features)
 end
@@ -43,9 +42,7 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
  end
  
 function apply_tree_by_leaf_iteration!(idx,t::Leaf,features::DataFrame,fit,leaf)
-	nobs=length(idx)
-	#numm=firstmatch(rpvector,t.rule_path) #todo/tbd: can this be done in a better way? firstmatch is sort of a hack since I could not get findin working on the first try.... the match should be unique by definition
-    @inbounds for i in idx
+	  @inbounds for i in idx
         leaf[i]=t.id
         fit[i]=t.fitted
     end
@@ -69,15 +66,12 @@ function apply_tree_by_leaf(t::Union{Leaf,Node{UInt8},Node{UInt16}},features::Da
   return fit,leafnrs
 end
 
-
-function predict(x::Tree,f::DataFrame;ignoreInconsitentFeatures::Bool=false)
-  #warn("need to ensure, data is consistent with the data used to derive the tree!")
-  #warn("ignoreInconsitentFeatures=$(ignoreInconsitentFeatures). The algorithm may not work as intended if the features
+function predictConsistentFeatures(x::Tree,f::DataFrame)
   @assert assert_consistent_features(x.featurepools,f)
   return apply_tree_by_leaf(x.rootnode,f)
 end
 
-function predict(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool=false)
+function predictConsistentFeatures(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool=false)
   #warn("need to ensure, data is consistent with the data used to derive the tree!")
   @assert assert_consistent_features(x.featurepools,f)
   
@@ -164,7 +158,7 @@ function assert_consistent_features(fp,f::DataFrame)
       @show f[j].pool.==fp[j]
       @show f[j].pool.-fp[j]
       @show !(fp[j]==f[j].pool)
-      @show issubset(fp[j],f[j].pool)      
+      @show issubset(f[j].pool,fp[j])
       error("Features do not match model features. Note: this condition could be weakend: the features of the data which is provided only needs to be a subset of the pools used during modelling")      
       error("Abort.")
     end
