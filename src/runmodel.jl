@@ -140,7 +140,7 @@ removeUnionTypes!(dfin,independent_vars)
         if in(this_name,Symbol.(treat_as_categorical_variable))
             #change variable type in original dataframe
             if !is_categorical_column(dfin[this_name],this_name)
-                @info "DTM: Converting the column $(this_name) from $(eltype(dfin[this_name])) to string."
+                @info "DTM: Converting the column $(this_name) from $(eltype(dfin[this_name])) to String."
                 dfin[this_name]=string.(dfin[this_name])
                 this_is_a_string=true
             else

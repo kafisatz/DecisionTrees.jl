@@ -1,3 +1,7 @@
+#Date: July 1, 2018
+#Author: Bernhard König
+#Title: Modelling the residual of a GLM with a boosted tree 
+
 ###########
 
 t0=time_ns()
@@ -17,7 +21,7 @@ tela = (time_ns()-t0)/1e9
 ##############################
 #Read the data
 ##############################
-datafile=string("data\\freMTPL2\\freMTPL2.csv")
+datafile=joinpath("data","freMTPL2","freMTPL2.csv")
 @assert isfile(datafile);
 @time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 

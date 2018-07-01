@@ -1,5 +1,8 @@
+#Date: July 1, 2018
+#Author: Bernhard König
+
 ############################################################
-#Decision Tree Model for the French MTPL Data
+#Title: Decision Tree Model for the French MTPL Data
 ############################################################
 
 # If you do not yet have a suitable editor for Julia, you may want to consider VS Code.
@@ -29,7 +32,7 @@ tela = (time_ns()-t0)/1e9
 ##############################
 #Read the data
 ##############################
-datafile=string("data\\freMTPL2\\freMTPL2.csv")
+datafile=joinpath("data","freMTPL2","freMTPL2.csv")
 @assert isfile(datafile);
 @time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
@@ -75,7 +78,16 @@ end
 #sett are the model settings
 #dfprepped is an intermediary dataframe which is generally not needed
 dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
-#consider 
+#NOTE:if the input data (i.e. the DataFrame fullData in this case) contains a row which is currently 'numerical' but should be treated as a categorical variable,
+#then you can use the parameter treat_as_categorical_variable
+#consider this code example, which is NOT MEANINGFUL in this context, but showcases the optional parameter
+dtmtableAlt,settAlt,dfpreppedAlt=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["DrivAge","VehAge"]);
+dtmtable.features[:DrivAge].pool #the data was interpreted as a numerical feature
+dtmtableAlt.features[:DrivAge].pool #the data was interpreted as a categorical feature (i.e. a String)
+
+#We will now continue to work with dtmtable
+
+#Consider the following regarding the data structure of dtmtable
 fieldnames(typeof(dtmtable))
 dtmtable.key #an identifier (String type), ideally it is a unique identifier for each row
 dtmtable.numerator #a vector

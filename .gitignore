@@ -26,3 +26,6 @@ data/freMTPL2/JuliaBoostingScores1000.csv
 data/freMTPL2/freMTPL2_withJuliaBoostingScores1000.csv
 data/GermanMotorPremiums/data1Full.csv
 data/GermanMotorPremiums/data1Medium.csv
+RCode/ReservingData.R
+data/reservingAccident/Simulated.Cashflows.csv
+data/reservingAccident/~$triangle.xlsx

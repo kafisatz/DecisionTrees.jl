@@ -1,3 +1,9 @@
+#Date: July 1, 2018
+#Author: Bernhard König
+#Title: Short example on how categorical variables with high cardinalilty can be treated and preprocessed for these algorithms
+#This snippet shall merely show the functionality of the two very simple Julia funcitons mapToOther! and getCounts 
+#We refer to the general literature on data preprocessing (specifically for high cardinality categorical data) and feature generation
+
 import Distributed
 #Distributed.@everywhere using Revise
 Distributed.@everywhere import CSV

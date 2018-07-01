@@ -1,5 +1,8 @@
+#Date: July 1, 2018
+#Author: Bernhard König
+
 ############################################################
-#Boosting Model for the French MTPL Data
+#Title: Boosting Model for the French MTPL Data
 ############################################################
 
 #We suggest that you first go through the frenchMTPLdata_single_tree.jl tutorial before doing this tutorial
@@ -26,7 +29,7 @@ tela = (time_ns()-t0)/1e9
 ##############################
 #Read the data
 ##############################
-datafile=string("data\\freMTPL2\\freMTPL2.csv")
+datafile=joinpath("data","freMTPL2","freMTPL2.csv")
 @assert isfile(datafile);
 @time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 

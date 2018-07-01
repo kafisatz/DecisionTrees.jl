@@ -1,0 +1,1 @@
+#You need to run the R code in RCode\GenerateIndividualClaimsData.R to generate the file Simulated.Cashflows.csv
