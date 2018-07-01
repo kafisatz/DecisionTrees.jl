@@ -152,15 +152,16 @@ function assert_consistent_features(fp,f::DataFrame)
   #the above condition could also be weakend (as could the loop below) we only need to check the variables that were actually used by the model. 
   for j=1:length(fp)
     if !(fp[j]==f[j].pool)
-      @show names(f)[j]
-      @show fp[j]
-      @show f[j].pool
-      @show f[j].pool.==fp[j]
-      @show f[j].pool.-fp[j]
-      @show !(fp[j]==f[j].pool)
-      @show issubset(f[j].pool,fp[j])
-      error("Features do not match model features. Note: this condition could be weakend: the features of the data which is provided only needs to be a subset of the pools used during modelling")      
-      error("Abort.")
+      #@show names(f)[j]
+      #@show fp[j]
+      #@show f[j].pool
+      #@show f[j].pool.==fp[j]
+      #@show f[j].pool.-fp[j]
+      #@show !(fp[j]==f[j].pool)
+      #@show issubset(f[j].pool,fp[j])
+      @warn("Features do not match model features. Note: this condition could be weakend: the features of the data which is provided only needs to be a subset of the pools used during modelling")      
+      @warn("Algorithm may abort.")
+      return false
     end
   end
   return true

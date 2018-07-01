@@ -11,7 +11,8 @@ function predict(x::Tree,f::DataFrame)
     else 
         @warn("in the works....")
         fp=x.featurepools
-        return apply_tree_by_leaf_inconsistent_features(x,f,fp)
+        res=apply_tree_by_leaf_inconsistent_features(x.rootnode,f,fp)
+        return res 
     end
     #return apply_tree_by_leaf(x.rootnode,f)
 end
@@ -32,6 +33,7 @@ function apply_tree_by_leaf_inconsistent_features(t::Union{Leaf,Node{UInt8},Node
   leafnrs=zeros(Int,nobs)
   idx=collect(1:nobs)
   apply_tree_by_leaf_inconsistent_features_iteration!(idx,t,features,fit,leafnrs,fp)  
+  return fit,leafnrs
 end
 
 

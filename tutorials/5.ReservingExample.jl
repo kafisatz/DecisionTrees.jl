@@ -84,6 +84,7 @@ maxAY=maximum(ayears)
 
 #array of LDFs
 LDFArray=zeros(size(fullData,1),length(ayears))
+LDFArray[:,end].=1.0 #tail factor 1.0
 #prepare the whole dataset in the same manner as the training data set
 dtmtablefullData,settfullData,dfpreppedfullData=prepare_dataframe_for_dtm!(fullData,keycol="ClNr",numcol="PayCum00",trnvalcol="trnValCol",independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
 
@@ -113,7 +114,29 @@ for ldfYear=1:length(ayears)-1
     LDFArray[:,ldfYear].=copy(fittedValues)
 end 
 
-#apply Chainladder to each leaf
+#apply Chainladder to each row
+ultimate=zeros(size(fullData,1))
+paycumcols=[Symbol(string("PayCum",lpad(i,2,0))) for i=0:11]
+minAY,maxAY=extrema(ayears)
+for iRow=1:size(fullData,1)
+    @inbounds column=fullData[:AY][iRow]-minAY+1
+    @inbounds cumfactor=prod(1./LDFArray[iRow,column:end])
+end
+minRow,MaxRow=extrema(data[rowIdentifier])
+nRows=MaxRow-minRow+1
+nColumns=length(columns)
+res=zeros(Int,nRows,nColumns)
+have=names(data)
+@assert issubset(columns,have)
+for i=1:size(data,1)
+    for j=1:length(columns)     
+        @inbounds thisAY = data[rowIdentifier][i]
+        @inbounds res[thisAY-minRow+1,j] += data[columns[j]][i]
+    end  
+end
+return res
+
+
 
 #the chain ladder volume weighted LDF for Y1-Y2 is 1.62458536172099 
 #its inverse is 0.615541678241308 
