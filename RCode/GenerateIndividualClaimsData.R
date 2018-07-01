@@ -84,7 +84,7 @@ output <- rbind(output,add.obs)
 
 ### Cumulative cash flows
 #cum_CF <- round((1000)^(-1)*ddply(output, .(AY), summarise, CF00=sum(Pay00),CF01=sum(Pay01),CF02=sum(Pay02),CF03=sum(Pay03),CF04=sum(Pay04),CF05=sum(Pay05),CF06=sum(Pay06),CF07=sum(Pay07),CF08=sum(Pay08),CF09=sum(Pay09),CF10=sum(Pay10),CF11=sum(Pay11))[,2:13])
-cum_CF <- round(ddply(output, .(AY), summarise, CF00=sum(Pay00),CF01=sum(Pay01),CF02=sum(Pay02),CF03=sum(Pay03),CF04=sum(Pay04),CF05=sum(Pay05),CF06=sum(Pay06),CF07=sum(Pay07),CF08=sum(Pay08),CF09=sum(Pay09),CF10=sum(Pay10),CF11=sum(Pay11))[,2:13])
+cum_CF <- ddply(output, .(AY), summarise, CF00=sum(Pay00),CF01=sum(Pay01),CF02=sum(Pay02),CF03=sum(Pay03),CF04=sum(Pay04),CF05=sum(Pay05),CF06=sum(Pay06),CF07=sum(Pay07),CF08=sum(Pay08),CF09=sum(Pay09),CF10=sum(Pay10),CF11=sum(Pay11))[,2:13]
 for (j in 2:12){cum_CF[,j] <- cum_CF[,j-1] + cum_CF[,j]}
 cum_CF
 
@@ -108,6 +108,7 @@ reserves                           # true reserves, chain-ladder reserves and sq
 
 #write triangle to file
 write.table(tri_dat, "./triangle.csv", sep=",", row.names=FALSE)
+write.table(reserves, "./truth.csv", sep=",", row.names=FALSE)
 
 paidToDate<-diag(tri_dat[nrow(tri_dat):1,])[nrow(tri_dat):1]
 ultimate<-paidToDate+reserves[1:nrow(tri_dat),2]
@@ -124,7 +125,7 @@ output$PayCum00<-output$Pay00
 output$PayCum01<-output$PayCum00+output$Pay01
 output$PayCum02<-output$PayCum01+output$Pay02
 output$PayCum03<-output$PayCum02+output$Pay03
-output$PayCum04<-output$PayCum03+output$Pay05
+output$PayCum04<-output$PayCum03+output$Pay04
 output$PayCum05<-output$PayCum04+output$Pay05
 output$PayCum06<-output$PayCum05+output$Pay06
 output$PayCum07<-output$PayCum06+output$Pay07

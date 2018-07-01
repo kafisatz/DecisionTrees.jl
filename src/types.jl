@@ -360,7 +360,7 @@ mutable struct ModelSettings
 	smoothEstimates="1" #46 this is a string for now (as there could be different smoothing methods specified by this string)
 	deriveFitPerScoreFromObservedRatios=true
 	roptForcedPremIncr=false #47
-    write_sas_code=true #49
+    write_sas_code=false #49
 	write_iteration_matrix=false#50
 	write_result=true #51
 	write_statistics=true #52

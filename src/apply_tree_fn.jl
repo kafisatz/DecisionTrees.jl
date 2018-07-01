@@ -70,8 +70,9 @@ function apply_tree_by_leaf(t::Union{Leaf,Node{UInt8},Node{UInt16}},features::Da
 end
 
 
-function predict(x::Tree,f::DataFrame)
+function predict(x::Tree,f::DataFrame;ignoreInconsitentFeatures::Bool=false)
   #warn("need to ensure, data is consistent with the data used to derive the tree!")
+  #warn("ignoreInconsitentFeatures=$(ignoreInconsitentFeatures). The algorithm may not work as intended if the features
   @assert assert_consistent_features(x.featurepools,f)
   return apply_tree_by_leaf(x.rootnode,f)
 end
