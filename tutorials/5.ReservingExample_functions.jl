@@ -45,7 +45,6 @@ function chainLadder(x;tail=1.0)
     return df #LDFs,factorsToUltimate,ultimate,reserves,paidToDate
 end
 
-
 function aggregateReservesOfIndividualCLModels(fullData,leafNrs)
     reservesCombined=zeros(length(unique(fullData[:AY])))
     uqLeafNrs=sort(unique(leafNrs))
@@ -58,3 +57,31 @@ function aggregateReservesOfIndividualCLModels(fullData,leafNrs)
     return reservesCombined
 end
 
+function calculateEstimates(fullData,LDFArray,triangle,aggCL)
+    ayears=unique(fullData[:AY])
+    #apply Chainladder to each row
+    ultimatePerRow=zeros(size(fullData,1))
+    paidToDatePerRow=zeros(size(fullData,1))
+    cumulativefactors=zeros(size(fullData,1))
+    ultimatePerAY=zeros(length(ayears))
+    truthPerAY=zeros(length(ayears))
+    paycumcols=[Symbol(string("PayCum",lpad(i,2,0))) for i=0:11]
+    minAY,maxAY=extrema(ayears)
+    for iRow=1:size(fullData,1)
+        @inbounds row=fullData[:AY][iRow]-minAY+1
+        @inbounds rowInversed = length(ayears) - row + 1
+        @inbounds cumulativefactor=prod(1./LDFArray[iRow,rowInversed:end])
+        @inbounds cumulativefactors[iRow] = cumulativefactor
+        @inbounds paidToDatePerRow[iRow] = fullData[paycumcols[rowInversed]][iRow]
+        @inbounds ultimatePerRow[iRow] = cumulativefactor*paidToDatePerRow[iRow]        
+        @inbounds ultimatePerAY[rowInversed] += ultimatePerRow[iRow]
+        @inbounds truthPerAY[row] += fullData[:PayCum11][iRow]
+    end
+    #reserves=fullData[:PayCum11]
+    ultimate
+    reservesPerAY=ultimatePerAY.-aggCL[:paidToDate]
+    errPerAY=ultimatePerAY.-truthPerAY #aggCL[:ultimate]
+    dfPerRow=DataFrame(paidToDate=paidToDatePerRow,reserves=ultimatePerRow.-paidToDatePerRow,ultimate=ultimatePerRow,cumulativefactors=cumulativefactors)
+    df=DataFrame(paidToDate=deepcopy(aggCL[:paidToDate]),reserves=reservesPerAY,ultimate=ultimatePerAY,truth=truthPerAY,error=errPerAY)
+    return dfPerRow,df 
+    end

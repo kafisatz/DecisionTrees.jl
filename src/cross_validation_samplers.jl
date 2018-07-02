@@ -9,7 +9,7 @@ struct Kfold <: CrossValGenerator
     coeff::Float64
 
     function Kfold(n::Int, k::Int)
-        2 <= k <= n || error("The value of k must be in [2, length(a)].")
+        2 <= k <= n || error("DTM: (Kfold CV Sampler): The value of k must be in [2, length(a)]. You provided k=$(k)")
         new(randperm(n), k, n / k)
     end
 end
@@ -51,7 +51,8 @@ struct KfoldDisjoint <: CrossValGenerator
     coeff::Float64
 
     function KfoldDisjoint(n::Int, k::Int)
-        2 <= k <= n || error("The value of k must be in [2, length(a)].")
+        2 <= k <= n || error("DTM: (KfoldDisjoint CV Sampler): The value of k must be in [2, length(a)]. You provided k=$(k)")
+        #2 <= k <= n || error("The value of k must be in [2, length(a)].")
         new(randperm(n), k, n / k)
     end
 end

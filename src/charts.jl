@@ -115,7 +115,7 @@ end
 function excelLetter(x::Int)
 	@assert x>0
 	if x>702
-		error("Only columns up to 702 are supported")
+		error("DTM: (excelLetter function) Only columns up to 702 are supported. You provided x=$(x)")
 	else
 		d,r=divrem(x,26)
 		if r==0

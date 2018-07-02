@@ -177,7 +177,7 @@ function createGridSearchSettings(sett::ModelSettings;args...)
 	seen=[]
 	for (smember,valuelist) in args
 		if in(smember,seen)
-			error("You provided multiple values for the field $(smember)")
+			error("DTM: (createGridSearchSettings) You provided multiple values for the field $(smember)")
 		end
         push!(seen,smember)
         try 

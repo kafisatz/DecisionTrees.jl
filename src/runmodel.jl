@@ -126,7 +126,7 @@ removeUnionTypes!(dfin,independent_vars)
 		if !in(x,dfnames)
 			@show x
 			@show dfnames
-			error("column $(x) not found in dfnames")			
+			error("DTM: Column $(x) not found in dfnames. You provided that column as part of treat_as_categorical_variable.")			
 		end
 	end 	
 	@assert issubset(Symbol.(treat_as_categorical_variable),dfnames)
@@ -222,7 +222,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	datafilename,ext=splitext(fn_with_ext) #actually one can provide fn_with_ext="c:\\temp\\my folder\\out" (so no extension is necessary)
 	datafolder,outfileStringOnly=splitdir(datafilename)
 	if length(outfileStringOnly)==0
-		error("fn_with_ext should be of the form C:\\some\\folder\\my_output.txt (the extension is irrelevant) \n You provided: $(fn_with_ext) \nAbort.")
+		error("DTM: fn_with_ext should be of the form C:\\some\\folder\\my_output.txt (the extension is irrelevant) \n You provided: $(fn_with_ext) \nAbort.")
 	end
 	dfIndata=df_userinput
 	println("Preparing Data for analysis...")
@@ -282,7 +282,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 		if !(eltype(dfIndata[global_const_shift_cols+i+sett.number_of_num_features])<:AbstractString) 
 			@show eltype(dfIndata[global_const_shift_cols+i+sett.number_of_num_features])
 			@show dfIndata[1:min(10,size(dfIndata,1)),global_const_shift_cols+i+sett.number_of_num_features]
-			error("Character variable $(i) = $(sett.df_name_vector[i+sett.number_of_num_features]) is not <:AbstractString in the dataframe.")
+			error("DTM: Character variable $(i) = $(sett.df_name_vector[i+sett.number_of_num_features]) is not <:AbstractString in the dataframe.")
 			#@warn("It may be that the variable was exported as character (by SAS) even though it is infact an integer. Please check!")			
 		end		
 	  try
@@ -679,7 +679,7 @@ prnt&&println("---Model Settings------------------------------------------------
 			#
 			model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
 		else
-			error("Unknown Model Type: $(sett.model_type) (Within Bagging/Boosting loop)")
+			error("DTM: Unknown Model Type: $(sett.model_type) (Within Bagging/Boosting loop)")
 		end #end bagging or boosting
 
 resulting_model=resultEnsemble

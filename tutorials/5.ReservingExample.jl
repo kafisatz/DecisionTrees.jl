@@ -114,29 +114,26 @@ for ldfYear=1:length(ayears)-1
     LDFArray[:,ldfYear].=copy(fittedValues)
 end 
 
-#apply Chainladder to each row
-ultimate=zeros(size(fullData,1))
-paycumcols=[Symbol(string("PayCum",lpad(i,2,0))) for i=0:11]
-minAY,maxAY=extrema(ayears)
-for iRow=1:size(fullData,1)
-    @inbounds column=fullData[:AY][iRow]-minAY+1
-    @inbounds cumfactor=prod(1./LDFArray[iRow,column:end])
-end
-minRow,MaxRow=extrema(data[rowIdentifier])
-nRows=MaxRow-minRow+1
-nColumns=length(columns)
-res=zeros(Int,nRows,nColumns)
-have=names(data)
-@assert issubset(columns,have)
-for i=1:size(data,1)
-    for j=1:length(columns)     
-        @inbounds thisAY = data[rowIdentifier][i]
-        @inbounds res[thisAY-minRow+1,j] += data[columns[j]][i]
-    end  
-end
-return res
+#consider aggregate CL Model
+triangle=buildTriangle(fullData)
+aggCL=chainLadder(triangle)
+truthperAY=triangle[:,end]
 
+#consider per Row Model 
+estPerRow,estAgg=calculateEstimates(fullData,LDFArray,triangle,aggCL)
 
+truthPerRow=fullData[:PayCum11]
+reservesPerAY=ultimatePerAY.-aggCL[:paidToDate]
+errPerAY=ultimatePerAY.-truthPerAY #aggCL[:ultimate]
+errTotal=sum(errPerAY)
+errPerRow=ultimatePerRow.-truthPerRow
+@show selectedWeight,mean(errPerRow.^2)
+
+AY2005Idx=fullData[:AY].==2005
+errPerRow[AY2005Idx]
+
+#we can correct the aggregate total in order for it to match the CL ultimate
+@warn("correct the ultimate estimate?!? with a certain factor")
 
 #the chain ladder volume weighted LDF for Y1-Y2 is 1.62458536172099 
 #its inverse is 0.615541678241308 
@@ -155,9 +152,5 @@ reservesCombined=aggregateReservesOfIndividualCLModels(fullData,leafNrs)
 DelimitedFiles.writedlm("C:\\temp\\1.csv",reservesCombined,',')
 
 @warn("show scores y1/y2 ldf versus y2/y3 ldf in an xy scatter plot")
-
-
-
-
 
 @warn("add mini CL code here")

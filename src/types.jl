@@ -406,26 +406,26 @@ function edit_statsByVariables(col,stringValue,s::ModelSettings)
 if col=="statsbyvariables"&&length(stringValue)>0
 	if in(',',stringValue)||in(';',stringValue)
 		println("statsbyvariables=$(stringValue)")
-		error("Error: statsbyvariables must be space separated not comma separated!")
+		error("DTM: statsbyvariables must be space separated not comma separated!")
 	end
 	try
 	chosenvars=[lowercase(x) for x in split(stringValue,' ')]
 	integerindices=findall(in(chosenvars), [lowercase(x) for x in s.df_name_vector])
 	if length(integerindices)!=length(chosenvars)
-		@warn("some variables of statsbyvariables were not found in the data")
+		@warn("DMT: Some variables of statsbyvariables were not found in the data")
 		@show s.df_name_vector
 		@show chosenvars
 		@show stringValue
 		@show integerindices
 		@show [lowercase(x) for x in s.df_name_vector]
-		error("abort")
+		error("DTM: Abort")
 		else
 		integerindices2=[x<=s.number_of_num_features ? x : -1*(x-s.number_of_num_features) for x in integerindices]
 		return string(integerindices2)[2:end-1] #remove leading and trailing '[' and ']'
 	end
 	catch er
 		@show er
-		error("Unable to parse statsbyvariables option")
+		error("DTM: Unable to parse statsbyvariables option")
 	end
 end
 return stringValue
@@ -475,7 +475,7 @@ function updateSettingsMod!(s::ModelSettings;args...)
 	seen=[]
 	for (smember,v) in args
 		if in(smember,seen)
-			error("You provided multiple values for the field $(smember)")
+			error("DTM: You provided multiple values for the field $(smember)")
 		end
 		push!(seen,smember)
 
@@ -531,7 +531,7 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 	else
 		@info "Invalid splitting criterion: $(critfnstr). Currently only the following strings are allowed as input:"
 		@info string(allowedinputstrings)
-		error("Abort due to invalid splitting criterion (see above).")
+		error("DTM: Abort due to invalid splitting criterion (see above).")
 	end
 	return crit
 end
@@ -542,7 +542,7 @@ local arr
 		arr=Int[parse(Int,x) for x in split(val,',')]
 	catch er
 		@show er
-		error("Unable to parse input string as integer vector: input= $(val)")
+		error("DTM: Unable to parse input string as integer vector: input= $(val)")
 	end
 return arr
 end
@@ -553,7 +553,7 @@ local arr
 		arr=Float64[parse(Float64,x) for x in split(val,',')]
 	catch er
 		@show er
-		error("Unable to parse input string as integer vector: input= $(val)")
+		error("DTM: Unable to parse input string as integer vector: input= $(val)")
 	end
 return arr
 end
@@ -596,7 +596,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
 		if !((length(s.moderationvector)==1)&&(s.moderationvector[1]==s.mf))
 			@show s.moderationvector
 			@show s.mf
-			error("Invalid mf or moderationvector settings")
+			error("DTM: Invalid mf or moderationvector settings")
 	  	end
 		end
       @assert (s.mf>=0 && s.mf<=1)
@@ -619,7 +619,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
 	  @assert in(s.smoothEstimates,["0" "1"]) #this is currently a string since there could (in the future) be multiple smoothing methods
 	  if !(length(s.graphvizexecutable)<1||isfile(s.graphvizexecutable))
 		@show s.graphvizexecutable
-		error("invalid graphvizexecutable")
+		error("DTM: Invalid graphvizexecutable: $(graphvizexecutable) is not a file.")
 	  end
 	if s.roptForcedPremIncr
 		@assert (s.crit==ROptMinRLostPctSplit()||s.crit==ROptMinRLostSplit())
