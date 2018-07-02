@@ -159,8 +159,7 @@ function assert_consistent_features(fp,f::DataFrame)
       #@show f[j].pool.-fp[j]
       #@show !(fp[j]==f[j].pool)
       #@show issubset(f[j].pool,fp[j])
-      @warn("Features do not match model features. Note: this condition could be weakend: the features of the data which is provided only needs to be a subset of the pools used during modelling")      
-      @warn("Algorithm may abort.")
+      @warn("Features do not match model features. Note: this condition could be weakend: the features of the data which is provided only needs to be a subset of the pools used during modelling.\r\nAlgorithm may abort.")
       return false
     end
   end

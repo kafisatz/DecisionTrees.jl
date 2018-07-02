@@ -1,4 +1,5 @@
-cd(Pkg.dir("DecisionTrees"))
+#pth=joinpath(@__DIR__,"..","test",filename)
+cd(Pkg.dir("DecisionTrees")) #
 import Core 
 import Dates
 println(Dates.now())

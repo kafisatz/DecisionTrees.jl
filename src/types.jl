@@ -362,7 +362,7 @@ mutable struct ModelSettings
 	roptForcedPremIncr=false #47
     write_sas_code=false #49
 	write_iteration_matrix=false#50
-	write_result=true #51
+	write_result=false #true #51
 	write_statistics=true #52
 	boolCreateZipFile=false #true #53
 	write_csharp_code=false #true

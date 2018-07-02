@@ -8,8 +8,7 @@ function predict(x::Tree,f::DataFrame)
     asrt=DecisionTrees.assert_consistent_features(x.featurepools,f)
     if asrt
         return predictConsistentFeatures(x,f)
-    else 
-        @warn("in the works....")
+    else         
         fp=x.featurepools
         res=apply_tree_by_leaf_inconsistent_features(x.rootnode,f,fp)
         return res 

@@ -1,4 +1,3 @@
-#this is in the works
 #calculateSplitValue(::DecisionTrees.NormalDevianceSplit, ::Symbol, ::Int64, ::Array{UInt8,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Float64, ::DecisionTrees.MyIncreasingSubsets, ::Array{OnlineStats.Series,1})
 function calculateSplitValue(a::NormalDevianceSplit,fname::Symbol,number_of_char_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass) where T<:Unsigned
 #here randomweight==0

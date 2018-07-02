@@ -254,8 +254,7 @@ elt=T#elt=eltype(trnfeatures.parent.refs)
         
         # @code_warntype build_listOfMeanResponse(crit,trnidx,validx,actualNumerator,estimatedNumerator,weight,trnfeatures,labellist_sorted,minweight)
         
-	elseif (crit_type==NormalDevianceSplit)
-		#@info "in the works..."
+	elseif (crit_type==NormalDevianceSplit)		
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass=build_listOfMeanResponse(crit,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	#else #we catch this possibility earlier when checking the settings
 	#	throw(ErrorException(string("Invalid Splitting criterion $(crit)")))

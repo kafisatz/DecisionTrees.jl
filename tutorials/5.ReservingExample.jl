@@ -6,11 +6,10 @@
 #to generate the data Simulated.Cashflows.csv
 #We refer to the work of Wuethrich and Gabrielli for details on the
 #simulated claims data, see the following references:
-
-### Source: https://people.math.ethz.ch/~wmario/simulation.html
-### Reference: Individual Claims History Simulation Machine. ###
-###            SSRN Manuscript ID 3130560.                   ###  
-###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
+    ### Source: https://people.math.ethz.ch/~wmario/simulation.html
+    ### Reference: Individual Claims History Simulation Machine. ###
+    ###            SSRN Manuscript ID 3130560.                   ###  
+    ###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
 
 import Distributed
 import Random  
@@ -19,10 +18,13 @@ Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
 Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!
 
-Distributed.@everywhere using DecisionTrees
+Distributed.@everywhere using DecisionTrees #200s in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook
 
 #define functions
-include(joinpath("tutorials","5.ReservingExample_functions.jl"))
+#=
+include(joinpath(@__DIR__,"tutorials","5.ReservingExample_functions.jl"))
+=#
+include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
 
 ##############################
 #Read the data
@@ -88,49 +90,104 @@ LDFArray[:,end].=1.0 #tail factor 1.0
 #prepare the whole dataset in the same manner as the training data set
 dtmtablefullData,settfullData,dfpreppedfullData=prepare_dataframe_for_dtm!(fullData,keycol="ClNr",numcol="PayCum00",trnvalcol="trnValCol",independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
 
+#consider paidToDate and 'truth'
+paidToDatePerRow=getPaidToDatePerRow(fullData)
+truthPerRow=fullData[:PayCum11]
 
-#goal: build a tree for each LDF (i.e. a tree for 12-24 months, a second tree for 24-36 months, etc.)
-selectedWeight=-0.15
-
-for ldfYear=1:length(ayears)-1
-    #subset the data
-    thisdata=copy(fullData)
-    thisdata=thisdata[thisdata[:AY].<=maxAY-ldfYear,:]
-    #Discard claims which had 0 cumulative payment by year 'ldfYear'
-    #this is currently a requirement for the algorithms we apply (although one may be able to weaken this condition and the algorithms would still run)
-    cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
-    cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
-    thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
-    dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
-
-    #run a single tree 
-    updateSettingsMod!(sett,minw=selectedWeight,model_type="build_tree")
-    resultingFiles,resM=dtm(dtmtable,sett)
-
-    #apply tree to the FULL data set
-    fittedValues,leafNrs=predict(resM,dtmtablefullData.features)
-
-    #save estimated ldf per observation 
-    LDFArray[:,ldfYear].=copy(fittedValues)
-end 
-
+#CL
 #consider aggregate CL Model
 triangle=buildTriangle(fullData)
 aggCL=chainLadder(triangle)
 truthperAY=triangle[:,end]
 
-#consider per Row Model 
-estPerRow,estAgg=calculateEstimates(fullData,LDFArray,triangle,aggCL)
+#Consider CL MSE
+ayperRow=fullData[:AY]
+CLfactorsToUltimate=aggCL[:factorsToUltimate]
+CLLDFperRow=map(x->CLfactorsToUltimate[x-1993],ayperRow)
+CLUltimatePerRow=CLLDFperRow.*paidToDatePerRow
+@assert isapprox(0,sum(CLUltimatePerRow)-sum(aggCL[:ultimate])) #should be zero 
+for i in ayears
+    idx=ayperRow.==i
+    @assert isapprox(0,sum(CLUltimatePerRow[idx])-aggCL[:ultimate][i-1993],atol=1e-7) #should be zero for each year
+end
+CLerrPerRow=CLUltimatePerRow-truthPerRow
+CLTotalUltimate=sum(CLUltimatePerRow)
+qtl_range=[.0001,.001,.01,.05,.1,.2,.25,.5,.75,.8,.9,.95,.99,.999,.9999] 
+CLqtls=quantile(CLerrPerRow,qtl_range)
+median(CLerrPerRow)
+CLmse=mean(CLerrPerRow.^2)
 
-truthPerRow=fullData[:PayCum11]
-reservesPerAY=ultimatePerAY.-aggCL[:paidToDate]
-errPerAY=ultimatePerAY.-truthPerAY #aggCL[:ultimate]
-errTotal=sum(errPerAY)
-errPerRow=ultimatePerRow.-truthPerRow
-@show selectedWeight,mean(errPerRow.^2)
 
-AY2005Idx=fullData[:AY].==2005
-errPerRow[AY2005Idx]
+minwList=-[.05,.1,.15,.2,.25,.35,.4]
+#goal: build a tree for each LDF (i.e. a tree for 12-24 months, a second tree for 24-36 months, etc.)
+selectedWeight=-0.15
+treeMSE=zeros(length(minwList))
+treeResults=Dict{Float64,DataFrame}()
+treeResultsAgg=Dict{Float64,DataFrame}()
+kk=0
+for selectedWeight in minwList
+    kk+=1    
+    for ldfYear=1:length(ayears)-1
+        #subset the data
+        thisdata=copy(fullData)
+        thisdata=thisdata[thisdata[:AY].<=maxAY-ldfYear,:]
+        #Discard claims which had 0 cumulative payment by year 'ldfYear'
+        #this is currently a requirement for the algorithms we apply (although one may be able to weaken this condition and the algorithms would still run)
+        cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
+        cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
+        thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
+        dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
+
+        #run a single tree 
+        updateSettingsMod!(sett,minw=selectedWeight,model_type="build_tree")
+        resultingFiles,resM=dtm(dtmtable,sett)
+
+        #apply tree to the FULL data set
+        fittedValues,leafNrs=predict(resM,dtmtablefullData.features)
+
+        #save estimated ldf per observation 
+        LDFArray[:,ldfYear].=copy(fittedValues)
+    end 
+
+    #consider per Row Model 
+    estPerRow,estAgg=calculateEstimates(fullData,LDFArray,triangle,aggCL,paidToDatePerRow)
+    treeResults[selectedWeight]=deepcopy(estPerRow)
+    treeResultsAgg[selectedWeight]=deepcopy(estAgg)
+    
+    reservesPerAY=estAgg[:reserves]
+    errPerAY=estAgg[:error]
+    errTotal=sum(errPerAY)        
+    errPerRow=estPerRow[:ultimate]-truthPerRow
+    totalUltimate=sum(estPerRow[:ultimate])    
+    quantile(errPerRow,qtl_range)
+    median(errPerRow)
+    @show selectedWeight,mean(errPerRow.^2)
+    treeMSE[kk]=mean(errPerRow.^2)
+    
+    #what if we correct the ultimate total to match the CL total?
+    @show corrFactor=1/totalUltimate*CLTotalUltimate    
+    @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
+    errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
+    quantile(errPerRowCorrected,qtl_range)    
+end 
+
+function getcorrectedQuantilesOfError(estPerRow,truthPerRow,qtl_range,CLTotalUltimate)
+    errPerRow=estPerRow[:ultimate]-truthPerRow
+    totalUltimate=sum(estPerRow[:ultimate])    
+    #what if we correct the ultimate total to match the CL total?
+    corrFactor=1/totalUltimate*CLTotalUltimate
+    #@show sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate
+    @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
+    errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
+    return quantile(errPerRowCorrected,qtl_range)    
+end
+
+qtls=map(x->getcorrectedQuantilesOfError(treeResults[x],truthPerRow,qtl_range,CLTotalUltimate),minwList)
+CLqtls
+
+CLmse
+#this is the same as treeMSE:
+mean.(map(x->abs2.(treeResults[x][:ultimate]-truthPerRow),minwList))
 
 #we can correct the aggregate total in order for it to match the CL ultimate
 @warn("correct the ultimate estimate?!? with a certain factor")
@@ -143,6 +200,7 @@ errPerRow[AY2005Idx]
 #consider the fitted values and the leaf numbers
 
 #fit model 
+#=
 updateSettingsMod!(sett,minw=-0.2,model_type="build_tree")
 resultingFiles,resM=dtm(dtmtable,sett)
 #predict the fittedValues and Leaf Numbers on the total data
@@ -150,7 +208,6 @@ fittedValues,leafNrs=predict(resM,dtmtablefullData.features)
 reservesCombined=aggregateReservesOfIndividualCLModels(fullData,leafNrs)
 
 DelimitedFiles.writedlm("C:\\temp\\1.csv",reservesCombined,',')
+=#
 
 @warn("show scores y1/y2 ldf versus y2/y3 ldf in an xy scatter plot")
-
-@warn("add mini CL code here")

@@ -1,5 +1,5 @@
 
-function buildTriangle(data;rowIdentifier=:AY,columns=[Symbol(string("PayCum",lpad(i,2,0))) for i=0:11])
+function buildTriangle(data;rowIdentifier=:AY,columns=[Symbol(string("PayCum",lpad(string(i),2,"0"))) for i=0:11])
     minRow,MaxRow=extrema(data[rowIdentifier])
     nRows=MaxRow-minRow+1
     nColumns=length(columns)
@@ -57,31 +57,43 @@ function aggregateReservesOfIndividualCLModels(fullData,leafNrs)
     return reservesCombined
 end
 
-function calculateEstimates(fullData,LDFArray,triangle,aggCL)
+function calculateEstimates(fullData,LDFArray,triangle,aggCL,paidToDatePerRow)
     ayears=unique(fullData[:AY])
     #apply Chainladder to each row
     ultimatePerRow=zeros(size(fullData,1))
-    paidToDatePerRow=zeros(size(fullData,1))
+    #paidToDatePerRow=zeros(size(fullData,1))
     cumulativefactors=zeros(size(fullData,1))
     ultimatePerAY=zeros(length(ayears))
     truthPerAY=zeros(length(ayears))
-    paycumcols=[Symbol(string("PayCum",lpad(i,2,0))) for i=0:11]
+    paycumcols=[Symbol(string("PayCum",lpad(string(i),2,"0"))) for i=0:11]
     minAY,maxAY=extrema(ayears)
     for iRow=1:size(fullData,1)
         @inbounds row=fullData[:AY][iRow]-minAY+1
         @inbounds rowInversed = length(ayears) - row + 1
         @inbounds cumulativefactor=prod(1./LDFArray[iRow,rowInversed:end])
         @inbounds cumulativefactors[iRow] = cumulativefactor
-        @inbounds paidToDatePerRow[iRow] = fullData[paycumcols[rowInversed]][iRow]
+        #@inbounds paidToDatePerRow[iRow] = fullData[paycumcols[rowInversed]][iRow]
         @inbounds ultimatePerRow[iRow] = cumulativefactor*paidToDatePerRow[iRow]        
-        @inbounds ultimatePerAY[rowInversed] += ultimatePerRow[iRow]
+        @inbounds ultimatePerAY[row] += ultimatePerRow[iRow]
         @inbounds truthPerAY[row] += fullData[:PayCum11][iRow]
-    end
-    #reserves=fullData[:PayCum11]
-    ultimate
+    end    
     reservesPerAY=ultimatePerAY.-aggCL[:paidToDate]
     errPerAY=ultimatePerAY.-truthPerAY #aggCL[:ultimate]
     dfPerRow=DataFrame(paidToDate=paidToDatePerRow,reserves=ultimatePerRow.-paidToDatePerRow,ultimate=ultimatePerRow,cumulativefactors=cumulativefactors)
     df=DataFrame(paidToDate=deepcopy(aggCL[:paidToDate]),reserves=reservesPerAY,ultimate=ultimatePerAY,truth=truthPerAY,error=errPerAY)
     return dfPerRow,df 
+end
+
+function getPaidToDatePerRow(fullData)
+    ayears=unique(fullData[:AY])
+    paidToDatePerRow=zeros(size(fullData,1))    
+    minAY,maxAY=extrema(ayears)
+    paycumcols=[Symbol(string("PayCum",lpad(string(i),2,"0"))) for i=0:11]
+    for iRow=1:size(fullData,1)
+        @inbounds row=fullData[:AY][iRow]-minAY+1
+        @inbounds rowInversed = length(ayears) - row + 1
+        @inbounds paidToDatePerRow[iRow] = fullData[paycumcols[rowInversed]][iRow]
     end
+    return paidToDatePerRow
+end
+

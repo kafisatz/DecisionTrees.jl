@@ -2003,17 +2003,21 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 ,numeratorval,denominatorval,weightval,ratioEstval,scoresval,sett::ModelSettings)
 		nClasses=length(scorebandsstartingpoints)		
 		sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn=aggregateScores(numeratortrn,denominatortrn,weighttrn,ratioEsttrn,scorestrn,scorebandsstartingpoints)
-		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,ratioEstval,scoresval,scorebandsstartingpoints)		
+		sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval=aggregateScores(numeratorval,denominatorval,weightval,ratioEstval,scoresval,scorebandsstartingpoints)	
+    
+        numeratorEsttrn=ratioEsttrn.*denominatortrn
+        numeratorEstval=ratioEstval.*denominatorval
+                    
 		if sett.boolCalculateGini
 			#these statistics are optinally disabled as the gini takes a LOT of time especially due to sorting			
 			#NOTE: we currently have two different gini values which we calculate, one approach takes only one argument (the estimator) while the other appraoch considers the truth and the estimator
 			#it seems that the single_agrument_gini is more common (it should correspond to the gini in library(reldist) in R).
-			gini_single_argtrn=gini_single_argument(ratioEsttrn.*denominatortrn)
-			gini_single_argval=gini_single_argument(ratioEstval.*denominatorval)			
+			gini_single_argtrn=gini_single_argument(numeratorEsttrn)
+			gini_single_argval=gini_single_argument(numeratorEstval)			
 			normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,ratioEsttrn) 
 			normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,ratioEstval)
-			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,ratioEsttrn.*denominatortrn,denominatortrn)
-			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,ratioEstval.*denominatorval,denominatorval)		
+			total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(numeratortrn,numeratorEsttrn,denominatortrn)
+			total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(numeratorval,numeratorEstval,denominatorval)		
 		else
 			gini_single_argtrn=1.0
 			gini_single_argval=1.0
@@ -2027,15 +2031,9 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
-		if sett.boolCalculatePoissonError
-			#poissonErrortrn=poissonError(numeratortrn,ratioEsttrn.*denominatortrn)::Vector{Float64}			
-            #poissonErrorval=poissonError(numeratorval,ratioEstval.*denominatorval)::Vector{Float64}
-            #poissonErrTrn=sum(poissonErrortrn)/length(weighttrn)
-            #poissonErrVal=sum(poissonErrorval)/length(weightval)
-            #@assert abs(poissonErrTrn-poissonErrorReduced(numeratortrn,ratioEsttrn.*denominatortrn))<1e-11
-            #@assert abs(poissonErrVal-poissonErrorReduced(numeratorval,ratioEstval.*denominatorval))<1e-11
-            poissonErrTrn=poissonErrorReduced(numeratortrn,ratioEsttrn.*denominatortrn)
-            poissonErrVal=poissonErrorReduced(numeratorval,ratioEstval.*denominatorval)
+		if sett.boolCalculatePoissonError			
+            poissonErrTrn=poissonErrorReduced(numeratortrn,numeratorEsttrn)
+            poissonErrVal=poissonErrorReduced(numeratorval,numeratorEstval)
         else
 			poissonErrTrn=0.0
             poissonErrVal=0.0
@@ -2128,18 +2126,17 @@ t=tree.rootnode
     if sett.boolCalculateGini
         giniTrn=gini_single_argument(view(numeratorEst,trnidx))			
         giniVal=gini_single_argument(view(numeratorEst,validx))        
-        #normalized_unweighted_gini_numeratorTrn=normalized_gini(numeratortrn,numeratorEsttrn) 
-        #normalized_unweighted_gini_numeratorVal=normalized_gini(numeratorval,numeratorEstval)
-        total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(view(numerator,trnidx),view(est,trnidx),view(denominator,trnidx))
-        total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(view(numerator,validx),view(est,validx),view(denominator,validx))
+        #normalized_unweighted_gini_numeratorTrn=normalized_gini(view(numerator,trnidx),view(numeratorEst,trnidx))
+        #normalized_unweighted_gini_numeratorVal=normalized_gini(view(numerator,validx),view(numeratorEst,validx))
+        total_sum_squares_of_numeratorTrn,residual_sum_squares_of_numeratorTrn,total_sum_squares_of_ratioTrn,residual_sum_squares_of_ratioTrn=calc_sum_squares(view(numerator,trnidx),view(numeratorEst,trnidx),view(denominator,trnidx))
+        total_sum_squares_of_numeratorVal,residual_sum_squares_of_numeratorVal,total_sum_squares_of_ratioVal,residual_sum_squares_of_ratioVal=calc_sum_squares(view(numerator,validx),view(numeratorEst,validx),view(denominator,validx))
     else 
     #gini
-		giniTrn=1.0 #normalized_gini(view(numerator,trnidx),view(est,trnidx))  #currently disabled gini takes a LOT of time especially due to sorting
-		giniVal=1.0 #normalized_gini(view(numerator,validx),view(est,validx))        	
+		giniTrn=1.0 #normalized_gini(view(numerator,trnidx),view(numeratorEst,trnidx))  #currently disabled gini takes a LOT of time especially due to sorting
+		giniVal=1.0 #normalized_gini(view(numerator,validx),view(numeratorEst,validx))        	
         total_sum_squares_of_numeratorTrn=residual_sum_squares_of_numeratorTrn=total_sum_squares_of_ratioTrn=residual_sum_squares_of_ratioTrn=1.0
         total_sum_squares_of_numeratorVal=residual_sum_squares_of_numeratorVal=total_sum_squares_of_ratioVal=residual_sum_squares_of_ratioVal=1.0
-    end
-    @warn("need to review/amend the rsquared and rss metrics which are not correct!")
+    end    
     r2_of_numeratortrn=1.0-residual_sum_squares_of_numeratorTrn/total_sum_squares_of_numeratorTrn
     r2_of_ratiotrn=1.0-residual_sum_squares_of_ratioTrn/total_sum_squares_of_ratioTrn
     r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal

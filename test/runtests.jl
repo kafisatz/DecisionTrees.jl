@@ -13,7 +13,7 @@ println("Time for using & import: ",round((time_ns()-t0)/1e9,digits=3),"s")
 
 #set directories
 global pkgdir=""
-global testdir = joinpath(dirname(@__FILE__),"")
+global testdir = joinpath(dirname(@__FILE__),"") #joinpath(@__DIR__,"..","test",filename)
 #the following if clause is for "direct execution" (e.g. in VScode where @__FILE__ does not seem to work)
 if testdir==""
     try 

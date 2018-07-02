@@ -43,7 +43,8 @@ There are likely use cases in other areas, which have a similar problem setting.
 ## Ideas for future improvements
 
 * Review splitting criteria (especially poisson,gamma and mean squared error). Possibly compare them to other implementations.
-* Each node should not only store 'subset' but also the actual String (or Float64) value which defines the split!
+* Review the formulae & calculations of the Gini and RSS metrics
+* Each node should not only store 'subset' but also the actual value (being a set of Strings or a or Float64 value) value which defines the split
 * Implement Bagging
 * fix/add/improve certain error statistics; mainly the RSS and Gini
 * Clean up the naming convention of the field names of ModelSettings (bool_xy, BoolXY, ...)
