@@ -255,7 +255,9 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 #Let us consider different stopping criteria (minimum weight per leaf)
-minweight_list=-collect(range(0.0001,stop=0.1,length=25))
+#minweight_list=-collect(range(0.0001,stop=0.1,length=25))
+minweight_list=Float64[50, 100, 150, 200, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 6000, 7000, 8000, 9000, 10000, 12500, 15000, 17500, 20000, 22500, 25000]
+
 
 settV=createGridSearchSettings(sett,    
     minw=minweight_list
@@ -280,7 +282,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 ############################################################
 
 tt0=time_ns()
-gridResult=dtm(dtmtable,settV,file="R:\\temp\\1\\MTPLsingleTree.CSV")
+gridResult=dtm(dtmtable,settV,file="R:\\temp\\1\\MTPLsingleTreeDifference.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
 
@@ -385,9 +387,11 @@ gridResult=dtm(dtmtable,settV,file="R:\\temp\\13\\MTPLsingleTree.CSV")
 #pds=partialDependence(resM,dtmtable,listOfFeatures=[:Density,:VehGas])
 #pds["Density"]
     
-
 #=
     sett2=deepcopy(sett) 
-    updateSettingsMod!(sett2,crit="poisson",minw=-0.3,model_type="build_tree",boolCalculatePoissonError=true)
+    updateSettingsMod!(sett2,crit="poisson",minw=-0.03,model_type="build_tree",boolCalculatePoissonError=true)
+    updateSettingsMod!(sett2,write_dot_graph="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
+    updateSettingsMod!(sett2,write_dot_graph="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
     dtm(dtmtable,sett2)
+    dtm(dtmtable,sett)
 =#
