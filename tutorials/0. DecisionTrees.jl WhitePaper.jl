@@ -293,13 +293,13 @@ gridResult=dtm(dtmtable,settV,file="R:\\temp\\1\\MTPLsingleTreeDifference.CSV")
 #Perform grid search for Poisson
 settPoisson=deepcopy(sett)
 updateSettingsMod!(settPoisson,crit="poisson")
-settPoissonV=createGridSearchSettings(sett,    
+settPoissonV=createGridSearchSettings(settPoisson,    
     minw=minweight_list
     );
 
 
 tt0=time_ns()
-#gridResult=dtm(dtmtable,settPoissonV,file="R:\\temp\\1\\MTPLsingleTreePoisson.CSV")
+gridResult=dtm(dtmtable,settPoissonV,file="R:\\temp\\2\\MTPLsingleTreePoisson.CSV")
 @show ela=(-tt0+time_ns())/1e9
 @info ".....done"
     
