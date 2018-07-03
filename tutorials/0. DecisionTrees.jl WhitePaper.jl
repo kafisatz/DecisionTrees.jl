@@ -388,6 +388,6 @@ gridResult=dtm(dtmtable,settV,file="R:\\temp\\13\\MTPLsingleTree.CSV")
 
 #=
     sett2=deepcopy(sett) 
-    updateSettingsMod!(sett2,crit="poisson",minw=-0.03,model_type="build_tree",boolCalculatePoissonError=true)
+    updateSettingsMod!(sett2,crit="poisson",minw=-0.3,model_type="build_tree",boolCalculatePoissonError=true)
     dtm(dtmtable,sett2)
 =#

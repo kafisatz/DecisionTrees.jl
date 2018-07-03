@@ -206,28 +206,20 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-        @inbounds wi = weight[count]
-		@inbounds eli=elementsInLeftChildBV[idx]
-        wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)
-        addition = - (ni - wiTimesMean)
-        addition += ifelse(iszero(ni), 0.0,ni*log(ni / wiTimesMean)) 
-        #if eli
-#            #dl += (xlogy(ni, ni / (wi*current_meanl)) - (ni - wi*current_meanl))
-#            dl += (ni*log(ni / (wi*current_meanl)) - (ni - wi*current_meanl))
-#		else
-#            #dr += (xlogy(ni, ni / (wi*current_meanr)) - (ni - wi*current_meanr))
-#            dr += (ni*log(ni / (wi*current_meanr)) - (ni - wi*current_meanr))
-#		end
-        #@show addition,wiTimesMean ,wi,current_meanl,current_meanr,ni,ni/wiTimesMean
-        #@show eli
-        #@show addition
-        #!isfinite(addition)&&error("oopsi, we had an error")
-        #@warn("remove this!!")
-        if eli            
-            dl += addition
-        else            
-            dr += addition
-        end
+    @inbounds wi = weight[count]
+		@inbounds eli = elementsInLeftChildBV[idx]
+    wiTimesMean = ifelse(eli,wi*current_meanl,wi*current_meanr)
+    if iszero(ni)
+      addition = -(ni - wiTimesMean)
+    else
+      addition = -(ni - wiTimesMean) + ni*log(ni / wiTimesMean)
+    end
+    
+    if eli            
+        dl += addition
+    else            
+        dr += addition
+    end
 	end
 	return dl,dr
 end
@@ -243,9 +235,12 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
 		@inbounds ni = numerator[count]
         @inbounds wi = weight[count]
         @inbounds eli=elementsInLeftChildBV[idx]
-        wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)
-        addition = - (ni - wiTimesMean)/wiTimesMean 
-        addition += ifelse(iszero(ni), 0.0,-log(ni / wiTimesMean)) 
+        wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)        
+        if iszero(ni)
+          addition = - (ni - wiTimesMean)/wiTimesMean 
+        else
+          addition = - (ni - wiTimesMean)/wiTimesMean -log(ni / wiTimesMean)
+        end
         #if eli
            #dl += (-log(ni / (wi*current_meanl)) - (ni - wi*current_meanl)/(wi*current_meanl))
         #		else            
