@@ -257,7 +257,8 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             di=Dict("ext"=>ext,"minw_prop"=>minw_prop,"size_which_is_sampled"=>size_which_is_sampled,"defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"cvsampler"=>cvsampler,"intDatahash"=>intDatahash,"sett"=>deepcopy(sett),"cvo"=>cvo,"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
         #send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)        
         sendto_module(DecisionTrees,Distributed.workers(),local_data_dict=deepcopy(di))
-        
+        local_data_dict=di
+
         #run all models in parallel
         #@warn("this is currently terribly slow as the local_data_dict might be transferred to each worker for each iteration -> improve this!.... ? global const variable....?")
             pmapresult=Distributed.pmap(iLoop -> run_cvsample_on_a_process(iLoop,local_data_dict),1:length(cvsampler))

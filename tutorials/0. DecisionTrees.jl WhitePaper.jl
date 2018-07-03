@@ -18,6 +18,7 @@ t0=time_ns()
 #cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 
 import Distributed
+addprocs(22)
 #Distributed.@everywhere using Revise
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
@@ -258,7 +259,6 @@ performanceMeasure="Average Poisson Error Val"
 #minweight_list=-collect(range(0.0001,stop=0.1,length=25))
 minweight_list=Float64[50, 100, 150, 200, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 6000, 7000, 8000, 9000, 10000, 12500, 15000, 17500, 20000, 22500, 25000]
 
-
 settV=createGridSearchSettings(sett,    
     minw=minweight_list
     );
@@ -290,108 +290,16 @@ gridResult=dtm(dtmtable,settV,file="R:\\temp\\1\\MTPLsingleTreeDifference.CSV")
 # The validation error may not be evaluated for the most granular tree
 # This is because the tree has found leaves with a fitted frequency of zero (on the training data)
 
-# Surprisingly the validation error is smallest for the tree with minw=-0.0042625 (which is 0.42% or 1374 policies)
-
-# We definitely want to challenge this on a different validation data set
-# Let us therefore consdier a cross validated model
-
-#this defines a CV sampler (which will be an additional parameter for the model run)
-#with -10 as first argument we specify that there will be 10 disjoint samples
-#the second argument must be 0.0 if we want to have a 10 fold partion of the data.
-#the third argument is NOT relevant in this case
-cvsampler=CVOptions(-10,0.0,true)
-
-#Let us consider an alternative CV sampler
-#anotherCVsampler (below) will randomly draw 10 samples (without replacement)
-#each sample will have have a size of 65% of the total size of dtmtable (train and validation!)
-#thus, the individual samples will have common data (as 10*0.65>1.0)
-anotherCVsampler=CVOptions(10,0.65,true)
-
-#the sampler below (yetAnotherCVsampler) is similar to anotherCVsampler
-#by setting the last argument to false, none of the 10 samples will use the rows defined by validx
-#as such you can still keep validx as a true hold out sample whic is not used by the CV models
-yetAnotherCVsampler=CVOptions(10,0.65,false)
-
-#for the following models we will consdier cvsampler
-#Note: for cross validation we can only provide a single 'setting' (and not the settings vector settV)
-updateSettingsMod!(sett,minw=1700);
-CVresult=dtm_single_threaded(dtmtable,sett,cvsampler)
-
-#CV result is dataframe of the cross valiation.
-#you can also consider the file dtmresult_multistats.xlsx
-#it will be located in a temporary directory (see the julia log above the dataframe to find its location)
-
-#from the result we can see that the model generated a degenerate poisson estimate of 0 a number of times
-#let us try to increase the size of the validation data
-#7 fold cross valiation
-CVresult=dtm_single_threaded(dtmtable,sett,CVOptions(-7,0.0,true))
-
-#the averaged error across the validation sets is around 0.314 which does not look unreasonable
-
-#let us creat additional cross valiation models
-#we create 20 models (which randomly sampled data) where the
-CVresult=dtm_single_threaded(dtmtable,sett,CVOptions(20,0.7,true))
-#the error measure remains relatively stable across several CV samples
-#for some samples it is even less than 0.31 on the validation data
-
-#try another model
-updateSettingsMod!(sett,minw=500);
-CVresult=dtm_single_threaded(dtmtable,sett,cvsampler)
-sett.minw=500
-originalTrnValIndex
-
-############################################################
-#Changing the impurity function
-############################################################
-
-#Until now we have used the 'difference' measure to select the best split
-#Computationally the difference has the favorable property that we only need 'one pass' over the data
-#That is to say, we can go once over the data and sum up the numerator and denominator for each bucket (in linear time)
-#then, to evaluate each of the possible M splits, we only need to do M-1 comparisons for numerical variables (for categorical variables the case is more complex)
-
-#For now the only possible impurity functions are
-#poissondeviance and difference
-
-#Let us consider the poisson error
-#to evaluate the poisson error for a given split, we need the mean estimated frequency in the left and right node
-#to obtain these means, we need a pass over the data
-#this increase the computation time considerably compared to the difference measure
-
-#We can set the poisson error as follows
-updateSettingsMod!(sett,crit="poissondeviance")
-resultingFiles,resM=dtm(dtmtable,sett)
-#For comparison reasons
-#on my machine the above model took 15.8 seconds (only the build tree operation)
-#with the difference measure, it takes about 1.46 seconds
-
-#Note: We have only marginally performace optimized this package. 
-#It is highly likely that a skilled programmer could improve various bits of the code in this package.
-
-#Upon inspecting the resulting errors, we can see a comparable performace as with the difference measure.
-
-#Let us consider a grid search for the Poisson Error impurity function.
-minweight_list=-collect(range(0.0001,stop=0.1,length=25))
-
-settV=createGridSearchSettings(sett,    
+#Perform grid search for Poisson
+settPoisson=deepcopy(sett)
+updateSettingsMod!(settPoisson,crit="poisson")
+settPoissonV=createGridSearchSettings(sett,    
     minw=minweight_list
     );
 
-gridResult=dtm(dtmtable,settV,file="R:\\temp\\13\\MTPLsingleTree.CSV")
 
-
-############################################################
-#Partial Dependence Plots
-############################################################
-#this is currently in development and in need of review  
-#NOTE: the function is very slow. This will take a few minutes
-#pds=partialDependence(resM,dtmtable,listOfFeatures=[:Density,:VehGas])
-#pds["Density"]
+tt0=time_ns()
+#gridResult=dtm(dtmtable,settPoissonV,file="R:\\temp\\1\\MTPLsingleTreePoisson.CSV")
+@show ela=(-tt0+time_ns())/1e9
+@info ".....done"
     
-#=
-    sett2=deepcopy(sett) 
-    updateSettingsMod!(sett2,crit="poisson",minw=-0.03,model_type="build_tree",boolCalculatePoissonError=true)
-    updateSettingsMod!(sett2,write_dot_graph="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-    updateSettingsMod!(sett2,write_dot_graph="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-    dtm(dtmtable,sett2)
-    dtm(dtmtable,sett)
-=#
