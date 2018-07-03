@@ -491,7 +491,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 		  println("Number of numeric/character variables: $(sett.number_of_num_features)/$(sett.number_of_char_features)")
       end
 	  if size(num_levels,1) >0
-        prnt&&println(string("Number of levels for numeric variables: (Maximal # of linear steps: $(sett.max_splitting_points_num))"))
+        prnt&&println(string("Number of levels for numeric variables: (Maximal # of splitting points: $(sett.max_splitting_points_num))"))
         num_level_string=join(sort(num_levels, rev=true),",")
         prnt&&println(string(" ",num_level_string))
       else
@@ -510,7 +510,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	  prnt&&println("catSortByThreshold: $(sett.catSortByThreshold), catSortBy: $(replace(string(sett.catSortBy),"DecisionTrees."=>"")), smoothEstimates: $(sett.smoothEstimates), deriveFitPerScoreFromObservedRatios: $(sett.deriveFitPerScoreFromObservedRatios)")
 
   #create a string which contains all model settings (this will be written to output file(s))
-      model_setting_string=convert(String,string("Number of records - Trn: $(length(trnidx)) Val: $(sum(validx)) \nNumber of levels for numeric variables: (Maximal # of linear steps: $(sett.max_splitting_points_num)) "))
+      model_setting_string=convert(String,string("Number of records - Trn: $(length(trnidx)) Val: $(sum(validx)) \nNumber of levels for numeric variables: (Maximal # of splitting points: $(sett.max_splitting_points_num)) "))
       model_setting_string=convert(String,string(model_setting_string, "\n",num_level_string, "\nNumber of levels for character variables: \n", char_level_string ))
       model_setting_string=convert(String,string(model_setting_string, "\n", general_settings))
       model_setting_string=convert(String,string(model_setting_string, "\n", "Type: $(sett.model_type) \nMinweight: $(sett.minw) \nRnd: $(sett.randomw) \nNumMaxSplitPoints: $(sett.max_splitting_points_num) \nCriterion: $(replace(string(sett.crit),"DecisionTrees."=>"")) \nIterations: $(sett.niter) \nModeration Vector: $(join(sett.moderationvector,",")) \nNScores: $(sett.nscores) \nBoolStartAtMean: $(sett.BoolStartAtMean) "))

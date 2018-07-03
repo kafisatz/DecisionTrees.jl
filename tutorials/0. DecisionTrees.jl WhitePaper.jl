@@ -1,8 +1,8 @@
-#Date: July 1, 2018
+#Date: July 3, 2018
 #Author: Bernhard König
 
 ############################################################
-#Title: Decision Tree Model for the French MTPL Data
+#Title: Decision Tree models used for the Whitepaper
 ############################################################
 
 # If you do not yet have a suitable editor for Julia, you may want to consider VS Code.
@@ -28,6 +28,10 @@ Distributed.@everywhere using DecisionTrees  #this may take some time
 tela = (time_ns()-t0)/1e9
 @show tela #precompilationcan take considerable time under Julia 0.7beta (up to 300 seconds in some cases (as ofJuly 3, 2018)) 
 
+
+############################################################
+#1. Model for the French MTPL Data
+############################################################
 
 ##############################
 #Read the data
@@ -381,3 +385,9 @@ gridResult=dtm(dtmtable,settV,file="R:\\temp\\13\\MTPLsingleTree.CSV")
 #pds=partialDependence(resM,dtmtable,listOfFeatures=[:Density,:VehGas])
 #pds["Density"]
     
+
+#=
+    sett2=deepcopy(sett) 
+    updateSettingsMod!(sett2,crit="poisson",minw=-0.03,model_type="build_tree",boolCalculatePoissonError=true)
+    dtm(dtmtable,sett2)
+=#

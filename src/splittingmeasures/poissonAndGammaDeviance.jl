@@ -248,9 +248,9 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
         addition += ifelse(iszero(ni), 0.0,-log(ni / wiTimesMean)) 
         #if eli
            #dl += (-log(ni / (wi*current_meanl)) - (ni - wi*current_meanl)/(wi*current_meanl))
-#		else            
-#            dr += (-log(ni / (wi*current_meanr)) - (ni - wi*current_meanr)/(wi*current_meanr))
-		#end
+        #		else            
+        #            dr += (-log(ni / (wi*current_meanr)) - (ni - wi*current_meanr)/(wi*current_meanr))
+            #end
         if eli            
             dl += addition
         else            

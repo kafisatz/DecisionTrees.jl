@@ -150,7 +150,7 @@ for selectedWeight in minwList
         if ldfYear>=LDF_Cutoff #for the tail of the triangle the models do not validate well, thus we want 'no tree' but a single leaf => same as CL factors
             actual_minimum_weight=-0.51
         else 
-            actual_minimum_weight=selectedWeight
+            actual_minimum_weight=copy(selectedWeight)
         end    
         updateSettingsMod!(sett,minw=actual_minimum_weight,model_type="build_tree",bool_write_tree=false)
         resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minw,"_ldfYear_",ldfYear,".txt")))
@@ -183,16 +183,21 @@ for selectedWeight in minwList
     treeMSE[kk]=mean(errPerRow.^2)
     
     #what if we correct the ultimate total to match the CL total?
-    #@show corrFactor=1/totalUltimate*CLTotalUltimate    
+    corrFactor=1/totalUltimate*CLTotalUltimate    
     @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
     errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
     quantile(errPerRowCorrected,qtl_range)    
 end 
 
 qtls=map(x->getcorrectedQuantilesOfError(treeResults[x],truthPerRow,qtl_range,CLTotalUltimate),minwList)
-CLqtls
+@show CLqtls
 
+qtls[1]./CLqtls
+qtls[2]./CLqtls
+
+treeMSE
 CLmse
+treeMSE./CLmse
 #this is the same as treeMSE:
 mean.(map(x->abs2.(treeResults[x][:ultimate]-truthPerRow),minwList))
 

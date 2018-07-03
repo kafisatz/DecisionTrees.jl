@@ -139,9 +139,8 @@ function get_sha1()
 end
 
 #Precompile files
-    include(joinpath("precompile","precompile_DecisionTrees.jl"))
-	#include("precompile.jl")
+    include(joinpath("precompile","precompile_DecisionTrees.jl"))	
 
-global const DoubleQuote='\"' #note, this is here at the end only because Notepad++ messes up the formatting after this definition
+global const DoubleQuote='\"' #note, this is here at the end only because Notepad++ messes up the context highlighting after this definition
 	
 end #end Module DTM
