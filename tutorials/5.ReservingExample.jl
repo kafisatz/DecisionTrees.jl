@@ -18,13 +18,16 @@ Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
 Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!
 
-Distributed.@everywhere using DecisionTrees #200s in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook
+@time Distributed.@everywhere using DecisionTrees #200s in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook
 
+folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180702\\"
+@assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
 #=
-include(joinpath(@__DIR__,"tutorials","5.ReservingExample_functions.jl"))
+    include(joinpath(@__DIR__,"tutorials","5.ReservingExample_functions.jl"))
 =#
-include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
+#include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
+include(joinpath(Pkg.dir("DecisionTrees"),"tutorials","5.ReservingExample_functions.jl"))
 
 ##############################
 #Read the data
@@ -37,7 +40,7 @@ elt=vcat(elt,repeat([Float64],12))
 
 #Define a random split into training and validaiton data 
 #training shall be 70% of the data
-srand(1239)
+Random.srand(1239)
 trnValCol=BitArray(rand() < 0.7 for x in 1:size(fullData,1));
 fullData[:trnValCol]=trnValCol
 
@@ -116,18 +119,23 @@ qtl_range=[.0001,.001,.01,.05,.1,.2,.25,.5,.75,.8,.9,.95,.99,.999,.9999]
 CLqtls=quantile(CLerrPerRow,qtl_range)
 median(CLerrPerRow)
 CLmse=mean(CLerrPerRow.^2)
+#CL LDFs 1.624586303	1.143772133	1.056608075	1.029755909	1.019553623	1.014561794	1.011186622	1.008085459	1.007157648	1.004935975	1.003334179
 
 
 minwList=-[.05,.1,.15,.2,.25,.35,.4]
+minwList=[35000,40000]
+LDF_Cutoff=4 #for the years >=LDF_Cutoff, we us the CL factors
+
 #goal: build a tree for each LDF (i.e. a tree for 12-24 months, a second tree for 24-36 months, etc.)
 selectedWeight=-0.15
 treeMSE=zeros(length(minwList))
 treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 kk=0
+Random.srand(1240)
 for selectedWeight in minwList
     kk+=1    
-    for ldfYear=1:length(ayears)-1
+    for ldfYear=1:length(ayears)-1        
         #subset the data
         thisdata=copy(fullData)
         thisdata=thisdata[thisdata[:AY].<=maxAY-ldfYear,:]
@@ -138,15 +146,25 @@ for selectedWeight in minwList
         thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
         dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
 
-        #run a single tree 
-        updateSettingsMod!(sett,minw=selectedWeight,model_type="build_tree")
-        resultingFiles,resM=dtm(dtmtable,sett)
+        #run a single tree         
+        if ldfYear>=LDF_Cutoff #for the tail of the triangle the models do not validate well, thus we want 'no tree' but a single leaf => same as CL factors
+            actual_minimum_weight=-0.51
+        else 
+            actual_minimum_weight=selectedWeight
+        end    
+        updateSettingsMod!(sett,minw=actual_minimum_weight,model_type="build_tree",bool_write_tree=false)
+        resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minw,"_ldfYear_",ldfYear,".txt")))
 
         #apply tree to the FULL data set
         fittedValues,leafNrs=predict(resM,dtmtablefullData.features)
 
         #save estimated ldf per observation 
         LDFArray[:,ldfYear].=copy(fittedValues)
+        if ldfYear>=LDF_Cutoff
+            #@show fittedValues[1]
+            #use Chain Ladder LDF factor
+            LDFArray[:,ldfYear].= 1/reverse(aggCL[:LDFS])[ldfYear]
+        end
     end 
 
     #consider per Row Model 
@@ -159,28 +177,17 @@ for selectedWeight in minwList
     errTotal=sum(errPerAY)        
     errPerRow=estPerRow[:ultimate]-truthPerRow
     totalUltimate=sum(estPerRow[:ultimate])    
-    quantile(errPerRow,qtl_range)
-    median(errPerRow)
-    @show selectedWeight,mean(errPerRow.^2)
+    #quantile(errPerRow,qtl_range)
+    #median(errPerRow)
+    #@show selectedWeight,mean(errPerRow.^2)
     treeMSE[kk]=mean(errPerRow.^2)
     
     #what if we correct the ultimate total to match the CL total?
-    @show corrFactor=1/totalUltimate*CLTotalUltimate    
+    #@show corrFactor=1/totalUltimate*CLTotalUltimate    
     @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
     errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
     quantile(errPerRowCorrected,qtl_range)    
 end 
-
-function getcorrectedQuantilesOfError(estPerRow,truthPerRow,qtl_range,CLTotalUltimate)
-    errPerRow=estPerRow[:ultimate]-truthPerRow
-    totalUltimate=sum(estPerRow[:ultimate])    
-    #what if we correct the ultimate total to match the CL total?
-    corrFactor=1/totalUltimate*CLTotalUltimate
-    #@show sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate
-    @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
-    errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
-    return quantile(errPerRowCorrected,qtl_range)    
-end
 
 qtls=map(x->getcorrectedQuantilesOfError(treeResults[x],truthPerRow,qtl_range,CLTotalUltimate),minwList)
 CLqtls

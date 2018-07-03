@@ -397,7 +397,7 @@ if in(lowercase(ext),["",".csv",".txt",".sas",".jl",".pdf"])
 else
 	@show fn
 	@show path_and_fn_wo_extension,ext
-	error("DTM: Unexpected file extension $(ext)")	
+	error("DTM: Unexpected file name extension $(ext). You provided the $(fn). Please provide a file name extension such as .txt")	
 end
 datafolder,outfileStringOnly=splitdir(path_and_fn_wo_extension)
 @assert isdir(datafolder) "DTM: The specified output folder $(datafolder) does not exist. Abort."
@@ -597,7 +597,7 @@ prnt&&println("---Model Settings------------------------------------------------
 			push!(filelistWithFilesToBeZipped,dot_graph_TXT_file)
 			isfile(dot_graph_visualization_file)&&push!(filelistWithFilesToBeZipped,dot_graph_visualization_file)
 		end
-		if sett.bool_write_tree			
+		if sett.bool_write_tree
 			#write settings
 			println("Writing tree structure to file: \n $(tree_file)")				
 				isfile(tree_file)&&rm(tree_file)

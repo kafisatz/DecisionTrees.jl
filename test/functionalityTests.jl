@@ -10,7 +10,6 @@ tolForTheseTests=1e-15
 ##################################################
 
 datafile=joinpath(datadir,"freMTPL2","freMTPL2.csv")
-@test isfile(datafile)
 if !isfile(datafile)
     @info("Data not found. Trying to unzip the data: $(datafile)")
     try 

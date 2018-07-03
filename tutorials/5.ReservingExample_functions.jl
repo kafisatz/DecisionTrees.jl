@@ -97,3 +97,14 @@ function getPaidToDatePerRow(fullData)
     return paidToDatePerRow
 end
 
+
+function getcorrectedQuantilesOfError(estPerRow,truthPerRow,qtl_range,CLTotalUltimate)
+    errPerRow=estPerRow[:ultimate]-truthPerRow
+    totalUltimate=sum(estPerRow[:ultimate])    
+    #what if we correct the ultimate total to match the CL total?
+    corrFactor=1/totalUltimate*CLTotalUltimate
+    #@show sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate
+    @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
+    errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
+    return quantile(errPerRowCorrected,qtl_range)    
+end

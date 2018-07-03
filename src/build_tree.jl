@@ -86,7 +86,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
   #this can happen (EVEN AT THE TOP NODE) if subsampling (of data and or features) is enabled: it may be that there is in fact no split possible (e.g. if all variables are constant)
   if id == 0
 	if (depth==0)
-		@warn("No split was found at the top node. This is generally not expected and may cause errors later on in the code!")
+		@warn("DTM: No split was found at the top node. This is generally not expected.")
 	end
 		trnsumn=sum(view(numerator,trnidx))
 		trnsumd=sum(view(denominator,trnidx))

@@ -2186,7 +2186,7 @@ t=tree.rootnode
 	#add charts
 		thischart=defineRelativityChart(nameOfModelStatisticsSheet,nameOfModelStatisticsSheet,"K2",size(leaves_of_tree,1),1,1,headerrow2=5+size(leaves_of_tree,1)+1,headercol2=1,datarow2=5+size(leaves_of_tree,1)+2+1,xtitle="Segment",ytitle="Observed Ratio",xscale=2.4,title="Observed Ratio per Segment",datarow=3,valuescol=6,categoriescol=1,valuescol2=6,yscale=1.5)
 		push!(xlData.charts,deepcopy(thischart))
-		thischart=defineRelativityChart(nameOfModelStatisticsSheet,nameOfModelStatisticsSheet,string("K",5+size(leaves_of_tree,1)+2),size(leaves_of_tree,1),1,1,headerrow2=5+size(leaves_of_tree,1)+1,headercol2=1,datarow2=5+size(leaves_of_tree,1)+2+1,xtitle="Segment",ytitle="Relative Weight per Segment",xscale=2.4,title="Relative Weight per Segment",datarow=3,valuescol=3,categoriescol=1,valuescol2=3,yscale=1.5)
+		thischart=defineRelativityChart(nameOfModelStatisticsSheet,nameOfModelStatisticsSheet,string("K",5+max(17,size(leaves_of_tree,1))+2),size(leaves_of_tree,1),1,1,headerrow2=5+size(leaves_of_tree,1)+1,headercol2=1,datarow2=5+size(leaves_of_tree,1)+2+1,xtitle="Segment",ytitle="Relative Weight per Segment",xscale=2.4,title="Relative Weight per Segment",datarow=3,valuescol=3,categoriescol=1,valuescol2=3,yscale=1.5)
 		push!(xlData.charts,deepcopy(thischart))
 	return overallstats[:,1:2]
 	#return thisres
