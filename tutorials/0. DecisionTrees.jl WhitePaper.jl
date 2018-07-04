@@ -319,3 +319,42 @@ gridResult=dtm(dtmtable,settPoissonV,file=outputfolderandFile2)
 @show ela=(-tt0+time_ns())/1e9
 
     
+
+############################################################
+#Boosting Models
+############################################################
+
+#0.25%	0.50%	1%	1.50%	3%
+
+settBoosting=deepcopy(sett)
+updateSettingsMod!(settBoosting,model_type="boosted_tree",niter=250)
+
+settBoostingV=createGridSearchSettings(settBoosting,
+    minw=[-0.0025,-0.005,-0.01,-0.015,-0.02,-0.03]
+    ,mf=[0.1,0.05],
+    subsampling_features_prop=[.7,1.0],
+    crit=["poisson", "difference"])    
+
+#consider the length(settV) which is the number of models that will be run
+length(settBoostingV)
+
+#depending on the size of settV, you may want to restart Julia with additional workers for parallelization, i.e. 
+#shell> julia -p 8 
+#to start julia with 8 workers. Depending on your CPU you may want to choose a different number
+
+Sys.CPU_CORES #might be give you an indication of the number of workers() you could use
+
+############################################################
+#Run grid search
+############################################################
+
+outputfolderandFile3="R:\\temp\\3\\BoostingMultiRun.CSV"
+outputfolder3=splitdir(outputfolderandFile3)[1]
+@assert isdir(outputfolder3)
+
+@warn "This may take quiet some time depending on length(settV)=$(length(settV))"
+@info "Starting grid search..."
+
+tt0=time_ns()
+statsdf,settsdf,allmodels=dtm(dtmtable,settPoissonV,file=outputfolderandFile3)
+@show ela=(-tt0+time_ns())/1e9
