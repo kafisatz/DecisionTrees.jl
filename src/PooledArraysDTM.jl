@@ -431,7 +431,8 @@ function Base.vcat(a::PooledArray, b::PooledArray)
     l = length(ap)
     for (i, x) in enumerate(bp)
         if x in ap
-            poolmap[i] = findfirst(ap, x)
+            #poolmap[i] = findfirst(ap, x)
+            poolmap[i]=something(findfirst(isequal(x),ap),0)
         else
             poolmap[i] = (l+=1)
         end
@@ -447,6 +448,7 @@ function Base.vcat(a::PooledArray, b::PooledArray)
     refs2 = map(r->poolmap[r], b.refs)
     types = [UInt8, UInt16, UInt32, UInt]
     tidx = findfirst(t->l < typemax(t), types)
+    #tidx=something(findfirst(t->l < typemax(t),types),0)
     T = types[tidx]
     newrefs = Base.typed_vcat(T, a.refs, refs2)
     return PooledArray(RefArray(newrefs), newpool)

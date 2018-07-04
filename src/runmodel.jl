@@ -245,7 +245,8 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	end
 	if any(denominator.==0) 
 	  @warn("denominator[trn] contains observations with values 0.0")
-	  foundobs=findfirst(denominator,0.0)
+	  #foundobs=findfirst(denominator,0.0)
+      foundobs=something(findfirst(isequal(0.0),denominator),0)
 	  foundk=key[foundobs]
 	  println("First observation: key=$(foundk), rownumber_trn=$(foundobs), value=$(denominator[foundobs])\r\nDenominator needs to be nonzero (negative values are allowed)\r\nConsider discarding or changing these values/rows.")
 	  error("DTM: Abort.")

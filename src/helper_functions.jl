@@ -282,7 +282,8 @@ function best_models(allmodelStats::DataFrame,metric)
 		idx=findlast(column,i)
 		res2[k,3]=metric_col[idx]
 
-		idx2=findfirst(column_srt,i)
+		#idx2=findfirst(column_srt,i)
+        idx2=something(findfirst(isequal(i),column_srt),0)
 		res2[k,2]=metric_col_srt[idx2]
 		k+=1
 	end
