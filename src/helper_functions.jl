@@ -3745,7 +3745,8 @@ end
 
 function enforce_monotonicity!(vec::Array{T}) where T<:Number
   x=vec[1]
-  i=j=0
+  i=0
+  j=0
   @inbounds while i<length(vec)
     while vec[j+1]<x
       vec[j+1]=x
