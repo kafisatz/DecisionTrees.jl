@@ -5456,7 +5456,8 @@ end
 
 function deleteSomeElementsInDegenerateCase!(obsPerScore,vectorWeightPerScore,scoreEndPoints)
 	maxValue=maximum(scoreEndPoints)
-    sEndIdx=findfirst(scoreEndPoints,maxValue)
+    #sEndIdx=findfirst(scoreEndPoints,maxValue)
+    sEndIdx=something(findfirst(isequal(maxValue),scoreEndPoints),0)
     originalLength=length(scoreEndPoints)
     if sEndIdx>=originalLength
         return originalLength

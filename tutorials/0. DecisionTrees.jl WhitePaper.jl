@@ -196,7 +196,7 @@ resultingFiles,resM=dtm(dtmtable,sett)
     #copy tree graph to Clipboard
     clipboard(dot_graph)
     #go to 'a graphviz online too':
-    https://dreampuf.github.io/GraphvizOnline/ 
+    #https://dreampuf.github.io/GraphvizOnline/ 
     #paste the tree 
 
 
@@ -315,7 +315,9 @@ outputfolder2=splitdir(outputfolderandFile2)[1]
 
 @warn("This may take quite some time!")
 tt0=time_ns()
+if false  #temporarily disabled
 gridResult=dtm(dtmtable,settPoissonV,file=outputfolderandFile2)
+end
 @show ela=(-tt0+time_ns())/1e9
 
     
@@ -327,6 +329,7 @@ gridResult=dtm(dtmtable,settPoissonV,file=outputfolderandFile2)
 #0.25%	0.50%	1%	1.50%	3%
 
 settBoosting=deepcopy(sett)
+#updateSettingsMod!(settBoosting,model_type="boosted_tree",niter=2)
 updateSettingsMod!(settBoosting,model_type="boosted_tree",niter=250)
 
 settBoostingV=createGridSearchSettings(settBoosting,
@@ -348,7 +351,7 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 #Run grid search
 ############################################################
 
-outputfolderandFile3="R:\\temp\\3\\BoostingMultiRun.CSV"
+outputfolderandFile3="R:\\temp\\3\\Boosting_MultiRun.CSV"
 outputfolder3=splitdir(outputfolderandFile3)[1]
 @assert isdir(outputfolder3)
 
@@ -356,5 +359,5 @@ outputfolder3=splitdir(outputfolderandFile3)[1]
 @info "Starting grid search..."
 
 tt0=time_ns()
-statsdf,settsdf,allmodels=dtm(dtmtable,settPoissonV,file=outputfolderandFile3)
+statsdf,settsdf,allmodels=dtm(dtmtable,settBoostingV,file=outputfolderandFile3)
 @show ela=(-tt0+time_ns())/1e9
