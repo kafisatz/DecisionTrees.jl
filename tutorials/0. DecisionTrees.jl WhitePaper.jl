@@ -295,7 +295,9 @@ outputfolder=splitdir(outputfolderandFile)[1]
 @assert isdir(outputfolder)
 
 tt0=time_ns()
-gridResult=dtm(dtmtable,settV,file=outputfolderandFile)
+if false  #temporarily disabled
+    gridResult=dtm(dtmtable,settV,file=outputfolderandFile)
+end  
 @show ela=(-tt0+time_ns())/1e9
 
 
