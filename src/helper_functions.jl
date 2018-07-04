@@ -5284,13 +5284,13 @@ function poissonError(trueNumerator,estimatedNumerator)
     res=zeros(Float64,n)
     for i=1:n
         @inbounds t=trueNumerator[i]
-		@inbounds estf=estimatedNumerator[i]
-		#@inbounds res[i]=2*(estf-t+xlogy(t,t/estf))
-        tmp=estf-t
+		@inbounds estNum=estimatedNumerator[i]
+		#@inbounds res[i]=2*(estNum-t+xlogy(t,t/estNum))
+        tmp=estNum-t
 		if iszero(t)
 			@inbounds res[i]=2.0*tmp
 		else 
-            @inbounds res[i]=2.0*(tmp+t*log(t/estf))
+            @inbounds res[i]=2.0*(tmp-t*log(estNum/t))
         end
     end
     return res
@@ -5306,12 +5306,12 @@ function poissonErrorReduced(trueNumerator,estimatedNumerator)
     err=0.0
     for i=1:n
         @inbounds t=trueNumerator[i]
-		@inbounds estf=estimatedNumerator[i]
-        tmp=estf-t
+		@inbounds estNum=estimatedNumerator[i]
+        tmp=estNum-t
 		if iszero(t)
 			@inbounds res=2.0*tmp
 		else 
-            @inbounds res=2.0*(tmp+t*log(t/estf))
+            @inbounds res=2.0*(tmp-t*log(estNum/t))
         end
         err+=res
     end
@@ -5330,12 +5330,12 @@ function poissonError(trueNumerator,estimatedNumerator,idx)
     res=0.0
     for i in idx
         @inbounds t=trueNumerator[i]
-		@inbounds estf=estimatedNumerator[i]
-        tmp=estf-t
+		@inbounds estNum=estimatedNumerator[i]
+        tmp=estNum-t
 		if iszero(t)
 			@inbounds res=2.0*tmp
 		else 
-            @inbounds res=2.0*(tmp+t*log(t/estf))
+            @inbounds res=2.0*(tmp-t*log(estNum/t))
         end
         err+=res
     end

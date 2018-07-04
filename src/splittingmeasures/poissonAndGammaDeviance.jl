@@ -212,7 +212,7 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
     if iszero(ni)
       addition = -(ni - wiTimesMean)
     else
-      addition = -(ni - wiTimesMean) + ni*log(ni / wiTimesMean)
+      addition = -(ni - wiTimesMean) - ni*log(wiTimesMean / ni)
     end
     
     if eli            
@@ -239,7 +239,7 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
         if iszero(ni)
           addition = - (ni - wiTimesMean)/wiTimesMean 
         else
-          addition = - (ni - wiTimesMean)/wiTimesMean -log(ni / wiTimesMean)
+          addition = - (ni - wiTimesMean)/wiTimesMean + log(wiTimesMean / ni)
         end
         #if eli
            #dl += (-log(ni / (wi*current_meanl)) - (ni - wi*current_meanl)/(wi*current_meanl))
