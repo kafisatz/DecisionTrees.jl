@@ -483,6 +483,8 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 		if size(sett.moderationvector,1)>1;if (sett.adaptiveLearningRate!=1.0 && sett.adaptiveLearningRate!=0.0);println("######################################## \nWarning: (bk) Adaptive Learning has been disabled as a moderation vector has been provided. \n######################################## ");end;sett.adaptiveLearningRate=1.0;end;
       if prnt
 		  println(stars)
+		  println("Time:\t\t",Dates.now())
+		  println(stars)
 		  println("---General Settings------------------------------------------------------------")
 		  println(general_settings)
 		  print_some_settings(sett,["write_sas_code","write_iteration_matrix","write_result","write_statistics","boolCreateZipFile","write_csharp_code","statsRandomByVariable","boolSaveJLDFile"])
