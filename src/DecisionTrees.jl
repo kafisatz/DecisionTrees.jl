@@ -22,7 +22,7 @@ true
 
 module DecisionTrees
 
-export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,updateSettingsMod!,prep_data_from_df_modernized,run_legacy,prep_data_from_df
+export run_model,run_model_actual,define_eltypevector,prepare_dataframe_for_dtm!,prep_data_from_df_modernized,run_legacy,prep_data_from_df
 
 #include PooledArraysDTM module
 include("PooledArraysDTM.jl")

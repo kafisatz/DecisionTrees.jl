@@ -1,6 +1,7 @@
 
 import Base: length,start,next,done,eltype,==,hash
 
+export updateSettings!,updateSettingsMod!
 export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree
 export ModelSettings,copySettingsToCurrentType
 
@@ -462,6 +463,17 @@ function copySettingsToCurrentType(oldSetting)
 		end
 	end
     return s
+end
+
+"""
+updateSettings!(s::ModelSettings;args...)
+use this function to update the model settings 
+try for instance:
+
+updateSettings!(sett,minw=-0.3,niter=30)
+"""
+function updateSettings!(s::ModelSettings;args...)
+	updateSettingsMod!(s;args...)
 end
 
 """

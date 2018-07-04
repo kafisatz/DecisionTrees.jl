@@ -18,7 +18,7 @@ t0=time_ns()
 #cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 
 import Distributed
-addprocs(22)
+#addprocs(22)
 #Distributed.@everywhere using Revise
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
@@ -151,6 +151,8 @@ updateSettingsMod!(sett,minw=-0.03,model_type="build_tree",boolCalculatePoissonE
 
 #resM is the resulting Model
 resultingFiles,resM=dtm(dtmtable,sett)
+#time to build the tree (3% min exposure, difference measure): 0.8s
+
 #consider the resulting Excel file for a description of the model 
 #it should be located here:
 @show resultingFiles[1]
@@ -218,6 +220,13 @@ sett.print_details=true
 # updateSettingsMod!(sett,write_csharp_code="true",write_vba_code="true",write_sas_code="true")
 # some of these options may only be applicable to boosting OR single tree models
 
+#Consider the Poisson splitting criterion
+settPoisson=deepcopy(sett)
+updateSettingsMod!(settPoisson,crit="poisson")
+dtm(dtmtable,settPoisson) #time to build tree: 12s
+#time to build the tree (3% min exposure, Poisson deviance): about 12s
+
+
 ############################################################
 #Prepare a grid search over the parameter space
 ############################################################
@@ -281,25 +290,32 @@ Sys.CPU_CORES #might be give you an indication of the number of workers() you co
 #Run grid search
 ############################################################
 
-tt0=time_ns()
-gridResult=dtm(dtmtable,settV,file="R:\\temp\\1\\MTPLsingleTreeDifference.CSV")
-@show ela=(-tt0+time_ns())/1e9
-@info ".....done"
+outputfolderandFile="R:\\temp\\1\\MTPLsingleTreeDifference.CSV"
+outputfolder=splitdir(outputfolderandFile)[1]
+@assert isdir(outputfolder)
 
-# The excelfile 'MTPLsingleTree_multistats.xlsx' will give you a summary of the statistics of each model run
+tt0=time_ns()
+gridResult=dtm(dtmtable,settV,file=outputfolderandFile)
+@show ela=(-tt0+time_ns())/1e9
+
+
+# The excelfile 'MTPLsingleTreeDifference_multistats.xlsx' will give you a summary of the statistics of each model run
 # The validation error may not be evaluated for the most granular tree
 # This is because the tree has found leaves with a fitted frequency of zero (on the training data)
 
+
 #Perform grid search for Poisson
-settPoisson=deepcopy(sett)
-updateSettingsMod!(settPoisson,crit="poisson")
 settPoissonV=createGridSearchSettings(settPoisson,    
     minw=minweight_list
     );
 
+outputfolderandFile2="R:\\temp\\2\\MTPLsingleTreePoisson.CSV"
+outputfolder2=splitdir(outputfolderandFile2)[1]
+@assert isdir(outputfolder2)
 
+@warn("This may take quite some time!")
 tt0=time_ns()
-gridResult=dtm(dtmtable,settPoissonV,file="R:\\temp\\2\\MTPLsingleTreePoisson.CSV")
+gridResult=dtm(dtmtable,settPoissonV,file=outputfolderandFile2)
 @show ela=(-tt0+time_ns())/1e9
-@info ".....done"
+
     

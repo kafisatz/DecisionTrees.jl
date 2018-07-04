@@ -9,7 +9,6 @@ numtot=sum(sumnumerator)
 denomtot=sum(sumdenominator)
 weighttot=sum(sumweight)
 weighttot_minw=weighttot-minweight
-
 sumnl=sumdl=sumwl=0.0
 val=-Inf
 chosen_sumwl=NaN
@@ -31,13 +30,10 @@ chosen_sumwl=NaN
       @inbounds sumdl+=sumdenominator[i]
       @inbounds sumwl+=sumweight[i]    	
   end
-    if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
-	  #vold=valnew
-	  valnew=abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))	  
-      #if vold==valnew;@show i,valnew,sumnl,sumdl;end;
+    if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?	  
+    valnew=abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))	          
 	  if valnew>val
-        val=valnew
-        #chosen_subset_bitarray=copy(elementsInLeftChildBV)        
+        val=valnew        
         chosen_subset_bitarray.=elementsInLeftChildBV
         chosen_sumwl=sumwl
       end
