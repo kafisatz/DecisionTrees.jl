@@ -11,8 +11,8 @@
 ###############################################
  
 require(MASS)
-#install.packages("CASdatasets", repos = "http://dutangc.free.fr/pub/RRepos/")
-library(CASdatasets)
+install.packages("CASdatasets", repos = "http://dutangc.free.fr/pub/RRepos/")
+library(CASdatasets) 
 require(stats)
 library(data.table)
 library(plyr)

@@ -318,7 +318,7 @@ outputfolder2=splitdir(outputfolderandFile2)[1]
 @warn("This may take quite some time!")
 tt0=time_ns()
 if false  #temporarily disabled
-gridResult=dtm(dtmtable,settPoissonV,file=outputfolderandFile2)
+    gridResult=dtm(dtmtable,settPoissonV,file=outputfolderandFile2)
 end
 @show ela=(-tt0+time_ns())/1e9
 
@@ -332,12 +332,13 @@ end
 
 settBoosting=deepcopy(sett)
 #updateSettingsMod!(settBoosting,model_type="boosted_tree",niter=2)
-updateSettingsMod!(settBoosting,model_type="boosted_tree",niter=250)
+updateSettingsMod!(settBoosting,model_type="boosted_tree",niter=20)
 
 settBoostingV=createGridSearchSettings(settBoosting,
-    minw=[-0.0025,-0.005,-0.01,-0.015,-0.02,-0.03]
-    ,mf=[0.1,0.05],
-    subsampling_features_prop=[.7,1.0],
+    #minw=[-0.0025,-0.005,-0.01,-0.015,-0.02,-0.03]
+    minw=[-0.015,-0.02,-0.03]
+    ,mf=[0.1],
+    subsampling_features_prop=[.7],
     crit=["poisson", "difference"])    
 
 #consider the length(settV) which is the number of models that will be run
