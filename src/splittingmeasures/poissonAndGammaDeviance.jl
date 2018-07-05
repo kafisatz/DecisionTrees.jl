@@ -206,20 +206,21 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-    @inbounds wi = weight[count]
-		@inbounds eli = elementsInLeftChildBV[idx]
-    wiTimesMean = ifelse(eli,wi*current_meanl,wi*current_meanr)
-    if iszero(ni)
-      addition = -(ni - wiTimesMean)
-    else
-      addition = -(ni - wiTimesMean) - ni*log(wiTimesMean / ni)
-    end
-    
-    if eli            
-        dl += addition
-    else            
-        dr += addition
-    end
+        @inbounds wi = weight[count]
+		@inbounds eli = elementsInLeftChildBV[idx]       
+        if eli
+            if iszero(ni)
+                dl += -(ni - wi*current_meanl)
+            else 
+                dl += -(ni - wi*current_meanl) - ni*log(wi*current_meanl / ni)
+            end
+        else            
+            if iszero(ni)
+                dr += -(ni - wi*current_meanr)
+            else 
+                dr += -(ni - wi*current_meanr) - ni*log(wi*current_meanr / ni)
+            end        
+        end
 	end
 	return dl,dr
 end
@@ -235,22 +236,34 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
 		@inbounds ni = numerator[count]
         @inbounds wi = weight[count]
         @inbounds eli=elementsInLeftChildBV[idx]
+
+        if eli
+          if iszero(ni)
+            dl += - (ni - current_meanl*wi)/(wi*current_meanl)
+          else 
+            dl += -(ni - wi*current_meanl)/(wi*current_meanl) + log(wi*current_meanl / ni)
+          end
+      else            
+          if iszero(ni)
+              dr += - (ni - current_meanr*wi)/(wi*current_meanr)
+          else 
+              dr += -(ni - wi*current_meanr)/(wi*current_meanr) + log(wi*current_meanr / ni)
+          end        
+      end        
+        #=
+        #I think this is slightly slower
         wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)        
         if iszero(ni)
           addition = - (ni - wiTimesMean)/wiTimesMean 
         else
           addition = - (ni - wiTimesMean)/wiTimesMean + log(wiTimesMean / ni)
-        end
-        #if eli
-           #dl += (-log(ni / (wi*current_meanl)) - (ni - wi*current_meanl)/(wi*current_meanl))
-        #		else            
-        #            dr += (-log(ni / (wi*current_meanr)) - (ni - wi*current_meanr)/(wi*current_meanr))
-            #end
+        end        
         if eli            
             dl += addition
         else            
             dr += addition
         end
+        =#
 	end
 	return dl,dr
 end

@@ -481,7 +481,8 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	@assert max_c0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
 	@assert max_n0<nLevelsThreshold "A variable has too many levels (i.e. more than $(nLevelsThreshold)). You can try and increase this threshold but the algorithm may take quite long for the modelling"
 		if size(sett.moderationvector,1)>1;if (sett.adaptiveLearningRate!=1.0 && sett.adaptiveLearningRate!=0.0);println("######################################## \nWarning: (bk) Adaptive Learning has been disabled as a moderation vector has been provided. \n######################################## ");end;sett.adaptiveLearningRate=1.0;end;
-      if prnt
+	  if prnt
+		  println("")
 		  println(stars)
 		  println("Time:\t\t",Dates.now())
 		  println(stars)
