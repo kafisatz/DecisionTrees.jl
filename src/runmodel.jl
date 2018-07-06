@@ -44,14 +44,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
 end
 
 function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
-	#denomcol=uppercase(denomcol)
-    #keycol=uppercase(keycol)
-    #trnvalcol=uppercase(trnvalcol)
-    #weightcol=uppercase(weightcol)
-	#independent_vars=uppercase.(independent_vars)
-	#treat_as_categorical_variable=uppercase.(treat_as_categorical_variable)
-
-    sz=size(dfin,1)
+	sz=size(dfin,1)
     dfnames=names(dfin)
 
     @assert ((valpct<1)&&(valpct>0))
@@ -239,9 +232,9 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 		
 	count_neg_denom=sum(denominator.<=0)
 	if count_neg_denom>0 
-		@warn("denominator contains observations with values <= 0.0")
+		@warn("DTM: Denominator contains observations with values <= 0.0")
 		tot_sz=length(denominator)
-		@warn("negative rowcount: $(count_neg_denom) of $(tot_sz). I.e. a proportion of $(count_neg_denom/tot_sz)")
+		@warn("DTM: Negative rowcount: $(count_neg_denom) of $(tot_sz). I.e. a proportion of $(count_neg_denom/tot_sz)")
 	end
 	if any(denominator.==0) 
 	  @warn("denominator[trn] contains observations with values 0.0")
@@ -249,28 +242,33 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
       foundobs=something(findfirst(isequal(0.0),denominator),0)
 	  foundk=key[foundobs]
 	  println("First observation: key=$(foundk), rownumber_trn=$(foundobs), value=$(denominator[foundobs])\r\nDenominator needs to be nonzero (negative values are allowed)\r\nConsider discarding or changing these values/rows.")
-	  error("DTM: Abort.")
+	  ignoreZeroDenominatorValues=sett.ignoreZeroDenominatorValues
+	  if !ignoreZeroDenominatorValues
+		error("DTM: Abort.")
+	  else 
+		@warn("DTM: Continuing data prep and modelling with zero denomintor observations. This is EXPERIMENTAL. Algorithm may fail.")
+	  end
 	end
 	strNegativeRatioWarning="Negative Ratios may lead to errors during the modelling process for models which rely on multiplicative residuals! \nIt is suggested that you adjust the data such that no negative values occur!"
 	if any(x->x<0.0,denominator)
-	  @warn("There are training obsevations with negative values in the denominator column!")
+	  @warn("DTM: There are training obsevations with negative values in the denominator column!")
 	  @warn(strNegativeRatioWarning)
 	end
 	#obsratiotrn=numeratortrn./denominatortrn
 	if any(numerator.<0)
-		@warn("There are negative observed ratios!")
+		@warn("DTM: There are negative numerator values!")
 		@warn(strNegativeRatioWarning)
 		if sett.boolCalculatePoissonError
 			@warn("DTM: Setting boolCalculatePoissonError to false!")
 			sett.boolCalculatePoissonError=false
 		end		
 		if typeof(sett.crit) == PoissonDevianceSplit
-		error("DTM: Negative numerator values are not allowed for Poisson Deviance!. Abort. \n Crit = $(sett.critt)")
+		error("DTM: Negative numerator values are not allowed for Poisson Deviance! Abort. \n Crit = $(sett.critt)")
 		end
 	end
 
 	df_names=sett.df_name_vector #names(dfIndata)
-	#this DataFrame will contain both categorical and numerical features!
+	#this DataFrame will contain both categorical and numerical features
 	features=DataFrame() 
 	
 	print("Preparing numeric variables...")
@@ -369,7 +367,7 @@ t0RunModel0=time_ns()
 sett=deepcopy(input_setttings)
 @assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
 if sett.boolCalculateGini
-    @warn("Gini and RSS metrics are experimental and need to be reviewed and thoroughly checked (e.g. are they evaluated only for the numerator or for the ratio=numerator/denominator?")
+    @warn("DTM: Note that Gini and RSS metrics are experimental and may need review. Also it needs to be clarified if the metrics are evaluated only for the numerator or for the ratio=numerator/denominator.")
 end
 x=checkIfSettingsAreValid(input_setttings)
 if !(x==nothing)

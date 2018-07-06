@@ -324,6 +324,7 @@ mutable struct ModelSettings
 	boolCalculatePoissonError::Bool
     performanceMeasure::String
 	fitForStatsAndCharts::String
+	ignoreZeroDenominatorValues::Bool
 
 	#the following are treated specially
 	df_name_vector::Array{String,1}
@@ -390,6 +391,7 @@ mutable struct ModelSettings
 	boolCalculatePoissonError=false
     performanceMeasure="Lift Val"
 	fitForStatsAndCharts="rawRelativities" #rawRelativities,unsmoothedPerScore,smoothedPerScore
+	ignoreZeroDenominatorValues=false
 
 	#the following are treated specially
 	df_name_vector=Array{String}(undef,0) #
@@ -397,7 +399,7 @@ mutable struct ModelSettings
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
 
-	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,spawnsmaller,boolRankOptimization,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolNumeratorStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini,boolCalculatePoissonError,performanceMeasure,fitForStatsAndCharts
+	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,spawnsmaller,boolRankOptimization,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolNumeratorStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini,boolCalculatePoissonError,performanceMeasure,fitForStatsAndCharts,ignoreZeroDenominatorValues
 	 ,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
   end  # ModelSettings()
 

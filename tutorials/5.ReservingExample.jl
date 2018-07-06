@@ -20,6 +20,7 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!
 
 @time Distributed.@everywhere using DecisionTrees #200s in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook
 
+#folderForOutput="C:\\temp\\"
 folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180702\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
@@ -60,7 +61,7 @@ fullData[:trnValCol]=trnValCol
 #inj_part is the body part injured that should be of factor type (categorical) and may take the labels 1; : : : ; 99 (with gaps).
 
 #set independent variables
-selected_explanatory_vars=["LoB","age","cc","inj_part"]
+selected_explanatory_vars=["AQ","LoB","age","cc","inj_part"]
 #note: we refrain from using the exposure as explanatory variable, as this is not meaningful in practical applications
 #where one aims to predict the claim frequency of a given policy (without knowing how long that policy will remain within a certain portfolio)
 
@@ -76,6 +77,7 @@ end
 #consider unique elements for each variable
 for x in 1:size(fullData,2)
     println(x)
+    println(names(fullData)[x])
     @show size(unique(fullData[:,x]))
 end
 
@@ -138,11 +140,14 @@ for selectedWeight in minwList
     for ldfYear=1:length(ayears)-1        
         #subset the data
         thisdata=copy(fullData)
+        #discard recent AYs (i.e ensure the data corresponds to a rectangle rather than a triangle)
         thisdata=thisdata[thisdata[:AY].<=maxAY-ldfYear,:]
         #Discard claims which had 0 cumulative payment by year 'ldfYear'
         #this is currently a requirement for the algorithms we apply (although one may be able to weaken this condition and the algorithms would still run)
         cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
         cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
+        #! NOTE for now we are discarding all claims which have zero payment in the more recent year which dermines the CL factor
+        #this condition might be weakend, but I would first need to dig into the algorithm to find out if it could break anything
         thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
         dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
 
