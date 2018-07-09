@@ -97,7 +97,6 @@ function getPaidToDatePerRow(fullData)
     return paidToDatePerRow
 end
 
-
 function getcorrectedQuantilesOfError(estPerRow,truthPerRow,qtl_range,CLTotalUltimate)
     errPerRow=estPerRow[:ultimate]-truthPerRow
     totalUltimate=sum(estPerRow[:ultimate])    

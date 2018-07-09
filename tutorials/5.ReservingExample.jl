@@ -18,7 +18,7 @@ Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
 Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!
 
-@time Distributed.@everywhere using DecisionTrees #200s in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook
+@time Distributed.@everywhere using DecisionTrees #200 - 300 seconds in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook (precompilation allocates 20GB of memory?)
 
 #folderForOutput="C:\\temp\\"
 folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180702\\"
@@ -45,7 +45,7 @@ Random.srand(1239)
 trnValCol=BitArray(rand() < 0.7 for x in 1:size(fullData,1));
 fullData[:trnValCol]=trnValCol
 
-@warn("redo the whole calc with no validation data! once we have ensure that minWeight is a meaningful value")
+@warn("We may want to redo the whole calculation with no validation data -> the CL factors will be based on all of the data (not only the training porportion).")
 
 #The data should match this total for the column Paycum11
 @assert sum(fullData[:PayCum11])==1477250848 "Expected 1464014219, have: $(sum(fullData[:PayCum11]))"
@@ -80,6 +80,26 @@ for x in 1:size(fullData,2)
     println(names(fullData)[x])
     @show size(unique(fullData[:,x]))
 end
+
+#Let us see whether all claims are 'increasing' in time (i.e. whether all incremental payments are non-negative)
+function checkIfPaymentsAreIncreasing(data)
+    #consider payment columns
+    paymCols=[Symbol(string("PayCum",lpad(ii,2,0))) for ii=0:11]
+    isNonDecreasing=BitVector(undef,size(data,1))
+    @time for ii=1:length(isNonDecreasing)
+        @inbounds thisrow=vec(convert(Array,view(data,ii,paymCols)))
+        @inbounds isNonDecreasing[ii]=issorted(thisrow)
+    end
+    return isNonDecreasing
+end
+
+isNonDecreasing=checkIfPaymentsAreIncreasing(fullData) #takes about 18 seconds
+sum(isNonDecreasing)/length(isNonDecreasing) # 99.67% of the claims are nondecreasing
+nonDecreasingRows=.!isNonDecreasing
+nonDecreasingRowsInteger=find(nonDecreasingRows)
+
+#claims which are decreasing over time (at some point)
+fullData[nonDecreasingRowsInteger,:]
 
 ##############################
 #Prepare the data
@@ -123,13 +143,11 @@ median(CLerrPerRow)
 CLmse=mean(CLerrPerRow.^2)
 #CL LDFs 1.624586303	1.143772133	1.056608075	1.029755909	1.019553623	1.014561794	1.011186622	1.008085459	1.007157648	1.004935975	1.003334179
 
-
-minwList=-[.05,.1,.15,.2,.25,.35,.4]
-minwList=[35000,40000]
-LDF_Cutoff=4 #for the years >=LDF_Cutoff, we us the CL factors
+minwList=[35000]
+LDF_Cutoff=4 #for the years >=LDF_Cutoff, we use the CL factors
 
 #goal: build a tree for each LDF (i.e. a tree for 12-24 months, a second tree for 24-36 months, etc.)
-selectedWeight=-0.15
+#selectedWeight=-0.15
 treeMSE=zeros(length(minwList))
 treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
@@ -148,10 +166,10 @@ for selectedWeight in minwList
         cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
 
         #discard all claims which are zero for 'both columns'
-        discardIdx=(thisdata[cumulativePaymentCol].==0) .&& (thisdata[cumulativePaymentCol] .==0)
-        @show sum(discardIdx)
+        discardIdx=(thisdata[cumulativePaymentCol].==0) .& (thisdata[cumulativePaymentColPrev] .==0)        
         if any(discardIdx)
-            thisdata=thisdata[.!discardIdx]
+            thisdata=thisdata[.!discardIdx,:]
+            println("Discarded $(sum(discardIdx)) observations with PayCum zero for both development years $(ldfYear) and $(ldfYear-1)")
         end 
         #NOTE for now we are discarding all claims which have zero payment in the more recent year which dermines the CL factor
         #we can keep the claims with zero values for cumulativePaymentCol
@@ -202,7 +220,17 @@ for selectedWeight in minwList
     quantile(errPerRowCorrected,qtl_range)    
 end 
 
-qtls=map(x->getcorrectedQuantilesOfError(treeResults[x],truthPerRow,qtl_range,CLTotalUltimate),minwList)
+
+#Consider the quantiles of the error
+qtls=map(x->quantile(treeResults[x][:ultimate].-truthPerRow,qtl_range),minwList)
+expectedQtls35k= [-3.00292e5, -42808.2, -966.453, 0.0, 0.0, 0.0, 0.0, 4.32545, 45.9819, 74.31, 247.741, 647.852, 3773.03, 23917.0, 90376.7][:]
+@assert all(isapprox.(qtls[minwList.==35000][1].-expectedQtls,0,atol=1)) 
+
+error("mi")
+
+#Consider the quantiles of the error when we correct the total ultimate such that it matches the CL Ultimate
+qtlsWithCorrectedTotalUltimate=map(x->getcorrectedQuantilesOfError(treeResults[x],truthPerRow,qtl_range,CLTotalUltimate),minwList)
+
 @show CLqtls
 
 qtls[1]./CLqtls
