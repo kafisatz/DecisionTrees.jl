@@ -224,7 +224,7 @@ end
 #Consider the quantiles of the error
 qtls=map(x->quantile(treeResults[x][:ultimate].-truthPerRow,qtl_range),minwList)
 expectedQtls35k= [-3.00292e5, -42808.2, -966.453, 0.0, 0.0, 0.0, 0.0, 4.32545, 45.9819, 74.31, 247.741, 647.852, 3773.03, 23917.0, 90376.7][:]
-@assert all(isapprox.(qtls[minwList.==35000][1].-expectedQtls,0,atol=1)) 
+@assert all(isapprox.(qtls[minwList.==35000][1].-expectedQtls35k,0,atol=1)) 
 
 error("mi")
 
