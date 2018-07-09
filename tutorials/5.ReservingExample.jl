@@ -117,7 +117,8 @@ dtmtablefullData,settfullData,dfpreppedfullData=prepare_dataframe_for_dtm!(fullD
 
 #consider paidToDate and 'truth'
 paidToDatePerRow=getPaidToDatePerRow(fullData)
-truthPerRow=fullData[:PayCum11]
+trueUltimatePerRow=fullData[:PayCum11]
+trueReservePerRow=trueUltimatePerRow.-paidToDatePerRow
 
 #CL
 #consider aggregate CL Model
@@ -135,7 +136,7 @@ for i in ayears
     idx=ayperRow.==i
     @assert isapprox(0,sum(CLUltimatePerRow[idx])-aggCL[:ultimate][i-1993],atol=1e-7) #should be zero for each year
 end
-CLerrPerRow=CLUltimatePerRow-truthPerRow
+CLerrPerRow=CLUltimatePerRow-trueUltimatePerRow
 CLTotalUltimate=sum(CLUltimatePerRow)
 qtl_range=[.0001,.001,.01,.05,.1,.2,.25,.5,.75,.8,.9,.95,.99,.999,.9999] 
 CLqtls=quantile(CLerrPerRow,qtl_range)
@@ -206,7 +207,7 @@ for selectedWeight in minwList
     reservesPerAY=estAgg[:reserves]
     errPerAY=estAgg[:error]
     errTotal=sum(errPerAY)        
-    errPerRow=estPerRow[:ultimate]-truthPerRow
+    errPerRow=estPerRow[:ultimate]-trueUltimatePerRow
     totalUltimate=sum(estPerRow[:ultimate])    
     #quantile(errPerRow,qtl_range)
     #median(errPerRow)
@@ -216,51 +217,51 @@ for selectedWeight in minwList
     #what if we correct the ultimate total to match the CL total?
     corrFactor=1/totalUltimate*CLTotalUltimate    
     @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
-    errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
+    errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-trueUltimatePerRow    
     quantile(errPerRowCorrected,qtl_range)    
 end 
 
 
 #Consider the quantiles of the error
-qtls=map(x->quantile(treeResults[x][:ultimate].-truthPerRow,qtl_range),minwList)
+qtls=map(x->quantile(treeResults[x][:ultimate].-trueUltimatePerRow,qtl_range),minwList)
 expectedQtls35k= [-3.00292e5, -42808.2, -966.453, 0.0, 0.0, 0.0, 0.0, 4.32545, 45.9819, 74.31, 247.741, 647.852, 3773.03, 23917.0, 90376.7][:]
 @assert all(isapprox.(qtls[minwList.==35000][1].-expectedQtls35k,0,atol=1)) 
 
-error("mi")
-
 #Consider the quantiles of the error when we correct the total ultimate such that it matches the CL Ultimate
-qtlsWithCorrectedTotalUltimate=map(x->getcorrectedQuantilesOfError(treeResults[x],truthPerRow,qtl_range,CLTotalUltimate),minwList)
+#qtlsWithCorrectedTotalUltimate=map(x->getcorrectedQuantilesOfError(treeResults[x],trueUltimatePerRow,qtl_range,CLTotalUltimate),minwList)
 
-@show CLqtls
+function summaryByAY(fullData,trueUltimatePerRow,trueReservePerRow,paidToDatePerRow,ayears,treeEstimate::DataFrame,clEstimatedUltimate::Vector;by="LoB")
+    @assert in(by,selected_explanatory_vars)
+    byS=Symbol(by)
+    uniqueValues=sort(unique(fullData[byS]))
+    ayShift=minimum(ayears)-1
+    
+    ayColumn=fullData[:AY]
+    treeReserve=treeEstimate[:reserves]    
+    clReserve=clEstimatedUltimate.-paidToDatePerRow
 
-qtls[1]./CLqtls
-qtls[2]./CLqtls
+    res=Dict{eltype(uniqueValues),Array{Float64,2}}()
 
-treeMSE
-CLmse
-treeMSE./CLmse
-#this is the same as treeMSE:
-mean.(map(x->abs2.(treeResults[x][:ultimate]-truthPerRow),minwList))
+    for thisValue in uniqueValues
+        res0=zeros(length(ayears),4)        
+        res0[:,1]=ayears
+        #note: this is very inefficiently programmed! (a countsort would be preferable)
+        for i=1:size(fullData,1)
+            @inbounds rowMatchesValue=fullData[byS][i]==thisValue
+            if rowMatchesValue                                    
+                @inbounds row=ayColumn[i]-ayShift
+                @inbounds res0[row,2]+=trueReservePerRow[i]
+                @inbounds res0[row,3]+=treeReserve[i]
+                @inbounds res0[row,4]+=clReserve[i]                    
+            end            
+        end        
+        res[thisValue]=deepcopy(res0)
+    end 
+    
+    return res
+end
 
-#we can correct the aggregate total in order for it to match the CL ultimate
-@warn("correct the ultimate estimate?!? with a certain factor")
+r1=summaryByAY(fullData,trueUltimatePerRow,trueReservePerRow,paidToDatePerRow,ayears,treeResults[35000],CLUltimatePerRow,by="LoB")
 
-#the chain ladder volume weighted LDF for Y1-Y2 is 1.62458536172099 
-#its inverse is 0.615541678241308 
-#this is the average observed value of the root node (if we consider the validation and training data together)
-#the tree has identified several segments (i.e. leaves) where this ratio is either higher or lower than that value
 
-#consider the fitted values and the leaf numbers
-
-#fit model 
-#=
-updateSettingsMod!(sett,minWeight=-0.2,model_type="build_tree")
-resultingFiles,resM=dtm(dtmtable,sett)
-#predict the fittedValues and Leaf Numbers on the total data
-fittedValues,leafNrs=predict(resM,dtmtablefullData.features)
-reservesCombined=aggregateReservesOfIndividualCLModels(fullData,leafNrs)
-
-DelimitedFiles.writedlm("C:\\temp\\1.csv",reservesCombined,',')
-=#
-
-@warn("show scores y1/y2 ldf versus y2/y3 ldf in an xy scatter plot")
+@warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")

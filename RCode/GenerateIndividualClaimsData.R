@@ -51,10 +51,10 @@ source(file="./Functions.V1.R")
 #############################
 
 V <- 500000                           # totally expected number of claims (over 12 accounting years)
-LoB.dist <- c(0.25,0.30,0.20,0.25)    # categorical distribution for the allocation of the claims to the 4 lines of business
-inflation <- c(0.01,0.01,0.01,0.01)   # growth parameters (per LoB) for the numbers of claims in the 12 accident years
+LoB.dist <- c(0.35,0.20,0.15,0.30)    # categorical distribution for the allocation of the claims to the 4 lines of business
+growth <- c(0,0,0,0)                  # growth parameters (per LoB) for the numbers of claims in the 12 accident years
 seed1 <- 100                          # setting seed for simulation
-features <- Feature.Generation(V = V, LoB.dist = LoB.dist, inflation = inflation, seed1 = seed1)
+features <- Feature.Generation(V = V, LoB.dist = LoB.dist, inflation = growth, seed1 = seed1)
 
 str(features)
 
@@ -64,7 +64,7 @@ str(features)
 
 npb <- nrow(features)                # blocks for parallel computing
 seed1 <- 100                         # setting seed for simulation
-std1 <- 1.25                         # standard deviation parameter for total claim size simulation
+std1 <- 0.85                         # standard deviation parameter for total claim size simulation
 std2 <- 0.85                         # standard deviation parameter for recovery simulation
 output <- Simulation.Machine(features = features, npb = npb, seed1 = seed1, std1 = std1, std2 = std2)
 
