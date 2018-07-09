@@ -35,7 +35,7 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
 	@time (df_prepped,sett)=prepareDF!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
 
 	#set this to false
-		sett.boolSaveJLDFile=false
+		sett.saveJLDFile=false
 		
 	fn=joinpath(directory,"DTMResult.csv")
 	dtmtable=prep_data_from_df(df_prepped,sett,fn,methodForSplittingPointsSelection=methodForSplittingPointsSelection)
@@ -258,9 +258,9 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	if any(numerator.<0)
 		@warn("DTM: There are negative numerator values!")
 		@warn(strNegativeRatioWarning)
-		if sett.boolCalculatePoissonError
-			@warn("DTM: Setting boolCalculatePoissonError to false!")
-			sett.boolCalculatePoissonError=false
+		if sett.calculatePoissonError
+			@warn("DTM: Setting calculatePoissonError to false!")
+			sett.calculatePoissonError=false
 		end		
 		if typeof(sett.crit) == PoissonDevianceSplit
 		error("DTM: Negative numerator values are not allowed for Poisson Deviance! Abort. \n Crit = $(sett.critt)")
@@ -273,7 +273,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	
 	print("Preparing numeric variables...")
 	#this function modifies features -> the num features are added as pdas!
-	candMatWOMaxValues=add_coded_numdata!(dfIndata,sett,trn_val_idx,sett.max_splitting_points_num,features,weight,methodForSplittingPointsSelection)
+	candMatWOMaxValues=add_coded_numdata!(dfIndata,sett,trn_val_idx,sett.maxSplittingPoints,features,weight,methodForSplittingPointsSelection)
 	println(" done.")
 	#IMPORTANT convention  numerical data 'comes first' (i.e. first x columns are numerical), then categorical
 	print("Preparing character variables...")
@@ -344,7 +344,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 	trnidx,validx=createIntegerIndices(trn_val_idx)
 	dtmtable=DTMTable(key,trnidx,validx,numerator,denominator,weight,features,candMatWOMaxValues,mappings)
 	
-	if sett.boolSaveJLDFile
+	if sett.saveJLDFile
         jldfile=string(fileroot(datafilename),".jld2")
         println("Saving prepped data to file:\n $(jldfile)")
 		isfile(jldfile)&&rm(jldfile)
@@ -366,7 +366,7 @@ function run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::
 t0RunModel0=time_ns()
 sett=deepcopy(input_setttings)
 @assert sett.chosen_apply_tree_fn=="apply_tree_by_leaf" #currently this is the default choice. Consider the code in boosting.jl and bagging.jl -> the apply tree fn is currently hardcoded
-if sett.boolCalculateGini
+if sett.calculateGini
     @warn("DTM: Note that Gini and RSS metrics are experimental and may need review. Also it needs to be clarified if the metrics are evaluated only for the numerator or for the ratio=numerator/denominator.")
 end
 x=checkIfSettingsAreValid(input_setttings)
@@ -377,16 +377,16 @@ if (sett.fitForStatsAndCharts=="smoothedPerScore")&&(sett.smoothEstimates!="1")
 	@info("DTM: setting sett.smoothEstimates to 1, because sett.fitForStatsAndCharts=$(sett.fitForStatsAndCharts)")	
 	sett.smoothEstimates="1"
 end
-if sett.write_iteration_matrix
-	if !sett.boolProduceEstAndLeafMatrices
-		@info "DTM: write_iteration_matrix=$(sett.write_iteration_matrix). The estimate matrices are required for this. Setting sett.boolProduceEstAndLeafMatrices to true."
+if sett.writeIterationMatrix
+	if !sett.prroduceEstAndLeafMatrices
+		@info "DTM: writeIterationMatrix=$(sett.writeIterationMatrix). The estimate matrices are required for this. Setting sett.prroduceEstAndLeafMatrices to true."
 	end
 end
 if sett.boolNumeratorStats
-	if !sett.boolProduceEstAndLeafMatrices
-		@info "DTM: User has requested NumeratorStats (boolNumeratorStats=$(sett.boolNumeratorStats)). The estimate matrices are required for these statistics. Setting boolProduceEstAndLeafMatrices to true."
-		sett.boolProduceEstAndLeafMatrices=true
-		#@show sett.boolNumeratorStats,sett.boolProduceEstAndLeafMatrices
+	if !sett.prroduceEstAndLeafMatrices
+		@info "DTM: User has requested NumeratorStats (boolNumeratorStats=$(sett.boolNumeratorStats)). The estimate matrices are required for these statistics. Setting prroduceEstAndLeafMatrices to true."
+		sett.prroduceEstAndLeafMatrices=true
+		#@show sett.boolNumeratorStats,sett.prroduceEstAndLeafMatrices
 	end
 end
 
@@ -456,17 +456,17 @@ end
 #also there are two types of hold out estimates: either the ones derived from training data (more meaningful case) or the ones derived from validation labels
 sumwtrn=sum(view(weight,trnidx))
 sumwval=sum(view(weight,validx))
-minweighttmp = sett.minw < 0.0 ? sumwtrn*(-max(-1.0,sett.minw)) : sett.minw
+minweighttmp = sett.minWeight < 0.0 ? sumwtrn*(-max(-1.0,sett.minWeight)) : sett.minWeight
 @assert minweighttmp>=0
 sumwtrn>=2*minweighttmp||@warn("DTM: Specified minweight is larger than half of the total training weight!! No split is possible!")
 
 someInteger=sumwtrn/minweighttmp
 if someInteger>100000
-	@warn("DTM: Total training weight is: $(sumwtrn) and you specified minw=$(minweighttmp). The tree might become very large")
+	@warn("DTM: Total training weight is: $(sumwtrn) and you specified minWeight=$(minweighttmp). The tree might become very large")
 end
 
 prnt=sett.print_details
-general_settings=convert(String,string("Write tree to txt file: $(sett.bool_write_tree), statsByVariables=$(join(sett.statsByVariables,','))"))
+general_settings=convert(String,string("Write tree to txt file: $(sett.writeTree), statsByVariables=$(join(sett.statsByVariables,','))"))
 #general_settings=convert(String,string(general_settings,))
 	char_levels=map(x->length(features[x].pool),sett.number_of_num_features+1:sett.number_of_num_features+sett.number_of_char_features)
 	num_levels=map(x->length(features[x].pool),1:sett.number_of_num_features)
@@ -486,14 +486,14 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 		  println(stars)
 		  println("---General Settings------------------------------------------------------------")
 		  println(general_settings)
-		  print_some_settings(sett,["write_sas_code","write_iteration_matrix","write_result","write_statistics","boolCreateZipFile","write_csharp_code","statsRandomByVariable","boolSaveJLDFile"])
+		  print_some_settings(sett,["writeSasCode","writeIterationMatrix","writeResult","writeStatistics","boolCreateZipFile","writeCsharpCode","statsRandomByVariable","saveJLDFile"])
 		  println("---Data Summary----------------------------------------------------------------")
 		  println("Number of records - Trn: $(length(trnidx)) Val: $(length(validx)) Val Proportion: $(round(length(validx)/(length(trnidx)+length(validx)),sigdigits=4))")
 		  println("Weight - Trn: $(round(sumwtrn,sigdigits=6)) Val: $(round(sumwval,sigdigits=6)) Val Proportion: $(round(sumwval/(sumwtrn+sumwval),sigdigits=4))")
 		  println("Number of numeric/character variables: $(sett.number_of_num_features)/$(sett.number_of_char_features)")
       end
 	  if size(num_levels,1) >0
-        prnt&&println(string("Number of levels for numeric variables: (Maximal # of splitting points: $(sett.max_splitting_points_num))"))
+        prnt&&println(string("Number of levels for numeric variables: (Maximal # of splitting points: $(sett.maxSplittingPoints))"))
         num_level_string=join(sort(num_levels, rev=true),",")
         prnt&&println(string(" ",num_level_string))
       else
@@ -512,10 +512,10 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.bool_writ
 	  prnt&&println("catSortByThreshold: $(sett.catSortByThreshold), catSortBy: $(replace(string(sett.catSortBy),"DecisionTrees."=>"")), smoothEstimates: $(sett.smoothEstimates), deriveFitPerScoreFromObservedRatios: $(sett.deriveFitPerScoreFromObservedRatios)")
 
   #create a string which contains all model settings (this will be written to output file(s))
-      model_setting_string=convert(String,string("Number of records - Trn: $(length(trnidx)) Val: $(sum(validx)) \nNumber of levels for numeric variables: (Maximal # of splitting points: $(sett.max_splitting_points_num)) "))
+      model_setting_string=convert(String,string("Number of records - Trn: $(length(trnidx)) Val: $(sum(validx)) \nNumber of levels for numeric variables: (Maximal # of splitting points: $(sett.maxSplittingPoints)) "))
       model_setting_string=convert(String,string(model_setting_string, "\n",num_level_string, "\nNumber of levels for character variables: \n", char_level_string ))
       model_setting_string=convert(String,string(model_setting_string, "\n", general_settings))
-      model_setting_string=convert(String,string(model_setting_string, "\n", "Type: $(sett.model_type) \nMinweight: $(sett.minw) \nRnd: $(sett.randomw) \nNumMaxSplitPoints: $(sett.max_splitting_points_num) \nCriterion: $(replace(string(sett.crit),"DecisionTrees."=>"")) \nIterations: $(sett.niter) \nModeration Vector: $(join(sett.moderationvector,",")) \nNScores: $(sett.nscores) \nBoolStartAtMean: $(sett.BoolStartAtMean) "))
+      model_setting_string=convert(String,string(model_setting_string, "\n", "Type: $(sett.model_type) \nMinweight: $(sett.minWeight) \nRnd: $(sett.randomw) \nNumMaxSplitPoints: $(sett.maxSplittingPoints) \nCriterion: $(replace(string(sett.crit),"DecisionTrees."=>"")) \nIterations: $(sett.iterations) \nModeration Vector: $(join(sett.moderationvector,",")) \nNScores: $(sett.nScores) \nBoolStartAtMean: $(sett.startAtMean) "))
       model_setting_string=convert(String,string(model_setting_string, "\n", "Datafolder= \n",datafolder,"\nOutfilename= \n",outfileStringOnly," "))
       model_setting_string=convert(String,string(model_setting_string, "\n\n", "CSV column names (in the order in which Julia processes them):\n",join(sett.df_name_vector,",")))
       #permutedims is "transpose" in julia 0.5
@@ -533,8 +533,8 @@ prnt&&println("---Model Settings------------------------------------------------
 
 	  if "build_tree"==sett.model_type
 		  if prnt
-			  println("Type: $(sett.model_type), Minweight: $(sett.minw), Rnd: $(sett.randomw)")
-			  println("NumMaxSplitPoints: $(sett.max_splitting_points_num), Criterion: $(replace(string(sett.crit),"DecisionTrees."=>""))")
+			  println("Type: $(sett.model_type), Minweight: $(sett.minWeight), Rnd: $(sett.randomw)")
+			  println("NumMaxSplitPoints: $(sett.maxSplittingPoints), Criterion: $(replace(string(sett.crit),"DecisionTrees."=>""))")
 			  println(stars)
 			  println(string(""))
 			  println(string("Building Tree... Time: $(Dates.now())"))
@@ -572,14 +572,14 @@ prnt&&println("---Model Settings------------------------------------------------
 			#this is not done in an efficient manner yet..... we are copying data to get est[trnidx] etc...
 			@time xlData,overallstats=createSingleTreeExcel(trnidx,validx,sett,tree,leaves_of_tree,fitted_values_tree,leaf_number_vector,numerator,denominator,weight)
 			resulting_model.exceldata=xlData
-			if sett.write_statistics
+			if sett.writeStatistics
 				writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
 			end
 			z=permutedims(overallstats,(2,1))
 			dfStats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
 			DataFrames.names!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
 			resulting_model.modelstats=dfStats
-			if sett.boolSaveResultAsJLDFile
+			if sett.saveResultAsJLDFile
 				println("Saving results to jld2 file: \n $(jldresultsfile)")
 				isfile(jldresultsfile)&&rm(jldresultsfile)
 				@time JLD2.@save jldresultsfile xlData res leaves_of_tree trnidx validx fitted_values_tree tree var_imp1d_str_arr var_imp2d_str_arr onedimintvec_unused twodimintvec_unused
@@ -599,7 +599,7 @@ prnt&&println("---Model Settings------------------------------------------------
 			push!(filelistWithFilesToBeZipped,dot_graph_TXT_file)
 			isfile(dot_graph_visualization_file)&&push!(filelistWithFilesToBeZipped,dot_graph_visualization_file)
 		end
-		if sett.bool_write_tree
+		if sett.writeTree
 			#write settings
 			println("Writing tree structure to file: \n $(tree_file)")				
 				isfile(tree_file)&&rm(tree_file)
@@ -610,18 +610,18 @@ prnt&&println("---Model Settings------------------------------------------------
 				write_tree(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,var_imp1d_str_arr,var_imp2d_str_arr,0,tree_file,sett.df_name_vector,dtmtable.mappings)
 				push!(filelistWithFilesToBeZipped,tree_file)			
             end
-			if sett.write_sas_code
+			if sett.writeSasCode
 				#write SAS Code
                 if isa(tree.rootnode,Leaf)
                     @warn("DTM: Tree is a single leaf. No SAS Code was produced.")
                 else 
                     println("Writing SAS Code: \n $(sas_code_file)")
                     isfile(sas_code_file)&&rm(sas_code_file)
-                    write_sas_code(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings,1.0)
+                    writeSasCode(dtmtable.candMatWOMaxValues,tree,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings,1.0)
                     push!(filelistWithFilesToBeZipped,sas_code_file)
                 end
 			end		
-			if sett.write_result
+			if sett.writeResult
 				println("Exporting Data: \n $(this_outfile)")
 				isfile(this_outfile)&&rm(this_outfile)
 				DelimitedFiles.writedlm(this_outfile,res,',')
@@ -630,9 +630,9 @@ prnt&&println("---Model Settings------------------------------------------------
 	#end build tree
 	elseif in(sett.model_type,["bagged_tree","boosted_tree"])
 		if prnt
-			println("Type: $(sett.model_type),Iterations: $(sett.niter),Minweight: $(sett.minw)")
-			if size(sett.moderationvector,1)>1;println("Moderationvector = $(join(sett.moderationvector,",")) ");else println("Moderation Factor: $(sett.mf)"); end;
-			println("Rnd: $(sett.randomw), NumMaxSplitPoints: $(sett.max_splitting_points_num), NScores: $(sett.nscores), Criterion: $(replace(string(sett.crit),"DecisionTrees."=>""))")
+			println("Type: $(sett.model_type),Iterations: $(sett.iterations),Minweight: $(sett.minWeight)")
+			if size(sett.moderationvector,1)>1;println("Moderationvector = $(join(sett.moderationvector,",")) ");else println("Moderation Factor: $(sett.learningRate)"); end;
+			println("Rnd: $(sett.randomw), NumMaxSplitPoints: $(sett.maxSplittingPoints), nScores: $(sett.nScores), Criterion: $(replace(string(sett.crit),"DecisionTrees."=>""))")
 			println("boolRandomizeOnlySplitAtTopNode: $(sett.boolRandomizeOnlySplitAtTopNode), sett.boolRankOptimization: $(sett.boolRankOptimization)")
 			println("subsampling_features_prop: $(sett.subsampling_features_prop), subsampling_prop: $(sett.subsampling_prop)")
 			println(stars)
@@ -647,27 +647,27 @@ prnt&&println("---Model Settings------------------------------------------------
 			#this line is for  the sas,vba and csharp code
 			estimatesPerScoreForCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
 			
-			if sett.write_sas_code
+			if sett.writeSasCode
 				#write SAS Code
 				println("Writing SAS Code: \n $(sas_code_file)")
 				isfile(sas_code_file)&&rm(sas_code_file)
 				if sett.roptForcedPremIncr
 					error("this does currently not work")
 				else
-					write_sas_code(estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings)
+					writeSasCode(estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings)
 				end
 				push!(filelistWithFilesToBeZipped,sas_code_file)
 			end
-			if sett.write_csharp_code				
+			if sett.writeCsharpCode				
 				println("Writing C# Code: \n $(csharp_code_file)")
 				isfile(csharp_code_file)&&rm(csharp_code_file)				
-				write_csharp_code(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
+				writeCsharpCode(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,csharp_code_file)
 			end 
-			if sett.write_vba_code
+			if sett.writeVbaCode
 				println("Writing VBA Code: \n $(vba_code_file)")
 				isfile(vba_code_file)&&rm(vba_code_file)
-				write_vba_code(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
+				writeVbaCode(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
 				push!(filelistWithFilesToBeZipped,vba_code_file)
 			end
 		#end #boosting
@@ -686,11 +686,11 @@ prnt&&println("---Model Settings------------------------------------------------
 
 resulting_model=resultEnsemble
 
-if sett.write_result
+if sett.writeResult
 	res=hcat(key,trnidx_one_zero_full_length,resultEnsemble.scores,estimateUnsmoothed,estimateSmoothed,estimatedRatio)
 end	
 #save results as *.JLD2 file
-if sett.boolSaveResultAsJLDFile
+if sett.saveResultAsJLDFile
 	println("Saving results to jld2 file: \n $(jldresultsfile)")
 	isfile(jldresultsfile)&&rm(jldresultsfile)
 	@time JLD2.@save jldresultsfile xlData dtmtable trnidx validx vectorOfLeafNumbers vectorOfLeafArrays rawObservedRatioPerScore est_matrixFromScores stats estimateUnsmoothed estimateSmoothed estimateFromRelativities resultEnsemble
@@ -700,7 +700,7 @@ end
     #after boosting bagging  export etc
 #here we are in the "section": 	#if in(sett.model_type,["bagged_tree","boosted_tree"])
 #output for boosting & bagging#write tree
-	if sett.bool_write_tree
+	if sett.writeTree
 				#write settings
 				println("Writing tree structure to file: \n $(tree_file)")
 				isfile(tree_file)&&rm(tree_file)
@@ -709,23 +709,23 @@ end
 				push!(filelistWithFilesToBeZipped,tree_file)
 	end
 	#Write statistics
-	if sett.write_statistics
+	if sett.writeStatistics
 			writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
 		 end
 	#Write result to CSV
-		if sett.write_result
+		if sett.writeResult
 			println("Exporting Data: \n $(this_outfile)")
 			isfile(this_outfile)&&rm(this_outfile)
 			DelimitedFiles.writedlm(this_outfile,res,',')
 			push!(filelistWithFilesToBeZipped,this_outfile)
 		end
 	#write estimates matrix
-		if sett.write_iteration_matrix	&&(length(vectorOfLeafNumbers)<length(key))
+		if sett.writeIterationMatrix	&&(length(vectorOfLeafNumbers)<length(key))
 			@warn "DTM: The iteration matrices wil not be written to file. length(key)=$(length(key)), but length(vectorOfLeafNumbers)=$(length(vectorOfLeafNumbers)). \r\n"
-			@warn "DTM: Please check the values of sett.write_iteration_matrix and sett.boolProduceEstAndLeafMatrices"
-			sett.boolProduceEstAndLeafMatrices||@warn("DTM: You may want to set sett.boolProduceEstAndLeafMatrices to true")
+			@warn "DTM: Please check the values of sett.writeIterationMatrix and sett.prroduceEstAndLeafMatrices"
+			sett.prroduceEstAndLeafMatrices||@warn("DTM: You may want to set sett.prroduceEstAndLeafMatrices to true")
 		else
-			if sett.write_iteration_matrix		
+			if sett.writeIterationMatrix		
 				#Matrix with Leaf Numbers
 				#currently we only have the training mat
 				leafnrfile=string(path_and_fn_wo_extension,".leafnumbers.csv")

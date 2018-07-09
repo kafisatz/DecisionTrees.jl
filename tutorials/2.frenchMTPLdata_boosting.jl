@@ -91,10 +91,10 @@ length(dtmtable.trnidx)<length(dtmtable.numerator)
 
 dtmtable.features #explanatory variables
 #note that the data is generally stored in a compressed format
-#for numerical variables, the algorithm considers sett.max_splitting_points_num  (default 250) splitting points which are uniformly spaced
+#for numerical variables, the algorithm considers sett.maxSplittingPoints  (default 250) splitting points which are uniformly spaced
 #you can increase this number and re-prepare the data if you want
 #=
-    sett.max_splitting_points_num=100
+    sett.maxSplittingPoints=100
     dtmtable=prep_data_from_df(df_prepped,sett,fn)
 =#
 #we realize that it may be sutiable to define the splitting in a different manner (than uniformly spaced).
@@ -111,22 +111,22 @@ originalTrnValIndex=deepcopy(fullData[:trnTest])
 ##############################
 
 #the minimum weight of each individual tree shall be 3% of the exposure per leaf
-#You can set minw to any positive value, e.g. sett.minw=20000
-#if minw is set to a value in [-1,0] its absolute value is interpreted as a percentage
-#thus with sett.minw=-0.03 we define the min weight of each leaf as 3% of the training data
+#You can set minWeight to any positive value, e.g. sett.minWeight=20000
+#if minWeight is set to a value in [-1,0] its absolute value is interpreted as a percentage
+#thus with sett.minWeight=-0.03 we define the min weight of each leaf as 3% of the training data
 
 #model_type: currently only "build_tree" and "boosted_tree" are supported
 #we might add the implementation of bagging at a later stage
 
-#niter is the number of trees
+#iterations is the number of trees
 
-#mf is the moderation factor which is also know as shrinkage or learning rate
+#learningRate is the moderation factor which is also know as shrinkage or learning rate
 
 #subsampling_features_prop must be between 0 and 1 and defines the subsampling probability of the predictors for each tree 
 #i.e. with subsampling_features_prop=0.5 each tree will only use half of the predictors
 
-#boolCalculatePoissonError, is a boolean which we need to enable here in order for output to show the poisson error of the estimates
-updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.05,subsampling_features_prop=.7,boolCalculatePoissonError=true)
+#calculatePoissonError, is a boolean which we need to enable here in order for output to show the poisson error of the estimates
+updateSettingsMod!(sett,minWeight=-0.03,model_type="boosted_tree",iterations=40,learningRate=0.05,subsampling_features_prop=.7,calculatePoissonError=true)
 
 ##############################
 #Run single Boosting Model
@@ -144,7 +144,7 @@ sheetnames=map(x->x.name,resM.exceldata.sheets)
 #the following is the ModelStatistics sheets as a Dataframe 
 resM.exceldata.sheets[3].data
 #this is the lift in the training data for each iteration of the boosting model
-resM.exceldata.sheets[3].data[:x6][1:sett.niter+1]
+resM.exceldata.sheets[3].data[:x6][1:sett.iterations+1]
 
 ############################################################
 #Investigate the predictions (fitted values)
@@ -155,7 +155,7 @@ resM.exceldata.sheets[3].data[:x6][1:sett.niter+1]
 #this is simply the combination of all decision trees
 
 #2. Smoothed fitted values per Score. 
-#the user can specify the number of scores for the output (see sett.nscores which defaults to 1000)
+#the user can specify the number of scores for the output (see sett.nScores which defaults to 1000)
 #DecisionTrees runs a moving average over the observed data to smooth the noise
 
 #3. Unsmoothed fitted values per Score. 
@@ -193,7 +193,7 @@ end
 fitted=fittedThroughScores
 #notably for these fitted values we have less unique values
 @show unique(fitted)
-#this should correspond to sett.nscores
+#this should correspond to sett.nScores
 errs=poissonError(dtmtable.numerator,fitted.*dtmtable.denominator);
 trnAvgError=sum(errs[dtmtable.trnidx])/length(dtmtable.trnidx) #0.30909682928383053
 valAvgError=sum(errs[dtmtable.validx])/length(dtmtable.validx) #0.3192856166040531
@@ -222,7 +222,7 @@ estimatedFrequencieForFirst20Obs=predict(resM,dtmtable.features[1:20,:])
 #whole data set and then discrard possible hold out observations  (or mark as validation through validx)
 
 #Let us try a more granular model with more iterations and a higher learning rate
-updateSettingsMod!(sett,minw=-0.01,niter=100,mf=0.1,subsampling_features_prop=1.0,boolCalculatePoissonError=true)
+updateSettingsMod!(sett,minWeight=-0.01,iterations=100,learningRate=0.1,subsampling_features_prop=1.0,calculatePoissonError=true)
 resultingFiles,resMGranular=dtm(dtmtable,sett)
 
 #todo write down error metrics of this model
@@ -252,15 +252,15 @@ writetable(joinpath("data","freMTPL2","freMTPL2_withJuliaBoostingScores1000.csv"
 ############################################################
 
 #You can modify the settings directly, but should generally not do so.
-sett.niter=4
+sett.iterations=4
 #It is preferred to use the update function to avoid creating an 'invalid' setting (such as a negative number of iterations)
-#e.g. this will throw an error (whereas sett.niter=-3 does not)
-# updateSettingsMod!(sett,niter=-3) 
+#e.g. this will throw an error (whereas sett.iterations=-3 does not)
+# updateSettingsMod!(sett,iterations=-3) 
 
 #you can modify the number of scores which are derived
-updateSettingsMod!(sett,nscores=10000) 
+updateSettingsMod!(sett,nScores=10000) 
 #let us set it back to 1000
-updateSettingsMod!(sett,nscores=1000) 
+updateSettingsMod!(sett,nScores=1000) 
 #The resulting Excel ouput shows a number of graphs per score band
 #if you are interested in the tails of the data, you many want to pick more granular score bands
 #the default is this
@@ -268,14 +268,14 @@ sett.scorebandsstartingpoints
 #you can set them manually by defining the 'start' of each band
 updateSettingsMod!(sett,scorebandsstartingpoints=[1,25,50,75,100,300,500,800,900,925,950,975])
 sett.scorebandsstartingpoints
-#at the moment you will need to re run the hwole model if you amend nscores or scorebands
-updateSettingsMod!(sett,niter=20)
+#at the moment you will need to re run the hwole model if you amend nScores or scorebands
+updateSettingsMod!(sett,iterations=20)
 resultingFiles,resM=dtm(dtmtable,sett)
 
 #SOME COMMENT ON MANY UNUSED AND EXPERMIANTAL options
 #if you want to use the resutling tree in a different programming language you may want to
 #consider these options which give you the core structure of the model in other languages
-# updateSettingsMod!(sett,write_csharp_code="true",write_vba_code="true",write_sas_code="true")
+# updateSettingsMod!(sett,writeCsharpCode="true",writeVbaCode="true",writeSasCode="true")
 
 #mention DOT graph
 
@@ -285,23 +285,23 @@ resultingFiles,resM=dtm(dtmtable,sett)
 
 #set some default settings
 updateSettingsMod!(sett,
-niter=250,
+iterations=250,
 model_type="boosted_tree",
-nscores="1000",
-write_statistics="true",
-write_sas_code="false",
-write_iteration_matrix="false",
-write_result="false",
-write_csharp_code="false",
-write_vba_code="false",
-boolSaveJLDFile="false",
-boolSaveResultAsJLDFile="false",
+nScores="1000",
+writeStatistics="true",
+writeSasCode="false",
+writeIterationMatrix="false",
+writeResult="false",
+writeCsharpCode="false",
+writeVbaCode="false",
+saveJLDFile="false",
+saveResultAsJLDFile="false",
 
 showProgressBar_time="true",
-boolProduceEstAndLeafMatrices="false",
+prroduceEstAndLeafMatrices="false",
 write_dot_graph="false",
 
-boolCalculatePoissonError="true",
+calculatePoissonError="true",
 performanceMeasure="Average Poisson Error Val"
 )
 
@@ -319,8 +319,8 @@ performanceMeasure="Average Poisson Error Val"
 #X is the size of the cartesian product of all parameter vectors over which we want to loop.
 
 settV=createGridSearchSettings(sett,    
-    minw=[-0.03,-0.01,-0.005,-0.0025]
-    ,mf=[0.1,0.05],
+    minWeight=[-0.03,-0.01,-0.005,-0.0025]
+    ,learningRate=[0.1,0.05],
     subsampling_features_prop=[.5,.7,1.0],
     crit=["poissondeviance", "difference"])
     #,   subsampling_prop=[1.0,.5,.7]);

@@ -45,7 +45,7 @@ Random.srand(1239)
 trnValCol=BitArray(rand() < 0.7 for x in 1:size(fullData,1));
 fullData[:trnValCol]=trnValCol
 
-@warn("redo the whole calc with no validation data! once we have ensure that minw is a meaningful value")
+@warn("redo the whole calc with no validation data! once we have ensure that minWeight is a meaningful value")
 
 #The data should match this total for the column Paycum11
 @assert sum(fullData[:PayCum11])==1477250848 "Expected 1464014219, have: $(sum(fullData[:PayCum11]))"
@@ -146,9 +146,17 @@ for selectedWeight in minwList
         #this is currently a requirement for the algorithms we apply (although one may be able to weaken this condition and the algorithms would still run)
         cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
         cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
-        #! NOTE for now we are discarding all claims which have zero payment in the more recent year which dermines the CL factor
-        #this condition might be weakend, but I would first need to dig into the algorithm to find out if it could break anything
-        thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
+
+        #discard all claims which are zero for 'both columns'
+        discardIdx=(thisdata[cumulativePaymentCol].==0) .&& (thisdata[cumulativePaymentCol] .==0)
+        @show sum(discardIdx)
+        if any(discardIdx)
+            thisdata=thisdata[.!discardIdx]
+        end 
+        #NOTE for now we are discarding all claims which have zero payment in the more recent year which dermines the CL factor
+        #we can keep the claims with zero values for cumulativePaymentCol
+        #however, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
+        #thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
         dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
 
         #run a single tree         
@@ -157,8 +165,8 @@ for selectedWeight in minwList
         else 
             actual_minimum_weight=copy(selectedWeight)
         end    
-        updateSettingsMod!(sett,minw=actual_minimum_weight,model_type="build_tree",bool_write_tree=false)
-        resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minw,"_ldfYear_",ldfYear,".txt")))
+        updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=actual_minimum_weight,model_type="build_tree",writeTree=false)
+        resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))
 
         #apply tree to the FULL data set
         fittedValues,leafNrs=predict(resM,dtmtablefullData.features)
@@ -218,7 +226,7 @@ mean.(map(x->abs2.(treeResults[x][:ultimate]-truthPerRow),minwList))
 
 #fit model 
 #=
-updateSettingsMod!(sett,minw=-0.2,model_type="build_tree")
+updateSettingsMod!(sett,minWeight=-0.2,model_type="build_tree")
 resultingFiles,resM=dtm(dtmtable,sett)
 #predict the fittedValues and Leaf Numbers on the total data
 fittedValues,leafNrs=predict(resM,dtmtablefullData.features)

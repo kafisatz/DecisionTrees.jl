@@ -36,7 +36,7 @@ dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnva
 ##############################
 #Define model SETTINGS
 
-updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=2,mf=0.1,subsampling_features_prop=.7,boolCalculatePoissonError=true)
+updateSettingsMod!(sett,minWeight=-0.03,model_type="boosted_tree",iterations=2,learningRate=0.1,subsampling_features_prop=.7,calculatePoissonError=true)
 
 ##############################
 #Run single Boosting Model
@@ -44,23 +44,23 @@ resultingFiles,resM=dtm(dtmtable,sett)
 
 #measure allocation
 updateSettingsMod!(sett,
-niter=40,
+iterations=40,
 model_type="boosted_tree",
-nscores="1000",
-write_statistics="false",
-write_sas_code="false",
-write_iteration_matrix="false",
-write_result="false",
-write_csharp_code="false",
-write_vba_code="false",
-boolSaveJLDFile="false",
-boolSaveResultAsJLDFile="false",
+nScores="1000",
+writeStatistics="false",
+writeSasCode="false",
+writeIterationMatrix="false",
+writeResult="false",
+writeCsharpCode="false",
+writeVbaCode="false",
+saveJLDFile="false",
+saveResultAsJLDFile="false",
 
 showProgressBar_time="false",
-boolProduceEstAndLeafMatrices="false",
+prroduceEstAndLeafMatrices="false",
 write_dot_graph="false",
 
-boolCalculatePoissonError="true",
+calculatePoissonError="true",
 performanceMeasure="Average Poisson Error Val"
 )
 

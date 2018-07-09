@@ -8,7 +8,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	denominator=dtmtable.denominator
 	mappings=dtmtable.mappings
 	candMatWOMaxValues=dtmtable.candMatWOMaxValues
-	obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,boolProduceEstAndLeafMatrices=initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominator,sett)
+	obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,startAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,prroduceEstAndLeafMatrices=initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominator,sett)
 	#trn_meanobservedvalue is the mean observed RATIO, i.e. sum(numerator)/sum(denominator) for the training data
 	T_Uint8_or_UInt16=find_max_type(features)
     obs=obstrn+obsval
@@ -24,10 +24,10 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	else
 		actual_moderationvector=copy(moderationvector)
 	end
-	if BoolStartAtMean
+	if startAtMean
 		estimatedRatio=ones(length(weight)).*trn_meanobservedvalue
 	else
-		error("DTM: This is currently not working: please set BoolStartAtMean=true)")
+		error("DTM: This is currently not working: please set startAtMean=true)")
 	end
 	
 	estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
@@ -42,7 +42,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(inds_considered,iterations)
 	
 	res=Array{Union{Leaf{T_Uint8_or_UInt16},Node{UInt8},Node{UInt16}}}(undef,iterations)
-	if boolProduceEstAndLeafMatrices
+	if prroduceEstAndLeafMatrices
 		est_matrix=Array{Float64}(undef,obs,iterations+1)
 		est_matrixFromScores=copy(est_matrix)
 		MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
@@ -67,7 +67,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	#this header needs to be in line with the output of the function createTrnValStatsForThisIteration
 	statsPerIteration=global_statsperiter_header	
 	currentRelativity=Array{Float64}(undef,obs)
-	scoreBandLabels=createScorebandsUTF8List(sett.scorebandsstartingpoints,sett.nscores,addtotal=true)
+	scoreBandLabels=createScorebandsUTF8List(sett.scorebandsstartingpoints,sett.nScores,addtotal=true)
 	#this row is only here such that the variables are initialized outside the for loop
 	local fristRowOfThisTable,obsPerScore,vectorWeightPerScore,numPerScore,denomPerScore,scores,scoresVAL,cumulativeStatsPerScoreBand,maxRawRelativityPerScoreSorted,rawObservedRatioPerScore,MAPPINGSmoothedEstimatePerScore
 
@@ -91,7 +91,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 						tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
 			end
 			#indicatedRelativity
-			if (!sett.bINTERNALignoreNegRelsBoosting)&&(minimum(indicatedRelativityForApplyTree_reused)<0.0)
+			#if (!sett.ignoreNegRelsBoosting)&&(minimum(indicatedRelativityForApplyTree_reused)<0.0)
+            if minimum(indicatedRelativityForApplyTree_reused)<0.0
 				#todo/tbd check this: if there are negative indicated relativites the boosting approach is not meaningful.
 				@warn("The boosting model encountered negative indicated realtivities for some leaves.")
 				@warn("This should not happen if you have only positive values for numerator and denominator.")
@@ -106,14 +107,14 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			#Apply this iteration to the validation data set						
 			apply_tree_by_leaf!(indicatedRelativityForApplyTree_reused,reused_fitted_leafnr_vector,validx,res[iter],features)
 			#update_part_of_this_vector!(validx,indicatedRelativityForApplyTree_reused,indicatedRelativity)						
-            if boolProduceEstAndLeafMatrices
-            #todo/tbd this could possibly be optimized. We are calling apply_tree_by_leaf! twice (if boolProduceEstAndLeafMatrices==true), once for val and once for trn
+            if prroduceEstAndLeafMatrices
+            #todo/tbd this could possibly be optimized. We are calling apply_tree_by_leaf! twice (if prroduceEstAndLeafMatrices==true), once for val and once for trn
                     apply_tree_by_leaf!(indicatedRelativityForApplyTree_reused,reused_fitted_leafnr_vector,trnidx,res[iter],features)
                     MatrixOfLeafNumbers[:,iter+1]=reused_fitted_leafnr_vector #leaf_numbers(vectorOfLeafArrays[1+iter],obs) #TODO / TBD adjust this for subsampling. this may not work properly, as each tree will use a different amount of data AND DIFFERENT OBSERVATIONS! thus we cannot rely on the *.idx field of the leaves!			
             end			
 			#Moderate the estimate, this is done for BOTH trn and val!
 			_moderate!(estimatedRatio,indicatedRelativityForApplyTree_reused,current_mdf)
-			if boolProduceEstAndLeafMatrices
+			if prroduceEstAndLeafMatrices
 				write_column!(est_matrix,iter+1,estimatedRatio)
 			end
 			update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)
@@ -130,7 +131,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			sett.smoothEstimates=="0" ? referenceForNumEstimates=rawObservedRatioPerScore : referenceForNumEstimates=MAPPINGSmoothedEstimatePerScore
 			update_mapped_estFromScores!(estFromScores,referenceForNumEstimates,scores)			
 			
-			if boolProduceEstAndLeafMatrices
+			if prroduceEstAndLeafMatrices
 				write_column!(est_matrixFromScores,iter+1,estFromScores)
 			end
 		#Derive Cumulative Statistics
@@ -148,7 +149,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,iter,sett.scorebandsstartingpoints,view(actualNumerator,trnidx),view(denominator,trnidx),view(weight,trnidx),view(selectedEstimatedRatioForStats,trnidx),view(scores,trnidx),view(actualNumerator,validx),view(denominator,validx),view(weight,validx),view(selectedEstimatedRatioForStats,validx),view(scores,validx),sett)			
 			statsPerIteration=vcat(statsPerIteration,singleRowWithKeyMetrics)
 			if iter==1
-				fristRowOfThisTable=sett.niter+2+empty_rows_after_iteration_stats
+				fristRowOfThisTable=sett.iterations+2+empty_rows_after_iteration_stats
 				cumulativeStatsPerScoreBand=copy(statsThisIteration)
 			else
 				fristRowOfThisTable+=size(statsThisIteration,1)
@@ -225,7 +226,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 			stats=hcat(stats,errors_num_estimates)
 			xlData.sheets[statsSheetINDEX2]=ExcelSheet(nameOfModelStatisticsSheet,convert(DataFrame,stats))
 	end
-	z=deepcopy(stats[1:sett.niter+1,:])
+	z=deepcopy(stats[1:sett.iterations+1,:])
 	modelstats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
 	DataFrames.names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
 #resulting BT
@@ -233,7 +234,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	@assert issorted(trnidx)
 	trnidx_one_zero_full_length=map(x->UInt8(length(searchsorted(trnidx,x))),1:length(scores))	
 	fp=get_feature_pools(features)
-	resultingBT=BoostedTree(res,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,actual_moderationvector,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,BoolStartAtMean,MAPPINGSmoothedEstimatePerScore,rawObservedRatioPerScore,est_matrix,modelstats,xlData,trnidx_one_zero_full_length,fp)
+	resultingBT=BoostedTree(res,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,actual_moderationvector,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,startAtMean,MAPPINGSmoothedEstimatePerScore,rawObservedRatioPerScore,est_matrix,modelstats,xlData,trnidx_one_zero_full_length,fp)
 	return xlData,estimatedRatio,MatrixOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimatedRatioUnsmoothed,estimatedRatioSmoothed,estimateRatioFromRelativities,resultingBT
 end
 

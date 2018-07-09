@@ -1,5 +1,5 @@
 #tbd todo add single quotes around sheetnames for all chart formulas
-export write_statistics
+export writeStatistics
 
 function create_dataframe(arr::Array{U,2},header::Array{T,1}) where {T <: AbstractString,U <: Any}
 	res=convert(DataFrame,arr)
@@ -65,7 +65,7 @@ function addChartToWorkbook!(workbook::PyCall.PyObject,worksheet::PyCall.PyObjec
 	#writer[:save]()
 end
 
-function write_statistics(excelData::ExcelData,statsfile::T,write_header::Bool,write_index::Bool) where {T <: AbstractString} #,charts::Array{Chart,1})		
+function writeStatistics(excelData::ExcelData,statsfile::T,write_header::Bool,write_index::Bool) where {T <: AbstractString} #,charts::Array{Chart,1})		
 	#writing an Excel file seems very slow if the file already exists!
 	isfile(statsfile)&&rm(statsfile)
 	
@@ -407,41 +407,41 @@ function add_iteration_charts!(xlData::ExcelData,settings::ModelSettings,startro
 	chartRowStep=22
 	
 	currentChartRow=startrow
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,2,5,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.iterations,2,5,1)
 	push!(xlData.charts,deepcopy(thischart))
 	currentChartRow+=chartRowStep
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,6,7,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.iterations,6,7,1)
 	push!(xlData.charts,deepcopy(thischart))
 	currentChartRow+=chartRowStep
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,3,4,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.iterations,3,4,1)
 	push!(xlData.charts,deepcopy(thischart))
 	currentChartRow+=chartRowStep
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"column",settings.niter,8,9,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"column",settings.iterations,8,9,1)
 	push!(xlData.charts,deepcopy(thischart))
 	currentChartRow+=chartRowStep
-	thischart=defineChartWithNSeries("Overview","ModelStatistics",string("A",currentChartRow),"line",2,settings.niter,Int[14,15,18,19],1,"Iteration","","")		
+	thischart=defineChartWithNSeries("Overview","ModelStatistics",string("A",currentChartRow),"line",2,settings.iterations,Int[14,15,18,19],1,"Iteration","","")		
 	push!(xlData.charts,deepcopy(thischart))
 	currentChartRow+=chartRowStep
-	thischart=defineChartWithNSeries("Overview","ModelStatistics",string("A",currentChartRow),"line",2,settings.niter,Int[12,13,16,17],1,"Iteration","","")		
+	thischart=defineChartWithNSeries("Overview","ModelStatistics",string("A",currentChartRow),"line",2,settings.iterations,Int[12,13,16,17],1,"Iteration","","")		
 	push!(xlData.charts,deepcopy(thischart))
 	currentChartRow+=chartRowStep
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,22,23,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.iterations,22,23,1)
 	push!(xlData.charts,deepcopy(thischart))
 	currentChartRow+=chartRowStep
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,20,21,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.iterations,20,21,1)
 	push!(xlData.charts,deepcopy(thischart))
 	
 	#add charts for RSquared of Numerator
 	currentChartRow+=chartRowStep
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,26,27,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.iterations,26,27,1)
 	push!(xlData.charts,deepcopy(thischart))	
 	#add charts for RSS of numerator
 	currentChartRow+=chartRowStep
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,30,31,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.iterations,30,31,1)
 	push!(xlData.charts,deepcopy(thischart))		
 	#add chart for Poisson Error
 	currentChartRow+=chartRowStep
-	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.niter,32,33,1)
+	thischart=defineChartWith2Series("Overview","ModelStatistics",string("A",currentChartRow),"line",settings.iterations,32,33,1)
 	push!(xlData.charts,deepcopy(thischart))		
 	
 return nothing

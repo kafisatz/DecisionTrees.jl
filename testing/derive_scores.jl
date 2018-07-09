@@ -17,7 +17,7 @@ sett=td["sett"];
 trn_meanobservedvalue=td["trn_meanobservedvalue"];
 
 maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,uniqueRelativitiesSorted,nscoresPotentiallyReduced				=DTM2.constructANDderiveScores(trnidx,validx,estimatedRatio,currentRelativity,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett)
-@assert isequal(DTM2.constructANDderiveScores_OLD_VERSION(trnidx,validx,estimatedRatio,currentRelativity,sett.nscores,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett.smoothEstimates, sett.print_details),DTM2.constructANDderiveScores(trnidx,validx,estimatedRatio,currentRelativity,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett))
+@assert isequal(DTM2.constructANDderiveScores_OLD_VERSION(trnidx,validx,estimatedRatio,currentRelativity,sett.nScores,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett.smoothEstimates, sett.print_details),DTM2.constructANDderiveScores(trnidx,validx,estimatedRatio,currentRelativity,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett))
 @benchmark DTM2.constructANDderiveScores(trnidx,validx,estimatedRatio,currentRelativity,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett)
 #v0 memory estimate:  20.59 MiB  allocs estimate:  164531   179ms 2.4%gc
 #v1 
@@ -28,19 +28,19 @@ rawObservedRatioPerScore[i]=sum(view(numerator_srt,previdx:nextidx))/sum(view(de
 
 relativities=currentRelativity
 meanobservedvalue=trn_meanobservedvalue
-nscores=sett.nscores
+nScores=sett.nScores
 smooth=sett.smoothEstimates
 print_details=sett.print_details
 boolSmoothingEnabled=!(smooth=="0")
 #derive Scores from relativities
 uniqueRelativitiesSorted=unique(view(relativities,trnidx))
 sort!(uniqueRelativitiesSorted,alg=QuickSort)
-ns=min(nscores,size(uniqueRelativitiesSorted,1))
-#ns<nscores&&@warn("There are only $(ns) distinct relativities. Number of scores will be limited to $(ns) instead of $(nscores).")
+ns=min(nScores,size(uniqueRelativitiesSorted,1))
+#ns<nScores&&@warn("There are only $(ns) distinct relativities. Number of scores will be limited to $(ns) instead of $(nScores).")
 aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=DTM2.constructScores(
-    trnidx,validx,estimatedRatio,relativities,uniqueRelativitiesSorted,actualNumerator,denominator,weight,meanobservedvalue,ns,nscores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
+    trnidx,validx,estimatedRatio,relativities,uniqueRelativitiesSorted,actualNumerator,denominator,weight,meanobservedvalue,ns,nScores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
 
-    @code_warntype DTM2.constructScores(trnidx,validx,estimatedRatio,relativities,uniqueRelativitiesSorted,actualNumerator,denominator,weight,meanobservedvalue,ns,nscores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
+    @code_warntype DTM2.constructScores(trnidx,validx,estimatedRatio,relativities,uniqueRelativitiesSorted,actualNumerator,denominator,weight,meanobservedvalue,ns,nScores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
 
     estimatedRatioPerRow_full_vec=estimatedRatio
     raw_rel_full_vec=relativities
@@ -92,8 +92,8 @@ x=rand(999);
 
 
 
-estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},uniqueRelativitiesSorted::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nscoresPotentiallyReduced::Int,nscores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
-trnidx,validx,estimatedRatio,relativities,uniqueRelativitiesSorted,actualNumerator,denominator,weight,meanobservedvalue,ns,nscores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
+estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},uniqueRelativitiesSorted::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nscoresPotentiallyReduced::Int,nScores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
+trnidx,validx,estimatedRatio,relativities,uniqueRelativitiesSorted,actualNumerator,denominator,weight,meanobservedvalue,ns,nScores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
 
 estimatedRatioPerRow_full_vec=estimatedRatio
 raw_rel_full_vec=relativities
@@ -103,7 +103,7 @@ weight_full_vec=weight
 nscoresPotentiallyReduced=ns
 
 
-@assert nscores>=nscoresPotentiallyReduced
+@assert nScores>=nscoresPotentiallyReduced
 maxItersForSmoothing=0
 #todo,tbd this can probably be done more efficiently
 raw_rel=view(raw_rel_full_vec,trnidx)
@@ -148,7 +148,7 @@ numPerScore,denomPerScore,maxRawRelativityPerScoreSorted,aggregatedModelledRatio
 estimatedRatioPerScore=smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabled)	
 @code_warntype smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabled)	
 #insert gaps if necessary
-insert_gaps_to_scores!(wtot,nscores,nscoresPotentiallyReducedTWOTimes,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
+insert_gaps_to_scores!(wtot,nScores,nscoresPotentiallyReducedTWOTimes,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
 
 
 

@@ -58,7 +58,7 @@ else
     ##############################
 
     dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
-    updateSettingsMod!(sett,minw=-0.03,model_type="build_tree",boolCalculatePoissonError=true)
+    updateSettingsMod!(sett,minWeight=-0.03,model_type="build_tree",calculatePoissonError=true)
 
     ##############################
     #Run single tree model
@@ -77,8 +77,8 @@ else
     #run boosting
     ##################################################
 
-    sett.niter=15
-    sett.mf=0.1
+    sett.iterations=15
+    sett.learningRate=0.1
     sett.model_type="boosted_tree"
     strs,resm2=dtm(dtmtable,sett)
     @test typeof(resm2.modelstats)==DataFrame
@@ -93,7 +93,7 @@ else
         @test !(location==nothing)
         if location!=nothing
             @test location>0
-            value=resm2.exceldata.sheets[3].data[sett.niter+1,location]
+            value=resm2.exceldata.sheets[3].data[sett.iterations+1,location]
             @test isapprox(value,expectedVals[i])
         end
     end
@@ -103,11 +103,11 @@ else
     #@test !(lifttrnc==nothing)
     #if liftvalc!=nothing
     #    @test liftvalc>0
-    #    liv=resm2.exceldata.sheets[3].data[sett.niter+1,liftvalc]
+    #    liv=resm2.exceldata.sheets[3].data[sett.iterations+1,liftvalc]
     #end
     #if lifttrnc!=nothing
     #    @test lifttrnc>0
-    #    lit=resm2.exceldata.sheets[3].data[sett.niter+1,lifttrnc]
+    #    lit=resm2.exceldata.sheets[3].data[sett.iterations+1,lifttrnc]
     #end    
     #@show lit,liv
     #@test abs(liv-6.45083145936651) <tolForTheseTests

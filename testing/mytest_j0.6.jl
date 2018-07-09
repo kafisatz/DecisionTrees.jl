@@ -30,7 +30,7 @@ end
 @show droppedrows=origrows-size(df_prepped,1)
 @show size(df_prepped)
 
-@time updateSettingsMod!(this_sett,model_type="boosted_tree",minw=-.15,randomw=.1,mf=.1,subsampling_features_prop=1,niter=50,subsampling_prop=1.00)
+@time updateSettingsMod!(this_sett,model_type="boosted_tree",minWeight=-.15,randomw=.1,learningRate=.1,subsampling_features_prop=1,iterations=50,subsampling_prop=1.00)
 
 outfileStringOnly="boosti"
 datafolder="C:\\temp\\"

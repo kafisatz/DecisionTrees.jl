@@ -270,17 +270,17 @@ end
 
 mutable struct ModelSettings
 	model_type::String #1
-	minw::Float64 #2
+	minWeight::Float64 #2
 	randomw::Float64 #3
 	crit::SplittingCriterion # fn version of 4
-	max_splitting_points_num::Int #5
-	niter::Int #6
-	mf::Float64 #7 moderationfactor
-	nscores::Int #8
+	maxSplittingPoints::Int #5
+	iterations::Int #6
+	learningRate::Float64 #7 moderationfactor
+	nScores::Int #8
 	adaptiveLearningRate::Float64 #9
 	prem_buffer::Int #11
-	BoolStartAtMean::Bool #12
-	bool_write_tree::Bool #13	
+	startAtMean::Bool #12
+	writeTree::Bool #13	
 	number_of_num_features::Int #14
 	spawnsmaller::Bool #26
     boolRankOptimization::Bool #35  
@@ -296,32 +296,31 @@ mutable struct ModelSettings
 	smoothEstimates::String #46
 	deriveFitPerScoreFromObservedRatios::Bool #deriveFitPerScoreFromObservedRatios::Bool (if this is true then the fit per score will be based on the observed ratio per score (instead of the fitted ratio per score)) . Note that this does not influence the structure of the tree, but only the fitted ratio per score (and scoreband)
     roptForcedPremIncr::Bool #47
-    write_sas_code::Bool #49
-	write_iteration_matrix::Bool #50
-	write_result::Bool #51
-	write_statistics::Bool #52
+    writeSasCode::Bool #49
+	writeIterationMatrix::Bool #50
+	writeResult::Bool #51
+	writeStatistics::Bool #52
 	boolCreateZipFile::Bool #53
-	write_csharp_code::Bool
-	write_vba_code::Bool
+	writeCsharpCode::Bool
+	writeVbaCode::Bool
 	nDepthToStartParallelization::Int
 	baggingWeightTreesError::String
 	cBB_niterBoosting::Int
 	cBB_niterBagging::Int
 	fixedinds::Array{Int,1}
-	boolNumeratorStats::Bool
-	bINTERNALignoreNegRelsBoosting::Bool
+	boolNumeratorStats::Bool	
 	statsByVariables::Array{Int,1}
 	statsRandomByVariable::Int
-	boolSaveJLDFile::Bool #if this is set to false no *.jld2 file is saved #todo we should rename this to ensure it is clear that this refers to the prepped data only!
-	boolSaveResultAsJLDFile::Bool #this refers to the model output/result
+	saveJLDFile::Bool #if this is set to false no *.jld2 file is saved #todo we should rename this to ensure it is clear that this refers to the prepped data only!
+	saveResultAsJLDFile::Bool #this refers to the model output/result
 	print_details::Bool #whether julia should print details to the log or not (note to developers: warnings/errors and certain important infos should always be printed!)
 	seed::Int #optional entropy
 	graphvizexecutable::String #e.g. C:\Program Files (x86)\Graphviz2.38\ if this
 	showProgressBar_time::Bool # bar form iterators package (or some other package)
-	boolProduceEstAndLeafMatrices::Bool
+	prroduceEstAndLeafMatrices::Bool
 	write_dot_graph::Bool
-	boolCalculateGini::Bool #whether or not to calculate the gini (which requires sorting of the data (which takes time!))
-	boolCalculatePoissonError::Bool
+	calculateGini::Bool #whether or not to calculate the gini (which requires sorting of the data (which takes time!))
+	calculatePoissonError::Bool
     performanceMeasure::String
 	fitForStatsAndCharts::String
 	ignoreZeroDenominatorValues::Bool
@@ -336,17 +335,17 @@ mutable struct ModelSettings
   function ModelSettings()
 	#initialize default settings
 	model_type="build_tree" #1
-	minw=-0.1 #2
+	minWeight=-0.1 #2
 	randomw=0.0 #3
 	crit=DifferenceSplit()	 #4
-	max_splitting_points_num=250 #5 #arbitrary choice. Preliminary testing has shown no performance difference for different values (say 10 or 200) for this setting
-	niter=2 #6
-	mf=0.1 #7
-	nscores=1000 #8
+	maxSplittingPoints=250 #5 #arbitrary choice. Preliminary testing has shown no performance difference for different values (say 10 or 200) for this setting
+	iterations=2 #6
+	learningRate=0.1 #7
+	nScores=1000 #8
 	adaptiveLearningRate=1.0 #9
 	prem_buffer=0 #11
-	BoolStartAtMean=true #12
-	bool_write_tree=true #13
+	startAtMean=true #12
+	writeTree=true #13
 	number_of_num_features=-1 #14    
 	spawnsmaller=true #26
 	boolRankOptimization=false #35
@@ -362,33 +361,32 @@ mutable struct ModelSettings
 	smoothEstimates="1" #46 this is a string for now (as there could be different smoothing methods specified by this string)
 	deriveFitPerScoreFromObservedRatios=true
 	roptForcedPremIncr=false #47
-    write_sas_code=false #49
-	write_iteration_matrix=false#50
-	write_result=false #true #51
-	write_statistics=true #52
+    writeSasCode=false #49
+	writeIterationMatrix=false#50
+	writeResult=false #true #51
+	writeStatistics=true #52
 	boolCreateZipFile=false #true #53
-	write_csharp_code=false #true
-	write_vba_code=false
+	writeCsharpCode=false #true
+	writeVbaCode=false
 	nDepthToStartParallelization=-1
 	baggingWeightTreesError="mae" # ::String
 	#combined bagging&boosting model
 	cBB_niterBoosting=0
 	cBB_niterBagging=0
 	fixedinds=Array{Int}(undef,0)
-	boolNumeratorStats=false
-	bINTERNALignoreNegRelsBoosting=false
+	boolNumeratorStats=false	
 	statsByVariables=Int[]
 	statsRandomByVariable=5
-	boolSaveJLDFile=true
-	boolSaveResultAsJLDFile=false
+	saveJLDFile=true
+	saveResultAsJLDFile=false
 	print_details=true
 	seed=90210
 	graphvizexecutable="" #C:\\Program Files (x86)\\Graphviz2.38\\bin\\"
 	showProgressBar_time=true
-	boolProduceEstAndLeafMatrices=false
+	prroduceEstAndLeafMatrices=false
 	write_dot_graph=false
-	boolCalculateGini=false
-	boolCalculatePoissonError=false
+	calculateGini=false
+	calculatePoissonError=false
     performanceMeasure="Lift Val"
 	fitForStatsAndCharts="rawRelativities" #rawRelativities,unsmoothedPerScore,smoothedPerScore
 	ignoreZeroDenominatorValues=false
@@ -399,7 +397,7 @@ mutable struct ModelSettings
 	chosen_apply_tree_fn="apply_tree_by_leaf" # #apply_tree_by_row does not seem to work for (certain?) boosting models
 	moderationvector=[0.1] #
 
-	return new(model_type,minw,randomw,crit,max_splitting_points_num,niter,mf,nscores,adaptiveLearningRate,prem_buffer,BoolStartAtMean,bool_write_tree,number_of_num_features,spawnsmaller,boolRankOptimization,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,write_sas_code,write_iteration_matrix,write_result,write_statistics,boolCreateZipFile,write_csharp_code,write_vba_code,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolNumeratorStats,bINTERNALignoreNegRelsBoosting,statsByVariables,statsRandomByVariable,boolSaveJLDFile,boolSaveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,boolProduceEstAndLeafMatrices,write_dot_graph,boolCalculateGini,boolCalculatePoissonError,performanceMeasure,fitForStatsAndCharts,ignoreZeroDenominatorValues
+	return new(model_type,minWeight,randomw,crit,maxSplittingPoints,iterations,learningRate,nScores,adaptiveLearningRate,prem_buffer,startAtMean,writeTree,number_of_num_features,spawnsmaller,boolRankOptimization,boolRandomizeOnlySplitAtTopNode,subsampling_prop,subsampling_features_prop,version,preppedJLDFileExists,catSortByThreshold,catSortBy,scorebandsstartingpoints,showTimeUsedByEachIteration,smoothEstimates,deriveFitPerScoreFromObservedRatios,roptForcedPremIncr,writeSasCode,writeIterationMatrix,writeResult,writeStatistics,boolCreateZipFile,writeCsharpCode,writeVbaCode,nDepthToStartParallelization,baggingWeightTreesError,cBB_niterBoosting,cBB_niterBagging,fixedinds,boolNumeratorStats,statsByVariables,statsRandomByVariable,saveJLDFile,saveResultAsJLDFile,print_details,seed,graphvizexecutable,showProgressBar_time,prroduceEstAndLeafMatrices,write_dot_graph,calculateGini,calculatePoissonError,performanceMeasure,fitForStatsAndCharts,ignoreZeroDenominatorValues
 	 ,df_name_vector,number_of_char_features,chosen_apply_tree_fn,moderationvector)
   end  # ModelSettings()
 
@@ -472,7 +470,7 @@ updateSettings!(s::ModelSettings;args...)
 use this function to update the model settings 
 try for instance:
 
-updateSettings!(sett,minw=-0.3,niter=30)
+updateSettings!(sett,minWeight=-0.3,iterations=30)
 """
 function updateSettings!(s::ModelSettings;args...)
 	updateSettingsMod!(s;args...)
@@ -483,7 +481,7 @@ updateSettingsMod!(s::ModelSettings;args...)
 use this function to update the model settings 
 try for instance:
 
-updateSettingsMod!(sett,minw=-0.3,niter=30)
+updateSettingsMod!(sett,minWeight=-0.3,iterations=30)
 """
 function updateSettingsMod!(s::ModelSettings;args...)
 	seen=[]
@@ -585,41 +583,41 @@ function checkIfSettingsAreValid(s::ModelSettings)
       @assert (s.randomw>=0) & (s.randomw<=1)
 	  #Note, we could easily support more splitting Points (i.e. UInt), but it is likely that the user has not intended to exceed typemax(UInt16), thus we catch this here
 	  max_splitting_points_num_INTERNAL=Int(typemax(UInt16))-1
-      @assert s.max_splitting_points_num<max_splitting_points_num_INTERNAL "Maximum number of splitting points is currently limited to $(max_splitting_points_num_INTERNAL)"
-	  @assert s.max_splitting_points_num>0
+      @assert s.maxSplittingPoints<max_splitting_points_num_INTERNAL "Maximum number of splitting points is currently limited to $(max_splitting_points_num_INTERNAL)"
+	  @assert s.maxSplittingPoints>0
 	  if (s.model_type=="bagged_boosted_tree")
 		@assert min(cBB_niterBagging,cBB_niterBoosting)>0
 		@assert abs(subsampling_prop)<1.0 #without subsampling bagged boosting probably does not make too much sense
 		@assert subsampling_features_prop<1.0 #without sampling features bagged boosting probably does not make too much sense
-		@assert s.niter==0 "Please set niter to 0 for Combined Bagging&Boosting Models" #I want to avoid confusion where the use thinkgs that this parameter is of relevance.
+		@assert s.iterations==0 "Please set iterations to 0 for Combined Bagging&Boosting Models" #I want to avoid confusion where the use thinkgs that this parameter is of relevance.
 	  else
-		@assert s.niter>0
+		@assert s.iterations>0
 	  end
 	  @assert in(s.baggingWeightTreesError,["mse" "pearsoncorrelation" "mrae" "mrse" "mae" "uniform"])	  
 	  #if length(s.moderationvector)=1
 	  if in(s.model_type,["build_tree"])
-		s.moderationvector=[s.mf]
+		s.moderationvector=[s.learningRate]
 	  end
 	  if length(s.moderationvector)==1
-		if s.moderationvector[1]!=s.mf && s.model_type=="boosted_tree"
-			@info "Replacing moderationvector[1] with the value of mf=$(s.mf)"
-			s.moderationvector[1]=s.mf
+		if s.moderationvector[1]!=s.learningRate && s.model_type=="boosted_tree"
+			@info "Replacing moderationvector[1] with the value of learningRate=$(s.learningRate)"
+			s.moderationvector[1]=s.learningRate
 		end
 	  end
 	  if s.model_type=="boosted_tree"
-		if !((length(s.moderationvector)==1)&&(s.moderationvector[1]==s.mf))
+		if !((length(s.moderationvector)==1)&&(s.moderationvector[1]==s.learningRate))
 			@show s.moderationvector
-			@show s.mf
-			error("DTM: Invalid mf or moderationvector settings")
+			@show s.learningRate
+			error("DTM: Invalid learningRate or moderationvector settings")
 	  	end
 		end
-      @assert (s.mf>=0 && s.mf<=1)
+      @assert (s.learningRate>=0 && s.learningRate<=1)
 	  #end
       @assert (s.adaptiveLearningRate<=1.0 && s.adaptiveLearningRate>=0.0)
       #@assert s.subsampling_prop<=1.0 #positive value => without replacement
 	  @assert s.subsampling_prop>=-1.0 #negative value => with replacement, smaller than -1 is not possible wherease larger than 1 is possible
 	  if s.subsampling_prop<1.0
-		@warn("Subsampling of the data is enabled. Ensure the value of subsampling_prop=$(s.subsampling_prop) has a meaningful value relative to minw=$(s.minw)")
+		@warn("Subsampling of the data is enabled. Ensure the value of subsampling_prop=$(s.subsampling_prop) has a meaningful value relative to minWeight=$(s.minWeight)")
 	  end
 	  #if (s.model_type!="bagged_tree")&&(abs(s.subsampling_prop)!=1.0);@warn("Subsampling with Boosting methods is experimental!");end
 	  #todo/tbd need to fix this! see goodnessOfFit
@@ -628,8 +626,8 @@ function checkIfSettingsAreValid(s::ModelSettings)
       @assert (abs(s.subsampling_features_prop>0) && abs(s.subsampling_features_prop<=1))
 	  @assert s.scorebandsstartingpoints[1]==1
 	  @assert issorted(s.scorebandsstartingpoints)
-	  @assert s.scorebandsstartingpoints[end]<s.nscores
-	  @assert s.nscores>8 "Please set nscores to a value greater than 8" #Less than 8 scores makes it hard/impossible for the moving average
+	  @assert s.scorebandsstartingpoints[end]<s.nScores
+	  @assert s.nScores>8 "Please set nScores to a value greater than 8" #Less than 8 scores makes it hard/impossible for the moving average
 	  @assert in(s.smoothEstimates,["0" "1"]) #this is currently a string since there could (in the future) be multiple smoothing methods
 	  if !(length(s.graphvizexecutable)<1||isfile(s.graphvizexecutable))
 		@show s.graphvizexecutable
@@ -726,7 +724,7 @@ struct BoostedTree <: Ensemble
     rawrelativities::Array{Float64,1}
     maxRawRelativityPerScoreSorted::Array{Float64,1}
     meanobserved::Float64
-    BoolStartAtMean::Bool
+    startAtMean::Bool
 	ScoreToSmoothedEstimate::Array{Float64,1}
 	rawObservedRatioPerScore::Array{Float64,1}
 	iterationmatrix::Array{Float64,2}
@@ -751,7 +749,7 @@ struct BaggedTree <: Ensemble
     rawrelativities::Array{Float64,1}
     maxRawRelativityPerScoreSorted::Array{Float64,1}
     meanobserved::Float64
-    BoolStartAtMean::Bool
+    startAtMean::Bool
 	ScoreToSmoothedEstimate::Array{Float64,1}
 	rawObservedRatioPerScore::Array{Float64,1}
 	iterationmatrix::Array{Float64,2}

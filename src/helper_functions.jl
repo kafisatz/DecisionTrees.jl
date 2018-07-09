@@ -442,7 +442,7 @@ function write_any_array_to_excel_file(arr::Array,file::String)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr))]
 	xld=ExcelData(sheets,Array{Chart}(undef,0))
-	write_statistics(xld,file,false,false)
+	writeStatistics(xld,file,false,false)
 	return nothing
 end
 
@@ -451,7 +451,7 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,file::String)
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2))]
 	xld=ExcelData(sheets,Array{Chart}(undef,0))
-	write_statistics(xld,file,false,false)
+	writeStatistics(xld,file,false,false)
 	return nothing
 end
 
@@ -460,7 +460,7 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,arr3::Array,file::
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2)),ExcelSheet("sheet3",convert(DataFrame,arr3))]
 	xld=ExcelData(sheets,Array{Chart}(undef,0))
-	write_statistics(xld,file,false,false)
+	writeStatistics(xld,file,false,false)
 	return nothing
 end
 
@@ -469,7 +469,7 @@ function write_any_array_to_excel_file(arr::Array,arr2::Array,arr3::Array,arr4::
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet("sheet1",convert(DataFrame,arr)),ExcelSheet("sheet2",convert(DataFrame,arr2)),ExcelSheet("sheet3",convert(DataFrame,arr3)),ExcelSheet("sheet4",convert(DataFrame,arr4))]
 	xld=ExcelData(sheets,Array{Chart}(undef,0))
-	write_statistics(xld,file,false,false)
+	writeStatistics(xld,file,false,false)
 	return nothing
 end
 
@@ -478,7 +478,7 @@ function write_any_array_to_excel_file(arr::Array{Array{T,2},1},file::String) wh
 	isfile(file)&&rm(file)
 	sheets=[ExcelSheet(string("sheet",i),convert(DataFrame,arr[i])) for i=1:length(arr)]
 	xld=ExcelData(sheets,Array{Chart}(undef,0))
-	write_statistics(xld,file,false,false)
+	writeStatistics(xld,file,false,false)
 	return nothing
 end
 
@@ -755,9 +755,9 @@ end
 
 function variablesUsed(bt)
 	utf8ListVarsUsed=Array{String}(undef,0)
-	niter=bt.settings.niter
-	nmat=zeros(Int,bt.settings.number_of_num_features+bt.settings.number_of_char_features,niter)
-	for i=1:niter
+	iterations=bt.settings.iterations
+	nmat=zeros(Int,bt.settings.number_of_num_features+bt.settings.number_of_char_features,iterations)
+	for i=1:iterations
 		#note: bt.intNumVarsUsed[i] is an array denoting which split threshold or id was used
 		for j=1:length(bt.intVarsUsed[i])
 			nmat[j,i]+=sum(bt.intVarsUsed[i][j])
@@ -968,7 +968,7 @@ function writeStatisticsFile!(statsfileExcel,xlData,filelistWithFilesToBeZipped)
 	println("Exporting Stats to Excel file: \r\n $(statsfileExcel)")
 	try 
 		isfile(statsfileExcel)&&rm(statsfileExcel)
-		@time write_statistics(xlData,statsfileExcel,false,false)
+		@time writeStatistics(xlData,statsfileExcel,false,false)
 		push!(filelistWithFilesToBeZipped,statsfileExcel)
 	catch ePyCallWriteExcel
         @show ePyCallWriteExcel
@@ -1068,7 +1068,7 @@ end
 #errors_num_estimates=addTariffEstimationStatsAndGraphs!(xlData,trnidx,validx,actualNumerator,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,est_matrix,est_matrixFromScores)
 function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::Vector{Int},
 	actualNumerator::Array{Float64,1},estimateUnsmoothed::Array{Float64,1},estimateSmoothed::Array{Float64,1},estimateFromRelativities::Array{Float64,1},est_matrix::Array{Float64,2},est_matrixFromScores::Array{Float64,2})
-	niter=size(est_matrixFromScores,2)-1
+	iterations=size(est_matrixFromScores,2)-1
 	sumactual=sum(view(actualNumerator,trnidx))
     sumactualVAL=sum(view(actualNumerator,validx))	
 	#[name i mse mrse mae mrae sumrae mseVAL mrseVAL maeVAL mraeVAL sumraeVAL][:]
@@ -1126,18 +1126,18 @@ function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::V
 		tariffEstErrorSheet=ExcelSheet(tariffestsheetname,resultDF)
 		push!(xlData.sheets,tariffEstErrorSheet)
 	#Add Charts
-		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C5","line",5,niter,[4,4+5],1,"Iteration","Error","Based on Raw Estimates",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
+		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C5","line",5,iterations,[4,4+5],1,"Iteration","Error","Based on Raw Estimates",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
 		push!(xlData.charts,deepcopy(c1))
-		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C27","line",5,niter,[6,6+5],1,"Iteration","Error","Based on Raw Estimates",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
+		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C27","line",5,iterations,[6,6+5],1,"Iteration","Error","Based on Raw Estimates",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
 		push!(xlData.charts,deepcopy(c1))
-		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C49","line",5,niter,[7,7+5],1,"Iteration","Error","Based on Raw Estimates",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
+		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C49","line",5,iterations,[7,7+5],1,"Iteration","Error","Based on Raw Estimates",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
 		push!(xlData.charts,deepcopy(c1))
 
-		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C71","line",niter+5,niter,[4,4+5],1,"Iteration","Error","Based on Estimates by Score",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
+		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C71","line",iterations+5,iterations,[4,4+5],1,"Iteration","Error","Based on Estimates by Score",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
 		push!(xlData.charts,deepcopy(c1))
-		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C93","line",niter+5,niter,[6,6+5],1,"Iteration","Error","Based on Estimates by Score",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
+		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C93","line",iterations+5,iterations,[6,6+5],1,"Iteration","Error","Based on Estimates by Score",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
 		push!(xlData.charts,deepcopy(c1))
-		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C113","line",niter+5,niter,[7,7+5],1,"Iteration","Error","Based on Estimates by Score",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
+		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C113","line",iterations+5,iterations,[7,7+5],1,"Iteration","Error","Based on Estimates by Score",categoriescol=2,yaxisformat="0.00%",xscale=3.5)
 		push!(xlData.charts,deepcopy(c1))
 	#error dist charts
 		c1=defineChartWithNSeries(tariffestsheetname,tariffestsheetname,"C135","line",errstartrow+1,histbinsChartRows,[8,8+3],errstartrow,"Error","Percentage of Data","Cumulative Distribution Absolute Relative Errors",categoriescol=1,xaxisformat="0.00%",yaxisformat="0.00%",yscale=3.1,xscale=3.5)
@@ -1433,10 +1433,10 @@ function initSettingsWhichAreTheSameForBoostingAndBagging(trnidx::Vector{Int},va
 	empty_rows_after_iteration_stats=2
 	showTimeUsedByEachIteration=sett.showTimeUsedByEachIteration
 	chosen_apply_tree_fn=sett.chosen_apply_tree_fn
-	BoolStartAtMean=sett.BoolStartAtMean
+	startAtMean=sett.startAtMean
 	adaptiveLearningRate=sett.adaptiveLearningRate
 	moderationvector=sett.moderationvector
-	iterations=sett.niter
+	iterations=sett.iterations
 
 	obstrn = length(trnidx) #originally obs
 	obsval = length(validx) 
@@ -1449,7 +1449,7 @@ function initSettingsWhichAreTheSameForBoostingAndBagging(trnidx::Vector{Int},va
 	val_meanobservedvalue=val_numtot/val_denomtot
 	nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData=initExcelData()
 	showProgressBar_time=sett.showProgressBar_time
-	return obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,sett.boolProduceEstAndLeafMatrices
+	return obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,startAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,sett.prroduceEstAndLeafMatrices
 end
 
 function initExcelData()
@@ -1736,9 +1736,9 @@ end
 
 
 """adds numerical explanatory variables as PooledArrays to the input DataFrame wholeDF
-add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame)
+add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},maxSplittingPoints::Int,features::DataFrame)
 """
-function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},max_splitting_points_num::Int,features::DataFrame,weight::Vector{Float64},methodForSplittingPointsSelection) #Version where no candidates are supplied -> Julia chooses the candidates
+function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},maxSplittingPoints::Int,features::DataFrame,weight::Vector{Float64},methodForSplittingPointsSelection) #Version where no candidates are supplied -> Julia chooses the candidates
   nobs=length(trn_val_idx)
   cols=sett.number_of_num_features 
   freqweights=StatsBase.fweights(weight) #Frequency Weights
@@ -1764,11 +1764,11 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
 		this_column=original_data_vector
 	end
 	#Generate candidate list
-	candlist=defineCandidates(this_column,max_splitting_points_num,freqweights,method=methodForSplittingPointsSelection)
-	if max_splitting_points_num>500
-		@warn("DTM: max_splitting_points_num=$(max_splitting_points_num) is larger than 500. That may not be a good idea")
-		if max_splitting_points_num>2000
-			error("DTM: max_splitting_points_num too large max_splitting_points_num=$(max_splitting_points_num)")
+	candlist=defineCandidates(this_column,maxSplittingPoints,freqweights,method=methodForSplittingPointsSelection)
+	if maxSplittingPoints>500
+		@warn("DTM: maxSplittingPoints=$(maxSplittingPoints) is larger than 500. That may not be a good idea")
+		if maxSplittingPoints>2000
+			error("DTM: maxSplittingPoints too large maxSplittingPoints=$(maxSplittingPoints)")
 		end
 	end
 	(length(candlist)==1)&&(@info "DTM: Numeric column $(i):$(string(thisname)) (numeric) has zero splitting points.") #throw an error when not splitting point exists, was this intended? does this ever happen?
@@ -1798,21 +1798,21 @@ end
 
 
 """
-defineCandidates(feature_column,max_splitting_points_num::Int)
+defineCandidates(feature_column,maxSplittingPoints::Int)
 returns a candidate list of split values which considers the distribution of the data where each 
 data point has the same weight (i.e. the weight/exposure vector of dtmtable is NOT used for this function)
 """
-function defineCandidates(feature_column,max_splitting_points_num::Int,fw::T;topAndBottomCutoff=0.5,method="basedOnWeightVector") where T<:StatsBase.FrequencyWeights
+function defineCandidates(feature_column,maxSplittingPoints::Int,fw::T;topAndBottomCutoff=0.5,method="basedOnWeightVector") where T<:StatsBase.FrequencyWeights
     @assert in(method,globalConstAllowableMethodsForDefineCandidates)
     #step 1: get quantiles of data
     local domain_i
     if method=="equalWeight"
-        domain_i = unique(quantile(feature_column, range(topAndBottomCutoff/Float64(max_splitting_points_num), stop=1.0-topAndBottomCutoff/Float64(max_splitting_points_num), length=max_splitting_points_num)))
+        domain_i = unique(quantile(feature_column, range(topAndBottomCutoff/Float64(maxSplittingPoints), stop=1.0-topAndBottomCutoff/Float64(maxSplittingPoints), length=maxSplittingPoints)))
     else 
         #wt=fweights
-        domain_i = unique(StatsBase.quantile(feature_column, fw,range(topAndBottomCutoff/Float64(max_splitting_points_num), stop=1.0-topAndBottomCutoff/Float64(max_splitting_points_num), length=max_splitting_points_num)))  
+        domain_i = unique(StatsBase.quantile(feature_column, fw,range(topAndBottomCutoff/Float64(maxSplittingPoints), stop=1.0-topAndBottomCutoff/Float64(maxSplittingPoints), length=maxSplittingPoints)))  
     end
-	@assert size(domain_i,1)<=max_splitting_points_num #that should not happen
+	@assert size(domain_i,1)<=maxSplittingPoints #that should not happen
 
 	#step 2 ensure each element of domain_i corresponds to an observation
 	uq_obs=unique(feature_column);
@@ -1829,13 +1829,13 @@ function defineCandidates(feature_column,max_splitting_points_num::Int,fw::T;top
 		result[tmploopvar]=uq_obs[idx2]
 	end
 	result_unique=unique(result)
-	return result_unique #NOTE! the length of domain_i may be smaller than max_splitting_points_num
+	return result_unique #NOTE! the length of domain_i may be smaller than maxSplittingPoints
 end
 #=
     this_column=fullData[:Density]
     weights=fullData[:Exposure]
     fw=fweights(weights)
-    max_splitting_points_num=250
+    maxSplittingPoints=250
     candlist1=defineCandidates(this_column,10,fw)
     candlist2=defineCandidates(this_column,10,fw,method="basedOnWeightVector")
     hcat(candlist1,candlist2)
@@ -1985,11 +1985,11 @@ function aggregateScores(num,denom,weight,estRatio,scores,scorebandsstartingpoin
 	return sumnumer,sumdenom,sumweight,sumnumeratorEst
 end
 
-function createScorebandsUTF8List(scorebandsstartingpoints,nscores::Int;addtotal::Bool=false)
+function createScorebandsUTF8List(scorebandsstartingpoints,nScores::Int;addtotal::Bool=false)
 	scorebandsUTF8List=Array{String}(undef,0)
 	nClasses=length(scorebandsstartingpoints)
 	for i=1:nClasses
-		i<nClasses ? last=string(scorebandsstartingpoints[i+1]-1) : last=string(nscores)
+		i<nClasses ? last=string(scorebandsstartingpoints[i+1]-1) : last=string(nScores)
 		#push!(scorebandsUTF8List,string('\'',scorebandsstartingpoints[i],"-",last)) #we add an apostrophe here to avoid autoformatting in Excel (it will interpret 1-99 as a date otherwise)
 		push!(scorebandsUTF8List,string("=",DoubleQuote,scorebandsstartingpoints[i],"-",last,DoubleQuote)) #we add an apostrophe here to avoid autoformatting in Excel (it will interpret 1-99 as a date otherwise)
 	end
@@ -2009,7 +2009,7 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
         numeratorEsttrn=ratioEsttrn.*denominatortrn
         numeratorEstval=ratioEstval.*denominatorval
                     
-		if sett.boolCalculateGini
+		if sett.calculateGini
 			#these statistics are optinally disabled as the gini takes a LOT of time especially due to sorting			
 			#NOTE: we currently have two different gini values which we calculate, one approach takes only one argument (the estimator) while the other appraoch considers the truth and the estimator
 			#it seems that the single_agrument_gini is more common (it should correspond to the gini in library(reldist) in R).
@@ -2032,7 +2032,7 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		r2_of_numeratorval=1.0-residual_sum_squares_of_numeratorVal/total_sum_squares_of_numeratorVal
 		r2_of_ratioval=1.0-residual_sum_squares_of_ratioVal/total_sum_squares_of_ratioVal        
         #poisson error (for frequency models)	        
-		if sett.boolCalculatePoissonError			
+		if sett.calculatePoissonError			
             poissonErrTrn=poissonErrorReduced(numeratortrn,numeratorEsttrn)
             poissonErrVal=poissonErrorReduced(numeratorval,numeratorEstval)
         else
@@ -2124,7 +2124,7 @@ t=tree.rootnode
 	header=["Segment" "Weight" "Relative Weight" "Numerator" "Denominator" "Observed Ratio" "Numerator Estimate" "Fitted Ratio" "Relativity"]
 	thisres,overallstats=buildStatistics(header,segmentlist,sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
     numeratorEst=est.*denominator
-    if sett.boolCalculateGini
+    if sett.calculateGini
         giniTrn=gini_single_argument(view(numeratorEst,trnidx))			
         giniVal=gini_single_argument(view(numeratorEst,validx))        
         #normalized_unweighted_gini_numeratorTrn=normalized_gini(view(numerator,trnidx),view(numeratorEst,trnidx))
@@ -2166,7 +2166,7 @@ t=tree.rootnode
 		rss_rowval=["RSS of Numerator Val" residual_sum_squares_of_numeratorVal repeat([""],1,size(thisres,2)-2)]
 		thisres=[thisres;rss_rowval];overallstats=[overallstats;rss_rowval];
 	#attach poisson error (for frequency models)	
-		if sett.boolCalculatePoissonError
+		if sett.calculatePoissonError
 			poissonErrors=poissonError(numerator,numeratorEst)::Vector{Float64}
             poissonErrTrn=sum(poissonErrors[trnidx])/length(trnidx)
             poissonErrVal=sum(poissonErrors[validx])/length(validx)		
@@ -3144,7 +3144,7 @@ function write_tree(candMatWOMaxValues::Array{Array{Float64,1},1},tree::Node{T},
 end
 
 #write SAS Code fn
-function write_sas_code(estimatesPerScore,candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,number_of_num_features::Int,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"),indent::Int=0)	
+function writeSasCode(estimatesPerScore,candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,number_of_num_features::Int,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"),indent::Int=0)	
 	
 iterations=size(bt.trees,1)
 local vname
@@ -3281,8 +3281,8 @@ end
 close(fiostream)
 end
 
-"""write_sas_code version for single trees"""
-function write_sas_code(candMatWOMaxValues::Array{Array{Float64,1},1},inTree::Tree,number_of_num_features::Int,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),mdf::Float64=1.0;leafvarname::String=convert(String,"leaf"),indent::Int=0)
+"""writeSasCode version for single trees"""
+function writeSasCode(candMatWOMaxValues::Array{Array{Float64,1},1},inTree::Tree,number_of_num_features::Int,fileloc::String,df_name_vector::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0),mdf::Float64=1.0;leafvarname::String=convert(String,"leaf"),indent::Int=0)
 tree=inTree.rootnode
 notsign=convert(String,"not")
 insign=convert(String," in ")
@@ -3375,7 +3375,7 @@ function write_tree_at_each_node!(candMatWOMaxValues::Array{Array{Float64,1},1},
 	write(fiostream," " ^ indent,"rel_mod_",leafvarname,"=$(val);\r\n")
 end
 
-function write_sas_code(leaves,number_of_num_features::Int,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
+function writeSasCode(leaves,number_of_num_features::Int,fileloc::String,namevec::Array{String,1},settings::String,mappings::Array{Array{String,1},1}=Array{Array{String,1}}(undef,0);leafvarname::String=convert(String,"leaf"))
 	error("BK: This function should not be used anymore. (right?)")	
 	#open file
 fiostream=open(fileloc,"w")
@@ -3765,19 +3765,19 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
   #Perform LOWESS/LOESS with degree 1 / weighted linear regression  estimatedRatioPerScore=copy(rawObservedRatioPerScore)
   @assert span>0.0
   #@warn("it matters if we start at the bottom or top end! which ones is better?")
-  nscores=size(estimatedRatioPerScore,1)
-  if (nscores<=2) #for 2 or less scores smoothing is not meaningful
-	@info("DTM: nscores was less than 3. No smoothing performed")
+  nScores=size(estimatedRatioPerScore,1)
+  if (nScores<=2) #for 2 or less scores smoothing is not meaningful
+	@info("DTM: nScores was less than 3. No smoothing performed")
 	return nothing
   end
-  intSpan=convert(Int,ceil((nscores)*span))
+  intSpan=convert(Int,ceil((nScores)*span))
   intSpan=max(intSpan,2) #span should be at least two
   smoothed=intercept=slope=0.0
 
   #bottom end
   thispoint=0
   firstidx=max(1,thispoint-intSpan+1)
-  lastidx=max(firstidx,min(nscores,thispoint+intSpan-1))
+  lastidx=max(firstidx,min(nScores,thispoint+intSpan-1))
   x=float(collect(firstidx:lastidx))
   thisRange=copy(estimatedRatioPerScore[firstidx:lastidx]) #todo, determine if we need the copy command (do we modify current range later on ?)
   w=1.0.-((x.-thispoint)./intSpan).^2
@@ -3796,7 +3796,7 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
   #middle part
   #thisRangeMid=length(thisRange)+1
   #wVec=FrequencyWeights(w)
-  while thispoint<=nscores-intSpan
+  while thispoint<=nScores-intSpan
     thispoint+=1
     next=estimatedRatioPerScore[thispoint+intSpan-1]
     push!(thisRange,next)
@@ -3810,7 +3810,7 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
   end
 
   #Top end: consider smaller intSpan
-  while thispoint<nscores
+  while thispoint<nScores
     thispoint+=1
     #remove the last element of each vector
     popfirst!(thisRange)
@@ -3819,7 +3819,7 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
     intercept,slope=mylinreg(x,thisRange,w)
 	smoothed=thispoint*slope+intercept
 	estimatedRatioPerScore[thispoint]=smoothed
-	#thisRange[end-(nscores-thispoint)]=smoothed #this seems to make it worse
+	#thisRange[end-(nScores-thispoint)]=smoothed #this seems to make it worse
   end
 
   return nothing
@@ -3960,16 +3960,16 @@ end
 
 function constructANDderiveScores!(trnidx::Vector{Int},validx::Vector{Int},sortvec_reused::Vector{Int},estimatedRatio::Array{Float64,1},relativities::Array{Float64,1},actualNumerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},meanobservedvalue::Float64,currentIteration::Int,sett::ModelSettings)
 	deriveFitPerScoreFromObservedRatios=sett.deriveFitPerScoreFromObservedRatios
-	nscores=sett.nscores
+	nScores=sett.nScores
 	smooth=sett.smoothEstimates
 	print_details=sett.print_details
 	boolSmoothingEnabled=!(smooth=="0")
-	aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=constructScores!(deriveFitPerScoreFromObservedRatios,trnidx,validx,sortvec_reused,estimatedRatio,relativities,actualNumerator,denominator,weight,meanobservedvalue,nscores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
-return maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nscores
+	aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=constructScores!(deriveFitPerScoreFromObservedRatios,trnidx,validx,sortvec_reused,estimatedRatio,relativities,actualNumerator,denominator,weight,meanobservedvalue,nScores,print_details,boolSmoothingEnabled=boolSmoothingEnabled)	
+return maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nScores
 end
 
-function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vector{Int},validx::Vector{Int},srt::Vector{Int},estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nscores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
-	#@assert nscores>=nscoresPotentiallyReduced
+function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vector{Int},validx::Vector{Int},srt::Vector{Int},estimatedRatioPerRow_full_vec::Array{Float64,1},raw_rel_full_vec::Array{Float64,1},numerator_full_vec::Array{Float64,1},denominator_full_vec::Array{Float64,1},weight_full_vec::Array{Float64,1},meanobservedvalue::Float64,nScores::Int,print_details::Bool;boolSmoothingEnabled::Bool=true)
+	#@assert nScores>=nscoresPotentiallyReduced
 	maxItersForSmoothing=0
     #todo,tbd this can probably be done more efficiently
 	raw_rel=view(raw_rel_full_vec,trnidx)	
@@ -3990,15 +3990,15 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	weightPerUniqueRelativity=weight_srt	
 	numeratorEstimatedPerRow_srt=estimatedRatioPerRow_srt.*denominator_srt	
 	wtot=sum(weight_srt)
-	wperscore=wtot/nscores
-	#scoreEndPoints=zeros(Int,nscores)
+	wperscore=wtot/nScores
+	#scoreEndPoints=zeros(Int,nScores)
 	#scoreEndPoints[end]=size(weight_srt,1)
-	#vectorWeightPerScore=Array{Float64}(undef,nscores)	#nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nscores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
+	#vectorWeightPerScore=Array{Float64}(undef,nScores)	#nscoresPotentiallyReducedTWOTimes=derive_scores_main_aggregation_step!(nScores,wperscore,raw_rel_srt,weight_srt,scoreEndPoints,vectorWeightPerScore)
 	#obsPerScore=copy(scoreEndPoints)
 	#cumulativeToIncremental!(obsPerScore)
 	#cumulativeToIncremental!(vectorWeightPerScore)        
         
-    qtls=quantile(raw_rel_srt,StatsBase.fweights(weight_srt),range(1/nscores,stop=1,length=nscores))
+    qtls=quantile(raw_rel_srt,StatsBase.fweights(weight_srt),range(1/nScores,stop=1,length=nScores))
     qtls=unique(qtls)
     nscoresPotentiallyReducedTWOTimes=length(qtls)
     obsPerScore=zeros(Int,nscoresPotentiallyReducedTWOTimes)
@@ -4020,7 +4020,7 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	referenceVec = deriveFitPerScoreFromObservedRatios ? rawObservedRatioPerScore : aggregatedModelledRatioPerScore
 	estimatedRatioPerScore=smooth_scores(referenceVec,print_details,boolSmoothingEnabled)		
 	#insert gaps if necessary
-	insert_gaps_to_scores!(wtot,nscores,nscoresPotentiallyReducedTWOTimes,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
+	insert_gaps_to_scores!(wtot,nScores,nscoresPotentiallyReducedTWOTimes,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
 
 	return aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore
 end
@@ -4048,8 +4048,8 @@ function calcWeightandObsPerScoreAndEndpoints!(qtls,relativitiesSorted,weight_sr
 	return nothing 
 end
 
-function derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
-#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
+function derive_scores_main_aggregation_step!(nScores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
+#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nScores then we do not need to do any aggregation at all.
 
 #NOTE: (todo/tbd improve this) there are different ways to aggregate the relativities to scores. the approach below is a bottom up approach
 #issues can arise when there is a mass (of weight) for a certain relativity towards the end of the scores
@@ -4107,7 +4107,7 @@ if (length(scoreEndPoints)>1)&&(scoreEndPoints[end-1]>=scoreEndPoints[end])
 	resize!(vectorWeightPerScore,endlocation) #drop the tail end
 	nscoresPotentiallyReducedTWOTimes=length(scoreEndPoints)
 else
-	nscoresPotentiallyReducedTWOTimes=nscores::Int
+	nscoresPotentiallyReducedTWOTimes=nScores::Int
 end
 
 scoreEndPoints[end]=min(length(weight_srt),scoreEndPoints[end])
@@ -4178,16 +4178,16 @@ function smooth_scores(rawObservedRatioPerScore,print_details,boolSmoothingEnabl
 		end
 
 		
-function insert_gaps_to_scores!(wtot,nscores::Int,nscoresPotentiallyReducedTWOTimes::Int,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
-	#NOTE: here we blow up the scores such that we have "nscores" (e.g. 1000) scores. This is only relevant when nscores>length(uniqueRelativitiesSorted) (=nscoresPotentiallyReduced) which is the case for the first few iterations or somewhat degenerated data sets (todo tbd: check this! is it meaningful?)
+function insert_gaps_to_scores!(wtot,nScores::Int,nscoresPotentiallyReducedTWOTimes::Int,aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,estimatedRatioPerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore)
+	#NOTE: here we blow up the scores such that we have "nScores" (e.g. 1000) scores. This is only relevant when nScores>length(uniqueRelativitiesSorted) (=nscoresPotentiallyReduced) which is the case for the first few iterations or somewhat degenerated data sets (todo tbd: check this! is it meaningful?)
 	nscoresToBeIncreased=nscoresPotentiallyReducedTWOTimes
 	cumulw=0.0
 	loopVariable=0
-	wperscoreForActualNscores=wtot/nscores
-	while nscoresToBeIncreased<nscores
+	wperscoreForActualNscores=wtot/nScores
+	while nscoresToBeIncreased<nScores
 		loopVariable+=1
 		cumulw+=vectorWeightPerScore[loopVariable]
-		while (cumulw>wperscoreForActualNscores*loopVariable)&&(nscoresToBeIncreased<nscores)
+		while (cumulw>wperscoreForActualNscores*loopVariable)&&(nscoresToBeIncreased<nScores)
 			#insert "gaps" into score vectors
 			insert!(maxRawRelativityPerScoreSorted,loopVariable,maxRawRelativityPerScoreSorted[loopVariable])
 			insert!(estimatedRatioPerScore,loopVariable,estimatedRatioPerScore[loopVariable])
@@ -4977,7 +4977,7 @@ function determine_used_variables(bt::BoostedTree)
 return boolVariablesUsed,boolNumVarsUsedByModel,boolCharVarsUsedByModel
 end
 
-function write_vba_code(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function writeVbaCode(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector
@@ -5049,7 +5049,7 @@ End Function
 end	
 
 
-function write_csharp_code(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
+function writeCsharpCode(vectorOfLeafArrays,estimatesPerScore::Array{Float64,1},candMatWOMaxValues::Array{Array{Float64,1},1},bt::BoostedTree,fileloc::String,settings::String,mappings::Array{Array{String,1},1},indent::Int,sett::ModelSettings)
 	@assert size(estimatesPerScore)==size(bt.maxRawRelativityPerScoreSorted)
 	number_of_num_features=sett.number_of_num_features
 	df_name_vector=sett.df_name_vector

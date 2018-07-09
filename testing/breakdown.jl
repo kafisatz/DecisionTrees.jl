@@ -26,7 +26,7 @@ selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","B
 
 dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 
-updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.025,subsampling_features_prop=.7,boolCalculatePoissonError=true)
+updateSettingsMod!(sett,minWeight=-0.03,model_type="boosted_tree",iterations=40,learningRate=0.025,subsampling_features_prop=.7,calculatePoissonError=true)
 
 resultingFiles,resM=dtm(dtmtable,sett) #31s on notebook (x260 with profiling disabled but Revise on!)
 
@@ -48,7 +48,7 @@ import DecisionTrees: calculateSplitValue,increasing_subsets,build_listOfMeanRes
     denominatorDTM=dtmtable.denominator
     mappings=dtmtable.mappings
     candMatWOMaxValues=dtmtable.candMatWOMaxValues
-    obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,boolProduceEstAndLeafMatrices=DecisionTrees.initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominatorDTM,sett)
+    obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,startAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,prroduceEstAndLeafMatrices=DecisionTrees.initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominatorDTM,sett)
     #trn_meanobservedvalue is the mean observed RATIO, i.e. sum(numerator)/sum(denominatorDTM) for the training data
     obs=obstrn+obsval
     current_error=0.0
@@ -63,10 +63,10 @@ import DecisionTrees: calculateSplitValue,increasing_subsets,build_listOfMeanRes
         actual_moderationvector=deepcopy(moderationvector)
     end
     
-    if BoolStartAtMean
+    if startAtMean
         estimatedRatio=ones(length(weight)).*trn_meanobservedvalue
     else
-        error("DTM: This is currently not working: please set BoolStartAtMean=true)")
+        error("DTM: This is currently not working: please set startAtMean=true)")
     end
     
     estimatedNumerator=estimatedRatio.*denominatorDTM #these are for instance the estimated losses for a LR model
@@ -78,7 +78,7 @@ import DecisionTrees: calculateSplitValue,increasing_subsets,build_listOfMeanRes
     inds_considered=Array{Array{Int,1}}(undef,0);sizehint!(inds_considered,iterations)
         
     res=Array{Union{Leaf,Node{UInt8},Node{UInt16}}}(undef,iterations)
-    if boolProduceEstAndLeafMatrices
+    if prroduceEstAndLeafMatrices
         est_matrix=Array{Float64}(undef,obs,iterations+1)
         est_matrixFromScores=deepcopy(est_matrix)
         MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
@@ -105,7 +105,7 @@ import DecisionTrees: calculateSplitValue,increasing_subsets,build_listOfMeanRes
     #this header needs to be in line with the output of the function createTrnValStatsForThisIteration
     statsPerIteration=global_statsperiter_header    
     currentRelativity=Array{Float64}(undef,obs)
-    scoreBandLabels=createScorebandsUTF8List(sett.scorebandsstartingpoints,sett.nscores,addtotal=true)
+    scoreBandLabels=createScorebandsUTF8List(sett.scorebandsstartingpoints,sett.nScores,addtotal=true)
     #this row is only here such that the variables are initialized outside the for loop
     local fristRowOfThisTable,obsPerScore,vectorWeightPerScore,numPerScore,denomPerScore,scores,scoresVAL,cumulativeStatsPerScoreBand,maxRawRelativityPerScoreSorted,rawObservedRatioPerScore,MAPPINGSmoothedEstimatePerScore
 
@@ -147,9 +147,9 @@ nnnode=build_tree!(trnidx,validx,candMatWOMaxValues,mappings,sett,actualNumerato
 settings=sett 
 fitted_values=indicatedRelativityForApplyTree_reused
 
-intVarsUsed,inds,minweightcalculated=some_tree_settings(trnidx,validx,settings.fixedinds,candMatWOMaxValues,mappings,settings.minw,weight,settings.subsampling_features_prop,size(features,2))
+intVarsUsed,inds,minweightcalculated=some_tree_settings(trnidx,validx,settings.fixedinds,candMatWOMaxValues,mappings,settings.minWeight,weight,settings.subsampling_features_prop,size(features,2))
 
-	settings.minw=minweightcalculated #update minw
+	settings.minWeight=minweightcalculated #update minWeight
 	if !(length(inds)>0)
         throw(ErrorException(string("Error: no features were selected length(inds)=",length(inds))))
     end
@@ -181,7 +181,7 @@ intVarsUsed,inds,minweightcalculated=some_tree_settings(trnidx,validx,settings.f
 	end
 	intVarsUsed=thisTree.intVarsUsed
 
-	minweight=settings.minw
+	minweight=settings.minWeight
 	crit=settings.crit
 	spawnsmaller=settings.spawnsmaller
 	catSortByThreshold=settings.catSortByThreshold

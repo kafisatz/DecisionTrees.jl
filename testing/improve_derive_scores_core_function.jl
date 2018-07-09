@@ -16,8 +16,8 @@ function incrementalToCumulative!(x::Vector{T}) where {T <: Number}
 	return nothing
 end
 
-function derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
-#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nscores then we do not need to do any aggregation at all.
+function derive_scores_main_aggregation_step!(nScores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
+#todo/tbd this can be simplified if length(uniqueRelativitiesSorted)<sett.nScores then we do not need to do any aggregation at all.
 
 #NOTE: (todo/tbd improve this) there are different ways to aggregate the relativities to scores. the approach below is a bottom up approach
 #issues can arise when there is a mass (of weight) for a certain relativity towards the end of the scores
@@ -75,7 +75,7 @@ if (length(scoreEndPoints)>1)&&(scoreEndPoints[end-1]>=scoreEndPoints[end])
 	resize!(vectorWeightPerScore,endlocation) #drop the tail end
 	nscoresPotentiallyReducedTWOTimes=length(scoreEndPoints)
 else
-	nscoresPotentiallyReducedTWOTimes=nscores::Int
+	nscoresPotentiallyReducedTWOTimes=nScores::Int
 end
 
 scoreEndPoints[end]=min(length(weight_srt),scoreEndPoints[end])
@@ -89,21 +89,21 @@ relativitiesSorted=sample(rand(nnn),nnn,replace=true)
 sort!(relativitiesSorted)
 weight_srt=201*rand(nnn)+130*rand(nnn)
 
-nscores=floor(Int,min(100,nnn/2))
-scoreEndPoints=zeros(Int,nscores)
-obsPerScore=zeros(Int,nscores)
+nScores=floor(Int,min(100,nnn/2))
+scoreEndPoints=zeros(Int,nScores)
+obsPerScore=zeros(Int,nScores)
 scoreEndPoints[end]=size(weight_srt,1)
-vectorWeightPerScore=zeros(Float64,nscores) #Array{Float64}(undef,nscores)
+vectorWeightPerScore=zeros(Float64,nScores) #Array{Float64}(undef,nScores)
 wtot=sum(weight_srt)
-wperscore=wtot/nscores
+wperscore=wtot/nScores
 
-#@btime derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
+#@btime derive_scores_main_aggregation_step!(nScores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 
-#@code_warntype derive_scores_main_aggregation_step!(nscores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
+#@code_warntype derive_scores_main_aggregation_step!(nScores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 
-#@btime quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nscores,stop=1-1/nscores,length=nscores))
+#@btime quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nScores,stop=1-1/nScores,length=nScores))
 
-qtls=quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nscores,stop=1,length=nscores))
+qtls=quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nScores,stop=1,length=nScores))
 qtls=unique(qtls)
 nscoresPotentiallyReducedTWOTimes=length(qtls)
 obsPerScore=zeros(Int,nscoresPotentiallyReducedTWOTimes)

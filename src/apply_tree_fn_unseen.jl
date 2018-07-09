@@ -16,10 +16,10 @@ function predict(x::Tree,f::DataFrame)
     #return apply_tree_by_leaf(x.rootnode,f)
 end
     
-function predict(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool=false)
+function predict(x::BoostedTree,f::DataFrame;prroduceEstAndLeafMatrices::Bool=false)
     asrt=DecisionTrees.assert_consistent_features(x.featurepools,f)
     if asrt
-        return predictConsistentFeatures(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices=boolProduceEstAndLeafMatrices)
+        return predictConsistentFeatures(x::BoostedTree,f::DataFrame;prroduceEstAndLeafMatrices=prroduceEstAndLeafMatrices)
     else
         @show DecisionTrees.assert_consistent_features(x.featurepools,f)
         @error("in the works....this is not yet done for boosting")

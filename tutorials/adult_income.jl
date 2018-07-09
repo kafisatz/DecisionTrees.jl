@@ -80,7 +80,7 @@ dtm(dtmtableTrain,sett)
 0
 
 favorite_settings=deepcopy(sett)
-favorite_settings.minw=250
+favorite_settings.minWeight=250
 dt=deepcopy(dtmtableTrain)
 #derive model from all data
 resample_trnvalidx!(dtmtableTrain,.999)

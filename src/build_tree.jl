@@ -31,8 +31,8 @@ function sample_data_and_build_tree!(trnidx::Vector{Int},validx::Vector{Int},fit
 end
 
 function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues::Array{Array{Float64,1},1},mappings::Array{Array{String,1},1},settings::ModelSettings,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,fitted_values::Vector{Float64},T_Uint8_or_UInt16)
-	intVarsUsed,inds,minweightcalculated=some_tree_settings(trnidx,validx,settings.fixedinds,candMatWOMaxValues,mappings,settings.minw,weight,settings.subsampling_features_prop,size(features,2))
-	settings.minw=minweightcalculated #update minw
+	intVarsUsed,inds,minweightcalculated=some_tree_settings(trnidx,validx,settings.fixedinds,candMatWOMaxValues,mappings,settings.minWeight,weight,settings.subsampling_features_prop,size(features,2))
+	settings.minWeight=minweightcalculated #update minWeight
 	if !(length(inds)>0)
         throw(ErrorException(string("Error: no features were selected length(inds)=",length(inds))))
     end
@@ -61,7 +61,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 	end
 	intVarsUsed=thisTree.intVarsUsed
 
-	minweight=settings.minw
+	minweight=settings.minWeight
 	crit=settings.crit
 	spawnsmaller=settings.spawnsmaller
 	catSortByThreshold=settings.catSortByThreshold

@@ -33,12 +33,12 @@ end
 #@time (df_prepped,sett)=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
 #temporary disable this (as FileIO does not seem to work properly)
-#sett.boolSaveJLDFile=false
+#sett.saveJLDFile=false
 
 #res=prep_data_from_df(df_prepped,sett,"C:\\temp\\")
 
 dtmtable,sett=prepare_dataframe_for_dtm!(df_tmp,directory="C:\\temp\\",treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
-sett.minw=-.2
+sett.minWeight=-.2
 #0
 
 @time df_tmp=CSV.read(joinpath("data","GermanMotorPremiums","data1medium.csv"),allowmissing=:none,categorical=false,rows_for_type_detect=10000);
@@ -52,7 +52,7 @@ end
 #@time (df_prepped,sett)=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
 #temporary disable this (as FileIO does not seem to work properly)
-#sett.boolSaveJLDFile=false
+#sett.saveJLDFile=false
 
 #res=prep_data_from_df(df_prepped,sett,"C:\\temp\\")
 features=dtmtable.features
@@ -62,4 +62,4 @@ sett.df_name_vector[pldidx]
 
 dtmtable,sett=prepare_dataframe_for_dtm!(df_tmp,directory="C:\\temp\\",treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 dtm(dtmtable,sett)
-sett.minw=-.2
+sett.minWeight=-.2

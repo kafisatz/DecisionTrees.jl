@@ -71,14 +71,14 @@ function predictConsistentFeatures(x::Tree,f::DataFrame)
   return apply_tree_by_leaf(x.rootnode,f)
 end
 
-function predictConsistentFeatures(x::BoostedTree,f::DataFrame;boolProduceEstAndLeafMatrices::Bool=false)
+function predictConsistentFeatures(x::BoostedTree,f::DataFrame;prroduceEstAndLeafMatrices::Bool=false)
   #warn("need to ensure, data is consistent with the data used to derive the tree!")
   @assert assert_consistent_features(x.featurepools,f)
   
   obs=size(f,1)
   sett=x.settings
   trn_meanobservedvalue=x.meanobserved
-  niter=sett.niter
+  iterations=sett.iterations
   
   estimatedRatio=ones(obs).*trn_meanobservedvalue  
   currentRelativity=ones(obs)
@@ -90,7 +90,7 @@ function predictConsistentFeatures(x::BoostedTree,f::DataFrame;boolProduceEstAnd
   thisidx=collect(1:obs)
   empty_validx=ones(Int,0)
 
-  if boolProduceEstAndLeafMatrices
+  if prroduceEstAndLeafMatrices
 		est_matrix=Array{Float64}(undef,obs,iterations+1)
 		est_matrixFromScores=copy(est_matrix)
 		MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
@@ -103,7 +103,7 @@ function predictConsistentFeatures(x::BoostedTree,f::DataFrame;boolProduceEstAnd
 		MatrixOfLeafNumbers=Array{Int}(undef,0,0)
 	end
 	
-  for iter=1:niter    
+  for iter=1:iterations    
     current_mdf=x.moderationvector[iter]
     
     #estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
@@ -114,7 +114,7 @@ function predictConsistentFeatures(x::BoostedTree,f::DataFrame;boolProduceEstAnd
     _moderate!(estimatedRatio,indicatedRelativityForApplyTree_reused,current_mdf)
     update_current_rels!(currentRelativity,estimatedRatio,trn_meanobservedvalue)
 
-    if boolProduceEstAndLeafMatrices
+    if prroduceEstAndLeafMatrices
       write_column!(est_matrix,iter+1,estimatedRatio)
       MatrixOfLeafNumbers[:,iter+1]=reused_fitted_leafnr_vector	
     end

@@ -44,6 +44,6 @@ selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","B
 dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 
 
-updateSettingsMod!(sett,minw=-0.03,model_type="build_tree",boolCalculatePoissonError=true)
+updateSettingsMod!(sett,minWeight=-0.03,model_type="build_tree",calculatePoissonError=true)
 
 resultingFiles,resM=dtm(dtmtable,sett)

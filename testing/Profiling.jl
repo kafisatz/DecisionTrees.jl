@@ -25,7 +25,7 @@ selected_explanatory_vars=["Area","AreaInteger","VehPower","VehAge","DrivAge","B
 
 dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,trnvalcol="trnTest",numcol="ClaimNb",denomcol="Exposure",weightcol="Exposure",independent_vars=selected_explanatory_vars);
 
-updateSettingsMod!(sett,minw=-0.03,model_type="boosted_tree",niter=40,mf=0.025,subsampling_features_prop=.7,boolCalculatePoissonError=true)
+updateSettingsMod!(sett,minWeight=-0.03,model_type="boosted_tree",iterations=40,learningRate=0.025,subsampling_features_prop=.7,calculatePoissonError=true)
 
 resultingFiles,resM=dtm(dtmtable,sett) #31s on notebook (x260 with profiling disabled but Revise on!)
 

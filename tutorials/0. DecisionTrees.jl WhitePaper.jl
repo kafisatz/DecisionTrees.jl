@@ -110,16 +110,16 @@ length(dtmtable.trnidx)<length(dtmtable.numerator)
 
 dtmtable.features #explanatory variables
 #note that the data is generally stored in a compressed format
-#for numerical variables, the algorithm considers sett.max_splitting_points_num  (default 250) splitting points which are uniformly spaced
+#for numerical variables, the algorithm considers sett.maxSplittingPoints  (default 250) splitting points which are uniformly spaced
 #you can increase this number and re-prepare the data if you want
 #=
-    sett.max_splitting_points_num=100
+    sett.maxSplittingPoints=100
     dtmtable=prep_data_from_df(df_prepped,sett,fn)
 =#
 #We realize that it may be sutiable to define the splitting in a different manner (than uniformly spaced).
 #This feature might be added at a later time. You can consider the function add_coded_numdata!(...) to see how splitting points are chosen
 
-#We note that 'pooling' the data into X (up to sett.max_splitting_points_num) buckets has a few advantages:
+#We note that 'pooling' the data into X (up to sett.maxSplittingPoints) buckets has a few advantages:
 #one can do sorting in linear time (countsort)
 #the data takes up less space in RAM and caches which generally increases performance
 
@@ -135,15 +135,15 @@ originalTrnValIndex=deepcopy(fullData[:trnTest])
 ##############################
 
 #the minimum weight of each individual tree shall be 3% of the exposure per leaf
-#You can set minw to any positive value, e.g. sett.minw=20000
-#if minw is set to a value in [-1,0] its absolute value is interpreted as a percentage
-#thus with sett.minw=-0.03 we define the min weight of each leaf as 3% of the training data
+#You can set minWeight to any positive value, e.g. sett.minWeight=20000
+#if minWeight is set to a value in [-1,0] its absolute value is interpreted as a percentage
+#thus with sett.minWeight=-0.03 we define the min weight of each leaf as 3% of the training data
 
 #model_type: currently only "build_tree" and "boosted_tree" are supported
 #we might add the implementation of bagging at a later stage
 
-#boolCalculatePoissonError, is a boolean which we need to enable here in order for output to show the poisson error of the estimates
-updateSettingsMod!(sett,minw=-0.03,model_type="build_tree",boolCalculatePoissonError=true)
+#calculatePoissonError, is a boolean which we need to enable here in order for output to show the poisson error of the estimates
+updateSettingsMod!(sett,minWeight=-0.03,model_type="build_tree",calculatePoissonError=true)
 
 ##############################
 #Run single tree model
@@ -217,7 +217,7 @@ sett.print_details=true
 
 #if you want to use the resutling tree in a different programming language you may want to
 #consider these options which give you the core structure of the model in other languages
-# updateSettingsMod!(sett,write_csharp_code="true",write_vba_code="true",write_sas_code="true")
+# updateSettingsMod!(sett,writeCsharpCode="true",writeVbaCode="true",writeSasCode="true")
 # some of these options may only be applicable to boosting OR single tree models
 
 #Consider the Poisson splitting criterion
@@ -234,20 +234,20 @@ dtm(dtmtable,settPoisson) #time to build tree: 12s
 #set some default settings
 updateSettingsMod!(sett,
 model_type="build_tree",
-write_statistics="true",
-write_sas_code="false",
-write_iteration_matrix="false",
-write_result="false",
-write_csharp_code="false",
-write_vba_code="false",
-boolSaveJLDFile="false",
-boolSaveResultAsJLDFile="false",
+writeStatistics="true",
+writeSasCode="false",
+writeIterationMatrix="false",
+writeResult="false",
+writeCsharpCode="false",
+writeVbaCode="false",
+saveJLDFile="false",
+saveResultAsJLDFile="false",
 
 showProgressBar_time="true",
-boolProduceEstAndLeafMatrices="false",
+prroduceEstAndLeafMatrices="false",
 write_dot_graph="false",
 
-boolCalculatePoissonError="true",
+calculatePoissonError="true",
 performanceMeasure="Average Poisson Error Val"
 )
 
@@ -269,7 +269,7 @@ performanceMeasure="Average Poisson Error Val"
 minweight_list=Float64[50, 100, 150, 200, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 6000, 7000, 8000, 9000, 10000, 12500, 15000, 17500, 20000, 22500, 25000]
 
 settV=createGridSearchSettings(sett,    
-    minw=minweight_list
+    minWeight=minweight_list
     );
 
 #consider the length(settV) which is the number of models that will be run
@@ -308,7 +308,7 @@ end
 
 #Perform grid search for Poisson
 settPoissonV=createGridSearchSettings(settPoisson,    
-    minw=minweight_list
+    minWeight=minweight_list
     );
 
 outputfolderandFile2="R:\\temp\\2\\MTPLsingleTreePoisson.CSV"
@@ -331,13 +331,13 @@ end
 #0.25%	0.50%	1%	1.50%	3%
 
 settBoosting=deepcopy(sett)
-#updateSettingsMod!(settBoosting,model_type="boosted_tree",niter=2)
-updateSettingsMod!(settBoosting,model_type="boosted_tree",niter=20)
+#updateSettingsMod!(settBoosting,model_type="boosted_tree",iterations=2)
+updateSettingsMod!(settBoosting,model_type="boosted_tree",iterations=20)
 
 settBoostingV=createGridSearchSettings(settBoosting,
-    #minw=[-0.0025,-0.005,-0.01,-0.015,-0.02,-0.03]
-    minw=[-0.015,-0.02,-0.03]
-    ,mf=[0.1],
+    #minWeight=[-0.0025,-0.005,-0.01,-0.015,-0.02,-0.03]
+    minWeight=[-0.015,-0.02,-0.03]
+    ,learningRate=[0.1],
     subsampling_features_prop=[.7],
     crit=["poisson", "difference"])    
 

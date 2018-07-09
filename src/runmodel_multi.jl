@@ -19,10 +19,10 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
 
         #run an initial dummy model to get the 'structure' (ie header and size) of the output statistics
             dummySett=deepcopy(settingsVector[1])
-            dummySett.print_details=false;dummySett.bool_write_tree=false;dummySett.write_sas_code=false;dummySett.write_iteration_matrix=false;dummySett.write_result=false;dummySett.write_statistics=false;dummySett.boolCreateZipFile=false;dummySett.write_csharp_code=false;dummySett.write_vba_code=false;dummySett.boolSaveJLDFile=false;dummySett.boolSaveResultAsJLDFile=false;dummySett.showProgressBar_time=false;dummySett.boolProduceEstAndLeafMatrices=false;dummySett.write_dot_graph=false;
+            dummySett.print_details=false;dummySett.writeTree=false;dummySett.writeSasCode=false;dummySett.writeIterationMatrix=false;dummySett.writeResult=false;dummySett.writeStatistics=false;dummySett.boolCreateZipFile=false;dummySett.writeCsharpCode=false;dummySett.writeVbaCode=false;dummySett.saveJLDFile=false;dummySett.saveResultAsJLDFile=false;dummySett.showProgressBar_time=false;dummySett.prroduceEstAndLeafMatrices=false;dummySett.write_dot_graph=false;
             path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_0")
             fnmod=string(path_and_fn_wo_extension_mod,ext)
-            dummySett.niter=min(10,dummySett.niter) #is this a good idea? I think we should be fine.
+            dummySett.iterations=min(10,dummySett.iterations) #is this a good idea? I think we should be fine.
             somestrings,model=run_model_actual(dtmtable,dummySett,fnmod)
             desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=settingsVector[1].performanceMeasure)
             #add first column
@@ -102,7 +102,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
         #write data
         try 		
             println("Writing summary statistics to file:\r\n$(filen)")
-            @time write_statistics(xld,filen,true,false)		
+            @time writeStatistics(xld,filen,true,false)		
         catch e
             @show e       
             @warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(filen)")

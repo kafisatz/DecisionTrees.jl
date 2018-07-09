@@ -27,7 +27,7 @@ mapToOther!(vnew,keep,9999999)
 ##################################################
 
 dtmtableMini,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp[1:100,:],treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
-sett.minw=-.2
+sett.minWeight=-.2
 strs,resm=dtm(dtmtableMini,sett)
 #boosting
 settB=deepcopy(sett)
@@ -48,14 +48,14 @@ strs,resm=dtm(dtmtable,sett)
 #run boosting
 ##################################################
 
-sett.niter=10
+sett.iterations=10
 sett.model_type="boosted_tree"
 strs,resm2=dtm(dtmtable,sett)
 @test typeof(resm2.modelstats)==DataFrame
 @test 1==1
 
-#reduce niter for the remaining tests
-sett.niter=3
+#reduce iterations for the remaining tests
+sett.iterations=3
 
 sett.statsByVariables=Int[1,2]
 strs,resm2=dtm(dtmtable,sett)
@@ -95,7 +95,7 @@ df_tmp[:PLZ_WOHNORT]=vnew
 
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
-sett.max_splitting_points_num=300
+sett.maxSplittingPoints=300
 dtmtable=prep_data_from_df(df_prepped,sett,joinpath(mktempdir(),"dtmsmoketest.csv"))
 @test eltype(dtmtable.features[:PLZ_WOHNORT].refs)==UInt16
 strs,resm2b=dtm(dtmtable,sett)
@@ -109,8 +109,8 @@ strs,resm2b=dtm(dtmtable,sett)
 #Multirun Boosting
 ##################################################
 settV=createGridSearchSettings(sett,    
-    minw=[-0.1,-0.2]
-    ,mf=[0.1,0.05],niter=[2])
+    minWeight=[-0.1,-0.2]
+    ,learningRate=[0.1,0.05],iterations=[2])
 settVBoosting=deepcopy(settV)
 a,b,allmodels=dtm(dtmtable,settV)
 @test typeof(allmodels[1].modelstats)==DataFrame
@@ -121,8 +121,8 @@ a,b,allmodels=dtm(dtmtable,settV)
 ##################################################
 sett.model_type="build_tree"
 settV=createGridSearchSettings(sett,    
-    minw=[-0.1,-0.2]
-    ,mf=[0.1,0.05],niter=[2])
+    minWeight=[-0.1,-0.2]
+    ,learningRate=[0.1,0.05],iterations=[2])
 a,b,allmodels=dtm(dtmtable,settV)
 #@test typeof(allmodels[1].modelstats)==DataFrame
 
@@ -141,24 +141,24 @@ statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 #set some default settings
 updateSettingsMod!(sett,
-niter=3,
+iterations=3,
 model_type="boosted_tree",
-nscores="1000",
-write_statistics="true",
-write_sas_code="true",
-write_iteration_matrix="true",
-write_result="true",
-write_csharp_code="true",
-write_vba_code="true",
-boolSaveJLDFile="true",
-boolSaveResultAsJLDFile="false",
+nScores="1000",
+writeStatistics="true",
+writeSasCode="true",
+writeIterationMatrix="true",
+writeResult="true",
+writeCsharpCode="true",
+writeVbaCode="true",
+saveJLDFile="true",
+saveResultAsJLDFile="false",
 
 showProgressBar_time="true",
-boolProduceEstAndLeafMatrices="true",
+prroduceEstAndLeafMatrices="true",
 write_dot_graph="false",
-boolCalculateGini="true",
+calculateGini="true",
 
-boolCalculatePoissonError="true",
+calculatePoissonError="true",
 performanceMeasure="Average Poisson Error Val"
 )
 sett.model_type="build_tree"
@@ -188,9 +188,9 @@ sett.randomw=0.0
 strs,resm5b=dtm(dtmtable,sett)
 @test typeof(resm5b.modelstats)==DataFrame
     
-#minw too big
-oldminw=sett.minw
-sett.minw=-0.51
+#minWeight too big
+oldminw=sett.minWeight
+sett.minWeight=-0.51
 strs,resm6=dtm(dtmtable,sett)
 @test typeof(resm6.modelstats)==DataFrame
 
@@ -208,7 +208,7 @@ df_tmp2[:LOSS20HALF][1:20].=-20
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
 
-sett.minw=oldminw
+sett.minWeight=oldminw
 #example with weights.==1 and denominator.==1
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
    

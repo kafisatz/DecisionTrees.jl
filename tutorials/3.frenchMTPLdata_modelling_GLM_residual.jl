@@ -92,7 +92,7 @@ dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnva
 #let us consider a larger validation data (say 30%) set for the following
 #resample_trnvalidx!(dtmtable,.7)
 
-updateSettingsMod!(sett,minw=-0.02,model_type="boosted_tree",niter=10,mf=0.05,subsampling_features_prop=.7,boolCalculatePoissonError=false)
+updateSettingsMod!(sett,minWeight=-0.02,model_type="boosted_tree",iterations=10,learningRate=0.05,subsampling_features_prop=.7,calculatePoissonError=false)
 #sett.scorebandsstartingpoints=[1,50,100,150,200,300,400,500,600,700,850,900,950]
 
 #resM is the resulting Model

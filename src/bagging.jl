@@ -8,7 +8,7 @@ actualNumerator=dtmtable.numerator
 denominator=dtmtable.denominator
 mappings=dtmtable.mappings
 candMatWOMaxValues=dtmtable.candMatWOMaxValues
-obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,boolProduceEstAndLeafMatrices=initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominator,sett)
+obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,startAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,prroduceEstAndLeafMatrices=initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominator,sett)
 obs=obstrn+obsval
 current_error=0.0
 moderationfactor=moderationvector[1]
@@ -22,14 +22,14 @@ if size(moderationvector,1)==1
 else
 	actual_moderationvector=deepcopy(moderationvector)
 end
-if BoolStartAtMean
+if startAtMean
 	estimatedRatio=ones(length(weight)).*trn_meanobservedvalue
 else
-	error("DTM: This is currently not working: please set BoolStartAtMean=true)")
+	error("DTM: This is currently not working: please set startAtMean=true)")
 end
 
-#obs,obsVAL,trn_meanobservedvalue,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,BoolStartAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time=initSettingsWhichAreTheSameForBoostingAndBagging(actualNumerator,actualNumeratorVAL,denominator,sett)
-iterationsPerCore=calcIterationsPerCore(sett.niter,Distributed.Distributed.nprocs())
+#obs,obsVAL,trn_meanobservedvalue,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,startAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time=initSettingsWhichAreTheSameForBoostingAndBagging(actualNumerator,actualNumeratorVAL,denominator,sett)
+iterationsPerCore=calcIterationsPerCore(sett.iterations,Distributed.Distributed.nprocs())
 sampleSizeForEachTreeCanBeNEG=convert(Int,round(sett.subsampling_prop*length(trnidx)))
 if abs(sampleSizeForEachTreeCanBeNEG)<1
 	sampleSizeForEachTreeCanBeNEG=convert(Int,sign(sett.subsampling_prop))
@@ -47,7 +47,7 @@ end
 		weightPerTree=defineWeightPerTree(vecTreesWErrs,sett.baggingWeightTreesError)		
 		#this header needs to be in line with the output of the function createTrnValStatsForThisIteration			
 			statsPerIteration=global_statsperiter_header
-			scoreBandLabels=createScorebandsUTF8List(sett.scorebandsstartingpoints,sett.nscores,addtotal=true)
+			scoreBandLabels=createScorebandsUTF8List(sett.scorebandsstartingpoints,sett.nScores,addtotal=true)
 		#this row is only here such that the variables are initialized outside the for loop
 		local	obsPerScore,vectorWeightPerScore,numPerScore,denomPerScore,scores,scoresVAL,cumulativeStatsPerScoreBand,relativities,relativitiesVAL,maxRawRelativityPerScoreSorted,rawObservedRatioPerScore,MAPPINGSmoothedEstimatePerScore
 	
@@ -61,7 +61,7 @@ end
 				
 		leaves_of_tree=Array{Array{Leaf{T},1}}(undef,iterations)
 		
-		if boolProduceEstAndLeafMatrices
+		if prroduceEstAndLeafMatrices
 			est_matrix=Array{Float64}(undef,obs,iterations+1)
 			est_matrixFromScores=copy(est_matrix)
 			MatrixOfLeafNumbers=Array{Int}(undef,obs,iterations+1)
@@ -95,7 +95,7 @@ end
 			estimatedRatio.= ((estimatedRatio.*cumulativeWeight).+(currentEstimateOfIndividualTree.*wi))./(cumulativeWeight+wi)			
 			currentRelativity.=estimatedRatio./trn_meanobservedvalue
 
-			if boolProduceEstAndLeafMatrices
+			if prroduceEstAndLeafMatrices
 				est_matrix[:,iter+1]=estimatedRatio
 				MatrixOfLeafNumbers[:,iter+1]=leafNumbersThisTree #leaf_numbers(vectorOfLeafArrays[1+iter],obs) #TODO / TBD adjust this for subsampling. this may not work properly, as each tree will use a different amount of data AND DIFFERENT OBSERVATIONS! thus we cannot rely on the *.idx field of the leaves!			
 			end	
@@ -106,10 +106,10 @@ end
 		sett.smoothEstimates=="0" ? referenceForNumEstimates=rawObservedRatioPerScore : referenceForNumEstimates=MAPPINGSmoothedEstimatePerScore
 		update_mapped_estFromScores!(estFromScores,referenceForNumEstimates,scores)
 		#estFromScores=map(x->referenceForNumEstimates[x],scores)	
-		if boolProduceEstAndLeafMatrices
+		if prroduceEstAndLeafMatrices
 			write_column!(est_matrixFromScores,iter+1,estFromScores)
 		end
-		#	maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,scores,uniqueRelativitiesSorted,nscoresPotentiallyReduced=constructANDderiveScores(estimatedRatio,currentRelativity,sett.nscores,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett.smoothEstimates,sett.print_details)
+		#	maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,scores,uniqueRelativitiesSorted,nscoresPotentiallyReduced=constructANDderiveScores(estimatedRatio,currentRelativity,sett.nScores,actualNumerator,denominator,weight,trn_meanobservedvalue,iter,sett.smoothEstimates,sett.print_details)
 		#Apply this iteration to the validation data set
 			#currentEstimateOfIndividualTreeVAL[:],leafNumbersThisTreeVAL[:]=Core.eval(parse(sett.chosen_apply_tree_fn))(vectorOfLeafArrays[iter+1],vecTreesWErrs.tree[iter.rootnode,numfeaturesVAL,charfeaturesVAL)
 		#derive current cumulative estimate
@@ -123,7 +123,7 @@ end
 			statsThisIteration,singleRowWithKeyMetrics,columnOfRelativityTrn=createTrnValStatsForThisIteration(scoreBandLabels,iter,sett.scorebandsstartingpoints,view(actualNumerator,trnidx),view(denominator,trnidx),view(weight,trnidx),view(estFromScores,trnidx),view(scores,trnidx),view(actualNumerator,validx),view(denominator,validx),view(weight,validx),view(estFromScores,validx),view(scores,validx),sett)			
 			statsPerIteration=vcat(statsPerIteration,singleRowWithKeyMetrics)
 			if iter==1
-				fristRowOfThisTable=sett.niter+2+empty_rows_after_iteration_stats
+				fristRowOfThisTable=sett.iterations+2+empty_rows_after_iteration_stats
 				cumulativeStatsPerScoreBand=copy(statsThisIteration)
 			else
 				fristRowOfThisTable+=size(statsThisIteration,1)
@@ -180,7 +180,7 @@ end
 #Define Excel
 	xlData.sheets=[modelsettingsSheet,overviewSheet,statsSheet,scoresSheet,predictorsSheet,validationSheet]
 
-	z=deepcopy(stats[1:sett.niter+1,:])
+	z=deepcopy(stats[1:sett.iterations+1,:])
 	modelstats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
 	DataFrames.names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
 #resulting Bagged Tree, construct Bagged Tree
@@ -193,7 +193,7 @@ end
 	@assert issorted(trnidx)
 	trnidx_one_zero_full_length=map(x->UInt8(length(searchsorted(trnidx,x))),1:length(scores))		
 	fp=get_feature_pools(features)
-	resultingBaggedTree=BaggedTree(nodesOnly,weightPerTree,errs,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,BoolStartAtMean,MAPPINGSmoothedEstimatePerScore,rawObservedRatioPerScorexx,est_matrix,modelstats,trnidx_one_zero_full_length,fp)
+	resultingBaggedTree=BaggedTree(nodesOnly,weightPerTree,errs,sett,intVarsUsed,candMatWOMaxValues,mappings,inds_considered,scores,currentRelativity,maxRawRelativityPerScoreSorted,trn_meanobservedvalue,startAtMean,MAPPINGSmoothedEstimatePerScore,rawObservedRatioPerScorexx,est_matrix,modelstats,trnidx_one_zero_full_length,fp)
 		
 #resulting Bagged Tree
 return xlData,estimatedRatio,MatrixOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultingBaggedTree
@@ -235,12 +235,12 @@ function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here
 			#derive scores				
 			maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore,nscoresPotentiallyReduced				=constructANDderiveScores!(sampleVector,
 			unusedSamplePart,sortvec_reused_trn_only,estimatedRatio,relativities,numerator,denominator,weight,trn_meanobservedvalue,itr,sett)
-			#old call constructScores(estimatedRatio,relativities,uniqueRelativitiesSorted,num,denom,w,trn_meanobservedvalue,ns,sett.nscores,sett.print_details)
+			#old call constructScores(estimatedRatio,relativities,uniqueRelativitiesSorted,num,denom,w,trn_meanobservedvalue,ns,sett.nScores,sett.print_details)
 			#uniqueRelativitiesSorted=unique(relativities)
 			#sort!(uniqueRelativitiesSorted,alg=QuickSort)
-			#ns=min(sett.nscores,size(uniqueRelativitiesSorted,1))
-			#ns<nscores&&warn("There are only $(ns) distinct relativities. Number of scores will be limited to $(ns) instead of $(nscores).")		
-			#aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=	constructScores(estimatedRatio,relativities,uniqueRelativitiesSorted,num,denom,w,trn_meanobservedvalue,ns,sett.nscores,sett.print_details)
+			#ns=min(sett.nScores,size(uniqueRelativitiesSorted,1))
+			#ns<nScores&&warn("There are only $(ns) distinct relativities. Number of scores will be limited to $(ns) instead of $(nScores).")		
+			#aggregatedModelledRatioPerScore,maxRawRelativityPerScoreSorted,MAPPINGSmoothedEstimatePerScore,vectorWeightPerScore,obsPerScore,rawObservedRatioPerScore,numPerScore,denomPerScore=	constructScores(estimatedRatio,relativities,uniqueRelativitiesSorted,num,denom,w,trn_meanobservedvalue,ns,sett.nScores,sett.print_details)
 
 		#apply tree to ooBagSample
 			if size(unusedSamplePart,1)>0
@@ -252,9 +252,9 @@ function create_bagged_trees(itr::Int,trnidx_which_should_only_be_used_once_here
 				#	resize!(ooBagEstimates,size(unusedSamplePart,1))
 				#end
 				#leaves_of_tree=create_leaves_array(thistree.rootnode)	
-				#if sett.boolProduceEstAndLeafMatrices
+				#if sett.prroduceEstAndLeafMatrices
 				#	error("this has not yet been updated for bagging")
-					#todo/tbd this could possibly be optimized. We are calling apply_tree_by_leaf! twice (if boolProduceEstAndLeafMatrices==true), once for val and once for trn
+					#todo/tbd this could possibly be optimized. We are calling apply_tree_by_leaf! twice (if prroduceEstAndLeafMatrices==true), once for val and once for trn
 					#apply_tree_by_leaf!(fitted_values_all_data_this_vector_is_modified_by_build_tree,reused_fitted_leafnr_vector,sampleVector,thistree.rootnode,features)
 					#MatrixOfLeafNumbers[:,iter+1]=copy(reused_fitted_leafnr_vector) #leaf_numbers(vectorOfLeafArrays[1+iter],obs) #TODO / TBD adjust this for subsampling. this may not work properly, as each tree will use a different amount of data AND DIFFERENT OBSERVATIONS! thus we cannot rely on the *.idx field of the leaves!			
 				#end	

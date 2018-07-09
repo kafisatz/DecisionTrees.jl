@@ -21,7 +21,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     trnsize_orig=length(trnidx_orig)
     fullsize=length(dtmtable.weight)
     validx_orig=copy(dtmtable.validx)
-    minw_orig=copy(sett.minw)
+    minw_orig=copy(sett.minWeight)
     seed_orig=copy(sett.seed)
     minw_prop=minw_orig/trnsize_orig
     
@@ -81,8 +81,8 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
             #notably trn and val "do not fill out" all data, there is third part of the data which remains unused here
         end
         dtmtable.trnidx=this_trnidx
-        if sett.minw>0 #if sett.minw is specified as a negative number then it will be interpreted as a percentage anyway (no need to update it)
-            sett.minw=minw_prop*length(dtmtable.trnidx) #note minw is adjusted for each run!
+        if sett.minWeight>0 #if sett.minWeight is specified as a negative number then it will be interpreted as a percentage anyway (no need to update it)
+            sett.minWeight=minw_prop*length(dtmtable.trnidx) #note minWeight is adjusted for each run!
         end
         
         path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_",i)
@@ -157,7 +157,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     #write data
     @info "DTM: Writing multistats to file:\r\n$(filen)"
     try 		
-		@time write_statistics(xld,filen,true,false)		
+		@time writeStatistics(xld,filen,true,false)		
 	catch e
         @show e       
 		@warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(filen)")
@@ -165,7 +165,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     #restore indices
     dtmtable.trnidx=copy(trnidx_orig)
     dtmtable.validx=copy(validx_orig)  
-    sett.minw=deepcopy(minw_orig)
+    sett.minWeight=deepcopy(minw_orig)
     sett.seed = seed_orig 
     
     return statsdf,settsdf,allmodels 
@@ -189,7 +189,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
     trnsize_orig=length(trnidx_orig)
     fullsize=length(dtmtable.weight)
     validx_orig=copy(dtmtable.validx)
-    minw_orig=copy(sett.minw)
+    minw_orig=copy(sett.minWeight)
     seed_orig=copy(sett.seed)
     minw_prop=minw_orig/trnsize_orig
 
@@ -233,7 +233,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
 
         #run an initial dummy model to get the 'structure' (ie header and size) of the output statistics
             dummySett=deepcopy(sett)
-            dummySett.print_details=false;dummySett.bool_write_tree=false;dummySett.write_sas_code=false;dummySett.write_iteration_matrix=false;dummySett.write_result=false;dummySett.write_statistics=false;dummySett.boolCreateZipFile=false;dummySett.write_csharp_code=false;dummySett.write_vba_code=false;dummySett.boolSaveJLDFile=false;dummySett.boolSaveResultAsJLDFile=false;dummySett.showProgressBar_time=false;dummySett.boolProduceEstAndLeafMatrices=false;dummySett.write_dot_graph=false;                
+            dummySett.print_details=false;dummySett.writeTree=false;dummySett.writeSasCode=false;dummySett.writeIterationMatrix=false;dummySett.writeResult=false;dummySett.writeStatistics=false;dummySett.boolCreateZipFile=false;dummySett.writeCsharpCode=false;dummySett.writeVbaCode=false;dummySett.saveJLDFile=false;dummySett.saveResultAsJLDFile=false;dummySett.showProgressBar_time=false;dummySett.prroduceEstAndLeafMatrices=false;dummySett.write_dot_graph=false;                
             path_and_fn_wo_extension_mod=string(path_and_fn_wo_extension,"_0")
             fnmod=string(path_and_fn_wo_extension_mod,ext)
             somestrings,model=run_model_actual(dtmtable,dummySett,fnmod)
@@ -312,7 +312,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         xld=ExcelData(ExcelSheet[sh1,sh2],Array{Chart,1}(undef,0))
         #write data
         try 		
-            @time write_statistics(xld,filen,true,false)		
+            @time writeStatistics(xld,filen,true,false)		
         catch e
             @show e       
             @warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(filen)")
@@ -320,7 +320,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         #restore indices
         dtmtable.trnidx=copy(trnidx_orig)
         dtmtable.validx=copy(validx_orig)  
-        sett.minw=deepcopy(minw_orig)
+        sett.minWeight=deepcopy(minw_orig)
         sett.seed = seed_orig 
         
         return statsdf,settsdf,allmodels 
@@ -365,9 +365,9 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
                 #here we leave the val data as it is;notably trn and val "do not fill out" all data, there is third part of the data which remains unused here
             end
             dtmtable.trnidx=this_trnidx
-        #update minw
-            if sett.minw>0 #if sett.minw is specified as a negative number then it will be interpreted as a percentage anyway (no need to update it)
-                sett.minw=minw_prop*length(dtmtable.trnidx) #note minw is adjusted for each run!
+        #update minWeight
+            if sett.minWeight>0 #if sett.minWeight is specified as a negative number then it will be interpreted as a percentage anyway (no need to update it)
+                sett.minWeight=minw_prop*length(dtmtable.trnidx) #note minWeight is adjusted for each run!
             end
         #set seed
             sett.seed =  floor(Int,0.31*hash(intDatahash,hash(99812,hash(i))))
