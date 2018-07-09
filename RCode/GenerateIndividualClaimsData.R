@@ -19,12 +19,6 @@
 ################################################################
 
 
-
-### IMPORTANT: Change the working directory to current directory through:
-### Session --> Set Working Directory --> To Source File Location
-
-
-
 ##################################
 ### Load the required packages ###
 ##################################
@@ -42,7 +36,10 @@ library(ChainLadder)
 ### Read in the functions Simulation.Machine and Feature.Generation ###
 #######################################################################
 
-#C:\Users\bernhard.konig\Documents\ASync\home\Code\Julia\Ressources\Reserving\SimulationWuethrich\Simulation.Machine.V1
+
+### IMPORTANT: Change the working directory to the directory containing the source files for the simulation machine:
+### Session --> Set Working Directory --> To Source File Location
+setwd("~/ASync/home/Code/Julia/Ressources/Reserving/SimulationWuethrich/Simulation.Machine.V1")
 source(file="./Functions.V1.R")
 
 
@@ -50,7 +47,7 @@ source(file="./Functions.V1.R")
 ### Generate the features ###
 #############################
 
-V <- 500000                           # totally expected number of claims (over 12 accounting years)
+V <- 5000000                           # totally expected number of claims (over 12 accounting years)
 LoB.dist <- c(0.35,0.20,0.15,0.30)    # categorical distribution for the allocation of the claims to the 4 lines of business
 growth <- c(0,0,0,0)                  # growth parameters (per LoB) for the numbers of claims in the 12 accident years
 seed1 <- 100                          # setting seed for simulation
@@ -82,9 +79,11 @@ add.obs[,4] <- 1994:2005
 add.obs[,9:20] <- 0
 output <- rbind(output,add.obs)
 
+#alreadyReportedby2005<-output[output$AY+output$RepDel<=2005,]
+
 ### Cumulative cash flows
 #cum_CF <- round((1000)^(-1)*ddply(output, .(AY), summarise, CF00=sum(Pay00),CF01=sum(Pay01),CF02=sum(Pay02),CF03=sum(Pay03),CF04=sum(Pay04),CF05=sum(Pay05),CF06=sum(Pay06),CF07=sum(Pay07),CF08=sum(Pay08),CF09=sum(Pay09),CF10=sum(Pay10),CF11=sum(Pay11))[,2:13])
-cum_CF <- ddply(output, .(AY), summarise, CF00=sum(Pay00),CF01=sum(Pay01),CF02=sum(Pay02),CF03=sum(Pay03),CF04=sum(Pay04),CF05=sum(Pay05),CF06=sum(Pay06),CF07=sum(Pay07),CF08=sum(Pay08),CF09=sum(Pay09),CF10=sum(Pay10),CF11=sum(Pay11))[,2:13]
+cum_CF <- ddply(alreadyReportedby2005, .(AY), summarise, CF00=sum(Pay00),CF01=sum(Pay01),CF02=sum(Pay02),CF03=sum(Pay03),CF04=sum(Pay04),CF05=sum(Pay05),CF06=sum(Pay06),CF07=sum(Pay07),CF08=sum(Pay08),CF09=sum(Pay09),CF10=sum(Pay10),CF11=sum(Pay11))[,2:13]
 for (j in 2:12){cum_CF[,j] <- cum_CF[,j-1] + cum_CF[,j]}
 cum_CF
 

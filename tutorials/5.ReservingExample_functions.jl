@@ -1,5 +1,11 @@
 
 function buildTriangle(data;rowIdentifier=:AY,columns=[Symbol(string("PayCum",lpad(string(i),2,"0"))) for i=0:11])
+    res=aggregate(data[vcat(columns,rowIdentifier)],rowIdentifier,sum);
+    res2=convert(Array,res)
+    return res2[:,2:end]    
+end
+
+function buildTriangleOLD(data;rowIdentifier=:AY,columns=[Symbol(string("PayCum",lpad(string(i),2,"0"))) for i=0:11])
     minRow,MaxRow=extrema(data[rowIdentifier])
     nRows=MaxRow-minRow+1
     nColumns=length(columns)
@@ -57,7 +63,7 @@ function aggregateReservesOfIndividualCLModels(fullData,leafNrs)
     return reservesCombined
 end
 
-function calculateEstimates(fullData,LDFArray,triangle,aggCL,paidToDatePerRow)
+function calculateEstimates(fullData,LDFArray,aggCL,paidToDatePerRow)
     ayears=unique(fullData[:AY])
     #apply Chainladder to each row
     ultimatePerRow=zeros(size(fullData,1))
@@ -107,3 +113,17 @@ function getcorrectedQuantilesOfError(estPerRow,truthPerRow,qtl_range,CLTotalUlt
     errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
     return quantile(errPerRowCorrected,qtl_range)    
 end
+
+function checkIfPaymentsAreIncreasing(data)
+    #consider payment columns
+    paymCols=[Symbol(string("PayCum",lpad(ii,2,0))) for ii=0:11]
+    isNonDecreasing=BitVector(undef,size(data,1))
+    data2=data[paymCols]
+    dataAsArray=transpose(convert(Array,data2))    
+    for ii=1:size(data2,1)        
+        @inbounds isNonDecreasing[ii]=issorted(dataAsArray[:,ii])
+        #@inbounds isNonDecreasing[ii]=issorted(view(dataAsArray,:,ii))        
+    end
+    return isNonDecreasing
+end
+

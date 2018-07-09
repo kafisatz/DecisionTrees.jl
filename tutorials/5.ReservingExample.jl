@@ -39,7 +39,7 @@ elt=[String,String,String,Int,Int,Int,String,Int]
 elt=vcat(elt,repeat([Float64],12))
 @time fullData=CSV.read(datafile,types=elt,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
-#Define a random split into training and validaiton data 
+#Define a random split into training and validation data 
 #training shall be 70% of the data
 Random.srand(1239)
 trnValCol=BitArray(rand() < 0.7 for x in 1:size(fullData,1));
@@ -48,7 +48,8 @@ fullData[:trnValCol]=trnValCol
 @warn("We may want to redo the whole calculation with no validation data -> the CL factors will be based on all of the data (not only the training porportion).")
 
 #The data should match this total for the column Paycum11
-@assert sum(fullData[:PayCum11])==1477250848 "Expected 1464014219, have: $(sum(fullData[:PayCum11]))"
+expectedSum=9061763108 
+@assert sum(fullData[:PayCum11])==expectedSum "Expected $(expectedSum), have: $(sum(fullData[:PayCum11]))"
 #The data is described in the paper mentioned above
 
 #We provide a short summary from the Readme of Wuethrich and Gabrielli
@@ -62,8 +63,7 @@ fullData[:trnValCol]=trnValCol
 
 #set independent variables
 selected_explanatory_vars=["AQ","LoB","age","cc","inj_part"]
-#note: we refrain from using the exposure as explanatory variable, as this is not meaningful in practical applications
-#where one aims to predict the claim frequency of a given policy (without knowing how long that policy will remain within a certain portfolio)
+categoricalVars=["LoB","inj_part","cc"]
 
 #check type of each column
 for x in selected_explanatory_vars
@@ -81,25 +81,21 @@ for x in 1:size(fullData,2)
     @show size(unique(fullData[:,x]))
 end
 
-#Let us see whether all claims are 'increasing' in time (i.e. whether all incremental payments are non-negative)
-function checkIfPaymentsAreIncreasing(data)
-    #consider payment columns
-    paymCols=[Symbol(string("PayCum",lpad(ii,2,0))) for ii=0:11]
-    isNonDecreasing=BitVector(undef,size(data,1))
-    @time for ii=1:length(isNonDecreasing)
-        @inbounds thisrow=vec(convert(Array,view(data,ii,paymCols)))
-        @inbounds isNonDecreasing[ii]=issorted(thisrow)
-    end
-    return isNonDecreasing
-end
+#=
+    #Let us see whether all claims are 'increasing' in time (i.e. whether all incremental payments are non-negative)
+    #NOTE: This may take a few minutes to compute!
+    #->there are some rows/claims which have non increasing payments over time
+    #99.7% of the claims are nondecreasing though
 
-isNonDecreasing=checkIfPaymentsAreIncreasing(fullData) #takes about 18 seconds
-sum(isNonDecreasing)/length(isNonDecreasing) # 99.67% of the claims are nondecreasing
-nonDecreasingRows=.!isNonDecreasing
-nonDecreasingRowsInteger=find(nonDecreasingRows)
+    isNonDecreasing=checkIfPaymentsAreIncreasing(fullData[1:30]) 
+    sum(isNonDecreasing)/length(isNonDecreasing) # 99.7% of the claims are nondecreasing
+    nonDecreasingRows=.!isNonDecreasing
+    nonDecreasingRowsInteger=find(nonDecreasingRows)
+    @show size(nonDecreasingRowsInteger)
+    #claims which are decreasing over time (at some point):
+    #fullData[nonDecreasingRowsInteger,:]
+=#
 
-#claims which are decreasing over time (at some point)
-fullData[nonDecreasingRowsInteger,:]
 
 ##############################
 #Prepare the data
@@ -107,47 +103,52 @@ fullData[nonDecreasingRowsInteger,:]
 #consider the Accient Years
 ayears=unique(fullData[:AY])
 maxAY=maximum(ayears)
-#For the first model we perform we consider the Cumulative Payment after 1 year and compare it to the Cumulative Payment after 2 years
+@assert maxAY==2005
 
-#array of LDFs
-LDFArray=zeros(size(fullData,1),length(ayears))
-LDFArray[:,end].=1.0 #tail factor 1.0
 #prepare the whole dataset in the same manner as the training data set
-dtmtablefullData,settfullData,dfpreppedfullData=prepare_dataframe_for_dtm!(fullData,keycol="ClNr",numcol="PayCum00",trnvalcol="trnValCol",independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
+    #indicator index whether claim is known by year end 2005
+    indexOfClaimIsReportedByYE2005=fullData[:AY]+fullData[:RepDel].<=2005
+    dataKnownByYE2005=fullData[indexOfClaimIsReportedByYE2005,:]
+    #paycumcolumns=[Symbol(string("PayCum",lpad(ii,2,0))) for ii=0:11]
+    #map(x->sum(fullData[.!indexOfClaimIsReportedByYE2005,x]),paycumcolumns)
+    #aggregate(df,:someColumn,[sum, mean])
+    dtmtableKnownData,settUnused,dfpreppedUnused=prepare_dataframe_for_dtm!(dataKnownByYE2005,keycol="ClNr",numcol="PayCum00",trnvalcol="trnValCol",independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);
 
 #consider paidToDate and 'truth'
-paidToDatePerRow=getPaidToDatePerRow(fullData)
-trueUltimatePerRow=fullData[:PayCum11]
-trueReservePerRow=trueUltimatePerRow.-paidToDatePerRow
+paidToDatePerRow=getPaidToDatePerRow(dataKnownByYE2005)
+#trueUltimatePerRow (this is not meaningful because we have two sets of claims: fullData[:PayCum11] AND dtmtableKnownData[:PayCum11])
+#trueReservePerRow=trueUltimatePerRow.-paidToDatePerRow #this is not meaningful either
+
+#build 'triangle' (in this case, we will atualls get a retangle rather than a triangle)
+@time triangleInclIBNyRClaims=buildTriangle(fullData)
 
 #CL
 #consider aggregate CL Model
-triangle=buildTriangle(fullData)
+triangle=buildTriangle(dataKnownByYE2005)
 aggCL=chainLadder(triangle)
-truthperAY=triangle[:,end]
+truthperAY=triangleInclIBNyRClaims[:,end]
 
 #Consider CL MSE
-ayperRow=fullData[:AY]
+ayperRow=dataKnownByYE2005[:AY]
 CLfactorsToUltimate=aggCL[:factorsToUltimate]
 CLLDFperRow=map(x->CLfactorsToUltimate[x-1993],ayperRow)
 CLUltimatePerRow=CLLDFperRow.*paidToDatePerRow
-@assert isapprox(0,sum(CLUltimatePerRow)-sum(aggCL[:ultimate])) #should be zero 
+@assert isapprox(0,sum(CLUltimatePerRow)-sum(aggCL[:ultimate]),atol=1e-4) #should be zero 
 for i in ayears
     idx=ayperRow.==i
-    @assert isapprox(0,sum(CLUltimatePerRow[idx])-aggCL[:ultimate][i-1993],atol=1e-7) #should be zero for each year
+    @assert isapprox(0,sum(CLUltimatePerRow[idx])-aggCL[:ultimate][i-1993],atol=1e-4) #should be zero for each year
 end
-CLerrPerRow=CLUltimatePerRow-trueUltimatePerRow
 CLTotalUltimate=sum(CLUltimatePerRow)
-qtl_range=[.0001,.001,.01,.05,.1,.2,.25,.5,.75,.8,.9,.95,.99,.999,.9999] 
-CLqtls=quantile(CLerrPerRow,qtl_range)
-median(CLerrPerRow)
-CLmse=mean(CLerrPerRow.^2)
-#CL LDFs 1.624586303	1.143772133	1.056608075	1.029755909	1.019553623	1.014561794	1.011186622	1.008085459	1.007157648	1.004935975	1.003334179
 
-minwList=[35000]
-LDF_Cutoff=4 #for the years >=LDF_Cutoff, we use the CL factors
+minwList=[30000,40000,50000,75000,100000,200000]
+LDF_Cutoff=5 #for the years >=LDF_Cutoff, we use the CL factors
+
+#array of LDFs
+LDFArray=zeros(size(dataKnownByYE2005,1),length(ayears))
+LDFArray[:,end].=1.0 #tail factor 1.0
 
 #goal: build a tree for each LDF (i.e. a tree for 12-24 months, a second tree for 24-36 months, etc.)
+
 #selectedWeight=-0.15
 treeMSE=zeros(length(minwList))
 treeResults=Dict{Float64,DataFrame}()
@@ -158,9 +159,10 @@ for selectedWeight in minwList
     kk+=1    
     for ldfYear=1:length(ayears)-1        
         #subset the data
-        thisdata=copy(fullData)
+        thisdata=copy(dataKnownByYE2005)        
         #discard recent AYs (i.e ensure the data corresponds to a rectangle rather than a triangle)
-        thisdata=thisdata[thisdata[:AY].<=maxAY-ldfYear,:]
+        #filter!(row->row[:AY]<=maxAY-ldfYear, thisdata)
+        thisdata=thisdata[thisdata[:AY].<=(maxAY-ldfYear),:]
         #Discard claims which had 0 cumulative payment by year 'ldfYear'
         #this is currently a requirement for the algorithms we apply (although one may be able to weaken this condition and the algorithms would still run)
         cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
@@ -172,11 +174,11 @@ for selectedWeight in minwList
             thisdata=thisdata[.!discardIdx,:]
             println("Discarded $(sum(discardIdx)) observations with PayCum zero for both development years $(ldfYear) and $(ldfYear-1)")
         end 
-        #NOTE for now we are discarding all claims which have zero payment in the more recent year which dermines the CL factor
-        #we can keep the claims with zero values for cumulativePaymentCol
-        #however, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
+        #Note: in a previous version of the model, we were discarding all claims which have zero payment in the more recent year which determines the CL factor
+        #It turns out that we can actaully keep these claims we can keep the claims 
+        #However, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
         #thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
-        dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=["LoB","inj_part","cc"]);
+        dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);        
 
         #run a single tree         
         if ldfYear>=LDF_Cutoff #for the tail of the triangle the models do not validate well, thus we want 'no tree' but a single leaf => same as CL factors
@@ -187,8 +189,8 @@ for selectedWeight in minwList
         updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=actual_minimum_weight,model_type="build_tree",writeTree=false)
         resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))
 
-        #apply tree to the FULL data set
-        fittedValues,leafNrs=predict(resM,dtmtablefullData.features)
+        #apply tree to the known claims
+        fittedValues,leafNrs=predict(resM,dtmtableKnownData.features)
 
         #save estimated ldf per observation 
         LDFArray[:,ldfYear].=copy(fittedValues)
@@ -200,31 +202,29 @@ for selectedWeight in minwList
     end 
 
     #consider per Row Model 
-    estPerRow,estAgg=calculateEstimates(fullData,LDFArray,triangle,aggCL,paidToDatePerRow)
+    estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,aggCL,paidToDatePerRow)
     treeResults[selectedWeight]=deepcopy(estPerRow)
     treeResultsAgg[selectedWeight]=deepcopy(estAgg)
     
     reservesPerAY=estAgg[:reserves]
     errPerAY=estAgg[:error]
     errTotal=sum(errPerAY)        
-    errPerRow=estPerRow[:ultimate]-trueUltimatePerRow
+    #errPerRow=estPerRow[:ultimate]-trueUltimatePerRow
     totalUltimate=sum(estPerRow[:ultimate])    
     #quantile(errPerRow,qtl_range)
     #median(errPerRow)
     #@show selectedWeight,mean(errPerRow.^2)
-    treeMSE[kk]=mean(errPerRow.^2)
+    #treeMSE[kk]=mean(errPerRow.^2)
     
     #what if we correct the ultimate total to match the CL total?
-    corrFactor=1/totalUltimate*CLTotalUltimate    
-    @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
-    errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-trueUltimatePerRow    
-    quantile(errPerRowCorrected,qtl_range)    
+    #corrFactor=1/totalUltimate*CLTotalUltimate    
+    #@assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)    
 end 
 
 
 #Consider the quantiles of the error
 qtls=map(x->quantile(treeResults[x][:ultimate].-trueUltimatePerRow,qtl_range),minwList)
-expectedQtls35k= [-3.00292e5, -42808.2, -966.453, 0.0, 0.0, 0.0, 0.0, 4.32545, 45.9819, 74.31, 247.741, 647.852, 3773.03, 23917.0, 90376.7][:]
+expectedQtls35k=  [-1.4657e5, -28191.4, -882.096, 0.0, 0.0, 0.0, 0.0, 9.02446, 53.2051, 78.8788, 221.046, 513.365, 2300.84, 12311.4, 44644.0][:]
 @assert all(isapprox.(qtls[minwList.==35000][1].-expectedQtls35k,0,atol=1)) 
 
 #Consider the quantiles of the error when we correct the total ultimate such that it matches the CL Ultimate
@@ -243,8 +243,8 @@ function summaryByAY(fullData,trueUltimatePerRow,trueReservePerRow,paidToDatePer
     res=Dict{eltype(uniqueValues),Array{Float64,2}}()
 
     for thisValue in uniqueValues
-        res0=zeros(length(ayears),4)        
-        res0[:,1]=ayears
+        res0=zeros(length(ayears)+1,4)        
+        res0[1:end-1,1]=ayears        
         #note: this is very inefficiently programmed! (a countsort would be preferable)
         for i=1:size(fullData,1)
             @inbounds rowMatchesValue=fullData[byS][i]==thisValue
@@ -255,13 +255,30 @@ function summaryByAY(fullData,trueUltimatePerRow,trueReservePerRow,paidToDatePer
                 @inbounds res0[row,4]+=clReserve[i]                    
             end            
         end        
+        resTot=sum(res0,1)
+        #consider total 
+        res0[end,1]=9999
+        res0[end,2:end].=resTot[2:end]
         res[thisValue]=deepcopy(res0)
     end 
     
     return res
 end
 
+selectedTree=treeResults[35000]
+selectedTree[:ultimate]
+
+trueReserves=sum(trueReservePerRow)
+trueReserves/1000
+CLReserves=sum(CLUltimatePerRow.-paidToDatePerRow)
+treeReserves=sum(selectedTree[:reserves])
+(treeReserves-trueReserves)/1000
+(CLReserves-trueReserves)/1000
+
+268338+208376+214768+424738
+
 r1=summaryByAY(fullData,trueUltimatePerRow,trueReservePerRow,paidToDatePerRow,ayears,treeResults[35000],CLUltimatePerRow,by="LoB")
 
 
 @warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
+@warn("make a note that 5m claims is a large data set!")
