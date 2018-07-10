@@ -1,6 +1,6 @@
 
 function buildTriangle(data;rowIdentifier=:AY,columns=[Symbol(string("PayCum",lpad(string(i),2,"0"))) for i=0:11])
-    res=aggregate(data[vcat(columns,rowIdentifier)],rowIdentifier,sum);
+    res=DataFrames.aggregate(data[vcat(columns,rowIdentifier)],rowIdentifier,sum);
     res2=convert(Array,res)
     return res2[:,2:end]    
 end
@@ -147,7 +147,7 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame)
     treeEstimatePerRow[:AY]=dataKnownByYE2005[:AY]
     comparisonByLOB=Dict{String,DataFrame}()
     for lob in sort(unique(dataKnownByYE2005[:LoB]))
-        sumRes=aggregate(treeEstimatePerRow[dataKnownByYE2005[:LoB].==lob,[:reserves,:AY]],:AY,sum)
+        sumRes=DataFrames.aggregate(treeEstimatePerRow[dataKnownByYE2005[:LoB].==lob,[:reserves,:AY]],:AY,sum)
         #names!(sumRes,[:AY,:reserves])
         sumRes2=hcat(ayears,trueReservesPerLOB[lob],sumRes[:reserves_sum],clPerLOB[lob][:reserves])
         #sumRes[:CLReserves]=clPerLOB[lob][:reserves]
@@ -166,14 +166,14 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame)
         #attach explanatory data to the tree estimates
         treeEstimatePerRow[Symbol(vv)]=dataKnownByYE2005[Symbol(vv)]
         #create comparison table
-        comparison=aggregate(fullData[vcat(Symbol(vv),:PayCum11, :paidToDate)],Symbol(vv),sum)
+        comparison=DataFrames.aggregate(fullData[vcat(Symbol(vv),:PayCum11, :paidToDate)],Symbol(vv),sum)
         #rename table
         names!(comparison,vcat(Symbol(vv),:PayCum11, :paidToDate))
         #calculate reserves
         comparison[Symbol("True Outstanding Amount")]=comparison[:PayCum11].-comparison[:paidToDate]
         sort!(comparison,Symbol(vv))
         #calculate estimated reserves (tree model)
-        est=aggregate(treeEstimatePerRow[vcat(Symbol(vv),:ultimate, :reserves,:paidToDate)],Symbol(vv),sum)
+        est=DataFrames.aggregate(treeEstimatePerRow[vcat(Symbol(vv),:ultimate, :reserves,:paidToDate)],Symbol(vv),sum)
         sort!(est,Symbol(vv))
         #rename table
         names!(est,vcat(Symbol(vv),:ultimate,:reserves, :paidToDate))
@@ -196,3 +196,90 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame)
     return comparisonByAY2,comparisonByLOB,absErrorsByAY,comparisons
     end
     
+    
+function runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,LDFArray,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData)
+    kk=0
+    Random.srand(1240)
+    ayears=sort(unique(dataKnownByYE2005[:AY]))
+    maxAY=maximum(ayears)
+    
+for minWeightPerLDF in modelsWeightsPerLDF
+    fill!(LDFArray,0.0)
+    LDFArray[:,end].=1.0 #tail factor 1.0
+    @show kk+=1    
+    for ldfYear=1:length(ayears)-1 
+        selectedWeight=minWeightPerLDF[ldfYear]  
+        @show ldfYear
+        @show selectedWeight
+       
+        resultingFiles,resM=runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput)
+        
+        #=
+            #subset the data
+            thisdata=copy(dataKnownByYE2005)        
+            #discard recent AYs (i.e ensure the data corresponds to a rectangle rather than a triangle)        
+            thisdata=thisdata[thisdata[:AY].<=(maxAY-ldfYear),:]
+            
+            cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
+            cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
+
+            #discard all claims which are zero for 'both columns'
+            discardIdx=(thisdata[cumulativePaymentCol].==0) .& (thisdata[cumulativePaymentColPrev] .==0)        
+            if any(discardIdx)
+                thisdata=thisdata[.!discardIdx,:]
+                println("Discarded $(sum(discardIdx)) observations with PayCum zero for both development years $(ldfYear) and $(ldfYear-1)")
+            end 
+            #Note: in a previous version of the model, we were discarding all claims which have zero payment in the more recent year which determines the CL factor
+            #It turns out that we can actaully keep these claims we can keep the claims 
+            #However, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
+            #thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
+            dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);        
+
+            #run a single tree model
+            updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
+            resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))            
+        =#
+            #apply tree to the known claims
+            fittedValues,leafNrs=predict(resM,dtmtableKnownData.features)            
+            #save estimated ldf per observation 
+            LDFArray[:,ldfYear].=copy(fittedValues)
+        end    
+    end 
+
+    #consider per Row Model 
+    estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)
+    treeResults[kk]=deepcopy(estPerRow)
+    treeResultsAgg[kk]=deepcopy(estAgg)
+    
+    #reservesPerAY=estAgg[:reserves]
+    #errPerAY=estAgg[:error]
+    #errTotal=sum(errPerAY)            
+    #totalUltimate=sum(estPerRow[:ultimate])        
+    return nothing
+end 
+
+function runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput)
+    thisdata=copy(dataKnownByYE2005)        
+    #discard recent AYs (i.e ensure the data corresponds to a rectangle rather than a triangle)        
+    thisdata=thisdata[thisdata[:AY].<=(maxAY-ldfYear),:]
+
+    cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
+    cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
+
+    #discard all claims which are zero for 'both columns'
+    discardIdx=(thisdata[cumulativePaymentCol].==0) .& (thisdata[cumulativePaymentColPrev] .==0)        
+    if any(discardIdx)
+        thisdata=thisdata[.!discardIdx,:]
+        println("Discarded $(sum(discardIdx)) observations with PayCum zero for both development years $(ldfYear) and $(ldfYear-1)")
+    end 
+    #Note: in a previous version of the model, we were discarding all claims which have zero payment in the more recent year which determines the CL factor
+    #It turns out that we can actaully keep these claims we can keep the claims 
+    #However, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
+    #thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
+    dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);
+
+    #run a single tree model
+    updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
+    resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))
+    return resultingFiles,resM
+end

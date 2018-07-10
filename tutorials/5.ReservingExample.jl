@@ -16,7 +16,7 @@ import Random
 import DelimitedFiles
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
-Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!
+Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggregate
 
 @time Distributed.@everywhere using DecisionTrees #200 - 300 seconds in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook (precompilation allocates 20GB of memory?)
 
@@ -105,7 +105,7 @@ paidToDateFullDataPerRow=getPaidToDatePerRow(fullData)
 fullData[:paidToDate]=paidToDateFullDataPerRow
 
 #consider the Accient Years
-ayears=unique(fullData[:AY])
+ayears=sort(unique(fullData[:AY]))
 maxAY=maximum(ayears)
 @assert maxAY==2005
 
@@ -135,6 +135,7 @@ clAllLOBs=chainLadder(triangle)
 trueReserves=trueUltimate.-clAllLOBs[:paidToDate]
 
 #Consider CL Ultimate per known claim
+#LDF = Loss Development Factor (also chain ladder factor)
 ayperRow=dataKnownByYE2005[:AY]
 CLfactorsToUltimate=clAllLOBs[:factorsToUltimate]
 CLLDFperRow=map(x->CLfactorsToUltimate[x-1993],ayperRow)
@@ -172,12 +173,16 @@ clPerLOB["4"]=clLOB4
 @assert all(isapprox.(trueReserves.-trueReservesLOB1.-trueReservesLOB2.-trueReservesLOB3.-trueReservesLOB4,0))
 @assert all(isapprox.(trueUltimate.-trueUltimateLOB1.-trueUltimateLOB2.-trueUltimateLOB3.-trueUltimateLOB4,0))
 
+
 #consider CL decision trees
 #each entry corresponds to an LDF Year
-minwListForEachYear=[75000,125000,150000,200000,350000,500000,15000000,15000000,15000000,15000000,15000000,15000000]
+modelsWeightsPerLDF=Vector{Vector{Float64}}()
+push!(modelsWeightsPerLDF,[75000,125000,150000,200000,350000,500000,15000000,15000000,15000000,15000000,15000000])
+push!(modelsWeightsPerLDF,[75000,100000,125000,175000,300000,450000,750000,15000000,15000000,15000000,15000000])
 
-minwList=[40000,50000,75000,100000,200000]
-LDF_Cutoff=5 #for the years >=LDF_Cutoff, we use the CL factors
+for i=1:length(modelsWeightsPerLDF)
+    @assert length(modelsWeightsPerLDF[i])==length(ayears)-1 # == number of LDFs
+end
 
 #array of LDFs
 LDFArray=zeros(size(dataKnownByYE2005,1),length(ayears))
@@ -185,64 +190,19 @@ LDFArray[:,end].=1.0 #tail factor 1.0
 
 #goal: build a tree for each LDF (i.e. a tree for 12-24 months, a second tree for 24-36 months, etc.)
 
-#selectedWeight=-0.15
-treeMSE=zeros(length(minwList))
 treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
-kk=0
-Random.srand(1240)
 error("redo this loop such that we have one minw per LDF. then consider the fit in Excel/reversals, etc.")
 error("then consdier a boosting model?")
-for selectedWeight in minwList
-    kk+=1    
-    for ldfYear=1:length(ayears)-1        
-        if ldfYear>=LDF_Cutoff #for the tail of the triangle the models do not validate well, thus we want 'no tree' but a single leaf => same as CL factors
-            #actual_minimum_weight=-0.51
-            #use Chain Ladder LDF factor
-            LDFArray[:,ldfYear].= 1/reverse(clAllLOBs[:LDFS])[ldfYear]
-        else 
-            #subset the data
-            thisdata=copy(dataKnownByYE2005)        
-            #discard recent AYs (i.e ensure the data corresponds to a rectangle rather than a triangle)        
-            thisdata=thisdata[thisdata[:AY].<=(maxAY-ldfYear),:]
-            
-            cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
-            cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
 
-            #discard all claims which are zero for 'both columns'
-            discardIdx=(thisdata[cumulativePaymentCol].==0) .& (thisdata[cumulativePaymentColPrev] .==0)        
-            if any(discardIdx)
-                thisdata=thisdata[.!discardIdx,:]
-                println("Discarded $(sum(discardIdx)) observations with PayCum zero for both development years $(ldfYear) and $(ldfYear-1)")
-            end 
-            #Note: in a previous version of the model, we were discarding all claims which have zero payment in the more recent year which determines the CL factor
-            #It turns out that we can actaully keep these claims we can keep the claims 
-            #However, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
-            #thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
-            dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);        
+#actual model run (this may take a few minutes)
+@time runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,LDFArray,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData);
 
-            #run a single tree model
-            updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-            resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))
-            #apply tree to the known claims
-            fittedValues,leafNrs=predict(resM,dtmtableKnownData.features)
-            #save estimated ldf per observation 
-            LDFArray[:,ldfYear].=copy(fittedValues)
-        end    
-    end 
+#=
+    resultingFiles,resM=runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput)
+=#
 
-    #consider per Row Model 
-    estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)
-    treeResults[selectedWeight]=deepcopy(estPerRow)
-    treeResultsAgg[selectedWeight]=deepcopy(estAgg)
-    
-    reservesPerAY=estAgg[:reserves]
-    errPerAY=estAgg[:error]
-    errTotal=sum(errPerAY)            
-    totalUltimate=sum(estPerRow[:ultimate])        
-end 
-
-#create struct to hold resulting data
+#define  struct to hold resulting data
 struct ResStats
     comparisonByAY::DataFrame
     comparisonByLOB::Dict

@@ -9,6 +9,7 @@ function predict(x::Tree,f::DataFrame)
     if asrt
         return predictConsistentFeatures(x,f)
     else         
+        @warn("DTM: Applying model even though model features do not match data features. Results might be inconsistent, you may want to review the predictions.")
         fp=x.featurepools
         res=apply_tree_by_leaf_inconsistent_features(x.rootnode,f,fp)
         return res 
