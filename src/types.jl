@@ -381,7 +381,7 @@ mutable struct ModelSettings
 	saveResultAsJLDFile=false
 	print_details=true
 	seed=90210
-	graphvizexecutable="" #C:\\Program Files (x86)\\Graphviz2.38\\bin\\"
+	graphvizexecutable="" #C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe""
 	showProgressBar_time=true
 	prroduceEstAndLeafMatrices=false
 	write_dot_graph=false

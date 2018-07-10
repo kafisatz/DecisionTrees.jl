@@ -127,3 +127,72 @@ function checkIfPaymentsAreIncreasing(data)
     return isNonDecreasing
 end
 
+
+
+function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame)
+    #NOTE: this function is using several global variables!
+
+    #overall Result
+    comparisonByAY=hcat(ayears,trueReserves,treeEstimateAgg[:reserves],clAllLOBs[:reserves])
+    comparisonByAY=vcat(comparisonByAY,sum(comparisonByAY,dims=1))
+    comparisonByAY[end,1]=9999
+    comparisonByAY2=DataFrame(comparisonByAY)
+    names!(comparisonByAY2,[:AY,Symbol("True Outstanding Amount"),Symbol("Estimated Reserves"),Symbol("CL Estimated Reserves")])
+    
+    absErrorsByAY=ceil.(Int,abs.(comparisonByAY[:,2].-comparisonByAY[:,3])/1000)
+    @show absErrorsByAY
+    @show absErrorsByAY[end]
+
+    #result by LOB versus four CL  models (one per LOB)
+    treeEstimatePerRow[:AY]=dataKnownByYE2005[:AY]
+    comparisonByLOB=Dict{String,DataFrame}()
+    for lob in sort(unique(dataKnownByYE2005[:LoB]))
+        sumRes=aggregate(treeEstimatePerRow[dataKnownByYE2005[:LoB].==lob,[:reserves,:AY]],:AY,sum)
+        #names!(sumRes,[:AY,:reserves])
+        sumRes2=hcat(ayears,trueReservesPerLOB[lob],sumRes[:reserves_sum],clPerLOB[lob][:reserves])
+        #sumRes[:CLReserves]=clPerLOB[lob][:reserves]
+        #sumRes[:trueReserves]=trueReservesPerLOB[lob]
+        sumRes2=vcat(sumRes2,sum(sumRes2,dims=1))
+        sumRes2[end,1]=9999
+        sumRes3=DataFrame(sumRes2)
+        names!(sumRes3,[:AY,Symbol("True Outstanding Amount"),Symbol("Estimated Reserves"),Symbol("CL Estimated Reserves")])
+        comparisonByLOB[lob]=deepcopy(sumRes3)
+    end
+    
+
+    comparisons=Dict{String,DataFrame}()
+    byVars=["cc","inj_part","age","LoB"]
+    for vv in byVars
+        #attach explanatory data to the tree estimates
+        treeEstimatePerRow[Symbol(vv)]=dataKnownByYE2005[Symbol(vv)]
+        #create comparison table
+        comparison=aggregate(fullData[vcat(Symbol(vv),:PayCum11, :paidToDate)],Symbol(vv),sum)
+        #rename table
+        names!(comparison,vcat(Symbol(vv),:PayCum11, :paidToDate))
+        #calculate reserves
+        comparison[Symbol("True Outstanding Amount")]=comparison[:PayCum11].-comparison[:paidToDate]
+        sort!(comparison,Symbol(vv))
+        #calculate estimated reserves (tree model)
+        est=aggregate(treeEstimatePerRow[vcat(Symbol(vv),:ultimate, :reserves,:paidToDate)],Symbol(vv),sum)
+        sort!(est,Symbol(vv))
+        #rename table
+        names!(est,vcat(Symbol(vv),:ultimate,:reserves, :paidToDate))
+        #check
+        @assert all(isapprox.(est[:paidToDate].-comparison[:paidToDate],0))
+        #attach estimated data (this should be a join (but as long as all values occurr in the data, we are fine))
+        comparison[Symbol("Estimated Reserves")]=est[:reserves]
+        #reorder columns
+        comparison=comparison[[1,4,5,3,2]]
+        #sort the table
+        if !isa(comparison[1,Symbol(vv)],Number)
+            comparison[:sort]=Meta.parse.(comparison[Symbol(vv)])
+            sort!(comparison,:sort)
+        end
+        comparisons[vv]=deepcopy(comparison)
+        #CSV.write(string("C:\\temp\\",vv,".csv"),comparison)
+        println(vv," : ",ceil(Int,sum(abs.(comparison[Symbol("True Outstanding Amount")].-comparison[Symbol("Estimated Reserves")]))/1000))
+    end
+    
+    return comparisonByAY2,comparisonByLOB,absErrorsByAY,comparisons
+    end
+    
