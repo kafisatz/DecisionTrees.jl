@@ -2228,7 +2228,7 @@ function buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,
     lifttrn=relativitytrn[end]/relativitytrn[1]
     liftval=relativityval[end]/relativityval[1]
 	reveralListtrn=reversals(relativitytrn)
-    reveralListval=reversals(relativitytrn)
+    reveralListval=reversals(relativityval)
     reversalstrn=sum(reveralListtrn)	
 	reversalsval=sum(reveralListval)
     reveralListIntegertrn=convert(Vector{Int},reveralListtrn)

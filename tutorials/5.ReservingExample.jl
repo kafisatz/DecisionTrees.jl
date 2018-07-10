@@ -177,8 +177,8 @@ clPerLOB["4"]=clLOB4
 #consider CL decision trees
 #each entry corresponds to an LDF Year
 modelsWeightsPerLDF=Vector{Vector{Float64}}()
-push!(modelsWeightsPerLDF,[75000,125000,150000,200000,350000,500000,15000000,15000000,15000000,15000000,15000000])
-push!(modelsWeightsPerLDF,[75000,100000,125000,175000,300000,450000,750000,15000000,15000000,15000000,15000000])
+push!(modelsWeightsPerLDF,[80000,130000,160000,200000,350000,500000,15000000,15000000,15000000,15000000,15000000])
+push!(modelsWeightsPerLDF,[80000,130000,160000,175000,300000,450000,750000,15000000,15000000,15000000,15000000])
 
 for i=1:length(modelsWeightsPerLDF)
     @assert length(modelsWeightsPerLDF[i])==length(ayears)-1 # == number of LDFs
@@ -199,7 +199,7 @@ error("then consdier a boosting model?")
 @time runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,LDFArray,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData);
 
 #=
-    resultingFiles,resM= runSingleModel(dataKnownByYE2005,80000,1,2005,selected_explanatory_vars,categoricalVars,folderForOutput)        
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,160000,4,2005,selected_explanatory_vars,categoricalVars,folderForOutput)
 =#
 
 #define  struct to hold resulting data

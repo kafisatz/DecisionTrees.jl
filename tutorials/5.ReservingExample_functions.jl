@@ -258,10 +258,10 @@ for minWeightPerLDF in modelsWeightsPerLDF
     return nothing
 end 
 
-function runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput)
-    thisdata=copy(dataKnownByYE2005)        
+function runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput)    
     #discard recent AYs (i.e ensure the data corresponds to a rectangle rather than a triangle)        
-    thisdata=thisdata[thisdata[:AY].<=(maxAY-ldfYear),:]
+    #this step also creates a COPY of the data (which is intended for now)
+    thisdata=dataKnownByYE2005[dataKnownByYE2005[:AY].<=(maxAY-ldfYear),:]
 
     cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
     cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
