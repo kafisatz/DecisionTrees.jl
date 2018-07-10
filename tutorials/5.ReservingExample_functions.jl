@@ -280,6 +280,7 @@ function runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_
 
     #run a single tree model
     updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-    resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))
+    resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("ldfYear_",ldfYear,"_minw_",sett.minWeight,".txt")))
+    #resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))
     return resultingFiles,resM
 end
