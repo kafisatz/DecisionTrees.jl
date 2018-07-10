@@ -2042,7 +2042,7 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
         		
 		qwkappaTrn=tryQWKappa(numeratortrn,ratioEsttrn)
 		qwkappaVal=tryQWKappa(numeratorval,ratioEstval)
-		observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
+		observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation,reveralListIntegertrn,reveralListIntegerval=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
 		cumulativeStatsMatrix=[description sumweighttrn sumweightval sumnumeratortrn sumnumeratorval sumdenominatortrn sumdenominatorval observedratiotrn observedratioval sumnumeratorEstimatetrn sumnumeratorEstimateval fittedratiotrn fittedratioval relativitytrn relativityval]
 		reltrntitle="Relativity Trn (Observed)" #this is used for the charts
 		header=["Cumulative Stats n=$(iter)" "Weight Trn" "Weight Val" "Numerator Trn" "Numerator Val" "Denominator Trn" "Denominator Val" "Observed Ratio Trn" "Observed Ratio Val" "Numerator Est Trn" "Numerator Est Val" "Fitted Ratio Trn" "Fitted Ratio Val" reltrntitle "Relativity Val (Observed)"]
@@ -2121,7 +2121,7 @@ t=tree.rootnode
 	segmentlist=collect(1:length(leaves_of_tree))
 	segmentlist=[segmentlist; "Total"]
 
-	header=["Segment" "Weight" "Relative Weight" "Numerator" "Denominator" "Observed Ratio" "Numerator Estimate" "Fitted Ratio" "Relativity"]
+	header=["Segment" "Weight" "Relative Weight" "Numerator" "Denominator" "Observed Ratio" "Numerator Estimate" "Fitted Ratio" "Relativity" "Reversal"]
 	thisres,overallstats=buildStatistics(header,segmentlist,sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
     numeratorEst=est.*denominator
     if sett.calculateGini
@@ -2227,8 +2227,12 @@ function buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,
     #mi,ma=extrema(relativityval);liftval=ma/mi
     lifttrn=relativitytrn[end]/relativitytrn[1]
     liftval=relativityval[end]/relativityval[1]
-	reversalstrn=sum(reversals(relativitytrn))	
-	reversalsval=sum(reversals(relativityval))
+	reveralListtrn=reversals(relativitytrn)
+    reveralListval=reversals(relativitytrn)
+    reversalstrn=sum(reveralListtrn)	
+	reversalsval=sum(reveralListval)
+    reveralListIntegertrn=convert(Vector{Int},reveralListtrn)
+    reveralListIntegerval=convert(Vector{Int},reveralListval)
 
 	#Attach relativity of one for Total
 	relativitytrn=push!(relativitytrn,1.0)
@@ -2259,15 +2263,15 @@ function buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,
     relDiffTrnObsVSValObs=wAverage(abs.(view(reldiff,1:sz_1)),view(sumnumeratorEstimatetrn,1:sz_1))
 	reldiff2=relativityval.-fittedratiotrn
 	relDiffValObsVSTrnFitted=wAverage(abs.(view(reldiff2,1:sz_1)),view(sumnumeratorEstimatetrn,1:sz_1))    
-return observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation
+return observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted, stddevtrn,stddevval,stddevratio,correlation,reveralListIntegertrn,reveralListIntegerval
 end
 
 function buildStatistics(header,description,sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
 	#Correlation of relativities
-    observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted,stddevtrn,stddevval,stddevratio,correlation=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
+    observedratiotrn,observedratioval,fittedratiotrn,fittedratioval,relativitytrn,relativityval,lifttrn,liftval,reversalstrn,reversalsval,relDiffTrnObsVSValObs,relDiffValObsVSTrnFitted,stddevtrn,stddevval,stddevratio,correlation,reveralListIntegertrn,reveralListIntegerval=buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,sumnumeratorEstimatetrn,sumnumeratorval,sumdenominatorval,sumweightval,sumnumeratorEstimateval)
 
-	statstrn=[description sumweighttrn float(sumweighttrn)/sumweighttrn[end] sumnumeratortrn sumdenominatortrn observedratiotrn sumnumeratorEstimatetrn fittedratiotrn relativitytrn]
-	statsval=[description sumweightval float(sumweightval)/sumweightval[end] sumnumeratorval sumdenominatorval observedratioval sumnumeratorEstimateval fittedratioval relativityval]
+	statstrn=[description sumweighttrn float(sumweighttrn)/sumweighttrn[end] sumnumeratortrn sumdenominatortrn observedratiotrn sumnumeratorEstimatetrn fittedratiotrn relativitytrn reveralListIntegertrn]
+	statsval=[description sumweightval float(sumweightval)/sumweightval[end] sumnumeratorval sumdenominatorval observedratioval sumnumeratorEstimateval fittedratioval relativityval reveralListIntegerval]
 
 	#add a header row and two empty rows in between
 	headerval=["Validation Data" repeat([""],1,length(header)-1)]
