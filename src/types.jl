@@ -149,7 +149,7 @@ end
 
 Base.size(d::DTMTable) = size(d.features)
 
-function Base.getindex(r::DTMTable,idx::Vector{T};compact_features=false) where T:<Number
+function Base.getindex(r::DTMTable,idx::Vector{T};compact_features=false) where T <: Number
 	@assert !compact_features 
 	key=r.key[idx]
     numerator=r.numerator[idx]    
