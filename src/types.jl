@@ -149,22 +149,29 @@ end
 
 Base.size(d::DTMTable) = size(d.features)
 
-function Base.getindex(r::DTMTable,idx,compact_features=false)
-    @warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")    
-    
-    key=r.key[idx]
-    one_to_n=collect(1:length(r.weight))
-    rows_to_keep=one_to_n[idx]        
-    new_trnidx=indexin(r.trnidx,rows_to_keep)
-    new_validx=indexin(r.validx,rows_to_keep)
-    filter!(!iszero,new_trnidx)
-    filter!(!iszero,new_validx)
+function Base.getindex(r::DTMTable,idx::Vector{T};compact_features=false) where T:<Number
+	@assert !compact_features 
+	key=r.key[idx]
     numerator=r.numerator[idx]    
     denominator=r.denominator[idx]    
     weight=r.weight[idx]    
+	features=r.features[idx,:]
+
+	#trn and val idx:
+	one_to_n=collect(1:length(r.weight))
+	rows_to_keep=one_to_n[idx]        
+	foundtrn=findall((in)(rows_to_keep),r.trnidx)
+	foundval=findall((in)(rows_to_keep),r.validx)	
+	new_trnidx=r.trnidx[foundtrn]
+	new_validx=r.validx[foundval]
 	
-    features=r.features[idx,:]
-    if compact_features 
+	(length(new_validx)!=0)||@warn("DTM: Validation index of the DTMTable has length zero! You may need to redefine validx. The function resample_trnvalidx! might be helpful.")
+	(length(new_trnidx)!=0)||@warn("DTM: Training index of the DTMTable has length zero! You may need to redefine trnidx. The function resample_trnvalidx! might be helpful.")
+	
+	#I think this is generally not desirable (e.g. when a dtmtable is created based on a large table, then models are fit to subsets of the data: in that case we want the pools to match perfectly!)
+	if compact_features 
+		@assert false
+		@warn("for this to work one would need to update mappings and candMatWOMaxValues too!")
         tmp_number_of_num_features=sum(map(x->eltype(r.features[x].pool),1:size(r.features,2)).!=String)	        
         #"compact" features, it is possible that we could do this in a better/faster way
         for i=tmp_number_of_num_features+1:size(features,2)
@@ -173,10 +180,8 @@ function Base.getindex(r::DTMTable,idx,compact_features=false)
             end
         end    
 	end 
-    
-    mp=deepcopy(r.mappings)
-    @warn("DTM: getindex(x::DTMTable,idx) was called. This function is highly experimental and untested!")
-    dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),mp)
+	
+	dt=DTMTable(key,new_trnidx,new_validx,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),deepcopy(r.mappings))
     return dt
 end
 

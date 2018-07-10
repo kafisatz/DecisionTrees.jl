@@ -46,6 +46,7 @@ There are likely use cases in other areas, which have a similar problem setting.
 * Review the formulae & calculations of the Gini and RSS metrics
 * Each node should not only store 'subset' but also the actual value (being a set of Strings or a or Float64 value) value which defines the split
 * Implement Bagging
+* Implement getindex for DTMTable (such that dtmtable[1:30] returns another valid dtmtable struct)
 * fix/add/improve certain error statistics; mainly the RSS and Gini
 * Clean up the naming convention of the field names of ModelSettings (bool_xy, BoolXY, ...)
 * Revise and DataStreams are in the Project.toml file but not specifically needed for the package. However we are having issues with the package manager in 0.7 alpha and beta (for now). Having the two packages in the Project file solves these issues.
