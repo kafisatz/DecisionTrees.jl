@@ -2234,6 +2234,10 @@ function buildStatisticsInternal(sumnumeratortrn,sumdenominatortrn,sumweighttrn,
     reveralListIntegertrn=convert(Vector{Int},reveralListtrn)
     reveralListIntegerval=convert(Vector{Int},reveralListval)
 
+    #attach reversals total
+    push!(reveralListIntegertrn,reversalstrn)
+    push!(reveralListIntegerval,reversalsval)
+
 	#Attach relativity of one for Total
 	relativitytrn=push!(relativitytrn,1.0)
 	relativityval=push!(relativityval,1.0)

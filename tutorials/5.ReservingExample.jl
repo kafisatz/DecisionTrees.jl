@@ -199,7 +199,7 @@ error("then consdier a boosting model?")
 @time runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,LDFArray,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData);
 
 #=
-    resultingFiles,resM=runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput)
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,80000,1,2005,selected_explanatory_vars,categoricalVars,folderForOutput)        
 =#
 
 #define  struct to hold resulting data
