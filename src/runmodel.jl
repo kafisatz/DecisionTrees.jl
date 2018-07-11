@@ -764,7 +764,7 @@ end #end distinction between three model types
 #this code applies to all model types
    #Create ZIP file
      #Push Log file to file list
-	 elapsed_until_this_point=(t0RunModel0-time_ns())/1e9
+     elapsed_until_this_point=(-t0RunModel0+time_ns())/1e9
 	 prnt&&println("Modelling finished. Time: $(Dates.now()) - Total time was $(round(elapsed_until_this_point,digits=1))s = $(round(elapsed_until_this_point/60,digits=1))m")
 	 if sett.boolCreateZipFile
 		 logfile=string(path_and_fn_wo_extension,".log")
