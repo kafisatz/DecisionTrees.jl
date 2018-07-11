@@ -36,17 +36,23 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
 	if !(length(inds)>0)
         throw(ErrorException(string("Error: no features were selected length(inds)=",length(inds))))
     end
+    if (typeof(settings.crit) == NormalDevianceDifferenceToMeanFitSplit)||(typeof(settings.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+        pointwiseRatio=numerator./denominator
+    else 
+       pointwiseRatio=zeros(numerator) #this vector should not be used in this case (also we want to allow for zero deonominators in certain cases and thus refrain from calcuating the pointwise ratio)
+    end
+    
 	empty_xl_data=ExcelData(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
 	fp=get_feature_pools(features)
     thisEmptyNode = T_Uint8_or_UInt16==UInt8 ? UInt8emptyNode : UInt16emptyNode
 	resultingTree=Tree(thisEmptyNode,intVarsUsed,candMatWOMaxValues,mappings,inds,settings,empty_xl_data,fp)
-	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,weight,features,0,settings.randomw,Array{Rulepath{T_Uint8_or_UInt16}}(undef,0),Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
+	resultingTree.rootnode=build_tree_iteration!(trnidx,validx,settings,resultingTree,numerator,denominator,pointwiseRatio,weight,features,0,settings.randomw,Array{Rulepath{T_Uint8_or_UInt16}}(undef,0),Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
 	#set Leaf Numbers
 	set_leaf_numbers!(resultingTree)
 	return resultingTree
 end
 
-function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings::ModelSettings,thisTree::Tree,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features::DataFrame,
+function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings::ModelSettings,thisTree::Tree,numerator::Array{Float64,1},denominator::Array{Float64,1},pointwiseRatio::Array{Float64,1},weight::Array{Float64,1},features::DataFrame,
 									depth::Int,randomweight::Float64,parent_rp::Array{Rulepath{RPType},1},parentid::Int,fitted_values::Vector{Float64},T_Uint8_or_UInt16) where RPType
 	#!!!! the current concept foresees that features is always the FULL DataFrame
 	boolRandomizeOnlySplitAtTopNode=settings.boolRandomizeOnlySplitAtTopNode
@@ -69,9 +75,9 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 
 	nobs=size(numerator,1)
 	fnames=names(features)
-	#@code_warntype _split(settings.number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames,features, minweight, depth,randomweight,crit,parallel_level_threshold,parallel_weight_threshold,inds,catSortByThreshold,catSortBy)
+	#@code_warntype _split(settings.number_of_num_features,trnidx,validx,numerator,denominator,pointwiseRatio,weight,fnames,features, minweight, depth,randomweight,crit,parallel_level_threshold,parallel_weight_threshold,inds,catSortByThreshold,catSortBy)
 	#T_Uint8_or_UInt16=T_Uint8_or_UInt16 #T_Uint8_or_UInt16=find_max_type(features)::DataType #Union{UInt8,UInt16}
-	best_split = _split(one(T_Uint8_or_UInt16),settings.number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames,features, minweight, depth,randomweight,crit,inds,catSortByThreshold,catSortBy)
+	best_split = _split(one(T_Uint8_or_UInt16),settings.number_of_num_features,trnidx,validx,numerator,denominator,pointwiseRatio,weight,fnames,features, minweight, depth,randomweight,crit,inds,catSortByThreshold,catSortBy)
 	id=best_split.featid
 	subset=best_split.subset
 	fname=best_split.featurename
@@ -138,13 +144,13 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 						fill_some_elements!(fitted_values,l,mean_observedl)
 							remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
           else
-            remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
+            remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,pointwiseRatio,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
 		      end
 					if rightchildwillbefurthersplit			    
 						fill_some_elements!(fitted_values,r,mean_observedr)
             remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
           else
-            remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
+            remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,pointwiseRatio,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
           end
       else
        #here we spawn a process for the smaller "child"
@@ -154,26 +160,26 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 							fill_some_elements!(fitted_values,r,mean_observedr)
              	  remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
             else
-              remote_ref_build_tree_rightchild = Distributed.@spawn build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
+              remote_ref_build_tree_rightchild = Distributed.@spawn build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,pointwiseRatio,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
             end
 						if leftchildwillbefurthersplit
 							fill_some_elements!(fitted_values,l,mean_observedl)
 						  remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
             else
-             remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
+             remote_ref_build_tree_leftchild = build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,pointwiseRatio,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
             end
         else
 						if leftchildwillbefurthersplit
 							fill_some_elements!(fitted_values,l,mean_observedl)
 						  remote_ref_build_tree_leftchild = Leaf(length(l),mean_observedl,fitted_labelsl,sumwl, depth+1, this_left_rp,trnsumnl,trnsumdl,-1)
             else
-              remote_ref_build_tree_leftchild = Distributed.@spawn build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
+              remote_ref_build_tree_leftchild = Distributed.@spawn build_tree_iteration!(l,validx,settings,thisTree,numerator,denominator,pointwiseRatio,weight,features,depth+1,newrandomweight,this_left_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
             end
 						if rightchildwillbefurthersplit
 							fill_some_elements!(fitted_values,r,mean_observedr)
                remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
             else
-              remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
+              remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,pointwiseRatio,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
             end
         end
      end
@@ -188,7 +194,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 return Node(id,id2,subset,fetched_left,fetched_right,parent_rp)::Node
 end
 
-function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int,randomweight::Float64,crit::SplittingCriterion,inds::Array{Int,1}=Array{Int}(undef,0),catSortByThreshold::Int=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned #,RT<:Union{Splitdef{UInt16},Splitdef{UInt8}}
+function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},pointwiseRatio::Array{Float64,1},weight::Array{Float64,1},fnames::Vector{Symbol},features, minweight::Float64, depth::Int,randomweight::Float64,crit::SplittingCriterion,inds::Array{Int,1}=Array{Int}(undef,0),catSortByThreshold::Int=8,catSortBy::SortBy=SORTBYMEAN) where T<:Unsigned #,RT<:Union{Splitdef{UInt16},Splitdef{UInt8}}
 	#This function selects the maximal possible split defined by crit (thus depending on the impurity function, we need to put a minus sign in front of it)
 		tmpsz::Int=0
 		if sum(view(weight,trnidx))<2*minweight;
@@ -203,7 +209,7 @@ function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vec
 			#ATTENTION: for char variables we pass the variable i with a negative sing!!
 			#this allows us to distinguish whether we are working on a char or num variable later on
 			modified_i = eltype(features[i])<:AbstractString ? number_of_num_features - i  :  i 
-			tmplist=_split_feature(val_of_some_UInt_type,number_of_num_features,trnidx,validx,numerator,denominator,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef{T}}
+			tmplist=_split_feature(val_of_some_UInt_type,number_of_num_features,trnidx,validx,numerator,denominator,pointwiseRatio,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef{T}}
 			append!(tmp_splitlist,tmplist)
 		end
 
@@ -252,7 +258,7 @@ end
 
 
 #new approach; first summarize by label, then iterate over the gray code such that only one category needs to switch classes and "online" update the metrics
-function _split_feature(ONE_return_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},fname::Symbol,features,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int,randomweight::Float64,catSortByThreshold::Int,catSortBy::SortBy) where T<:Unsigned
+function _split_feature(ONE_return_type::T,number_of_num_features::Int,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},pointwiseRatio::Array{Float64,1},weight::Array{Float64,1},fname::Symbol,features,minweight::Float64,crit::SplittingCriterion,feature_column_id::Int,randomweight::Float64,catSortByThreshold::Int,catSortBy::SortBy) where T<:Unsigned
 crit_type=typeof(crit)
 #This function is now for numeric and character variables!
 #feature_column_id is negative in case of character variables
@@ -276,7 +282,7 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
   else
 	#countsort!(labellist_sorted)
     #this may need improvement:
-	if (crit_type==DifferenceSplit||crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+	if (crit_type==DifferenceSplit||crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
     		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat=build_listOfMeanResponse(crit,trnidx,validx,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	elseif (crit_type==NormalDevianceSplit)		
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass=build_listOfMeanResponse(crit,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
@@ -309,8 +315,8 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs)
 	elseif (crit_type==NormalDevianceSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,moments_per_pdaclass)
-	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||cirt_type==NormalDevianceDifferenceToMeanFitSplit)
-		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures)
+	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,pointwiseRatio,weight,trnfeatures)
     end
     if isfinite(tmp_result[1])
         feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id) + number_of_num_features : feature_column_id
@@ -328,8 +334,8 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,feature_column_id)
 	elseif (crit_type==NormalDevianceSplit)
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,feature_column_id,moments_per_pdaclass)
-	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitSplit)
-		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,weight,trnfeatures,feature_column_id)
+	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,pointwiseRatio,weight,trnfeatures,feature_column_id)
     end
     
     return tmpres::Vector{Splitdef{T}}    

@@ -263,7 +263,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 			sett.calculatePoissonError=false
 		end		
 		if typeof(sett.crit) == PoissonDevianceSplit
-		error("DTM: Negative numerator values are not allowed for Poisson Deviance! Abort. \n Crit = $(sett.critt)")
+		    error("DTM: Negative numerator values are not allowed for Poisson Deviance! Abort. \n Crit = $(sett.critt)")
 		end
 	end
 
@@ -388,6 +388,15 @@ if sett.boolNumeratorStats
 		sett.prroduceEstAndLeafMatrices=true
 		#@show sett.boolNumeratorStats,sett.prroduceEstAndLeafMatrices
 	end
+end
+
+if (typeof(sett.crit) == NormalDevianceDifferenceToMeanFitSplit)||(typeof(sett.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+    if any(iszero,dtmtable.denominator) #must be non zero (ideally even positive)
+        error("DTM: Denominator has zero values. This is not allowed for crit=$(sett.crit)")
+    end
+    if any(dtmtable.denominator.<0) #must be non zero (ideally even positive)
+        @warn("DTM: Denominator has negative values. You have specified crit=$(sett.crit). This may lead to unintended results as the algorithm divides by the denominator (and it is used as weight!)")
+    end
 end
 
 path_and_fn_wo_extension,ext=splitext(fn)

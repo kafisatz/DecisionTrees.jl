@@ -1,4 +1,4 @@
-function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features) where {T<:Unsigned,PGN<:PoissonOrGammaOrNormalDTMF}
+function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},pointwiseRatio::Array{Float64,1},weight::Array{Float64},features) where {T<:Unsigned,PGN<:PoissonOrGammaOrNormalDTMF}
   #here randomweight==0
   #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -75,7 +75,7 @@ function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,la
       #@show sumwl,minweight,weighttot_minw
       #we can skip the calculation of the deviance, if we know that the leaves will be "too small"
       if (sumwl>minweight)&&(weighttot_minw>sumwl)        
-        @inbounds deviancel,deviancer=get_deviances(a,meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
+        @inbounds deviancel,deviancer=get_deviances(a,meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,pointwiseRatio,weight,elementsInLeftChildBV)
       #end
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        
         #@show deviancel, deviancer
@@ -100,7 +100,7 @@ function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,la
     return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
-function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},weight::Array{Float64},features,feature_column_id::Int) where {T<:Unsigned,PGN<:PoissonOrGammaOrNormalDTMF}
+function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},pointwiseRatio::Array{Float64,1},weight::Array{Float64},features,feature_column_id::Int) where {T<:Unsigned,PGN<:PoissonOrGammaOrNormalDTMF}
 #this is not yet supported:
   error("need to add fname and the other unused argument")
   #here randomweight>0
@@ -178,7 +178,7 @@ function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,la
       @inbounds sumwl=weightsl[counter]
       #we can skip the calculation of the deviance, if we know that the leaves will be "too small"
       if (sumwl>minweight)&&(weighttot_minw>sumwl)        
-        @inbounds deviancel,deviancer=get_deviances(a,meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,weight,elementsInLeftChildBV)
+        @inbounds deviancel,deviancer=get_deviances(a,meansl[counter],meansr[counter],lo,ooo,features,numerator,denominator,pointwiseRatio,weight,elementsInLeftChildBV)
       #end
       #if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?        				
         valnew = -(deviancel+deviancer) #abs(sumnl/sumdl-(numtot-sumnl)/(denomtot-sumdl))
@@ -192,7 +192,7 @@ function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,la
   return this_splitlist
 end
 
-function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
+function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},pointwiseRatio::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)
     #for the poisson deviance consider the derivative of the poisson loss (or google, the reacfin paper or the 'axa' master thesis)
 	#this is the core function of the modelling process
 	#besides copying of the data, the vast majority of time is spent in here!
@@ -205,19 +205,19 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-        @inbounds wi = weight[count]
+        @inbounds di = denominator[count]
 		@inbounds eli = elementsInLeftChildBV[idx]       
         if eli
             if iszero(ni)
-                dl += -(ni - wi*current_meanl)
+                dl += -(ni - di*current_meanl)
             else 
-                dl += -(ni - wi*current_meanl) - ni*log(wi*current_meanl / ni)
+                dl += -(ni - di*current_meanl) - ni*log(di*current_meanl / ni)
             end
         else            
             if iszero(ni)
-                dr += -(ni - wi*current_meanr)
+                dr += -(ni - di*current_meanr)
             else 
-                dr += -(ni - wi*current_meanr) - ni*log(wi*current_meanr / ni)
+                dr += -(ni - di*current_meanr) - ni*log(di*current_meanr / ni)
             end        
         end
 	end
@@ -225,36 +225,36 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
 end
 
 
-function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)    
+function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},pointwiseRatio::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)    
 	dr=0.0
 	dl=0.0
 	#note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-        @inbounds wi = weight[count]
+        @inbounds di = denominator[count]
         @inbounds eli=elementsInLeftChildBV[idx]
 
         if eli
           if iszero(ni)
-            dl += - (ni - current_meanl*wi)/(wi*current_meanl)
+            dl += - (ni - current_meanl*di)/(di*current_meanl)
           else 
-            dl += -(ni - wi*current_meanl)/(wi*current_meanl) + log(wi*current_meanl / ni)
+            dl += -(ni - di*current_meanl)/(di*current_meanl) + log(di*current_meanl / ni)
           end
       else            
           if iszero(ni)
-              dr += - (ni - current_meanr*wi)/(wi*current_meanr)
+              dr += - (ni - current_meanr*di)/(di*current_meanr)
           else 
-              dr += -(ni - wi*current_meanr)/(wi*current_meanr) + log(wi*current_meanr / ni)
+              dr += -(ni - di*current_meanr)/(di*current_meanr) + log(di*current_meanr / ni)
           end        
       end        
         #=
         #I think this is slightly slower
-        wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)        
+        diTimesMean=ifelse(eli,di*current_meanl,di*current_meanr)        
         if iszero(ni)
-          addition = - (ni - wiTimesMean)/wiTimesMean 
+          addition = - (ni - diTimesMean)/diTimesMean 
         else
-          addition = - (ni - wiTimesMean)/wiTimesMean + log(wiTimesMean / ni)
+          addition = - (ni - diTimesMean)/diTimesMean + log(diTimesMean / ni)
         end        
         if eli            
             dl += addition
@@ -266,19 +266,41 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
 	return dl,dr
 end
 
-function get_deviances(a::NormalDevianceDifferenceToMeanFitSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)    
+function get_deviances(a::NormalDevianceDifferenceToMeanFitSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},pointwiseRatio::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)    
 	dr=0.0
 	dl=0.0
 	#note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
-		@inbounds ni = numerator[count]
-        @inbounds wi = weight[count]
-        @inbounds eli=elementsInLeftChildBV[idx]
+		#@inbounds ni = numerator[count]
+        #@inbounds di = denominator[count]
+		@inbounds ratioi = pointwiseRatio[count]
+        @inbounds eli=elementsInLeftChildBV[idx]        
         if eli          
-            dl += (ni - current_meanl*wi)^2        
+            dl += (ratioi - current_meanl)^2
         else            
-            dr += (ni - current_meanr*wi)^2        
+            dr += (ratioi - current_meanr)^2
+      end                
+	end
+	return dl,dr
+end
+
+
+function get_deviances(a::NormalDevianceDifferenceToMeanFitWEIGHTEDSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)    
+	dr=0.0
+	dl=0.0
+	#note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
+	for count in 1:length(f)	
+		@inbounds idx = f.parent.refs[count] + ooo		
+		#@inbounds ni = numerator[count]
+        @inbounds di = denominator[count]
+		#@inbounds wi = weight[count]
+		@inbounds ratioi = pointwiseRatio[count]
+        @inbounds eli = elementsInLeftChildBV[idx]        
+        if eli          
+            dl += di*(ratioi - current_meanl)^2
+        else            
+            dr += di*(ratioi - current_meanr)^2
       end                
 	end
 	return dl,dr

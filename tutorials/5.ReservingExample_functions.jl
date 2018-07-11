@@ -246,19 +246,21 @@ function runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYea
 
     #subset data, conditions are: 
     #1) AY < 2005-ldfYear
-    #2) cumPay is NOT zero for both ldfYear and ldfYear-1 (these rows do not add any value and can be discarded)
-    subsetIdx=(dataKnownByYE2005[:AY].<=(maxAY-ldfYear)) .& (.! ((dataKnownByYE2005[cumulativePaymentCol].==0) .& (dataKnownByYE2005[cumulativePaymentColPrev].==0)))
+    #2) positive denominator
+    #3) cumPay is NOT zero for both ldfYear and ldfYear-1 (these rows do not add any value and can be discarded)    
+    subsetIdx=(dataKnownByYE2005[:AY].<=(maxAY-ldfYear)) .& (dataKnownByYE2005[cumulativePaymentCol] .> 0) .& (.! ((dataKnownByYE2005[cumulativePaymentCol].==0) .& (dataKnownByYE2005[cumulativePaymentColPrev].==0)))    
     #subsetIdx is a boolean index, we need to convert it to an integer index for the next step
     subsetIdxInteger=findall(subsetIdx)
     #this step also creates a copy of the data (which is intended)
     dtmSubset=dtmKnownByYE2005[subsetIdxInteger]
     #redefine numerator and denominator (we are considering different PayCum columns of the data for each development year)
     dtmSubset.numerator=dataKnownByYE2005[cumulativePaymentColPrev][subsetIdxInteger]
-    dtmSubset.denominator=dataKnownByYE2005[cumulativePaymentCol][subsetIdxInteger]
+    dtmSubset.denominator=dataKnownByYE2005[cumulativePaymentCol][subsetIdxInteger]    
     
     sett=deepcopy(settOrig)
+    critSTR=string(sett.crit)[15:22]
     updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-    resultingFiles,resM=dtm(dtmSubset,sett,file=joinpath(folderForOutput,string("LDF_Year_",ldfYear,"_minw_",sett.minWeight,".txt")))    
+    resultingFiles,resM=dtm(dtmSubset,sett,file=joinpath(folderForOutput,string("LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
     
     return resultingFiles,resM
 end

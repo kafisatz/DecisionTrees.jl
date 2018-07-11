@@ -11,8 +11,8 @@
     ###            SSRN Manuscript ID 3130560.                   ###  
     ###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
 
-import Distributed
-import Random  
+using Distributed
+import Random
 import DelimitedFiles
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
@@ -191,8 +191,9 @@ modelsWeightsPerLDF=Vector{Vector{Float64}}()
 push!(modelsWeightsPerLDF,[80000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
 #slightly more conservative version
 #push!(modelsWeightsPerLDF,[80000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
-#alternatvie
-push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
+#alternative
+#
+#WEIGHTS FOR DIFFERENCE FN: push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
 #version where the weigth is increasing
 push!(modelsWeightsPerLDF,[80000,170000,240000,220000,240000,240000,240000,240000,240000,240000,15000000])
 
@@ -210,6 +211,13 @@ treeResultsAgg=Dict{Float64,DataFrame}()
 
 #actual model run (this may take a few minutes)
 @time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+
+settC=deepcopy(sett)
+updateSettingsMod!(settC,crit="mse")
+folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180711_mse_not_weighted\\"
+folderForOutput="c:\\temP\\331\\"
+@assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
+@time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);    
 
 #=    
     ldfYear=1
