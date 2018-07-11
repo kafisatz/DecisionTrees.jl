@@ -76,7 +76,7 @@ function calculateEstimates(fullData,LDFArray,aggCL,paidToDatePerRow)
     for iRow=1:size(fullData,1)
         @inbounds row=fullData[:AY][iRow]-minAY+1
         @inbounds rowInversed = length(ayears) - row + 1
-        @inbounds cumulativefactor=prod(1./LDFArray[iRow,rowInversed:end])
+        @inbounds cumulativefactor=prod(1 ./ LDFArray[iRow,rowInversed:end])
         @inbounds cumulativefactors[iRow] = cumulativefactor
         #@inbounds paidToDatePerRow[iRow] = fullData[paycumcols[rowInversed]][iRow]
         @inbounds ultimatePerRow[iRow] = cumulativefactor*paidToDatePerRow[iRow]        
@@ -129,7 +129,7 @@ end
 
 
 
-function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame)
+function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;writeResultToTemp=false)
     #NOTE: this function is using several global variables!
 
     #overall Result
@@ -189,7 +189,9 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame)
             sort!(comparison,:sort)
         end
         comparisons[vv]=deepcopy(comparison)
-        #CSV.write(string("C:\\temp\\",vv,".csv"),comparison)
+        if writeResultToTemp
+            CSV.write(string("C:\\temp\\",vv,".csv"),comparison)
+        end
         println(vv," : ",ceil(Int,sum(abs.(comparison[Symbol("True Outstanding Amount")].-comparison[Symbol("Estimated Reserves")]))/1000))
     end
     
@@ -197,48 +199,26 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame)
     end
     
     
-function runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,LDFArray,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData)
+function runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData,clAllLOBs,paidToDatePerRow)
     kk=0
     Random.srand(1240)
     ayears=sort(unique(dataKnownByYE2005[:AY]))
     maxAY=maximum(ayears)
     
-for minWeightPerLDF in modelsWeightsPerLDF
-    fill!(LDFArray,0.0)
+    #array of LDFs
+    LDFArray=zeros(size(dataKnownByYE2005,1),length(ayears))
     LDFArray[:,end].=1.0 #tail factor 1.0
-    @show kk+=1    
-    for ldfYear=1:length(ayears)-1 
-        selectedWeight=minWeightPerLDF[ldfYear]  
-        @show ldfYear
-        @show selectedWeight
-       
-        resultingFiles,resM=runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput)
         
-        #=
-            #subset the data
-            thisdata=copy(dataKnownByYE2005)        
-            #discard recent AYs (i.e ensure the data corresponds to a rectangle rather than a triangle)        
-            thisdata=thisdata[thisdata[:AY].<=(maxAY-ldfYear),:]
-            
-            cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
-            cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
-
-            #discard all claims which are zero for 'both columns'
-            discardIdx=(thisdata[cumulativePaymentCol].==0) .& (thisdata[cumulativePaymentColPrev] .==0)        
-            if any(discardIdx)
-                thisdata=thisdata[.!discardIdx,:]
-                println("Discarded $(sum(discardIdx)) observations with PayCum zero for both development years $(ldfYear) and $(ldfYear-1)")
-            end 
-            #Note: in a previous version of the model, we were discarding all claims which have zero payment in the more recent year which determines the CL factor
-            #It turns out that we can actaully keep these claims we can keep the claims 
-            #However, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
-            #thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
-            dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);        
-
-            #run a single tree model
-            updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-            resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))            
-        =#
+    for minWeightPerLDF in modelsWeightsPerLDF
+        fill!(LDFArray,0.0)
+        LDFArray[:,end].=1.0 #tail factor 1.0
+        @show kk+=1    
+        for ldfYear=1:length(ayears)-1 
+            selectedWeight=minWeightPerLDF[ldfYear]  
+            @show ldfYear
+            @show selectedWeight
+        
+            resultingFiles,resM=runSingleModel(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput)
             #apply tree to the known claims
             fittedValues,leafNrs=predict(resM,dtmtableKnownData.features)            
             #save estimated ldf per observation 

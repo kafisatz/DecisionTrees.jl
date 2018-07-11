@@ -201,19 +201,20 @@ for i=1:length(modelsWeightsPerLDF)
     @assert length(modelsWeightsPerLDF[i])==length(ayears)-1 # == number of LDFs
 end
 
-#array of LDFs
-LDFArray=zeros(size(dataKnownByYE2005,1),length(ayears))
-LDFArray[:,end].=1.0 #tail factor 1.0
-
 #goal: build a tree for each LDF (i.e. a tree for 12-24 months, a second tree for 24-36 months, etc.)
 
 treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 
 #actual model run (this may take a few minutes)
-@time runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,LDFArray,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData);
+@time runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData,clAllLOBs,paidToDatePerRow);
 
 #=
+
+idx0=sample(1:size(dataKnownByYE2005,1),ceil(Int,size(dataKnownByYE2005,1)*.05));
+dataMini=dataKnownByYE2005[idx0,:];
+@time runModels!(dataMini,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,"R:\\temp\\3\\",dtmtableKnownData,clAllLOBs,paidToDatePerRow);
+
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,170000,2,2005,selected_explanatory_vars,categoricalVars,folderForOutput)
 
     ldfYear=11
@@ -251,9 +252,9 @@ struct ResStats
 end
 
 #compare results (CL versus Tree versus Truth)
-minws=sort(collect(keys(treeResultsAgg)))
+modelIndices=sort(collect(keys(treeResultsAgg)))
 modelStatistics=Dict{Float64,ResStats}()
-for thiskey in minws
+for thiskey in modelIndices
     @show thiskey
     resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
     obj=ResStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])

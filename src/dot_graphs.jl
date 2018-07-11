@@ -14,18 +14,28 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int,df_name_vecto
     mappings=tree.charMappings
     sett=tree.settings
     df_name_vector=tree.settings.df_name_vector
+    
+    #'header' of the file
+    
+    dot_graph  = "// Tree summary:\n"
+    dot_graph  *= "// Total weight/exposure of tree: $(nodesize(tree))\n"
+    dot_graph *= "// Number of leaves: $(size(create_leaves_array(tree),1))\n"
+    dot_graph *= "// Number of Nodes: $(number_of_nodes(tree))\n"
+    dot_graph *= "// Maximal depth of the tree: $(maxdepth(tree))\n\n\n"
+
+    label = "Root\nFit $(round(fittedratio(node),sigdigits=3)) Weight $(round(nodesize(node),digits=1))"		
+    name_of_this_node="R"
+    dot_graph *= """$(name_of_this_node)[label="$(label)"]\n"""
+
     if isa(node,Leaf)
-        #the tree is only a leaf....
-        dot_graph="! the tree is only a single leaf. No DOT graph was created."
+        #the tree is only a leaf!
+        dot_graph *= """\n\n // WARNING: The tree is only a single leaf!\n\n"""
+        dot_graph *= """X[label="No split was found \n (check the minimum weight per leaf and model settings)"]"""
+        dot_graph *= """X->R"""
     else
     #we have an actual tree
         orig_id=node.featid
         orig_id<0 ? this_id=tree.settings.number_of_num_features-orig_id : this_id=orig_id
-        dot_graph  = "// Tree summary:\n"
-        dot_graph  *= "// Total weight/exposure of tree: $(nodesize(tree))\n"
-        dot_graph *= "// Number of leaves: $(size(create_leaves_array(tree),1))\n"
-        dot_graph *= "// Number of Nodes: $(number_of_nodes(tree))\n"
-        dot_graph *= "// Maximal depth of the tree: $(maxdepth(tree))\n\n\n"
 
         edge_to_the_left = if orig_id>0
              "$(sett.df_name_vector[this_id]) <= $(round(candMatWOMaxValues[this_id][node.subset[end]],sigdigits=5))"
@@ -36,12 +46,7 @@ function graph(tree::Tree) #tree::Node,number_of_num_features::Int,df_name_vecto
                 "$(sett.df_name_vector[this_id]) in [$(join(mappings[-orig_id][[convert(Int,z) for z in node.subset]],","))]"
             end
         end
-
-        label = "Fit $(round(fittedratio(node),sigdigits=3)) Weight $(round(nodesize(node),digits=1))"		
-
-        name_of_this_node="R"
-        dot_graph *= """$(name_of_this_node)[label="$(label)"]\n"""
-
+        
         (n_nodes_and_leafsr,n_nodes_and_leafsl)=total_n_subnodes(node)
 
         tmpl=graph(node.left,1,name_of_this_node,sett,edge_to_the_left,mappings,candMatWOMaxValues,total_weight_of_tree)
