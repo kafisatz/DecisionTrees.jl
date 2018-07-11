@@ -24,7 +24,7 @@ export ModelSettings,copySettingsToCurrentType
 	struct ROptMinRLostSplit	   <: SplittingCriterion end
     
 	PoissonOrGamma = Union{PoissonDevianceSplit,GammaDevianceSplit}
-	PoissonOrGammaOrNormalDTMF = Union{PoissonDevianceSplit,NormalDevianceDifferenceToMeanFitSplit,NormalDevianceDifferenceToMeanFitWEIGHTEDSplit}
+	PoissonOrGammaOrNormalDTMF = Union{PoissonDevianceSplit,GammaDevianceSplit,NormalDevianceDifferenceToMeanFitSplit,NormalDevianceDifferenceToMeanFitWEIGHTEDSplit}
     
 #sortby options for categorical splits
 	abstract type SortBy end
