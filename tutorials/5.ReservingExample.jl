@@ -11,8 +11,8 @@
     ###            SSRN Manuscript ID 3130560.                   ###  
     ###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
 
-import Distributed
-import Random  
+using Distributed
+import Random
 import DelimitedFiles
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames

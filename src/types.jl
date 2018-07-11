@@ -550,7 +550,7 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 		crit=DifferenceSplit()
 	elseif (critfnstr=="msePointwise"||critfnstr=="normaldeviancePointwise" ||critfnstr=="normalPointwise" ||critfnstr=="gaussianPointwise" || critfnstr=="gaussiandeviancePointwise" || critfnstr=="rssPointwise")
 		crit=NormalDevianceSplit()
-	elseif (critfnstr=="mse"||critfnstr=="normaldeviance" ||critfnstr=="normal" ||critfnstr=="gaussian" || critfnstr=="gaussiandeviance" || critfnstr=="rss"))		
+	elseif (critfnstr=="mse"||critfnstr=="normaldeviance" ||critfnstr=="normal" ||critfnstr=="gaussian" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
 		crit=NormalDevianceDifferenceToMeanFitSplit()
 	elseif (critfnstr=="poissondeviance"||critfnstr=="poisson")
 		crit=PoissonDevianceSplit()
