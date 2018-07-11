@@ -2625,7 +2625,7 @@ return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat,momen
 end
 
 #this fn is identical for Difference, Gamma and Poisson
-function build_listOfMeanResponse(crit::T,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64) where T<:Union{PoissonDevianceSplit,GammaDevianceSplit}
+function build_listOfMeanResponse(crit::T,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64) where T<:Union{PoissonDevianceSplit,GammaDevianceSplit,NormalDevianceDifferenceToMeanFitSplit}
     return build_listOfMeanResponse(DifferenceSplit(),trnidx,validx,numerator,denominator,weight,features,feature_levels,minweight)
 end 
 
