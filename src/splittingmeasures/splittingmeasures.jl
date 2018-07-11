@@ -1,7 +1,7 @@
 #include("splitting_measures_mse.jl")
 include("difference.jl")
 include("normalDeviance.jl")
-include("poissonAndGammaDeviance.jl")
+include("poissonGammaNormal.jl")
 
 #these are not maintained any more
 include("maxsplitvalue.jl")
