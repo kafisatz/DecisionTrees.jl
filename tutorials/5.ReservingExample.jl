@@ -214,7 +214,9 @@ treeResultsAgg=Dict{Float64,DataFrame}()
 #=    
     ldfYear=1
     selectedWeight=130000
-    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",sett)
+    settC=deepcopy(sett)
+    updateSettingsMod!(settC,crit="mse")
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
     0
 =#
 
@@ -252,7 +254,7 @@ for kk in keys(modelStatistics)
 end
 
 #=
-    customSummary(treeResultsAgg[1],treeResults[1],writeResultToTemp=true)
+    customSummary(treeResultsAgg[2],treeResults[2],writeResultToTemp=true)
 =#
 
 @warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
