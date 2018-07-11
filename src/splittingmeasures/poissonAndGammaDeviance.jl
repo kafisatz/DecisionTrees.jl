@@ -293,12 +293,12 @@ function get_deviances(a::NormalDevianceDifferenceToMeanFitWEIGHTEDSplit,current
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
         @inbounds di = denominator[count]
-		@inbounds wi = weight[count]
+		#@inbounds wi = weight[count]
         @inbounds eli = elementsInLeftChildBV[idx]        
         if eli          
-            dl += wi*(ni/di - current_meanl)^2
+            dl += di*(ni/di - current_meanl)^2
         else            
-            dr += wi*(ni/di - current_meanr)^2
+            dr += di*(ni/di - current_meanr)^2
       end                
 	end
 	return dl,dr
