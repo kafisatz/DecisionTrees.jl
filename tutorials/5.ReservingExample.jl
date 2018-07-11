@@ -221,7 +221,7 @@ folderForOutput="c:\\temP\\331\\"
 
 #=    
     ldfYear=1
-    selectedWeight=80000
+    selectedWeight=130000
     settC=deepcopy(sett)
     updateSettingsMod!(settC,crit="mse")
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)

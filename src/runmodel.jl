@@ -391,10 +391,10 @@ if sett.boolNumeratorStats
 end
 
 if (typeof(sett.crit) == NormalDevianceDifferenceToMeanFitSplit)||(typeof(sett.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
-    if any(iszero,denominator) #must be non zero (ideally even positive)
+    if any(iszero,dtmtable.denominator) #must be non zero (ideally even positive)
         error("DTM: Denominator has zero values. This is not allowed for crit=$(sett.crit)")
     end
-    if any(denominator.<0) #must be non zero (ideally even positive)
+    if any(dtmtable.denominator.<0) #must be non zero (ideally even positive)
         @warn("DTM: Denominator has negative values. You have specified crit=$(sett.crit). This may lead to unintended results as the algorithm divides by the denominator (and it is used as weight!)")
     end
 end
