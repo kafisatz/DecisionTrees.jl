@@ -274,11 +274,31 @@ function get_deviances(a::NormalDevianceDifferenceToMeanFitSplit,current_meanl::
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
         @inbounds di = denominator[count]
-        @inbounds eli=elementsInLeftChildBV[idx]
+        @inbounds eli=elementsInLeftChildBV[idx]        
         if eli          
-            dl += (ni - current_meanl*di)^2        
+            dl += (ni/di - current_meanl)^2
         else            
-            dr += (ni - current_meanr*di)^2        
+            dr += (ni/di - current_meanr)^2
+      end                
+	end
+	return dl,dr
+end
+
+
+function get_deviances(a::NormalDevianceDifferenceToMeanFitWEIGHTEDSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)    
+	dr=0.0
+	dl=0.0
+	#note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
+	for count in 1:length(f)	
+		@inbounds idx = f.parent.refs[count] + ooo		
+		@inbounds ni = numerator[count]
+        @inbounds di = denominator[count]
+		@inbounds wi = weight[count]
+        @inbounds eli = elementsInLeftChildBV[idx]        
+        if eli          
+            dl += wi*(ni/di - current_meanl)^2
+        else            
+            dr += wi*(ni/di - current_meanr)^2
       end                
 	end
 	return dl,dr

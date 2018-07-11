@@ -11,7 +11,8 @@ export ModelSettings,copySettingsToCurrentType
 	abstract type SplittingCriterion  end
 	struct DifferenceSplit      <: SplittingCriterion end
 	struct NormalDevianceSplit      <: SplittingCriterion end
-	struct NormalDevianceDifferenceToMeanFitSplit <:SplittingCriterion end
+    struct NormalDevianceDifferenceToMeanFitSplit <:SplittingCriterion end
+    struct NormalDevianceDifferenceToMeanFitWEIGHTEDSplit <:SplittingCriterion end
 	struct PoissonDevianceSplit      <: SplittingCriterion end
 	struct GammaDevianceSplit      <: SplittingCriterion end
 	struct MaxValueSplit      <: SplittingCriterion end
@@ -23,7 +24,7 @@ export ModelSettings,copySettingsToCurrentType
 	struct ROptMinRLostSplit	   <: SplittingCriterion end
     
 	PoissonOrGamma = Union{PoissonDevianceSplit,GammaDevianceSplit}
-	PoissonOrGammaOrNormalDTMF = Union{PoissonDevianceSplit,NormalDevianceDifferenceToMeanFitSplit}
+	PoissonOrGammaOrNormalDTMF = Union{PoissonDevianceSplit,NormalDevianceDifferenceToMeanFitSplit,NormalDevianceDifferenceToMeanFitWEIGHTEDSplit}
     
 #sortby options for categorical splits
 	abstract type SortBy end
@@ -552,6 +553,8 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 		crit=NormalDevianceSplit()
 	elseif (critfnstr=="mse"||critfnstr=="normaldeviance" ||critfnstr=="normal" ||critfnstr=="gaussian" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
 		crit=NormalDevianceDifferenceToMeanFitSplit()
+	elseif (critfnstr=="mseWeighted")
+		crit=NormalDevianceDifferenceToMeanFitWEIGHTEDSplitSplit()
 	elseif (critfnstr=="poissondeviance"||critfnstr=="poisson")
 		crit=PoissonDevianceSplit()
 	elseif (critfnstr=="gammadeviance"||critfnstr=="gamma")
