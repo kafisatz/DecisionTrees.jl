@@ -21,12 +21,9 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 @time Distributed.@everywhere using DecisionTrees #200 - 300 seconds in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook (precompilation allocates 20GB of memory?)
 
 #folderForOutput="C:\\temp\\"
-folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180702\\"
+folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180711\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
-#=
-    include(joinpath(@__DIR__,"tutorials","5.ReservingExample_functions.jl"))
-=#
 #include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
 include(joinpath(Pkg.dir("DecisionTrees"),"tutorials","5.ReservingExample_functions.jl"))
 
@@ -115,12 +112,16 @@ maxAY=maximum(ayears)
     dataKnownByYE2005=fullData[indexOfClaimIsReportedByYE2005,:]
     #paycumcolumns=[Symbol(string("PayCum",lpad(ii,2,0))) for ii=0:11]
     #map(x->sum(fullData[.!indexOfClaimIsReportedByYE2005,x]),paycumcolumns)
-    #aggregate(df,:someColumn,[sum, mean])
-    dtmtableKnownData,settUnused,dfpreppedUnused=prepare_dataframe_for_dtm!(dataKnownByYE2005,keycol="ClNr",numcol="PayCum00",trnvalcol="trnValCol",independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);
+    #aggregate(df,:someColumn,[sum, mean])    
+    dtmKnownByYE2005,sett,dfpreppedUnused=prepare_dataframe_for_dtm!(dataKnownByYE2005,keycol="ClNr",numcol="PayCum00",trnvalcol="trnValCol",independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);
+
+    #a note on the data
+    #dataKnownByYE2005 is a DataFrame (it contains more data such as all PayCum columns and the AY)
+    #dtmKnownByYE2005 is a DTMTable object (it has a different structre than the DataFrame)    
 
 #consider paidToDate and 'truth'
 paidToDatePerRow=getPaidToDatePerRow(dataKnownByYE2005)
-#trueUltimatePerRow (this is not meaningful because we have two sets of claims: fullData[:PayCum11] AND dtmtableKnownData[:PayCum11])
+#trueUltimatePerRow (this is not meaningful because we have two sets of claims: fullData[:PayCum11] AND dtmKnownByYE2005[:PayCum11])
 #trueReservePerRow=trueUltimatePerRow.-paidToDatePerRow #this is not meaningful either
 
 #build 'triangle' (in this case, we will atualls get a retangle rather than a triangle)
@@ -207,13 +208,13 @@ treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 
 #actual model run (this may take a few minutes)
-@time runModels!(dataKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,dtmtableKnownData,clAllLOBs,paidToDatePerRow);
+@time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
 #=
 
 idx0=sample(1:size(dataKnownByYE2005,1),ceil(Int,size(dataKnownByYE2005,1)*.05));
 dataMini=dataKnownByYE2005[idx0,:];
-@time runModels!(dataMini,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,"R:\\temp\\3\\",dtmtableKnownData,clAllLOBs,paidToDatePerRow);
+@time runModels!(dataMini,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,"R:\\temp\\3\\",dtmKnownByYE2005,clAllLOBs,paidToDatePerRow);
 
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,170000,2,2005,selected_explanatory_vars,categoricalVars,folderForOutput)
 
