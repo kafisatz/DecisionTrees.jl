@@ -149,21 +149,21 @@ end
 CLTotalUltimate=sum(CLUltimatePerRow)
 
 #consider CL per LoB
-LOB="1";triangleLOB1=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB1=chainLadder(triangleLOB1);trueUltimateLOB1=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end]
-LOB="2";triangleLOB2=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB2=chainLadder(triangleLOB2);trueUltimateLOB2=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end]
-LOB="3";triangleLOB3=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB3=chainLadder(triangleLOB3);trueUltimateLOB3=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end]
-LOB="4";triangleLOB4=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB4=chainLadder(triangleLOB4);trueUltimateLOB4=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end]
+LOB="1";triangleLOB1=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB1=chainLadder(triangleLOB1);trueUltimateLOB1=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end];clLOB1[:trueReserves]=trueUltimateLOB1.-clLOB1[:paidToDate];clLOB1[:error]=clLOB1[:trueReserves].-clLOB1[:reserves];
+LOB="2";triangleLOB2=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB2=chainLadder(triangleLOB2);trueUltimateLOB2=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end];clLOB2[:trueReserves]=trueUltimateLOB2.-clLOB2[:paidToDate];clLOB2[:error]=clLOB2[:trueReserves].-clLOB2[:reserves];
+LOB="3";triangleLOB3=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB3=chainLadder(triangleLOB3);trueUltimateLOB3=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end];clLOB3[:trueReserves]=trueUltimateLOB3.-clLOB3[:paidToDate];clLOB3[:error]=clLOB3[:trueReserves].-clLOB3[:reserves];
+LOB="4";triangleLOB4=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB4=chainLadder(triangleLOB4);trueUltimateLOB4=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end];clLOB4[:trueReserves]=trueUltimateLOB4.-clLOB4[:paidToDate];clLOB4[:error]=clLOB4[:trueReserves].-clLOB4[:reserves];
 
-trueReservesLOB1=trueUltimateLOB1.-clLOB1[:paidToDate]
-trueReservesLOB2=trueUltimateLOB2.-clLOB2[:paidToDate]
-trueReservesLOB3=trueUltimateLOB3.-clLOB3[:paidToDate]
-trueReservesLOB4=trueUltimateLOB4.-clLOB4[:paidToDate]
+addTotal!(clLOB1)
+addTotal!(clLOB2)
+addTotal!(clLOB3)
+addTotal!(clLOB4)
 
 trueReservesPerLOB=Dict{String,Array{Float64}}()
-trueReservesPerLOB["1"]=trueReservesLOB1
-trueReservesPerLOB["2"]=trueReservesLOB2
-trueReservesPerLOB["3"]=trueReservesLOB3
-trueReservesPerLOB["4"]=trueReservesLOB4
+trueReservesPerLOB["1"]=clLOB1[:trueReserves]
+trueReservesPerLOB["2"]=clLOB2[:trueReserves]
+trueReservesPerLOB["3"]=clLOB3[:trueReserves]
+trueReservesPerLOB["4"]=clLOB4[:trueReserves]
 
 clPerLOB=Dict{String,DataFrame}()
 clPerLOB["1"]=clLOB1
@@ -171,14 +171,13 @@ clPerLOB["2"]=clLOB2
 clPerLOB["3"]=clLOB3
 clPerLOB["4"]=clLOB4
 
-@assert all(isapprox.(trueReserves.-trueReservesLOB1.-trueReservesLOB2.-trueReservesLOB3.-trueReservesLOB4,0))
+@assert all(isapprox.(vcat(trueReserves,sum(trueReserves)).-clLOB1[:trueReserves].-clLOB2[:trueReserves].-clLOB3[:trueReserves].-clLOB4[:trueReserves],0))
 @assert all(isapprox.(trueUltimate.-trueUltimateLOB1.-trueUltimateLOB2.-trueUltimateLOB3.-trueUltimateLOB4,0))
 
 
 ##############################
 #Consider CL decision trees
 ##############################
-
 
 #Define minimum weight per leaf (depending on the development year)
 #note:these weights are calibrated for a total training weight of 3477583 (Notably the number of claims will be smaller for higher LDFs!)
@@ -190,8 +189,10 @@ modelsWeightsPerLDF=Vector{Vector{Float64}}()
 #the values were selected by expert judgement
 #primarily we considered reversals (i.e when the observed ratio in the validation data is not monotonic in the number of leaves (as the leaf number is defined such that the training observed ratios are increasing))
 push!(modelsWeightsPerLDF,[80000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
-#slightly more consevative version
-push!(modelsWeightsPerLDF,[80000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
+#slightly more conservative version
+#push!(modelsWeightsPerLDF,[80000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
+#alternatvie
+push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
 #version where the weigth is increasing
 push!(modelsWeightsPerLDF,[80000,170000,240000,220000,240000,240000,240000,240000,240000,240000,15000000])
 
@@ -210,42 +211,15 @@ treeResultsAgg=Dict{Float64,DataFrame}()
 #actual model run (this may take a few minutes)
 @time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
-#=
-
-idx0=sample(1:size(dataKnownByYE2005,1),ceil(Int,size(dataKnownByYE2005,1)*.05));
-dataMini=dataKnownByYE2005[idx0,:];
-@time runModels!(dataMini,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,"R:\\temp\\3\\",dtmKnownByYE2005,clAllLOBs,paidToDatePerRow);
-
-    resultingFiles,resM= runSingleModel(dataKnownByYE2005,170000,2,2005,selected_explanatory_vars,categoricalVars,folderForOutput)
-
-    ldfYear=11
-    selectedWeight=80000
-
-    thisdata=dataKnownByYE2005[dataKnownByYE2005[:AY].<=(maxAY-ldfYear),:]
-
-    cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
-    cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
-
-    #discard all claims which are zero for 'both columns'
-    discardIdx=(thisdata[cumulativePaymentCol].==0) .& (thisdata[cumulativePaymentColPrev] .==0)        
-    if any(discardIdx)
-        thisdata=thisdata[.!discardIdx,:]
-        println("Discarded $(sum(discardIdx)) observations with PayCum zero for both development years $(ldfYear) and $(ldfYear-1)")
-    end 
-    #Note: in a previous version of the model, we were discarding all claims which have zero payment in the more recent year which determines the CL factor
-    #It turns out that we can actaully keep these claims we can keep the claims 
-    #However, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
-    #thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
-    dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);
-
-    #run a single tree model
-    updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-    resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("ldfYear_",ldfYear,"_minw_",sett.minWeight,".txt")))
+#=    
+    ldfYear=1
+    selectedWeight=130000
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",sett)
     0
 =#
 
 #define  struct to hold resulting data
-struct ResStats
+struct ModelStats
     comparisonByAY::DataFrame
     comparisonByLOB::Dict
     absErrorsByAY::Array 
@@ -254,11 +228,11 @@ end
 
 #compare results (CL versus Tree versus Truth)
 modelIndices=sort(collect(keys(treeResultsAgg)))
-modelStatistics=Dict{Float64,ResStats}()
+modelStatistics=Dict{Float64,ModelStats}()
 for thiskey in modelIndices
     @show thiskey
     resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
-    obj=ResStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
+    obj=ModelStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
     deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
     @show deltaTotalPerLOB
     modelStatistics[thiskey]=obj
@@ -276,6 +250,10 @@ for kk in keys(modelStatistics)
     @show treeTotal,sum(treeTotal)
     @show trueTotal,sum(trueTotal)
 end
+
+#=
+    customSummary(treeResultsAgg[1],treeResults[1],writeResultToTemp=true)
+=#
 
 @warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
 @warn("make a note that 5m claims is a large data set! (in practice less data might be availabe but the concept can be applied nevertheless)")

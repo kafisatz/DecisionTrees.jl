@@ -116,7 +116,7 @@ end
 
 function checkIfPaymentsAreIncreasing(data)
     #consider payment columns
-    paymCols=[Symbol(string("PayCum",lpad(ii,2,0))) for ii=0:11]
+    paymCols=[Symbol(string("PayCum",lpad(ii,2,"0"))) for ii=0:11]
     isNonDecreasing=BitVector(undef,size(data,1))
     data2=data[paymCols]
     dataAsArray=transpose(convert(Array,data2))    
@@ -149,7 +149,7 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
     for lob in sort(unique(dataKnownByYE2005[:LoB]))
         sumRes=DataFrames.aggregate(treeEstimatePerRow[dataKnownByYE2005[:LoB].==lob,[:reserves,:AY]],:AY,sum)
         #names!(sumRes,[:AY,:reserves])
-        sumRes2=hcat(ayears,trueReservesPerLOB[lob],sumRes[:reserves_sum],clPerLOB[lob][:reserves])
+        sumRes2=hcat(ayears,trueReservesPerLOB[lob][1:end-1],sumRes[:reserves_sum],clPerLOB[lob][:reserves][1:end-1])
         #sumRes[:CLReserves]=clPerLOB[lob][:reserves]
         #sumRes[:trueReserves]=trueReservesPerLOB[lob]
         sumRes2=vcat(sumRes2,sum(sumRes2,dims=1))
@@ -200,6 +200,7 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
     
     
 function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,settOrig::ModelSettings)
+
     kk=0
     Random.srand(1240)
     ayears=sort(unique(dataKnownByYE2005[:AY]))
@@ -212,7 +213,7 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
     for minWeightPerLDF in modelsWeightsPerLDF
         fill!(LDFArray,0.0)
         LDFArray[:,end].=1.0 #tail factor 1.0
-        @show kk+=1    
+        kk+=1
         for ldfYear=1:length(ayears)-1 
             selectedWeight=minWeightPerLDF[ldfYear]  
             @show ldfYear
@@ -223,50 +224,38 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
             fittedValues,leafNrs=predict(resM,dtmKnownByYE2005.features)            
             #save estimated ldf per observation 
             LDFArray[:,ldfYear].=copy(fittedValues)
-        end    
+        end   
+
+    #consider estimated ultimates per claim 
+    estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)
+    
+    treeResults[kk]=deepcopy(estPerRow)    
+    treeResultsAgg[kk]=deepcopy(estAgg)
+
     end 
 
-    #consider per Row Model 
-    estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)
-    treeResults[kk]=deepcopy(estPerRow)
-    treeResultsAgg[kk]=deepcopy(estAgg)
-    
-    #reservesPerAY=estAgg[:reserves]
-    #errPerAY=estAgg[:error]
-    #errTotal=sum(errPerAY)            
-    #totalUltimate=sum(estPerRow[:ultimate])        
-    return nothing
+return nothing
 end 
 
 function runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput,settOrig::ModelSettings)    
     #a note on the data
     #dataKnownByYE2005 is a DataFrame (it contains more data such as all PayCum columns and the AY)
     #dtmKnownByYE2005 is a DTMTable object (it has a different structre than the DataFrame)    
-    cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
-    cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
+    cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,"0")))
+    cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,"0")))
 
     #subset data, conditions are: 
     #1) AY < 2005-ldfYear
     #2) cumPay is NOT zero for both ldfYear and ldfYear-1 (these rows do not add any value and can be discarded)
     subsetIdx=(dataKnownByYE2005[:AY].<=(maxAY-ldfYear)) .& (.! ((dataKnownByYE2005[cumulativePaymentCol].==0) .& (dataKnownByYE2005[cumulativePaymentColPrev].==0)))
     #subsetIdx is a boolean index, we need to convert it to an integer index for the next step
-    subsetIdxInteger=find(subsetIdx)
+    subsetIdxInteger=findall(subsetIdx)
     #this step also creates a copy of the data (which is intended)
     dtmSubset=dtmKnownByYE2005[subsetIdxInteger]
-    #redefine numerator and denominator
+    #redefine numerator and denominator (we are considering different PayCum columns of the data for each development year)
     dtmSubset.numerator=dataKnownByYE2005[cumulativePaymentColPrev][subsetIdxInteger]
     dtmSubset.denominator=dataKnownByYE2005[cumulativePaymentCol][subsetIdxInteger]
-
-    @show size(dtmSubset.numerator)
-    @show size(dtmSubset.denominator)
-    @show size(dtmSubset.weight)
-    @show size(dtmSubset.features)
-    @show size(dtmSubset.trnidx)
-    @show size(dtmSubset.validx)
-    @show extrema(dtmSubset.trnidx)
-    @show extrema(dtmSubset.validx)
-
-
+    
     sett=deepcopy(settOrig)
     updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
     resultingFiles,resM=dtm(dtmSubset,sett,file=joinpath(folderForOutput,string("LDF_Year_",ldfYear,"_minw_",sett.minWeight,".txt")))    
@@ -274,43 +263,20 @@ function runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYea
     return resultingFiles,resM
 end
 
-function runSingleModelOLD(dataKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput,settOrig::ModelSettings)    
-    cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,0)))
-    cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,0)))
 
-    #=
-    #subset data, conditions are: 
-    #1) AY < 2005-ldfYear
-    #2) cumPay is NOT zero for both ldfYear and ldfYear-1 (these rows do not add any value and can be discarded)
-    subsetIdx=(dataKnownByYE2005[:AY].<=(maxAY-ldfYear)) .& (.! ((dataKnownByYE2005[cumulativePaymentCol].==0) .& (dataKnownByYE2005[cumulativePaymentColPrev].==0))    
-    #subsetIdx is a boolean index, we need to convert it to an integer index for the next step
-    subsetIdxInteger=find(subsetIdx)
-    #this step also creates a copy of the data (which is intended)
-    dtmSubset=dtmKnownByYE2005[subsetIdxInteger]
-    sett=deepcopy(settOrig)
-    updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-    resultingFiles,resM=dtm(dtmSubset,sett,file=joinpath(folderForOutput,string("ldfYear_",ldfYear,"_minw_",sett.minWeight,".txt")))    
-    =#
-    
-    #discard recent AYs (i.e ensure the data corresponds to a rectangle rather than a triangle)        
-    #this step also creates a COPY of the data (which is intended for now)
-    thisdata=dataKnownByYE2005[dataKnownByYE2005[:AY].<=(maxAY-ldfYear),:]
-
-    #discard all claims which are zero for 'both columns'
-    discardIdx=(thisdata[cumulativePaymentCol].==0) .& (thisdata[cumulativePaymentColPrev] .==0)
-    if any(discardIdx)
-        thisdata=thisdata[.!discardIdx,:]
-        println("Discarded $(sum(discardIdx)) observations with PayCum zero for both development years $(ldfYear) and $(ldfYear-1)")
-    end 
-    #Note: in a previous version of the model, we were discarding all claims which have zero payment in the more recent year which determines the CL factor
-    #It turns out that we can actaully keep these claims we can keep the claims 
-    #However, the algorithm will fail when a segment with only such claims is identified (which should be unlikely if sett.minWeight is large enough) 
-    #thisdata=thisdata[thisdata[cumulativePaymentCol].>0,:]
-    dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(thisdata,trnvalcol="trnValCol",keycol="ClNr",numcol=string(cumulativePaymentColPrev),denomcol=string(cumulativePaymentCol),independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);
-
-    #run a single tree model
-    updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-    resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("ldfYear_",ldfYear,"_minw_",sett.minWeight,".txt")))
-    #resultingFiles,resM=dtm(dtmtable,sett,file=joinpath(folderForOutput,string("minw_",sett.minWeight,"_ldfYear_",ldfYear,".txt")))
-    return resultingFiles,resM
+function addTotal!(d::DataFrame)
+    sm=[sum(d[i]) for i in 1 : size(d,2)]
+    totRow=d[1,:]    
+    nm=names(totRow)
+    for j=1:size(d,2)
+        totRow[j]=0.0
+        if in(nm,[:LDFS,:factorsToUltimate])
+        else 
+            totRow[j]=sm[j]
+        end
+    end
+    totRow[:LDFS]=1.0
+    totRow[:factorsToUltimate]=totRow[:ultimate][end]/totRow[:paidToDate][end]
+    append!(d,totRow)
+    return nothing
 end
