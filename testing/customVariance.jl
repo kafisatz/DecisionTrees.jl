@@ -21,11 +21,18 @@ cvl=CustomVariance(nl,dl)
 cvr=CustomVariance(nr,dr)
 
 merge!(cvl,cvr)
+@code_warntype merge!(cvl,cvr)
 
+@code_warntype unmerge!(cvl,cvr)
 unmerge!(cvl,cvr)
+cvl
 CustomVariance(nl,dl)
 #var want 53.3375356025
 #m2 want 160.0126068077387
+
+unmerge!(cvl,CustomVariance(nl,dl))
+cvl
+CustomVariance(nr,dr)
 
 sum(n)/sum(d)
 sum(d.*(n./d-sum(n)/sum(d)).^2)
