@@ -205,19 +205,19 @@ function get_deviances(a::PoissonDevianceSplit,current_meanl::Float64,current_me
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-        @inbounds wi = weight[count]
+        @inbounds di = denominator[count]
 		@inbounds eli = elementsInLeftChildBV[idx]       
         if eli
             if iszero(ni)
-                dl += -(ni - wi*current_meanl)
+                dl += -(ni - di*current_meanl)
             else 
-                dl += -(ni - wi*current_meanl) - ni*log(wi*current_meanl / ni)
+                dl += -(ni - di*current_meanl) - ni*log(di*current_meanl / ni)
             end
         else            
             if iszero(ni)
-                dr += -(ni - wi*current_meanr)
+                dr += -(ni - di*current_meanr)
             else 
-                dr += -(ni - wi*current_meanr) - ni*log(wi*current_meanr / ni)
+                dr += -(ni - di*current_meanr) - ni*log(di*current_meanr / ni)
             end        
         end
 	end
@@ -232,29 +232,29 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-        @inbounds wi = weight[count]
+        @inbounds di = denominator[count]
         @inbounds eli=elementsInLeftChildBV[idx]
 
         if eli
           if iszero(ni)
-            dl += - (ni - current_meanl*wi)/(wi*current_meanl)
+            dl += - (ni - current_meanl*di)/(di*current_meanl)
           else 
-            dl += -(ni - wi*current_meanl)/(wi*current_meanl) + log(wi*current_meanl / ni)
+            dl += -(ni - di*current_meanl)/(di*current_meanl) + log(di*current_meanl / ni)
           end
       else            
           if iszero(ni)
-              dr += - (ni - current_meanr*wi)/(wi*current_meanr)
+              dr += - (ni - current_meanr*di)/(di*current_meanr)
           else 
-              dr += -(ni - wi*current_meanr)/(wi*current_meanr) + log(wi*current_meanr / ni)
+              dr += -(ni - di*current_meanr)/(di*current_meanr) + log(di*current_meanr / ni)
           end        
       end        
         #=
         #I think this is slightly slower
-        wiTimesMean=ifelse(eli,wi*current_meanl,wi*current_meanr)        
+        diTimesMean=ifelse(eli,di*current_meanl,di*current_meanr)        
         if iszero(ni)
-          addition = - (ni - wiTimesMean)/wiTimesMean 
+          addition = - (ni - diTimesMean)/diTimesMean 
         else
-          addition = - (ni - wiTimesMean)/wiTimesMean + log(wiTimesMean / ni)
+          addition = - (ni - diTimesMean)/diTimesMean + log(diTimesMean / ni)
         end        
         if eli            
             dl += addition
@@ -273,12 +273,12 @@ function get_deviances(a::NormalDevianceDifferenceToMeanFitSplit,current_meanl::
 	for count in 1:length(f)	
 		@inbounds idx = f.parent.refs[count] + ooo		
 		@inbounds ni = numerator[count]
-        @inbounds wi = weight[count]
+        @inbounds di = denominator[count]
         @inbounds eli=elementsInLeftChildBV[idx]
         if eli          
-            dl += (ni - current_meanl*wi)^2        
+            dl += (ni - current_meanl*di)^2        
         else            
-            dr += (ni - current_meanr*wi)^2        
+            dr += (ni - current_meanr*di)^2        
       end                
 	end
 	return dl,dr
