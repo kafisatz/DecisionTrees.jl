@@ -39,7 +39,7 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
     if (typeof(settings.crit) == NormalDevianceDifferenceToMeanFitSplit)||(typeof(settings.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
         pointwiseRatio=numerator./denominator
     else 
-       pointwiseRatio=zeros(numerator) #this vector should not be used in this case (also we want to allow for zero deonominators in certain cases and thus refrain from calcuating the pointwise ratio)
+       pointwiseRatio=zeros(length(numerator)) #this vector should not be used in this case (also we want to allow for zero deonominators in certain cases and thus refrain from calcuating the pointwise ratio)
     end
     
 	empty_xl_data=ExcelData(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
