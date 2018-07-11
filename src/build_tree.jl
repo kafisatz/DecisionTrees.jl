@@ -36,7 +36,7 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
 	if !(length(inds)>0)
         throw(ErrorException(string("Error: no features were selected length(inds)=",length(inds))))
     end
-    if (typeof(sett.crit) == NormalDevianceDifferenceToMeanFitSplit)||(typeof(sett.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+    if (typeof(settings.crit) == NormalDevianceDifferenceToMeanFitSplit)||(typeof(settings.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
         pointwiseRatio=numerator./denominator
     else 
        pointwiseRatio=zeros(numerator) #this vector should not be used in this case (also we want to allow for zero deonominators in certain cases and thus refrain from calcuating the pointwise ratio)
