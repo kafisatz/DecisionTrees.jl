@@ -23,6 +23,37 @@ mutable struct CustomVariance
         end
         return new(meanratio,sn,sd,n,m2,var)
     end
+    function CustomVariance()
+        return new(0.0,0.0,0.0,0,0.0,0.0)
+    end
+end
+
+function removeSinglePoint!(a::CustomVariance,num,denom)
+    sn=a.sn-num
+    sd=a.sd-denom
+    meanratio=sn/sd
+    #merge: m2 = a.m2 + b.m2 + 2*(a.sn*(a.meanratio-meanratio)+§*(num/denom-meanratio)) + a.sd*(meanratio^2-a.meanratio^2) + denom*(meanratio^2-num/denom^2)
+    #unmerge:    
+    a.m2 = a.m2 + 2*(num*(a.meanratio-num/denom) + sn*(a.meanratio-meanratio)) + denom*((num/denom)^2-a.meanratio^2) + sd*(meanratio^2-a.meanratio^2)
+    a.sn=sn
+    a.sd=sd
+    a.n -= 1
+    a.meanratio=meanratio
+    a.var=a.m2/(a.n-1)
+    return nothing 
+end
+
+function addSinglePoint!(a::CustomVariance,num,denom)
+    sn=a.sn+num
+    sd=a.sd+denom   
+    a.n=a.n+1
+    meanratio=sn/sd
+    a.m2 = a.m2 + 2*(a.sn*(a.meanratio-meanratio)+num*(num/denom-meanratio)) + a.sd*(meanratio^2-a.meanratio^2) + denom*(meanratio^2-(num/denom)^2)
+    a.sn=sn
+    a.sd=sd
+    a.meanratio=meanratio
+    a.var=a.m2/(a.n-1)
+    return nothing 
 end
 
 function Base.merge!(a::CustomVariance,b::CustomVariance)

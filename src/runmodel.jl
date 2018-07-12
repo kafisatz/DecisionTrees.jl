@@ -390,7 +390,7 @@ if sett.boolNumeratorStats
 	end
 end
 
-if (typeof(sett.crit) == NormalDevianceDifferenceToMeanFitSplit)||(typeof(sett.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+if (typeof(sett.crit) == mseSplit)||(typeof(sett.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
     if any(iszero,dtmtable.denominator) #must be non zero (ideally even positive)
         error("DTM: Denominator has zero values. This is not allowed for crit=$(sett.crit)")
     end

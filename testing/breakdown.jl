@@ -254,7 +254,7 @@ elt=T#elt=eltype(trnfeatures.parent.refs)
         
         # @code_warntype build_listOfMeanResponse(crit,trnidx,validx,actualNumerator,estimatedNumerator,weight,trnfeatures,labellist_sorted,minweight)
         
-	elseif (crit_type==NormalDevianceSplit)		
+	elseif (crit_type==NormalDeviancePointwiseSplit)		
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass=build_listOfMeanResponse(crit,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	#else #we catch this possibility earlier when checking the settings
 	#	throw(ErrorException(string("Invalid Splitting criterion $(crit)")))
@@ -270,7 +270,7 @@ elt=T#elt=eltype(trnfeatures.parent.refs)
 	if size(labellist_sorted,1)>catSortByThreshold
 		if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
 			sortlists!(catSortBy,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) #catSortBy::SortBy=SORTBYMEAN
-		elseif (crit_type==NormalDevianceSplit)
+		elseif (crit_type==NormalDeviancePointwiseSplit)
 			sortlists!(catSortBy,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass)
 		end
 		subs=increasing_subsets(labellist)

@@ -10,21 +10,19 @@ export ModelSettings,copySettingsToCurrentType
 #Splitting Criterions use multiple dispatch
 	abstract type SplittingCriterion  end
 	struct DifferenceSplit      <: SplittingCriterion end
-	struct NormalDevianceSplit      <: SplittingCriterion end
-    struct NormalDevianceDifferenceToMeanFitSplit <:SplittingCriterion end
+	struct NormalDeviancePointwiseSplit      <: SplittingCriterion end
+    struct mseSplit <:SplittingCriterion end
     struct NormalDevianceDifferenceToMeanFitWEIGHTEDSplit <:SplittingCriterion end
 	struct PoissonDevianceSplit      <: SplittingCriterion end
 	struct GammaDevianceSplit      <: SplittingCriterion end
 	struct MaxValueSplit      <: SplittingCriterion end
 	struct MaxAbsValueSplit      <: SplittingCriterion end
-	struct MaxMinusValueSplit      <: SplittingCriterion end
-	struct MSESplit             <: SplittingCriterion end
+	struct MaxMinusValueSplit      <: SplittingCriterion end	
 	struct RankOptSplit         <: SplittingCriterion end
 	struct ROptMinRLostPctSplit	   <: SplittingCriterion end
 	struct ROptMinRLostSplit	   <: SplittingCriterion end
     
-	PoissonOrGamma = Union{PoissonDevianceSplit,GammaDevianceSplit}
-	PoissonOrGammaOrNormalDTMF = Union{PoissonDevianceSplit,GammaDevianceSplit,NormalDevianceDifferenceToMeanFitSplit,NormalDevianceDifferenceToMeanFitWEIGHTEDSplit}
+	PoissonOrGamma = Union{PoissonDevianceSplit,GammaDevianceSplit}	
     
 #sortby options for categorical splits
 	abstract type SortBy end
@@ -545,16 +543,16 @@ function convertFromString(oldvalue::T,val) where {T <: SortBy}
 	return SortByMean()  #currently only mean is possible here
 end
 function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion}
-	local allowedinputstrings=[lowercase(x) for x in ["difference" "normal" "poisson" "gamma" "maxvalue" "maxabsvalue" "maxminusvalue"]]
+	local allowedinputstrings=[lowercase(x) for x in ["difference" "mse" "msePointwise" "poisson" "gamma" "maxvalue" "maxabsvalue" "maxminusvalue"]]
 	critfnstr=lowercase(critfnstr)
 	if (critfnstr=="difference"||critfnstr=="default")
 		crit=DifferenceSplit()
 	elseif (critfnstr=="msePointwise"||critfnstr=="normaldeviancePointwise" ||critfnstr=="normalPointwise" ||critfnstr=="gaussianPointwise" || critfnstr=="gaussiandeviancePointwise" || critfnstr=="rssPointwise")
-		crit=NormalDevianceSplit()
-	elseif (critfnstr=="mse"||critfnstr=="normaldeviance" ||critfnstr=="normal" ||critfnstr=="gaussian" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
-		crit=NormalDevianceDifferenceToMeanFitSplit()
-	elseif (critfnstr=="mseWeighted")
-		crit=NormalDevianceDifferenceToMeanFitWEIGHTEDSplitSplit()
+		crit=NormalDeviancePointwiseSplit()
+	elseif (critfnstr=="mse") #||critfnstr=="normaldeviance" ||critfnstr=="normal" ||critfnstr=="gaussian" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
+		crit=mseSplit()
+	#elseif (critfnstr=="mseWeighted")
+	#	crit=NormalDevianceDifferenceToMeanFitWEIGHTEDSplitSplit()
 	elseif (critfnstr=="poissondeviance"||critfnstr=="poisson")
 		crit=PoissonDevianceSplit()
 	elseif (critfnstr=="gammadeviance"||critfnstr=="gamma")

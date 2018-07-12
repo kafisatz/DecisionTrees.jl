@@ -1,6 +1,7 @@
 #include("splitting_measures_mse.jl")
 include("difference.jl")
-include("normalDeviance.jl")
+include("msePointwise.jl")
+include("mse.jl")
 include("poissonGammaNormal.jl")
 
 #these are not maintained any more

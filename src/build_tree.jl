@@ -36,11 +36,12 @@ function build_tree!(trnidx::Vector{Int},validx::Vector{Int},candMatWOMaxValues:
 	if !(length(inds)>0)
         throw(ErrorException(string("Error: no features were selected length(inds)=",length(inds))))
     end
-    if (typeof(settings.crit) == NormalDevianceDifferenceToMeanFitSplit)||(typeof(settings.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
-        pointwiseRatio=numerator./denominator
-    else 
-       pointwiseRatio=zeros(length(numerator)) #this vector should not be used in this case (also we want to allow for zero deonominators in certain cases and thus refrain from calcuating the pointwise ratio)
-    end
+    #if (typeof(settings.crit) == mseSplit)||(typeof(settings.crit) == NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+    #    pointwiseRatio=numerator./denominator
+    #else 
+    #   pointwiseRatio=zeros(length(numerator)) #this vector should not be used in this case (also we want to allow for zero deonominators in certain cases and thus refrain from calcuating the pointwise ratio)
+    #end
+    pointwiseRatio=Vector{Float64}(undef,length(numerator)) #this should not be used by any of the algorithms, hence it is not computed (it is filled with trash(undefined data))
     
 	empty_xl_data=ExcelData(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
 	fp=get_feature_pools(features)
@@ -282,9 +283,9 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
   else
 	#countsort!(labellist_sorted)
     #this may need improvement:
-	if (crit_type==DifferenceSplit||crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+	if (crit_type==DifferenceSplit||crit_type==PoissonDevianceSplit||NormalDeviancePointwiseSplitcrit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
     		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat=build_listOfMeanResponse(crit,trnidx,validx,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
-	elseif (crit_type==NormalDevianceSplit)		
+	elseif (crit_type==NormalDeviancePointwiseSplit)||(crit_type==mseSplit)	
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass=build_listOfMeanResponse(crit,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	#else #we catch this possibility earlier when checking the settings
 	#	throw(ErrorException(string("Invalid Splitting criterion $(crit)")))
@@ -300,7 +301,7 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 	if size(labellist_sorted,1)>catSortByThreshold
 		if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
 			sortlists!(catSortBy,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) #catSortBy::SortBy=SORTBYMEAN
-		elseif (crit_type==NormalDevianceSplit)
+		elseif (crit_type==NormalDeviancePointwiseSplit)||(crit_type==mseSplit)
 			sortlists!(catSortBy,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass)
 		end
 		subs=increasing_subsets(labellist)
@@ -313,9 +314,9 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 	if randomweight==0.0
     if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs)
-	elseif (crit_type==NormalDevianceSplit)
+	elseif (crit_type==NormalDeviancePointwiseSplit)||(crit_type==mseSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,moments_per_pdaclass)
-	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,pointwiseRatio,weight,trnfeatures)
     end
     if isfinite(tmp_result[1])
@@ -332,9 +333,9 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
   #randomweight>0
 	if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,feature_column_id)
-	elseif (crit_type==NormalDevianceSplit)
+	elseif (crit_type==NormalDeviancePointwiseSplit)||(crit_type==mseSplit)
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,feature_column_id,moments_per_pdaclass)
-	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,pointwiseRatio,weight,trnfeatures,feature_column_id)
     end
     

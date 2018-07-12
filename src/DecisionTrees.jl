@@ -67,12 +67,12 @@ include("cross_validation.jl")
 include("show.jl")
 include("partialDependence.jl")
 include("apply_tree_fn_unseen.jl")
-include("customVariance.jl")
 
 global const pyModPandas = PyCall.PyNULL()
 global const pyModxlsxwriter = PyCall.PyNULL()
 
 global const emptyMeanVarSeries=OnlineStats.Series(OnlineStats.Mean(),OnlineStats.Variance())
+global const emptyCustomVariance=CustomVariance()
 global const globalConstAllowableMethodsForDefineCandidates=("equalWeight","basedOnWeightVector")
 global const UInt8VECTORemptySplitDef = Vector{Splitdef{UInt8}}(undef,0)
 global const UInt16VECTORemptySplitDef = Vector{Splitdef{UInt16}}(undef,0)
@@ -95,16 +95,6 @@ global const global_pldamod_valid_types=[String,Float64]
 global const global_nameOfSettingsSheet="ModelSettings"
 global const global_nameOfModelStatisticsSheet="ModelStatistics"
 global const global_nameOfTWOWayValidationSheet="2Way_ValidationGraphs"
-
-global const DifferenceSplitConst      =  DifferenceSplit() #todo/tbd check if we need the constants like Difference at all (I think we do not need these)
-global const MaxValue				   =  MaxValueSplit()
-global const MaxAbsValue			   =  MaxAbsValueSplit()
-global const MaxMinusValue			   =  MaxMinusValueSplit()
-global const MSE                       =  MSESplit()
-global const RankOpt                   =  RankOptSplit()
-global const ROptMinRLostPct           =  ROptMinRLostPctSplit()
-global const ROptMinRLost              =  ROptMinRLostSplit()
-global const SORTBYMEAN				   =  SortByMean()
 
 global const globalValidfitForStatsAndCharts=["rawRelativities","unsmoothedPerScore","smoothedPerScore"]	
 global const global_statsperiter_header=["Iteration" "Correlation" "Std Dev Trn" "Std Dev Val" "Std Dev Ratio" "Lift Trn" "Lift Val" "Reversals Trn" "Reversals Val" "RelDiff TrnObs vs ValObs" "RelDiff ValObs vs TrnFitted" "Min Rel Trn" "Max Rel Trn" "Min Observed Ratio Trn" "Max Observed Ratio Trn"  "Min Rel Val" "Max Rel Val" "Min Observed Ratio Val" "Max Observed Ratio Val" "Gini Num (Two Arg Fn) Unweighted Trn" "Gini Num (Two Arg Fn) Unweighted Val" "Gini Num Trn (Single Agrument Fn)" "Gini Num Val (Single Argument Fn)" "RSquared of Ratio Trn" "RSquared of Ratio Val" "RSquared of Numerator Trn" "RSquared of Numerator Val" "RSS of Ratio Trn" "RSS of Ratio Val" "RSS of Numerator Trn" "RSS of Numerator Val" "Average Poisson Error Trn" "Average Poisson Error Val"]

@@ -2605,11 +2605,10 @@ function build_listOfMeanResponse(crit::MaxMinusValueSplit,numerator::Array{Floa
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
-
-function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::mseSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64)
   ncategories=length(feature_levels)
   #calc variance for each "isolated" category
-  countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(features,numerator,denominator,weight)
+  countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_mseSlit(features,numerator,denominator,weight)
   if length(countlist)!=ncategories
   #there are gaps with no data between min(features.ids),max(features.ids)
      zeroidx=findall(in(0), countlist)	 #@show length(zeroidx)
@@ -2624,8 +2623,28 @@ function build_listOfMeanResponse(crit::NormalDevianceSplit,numerator::Array{Flo
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass
 end
 
+#this
+
+function build_listOfMeanResponse(crit::NormalDeviancePointwiseSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64)
+  ncategories=length(feature_levels)
+  #calc variance for each "isolated" category
+  countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_msePointwise(features,numerator,denominator,weight)
+  if length(countlist)!=ncategories
+  #there are gaps with no data between min(features.ids),max(features.ids)
+     zeroidx=findall(in(0), countlist)	 #@show length(zeroidx)
+     deleteat!(countlist,zeroidx)
+	 deleteat!(sumnumerator,zeroidx)
+	 deleteat!(sumdenominator,zeroidx)
+	 deleteat!(sumweight,zeroidx)
+	 deleteat!(moments_per_pdaclass,zeroidx)
+  end
+  countlistfloat=convert(Vector{Float64},countlist) #Float64[convert(Float64,x) for x in countlist]
+  #sorting is not done here! if we want the data sorted, is suggest to do this in another function which uses the output from this fn
+return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass
+end
+
 #this fn is identical for Difference, Gamma and Poisson
-function build_listOfMeanResponse(crit::T,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64) where T<:Union{PoissonDevianceSplit,GammaDevianceSplit,NormalDevianceDifferenceToMeanFitSplit,NormalDevianceDifferenceToMeanFitWEIGHTEDSplit}
+function build_listOfMeanResponse(crit::T,trnidx::Vector{Int},validx::Vector{Int},numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels,minweight::Float64) where T<:Union{PoissonDevianceSplit,GammaDevianceSplit}
     return build_listOfMeanResponse(DifferenceSplit(),trnidx,validx,numerator,denominator,weight,features,feature_levels,minweight)
 end 
 

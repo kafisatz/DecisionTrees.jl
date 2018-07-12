@@ -1,4 +1,4 @@
-function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},pointwiseRatio::Array{Float64,1},weight::Array{Float64},features) where {T<:Unsigned,PGN<:PoissonOrGammaOrNormalDTMF}
+function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},pointwiseRatio::Array{Float64,1},weight::Array{Float64},features) where {T<:Unsigned,PGN<:PoissonOrGamma}
   #here randomweight==0
   #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
   #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -100,7 +100,7 @@ function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,la
     return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
-function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},pointwiseRatio::Array{Float64,1},weight::Array{Float64},features,feature_column_id::Int) where {T<:Unsigned,PGN<:PoissonOrGammaOrNormalDTMF}
+function calculateSplitValue(a::PGN,fname::Symbol,number_of_num_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,numerator::Array{Float64},denominator::Array{Float64},pointwiseRatio::Array{Float64,1},weight::Array{Float64},features,feature_column_id::Int) where {T<:Unsigned,PGN<:PoissonOrGamma}
 #this is not yet supported:
   error("need to add fname and the other unused argument")
   #here randomweight>0
@@ -266,7 +266,9 @@ function get_deviances(a::GammaDevianceSplit,current_meanl::Float64,current_mean
 	return dl,dr
 end
 
-function get_deviances(a::NormalDevianceDifferenceToMeanFitSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},pointwiseRatio::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)    
+#=
+#old functions
+function get_deviances(a::mseSplit,current_meanl::Float64,current_meanr::Float64,lo,ooo,f,numerator::Array{Float64,1},denominator::Array{Float64,1},pointwiseRatio::Array{Float64,1},weight::Array{Float64,1},elementsInLeftChildBV)    
 	dr=0.0
 	dl=0.0
 	#note: inbounds increases efficiency here (about a factor of 2), however if the bounds are violated something nasty might happen (quote: If the subscripts are ever out of bounds, you may suffer crashes or silent corruption.)
@@ -305,3 +307,4 @@ function get_deviances(a::NormalDevianceDifferenceToMeanFitWEIGHTEDSplit,current
 	end
 	return dl,dr
 end
+=#

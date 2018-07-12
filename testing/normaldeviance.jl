@@ -35,7 +35,7 @@ function test_mean_and_var_merge(nloops,sizeofVectors)
         end 
 
         thispd=view(pd,trni)
-        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(thispd,num,denom,weight)
+        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_msePointwise(thispd,num,denom,weight)
         #check if the 'merge!' of all compoments matches the total
         total=Series(OnlineStats.Mean(),OnlineStats.Variance())
         for i=1:length(moments_per_pdaclass)
@@ -78,7 +78,7 @@ function test_mean_and_var_UNmerge(nloops,sizeofVectors)
         end 
 
         thispd=view(pd,trni)
-        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(thispd,num,denom,weight)
+        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_msePointwise(thispd,num,denom,weight)
         #check if the 'merge!' of all compoments matches the total
         total=Series(OnlineStats.Mean(),OnlineStats.Variance())
         for i=1:length(moments_per_pdaclass)
@@ -124,4 +124,4 @@ test_mean_and_var_merge(1000,1000)
 test_mean_and_var_UNmerge(1000,1000)
 #@benchmark test_mean_and_var_UNmerge(10,100)
 #@benchmark test_mean_and_var_merge(10,1000)
-@benchmark cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_normal_deviance(thispd,num,denom,weight)
+@benchmark cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_msePointwise(thispd,num,denom,weight)

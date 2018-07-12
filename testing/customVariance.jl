@@ -13,6 +13,10 @@ wr=w[rightIdx]
 
 include(joinpath("testing","customVariance_fns.jl"))
 
+zzr=CustomVariance()
+merge!(cv,zzr)
+
+
 cv=CustomVariance(n,d)
 cv.meanratio
 cv.m2
@@ -39,3 +43,17 @@ sum(d.*(n./d-sum(n)/sum(d)).^2)
 sum(nl)/sum(dl)
 sum(nr)/sum(dr)
 0
+
+
+CustomVariance()
+
+
+cvl=CustomVariance(nl,dl)
+merge!(cvl,CustomVariance())
+for i in [5,6]
+    addSinglePoint!(cvl,n[i],d[i])
+    removeSinglePoint!(cvl,n[i],d[i])
+end
+cvl
+
+CustomVariance(n[1:6],d[1:6])

@@ -27,7 +27,7 @@ function test_mean_and_var_merge(nloops,sizeofVectors)
         end 
 
         thispd=view(pd,trni)
-        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=DecisionTrees.aggregate_data_normal_deviance(thispd,num,denom,weight)
+        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=DecisionTrees.aggregate_data_msePointwise(thispd,num,denom,weight)
         #check if the 'merge!' of all compoments matches the total
         total=OnlineStats.Series(OnlineStats.Mean(),OnlineStats.Variance())
         for i=1:length(moments_per_pdaclass)
@@ -70,7 +70,7 @@ function test_mean_and_var_UNmerge(nloops,sizeofVectors)
         end 
 
         thispd=view(pd,trni)
-        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=DecisionTrees.aggregate_data_normal_deviance(thispd,num,denom,weight)
+        cnt,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=DecisionTrees.aggregate_data_msePointwise(thispd,num,denom,weight)
         #check if the 'merge!' of all compoments matches the total
         total=OnlineStats.Series(OnlineStats.Mean(),OnlineStats.Variance())
         for i=1:length(moments_per_pdaclass)
