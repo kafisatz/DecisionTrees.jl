@@ -229,6 +229,12 @@ ldfYear=1
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
     0
 
+    ldfYear=1
+    selectedWeight=130000
+    settC=deepcopy(sett)
+    updateSettingsMod!(settC,crit="difference")
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
+    0
 
 #actual model run (this may take a few minutes)
 @time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
