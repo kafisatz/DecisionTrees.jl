@@ -18,7 +18,7 @@ Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
 Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggregate
 
-@time Distributed.@everywhere using DecisionTrees #200 - 300 seconds in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook (precompilation allocates 20GB of memory?)
+@time Distributed.@everywhere using DecisionTrees #200 seconds in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook (precompilation allocates 20GB of memory?)
 
 #folderForOutput="C:\\temp\\"
 folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180711\\"
@@ -208,6 +208,27 @@ end
 
 treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
+
+#todo consider mse and sse
+ldfYear=1
+    selectedWeight=130000
+    settC=deepcopy(sett)
+    updateSettingsMod!(settC,crit="mse")
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
+    0
+
+    settC=deepcopy(sett)
+    updateSettingsMod!(settC,crit="sse")
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
+    0
+
+    ldfYear=1
+    selectedWeight=130000
+    settC=deepcopy(sett)
+    updateSettingsMod!(settC,crit="msePointwise")
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
+    0
+
 
 #actual model run (this may take a few minutes)
 @time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);

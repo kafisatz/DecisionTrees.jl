@@ -3,8 +3,8 @@
     we minimize the variance(ratios in left child) + variance(ratios in right child)
 =#
 
-#calculateSplitValue(::DecisionTrees.NormalDeviancePointwiseSplit, ::Symbol, ::Int64, ::Array{UInt8,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Float64, ::DecisionTrees.MyIncreasingSubsets, ::Array{OnlineStats.Series,1})
-function calculateSplitValue(a::NormalDeviancePointwiseSplit,fname::Symbol,number_of_char_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass) where T<:Unsigned
+#calculateSplitValue(::DecisionTrees.msePointwiseSplit, ::Symbol, ::Int64, ::Array{UInt8,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Array{Float64,1}, ::Float64, ::DecisionTrees.MyIncreasingSubsets, ::Array{OnlineStats.Series,1})
+function calculateSplitValue(a::msePointwiseSplit,fname::Symbol,number_of_char_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass) where T<:Unsigned
 #here randomweight==0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -79,7 +79,7 @@ return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
 
-function calculateSplitValue(a::NormalDeviancePointwiseSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int,moments_per_pdaclass)
+function calculateSplitValue(a::msePointwiseSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int,moments_per_pdaclass)
 @warn("221 this will not work yet.....")
 #here randomweight>0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})

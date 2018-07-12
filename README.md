@@ -58,6 +58,7 @@ Also:
 * Add meaningful unit tests, e.g. check the lift on trn and val for a given single tree and boosting (for a given seed)
 * To add purity improvement for each split! Stop splitting if it is > some_specified_threshold
 * Possibly add variable importance or partial dependence plot
+* consider SSEPointwise
 
 * Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run.
 * Add 'time_finished' to model result (and possibly the time needed for the modelling)

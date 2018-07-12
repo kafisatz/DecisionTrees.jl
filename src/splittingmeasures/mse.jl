@@ -3,6 +3,78 @@
     we minimize the (ratio.-meanLeft)^2 of both children
 =#
 
+
+function calculateSplitValue(a::sseSplit,fname::Symbol,number_of_char_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass) where T<:Unsigned
+    #here randomweight==0
+    #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
+    #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
+    #convention: in the beginning everything is on the right side
+    elementsInLeftChildBV=BitVector(undef,length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
+    chosen_subset_bitarray=BitVector(undef,0)
+    
+    totalMeanAndVariance=copy(emptyCustomVariance)
+    for idx=1:length(moments_per_pdaclass)
+        @inbounds merge!(totalMeanAndVariance,moments_per_pdaclass[idx])
+    end
+    
+    weighttot=sum(sumweight)
+    weighttot_minw=weighttot-minweight
+    
+    momentsl=copy(emptyCustomVariance) 
+    #momentsr needs to be the 'total' at the start of this.
+    momentsr=totalMeanAndVariance 
+    
+    sumwl=0.0
+    varl=varr=val=-Inf
+    chosen_sumwl=NaN
+      for i in subs
+      #@show "vv=$(i)" #should be the element which switches
+      #i is an index, it indicates which element of labellist will flip sides for the next calculation
+      @inbounds switching_class=moments_per_pdaclass[i]
+      @inbounds if elementsInLeftChildBV[i]
+        #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
+        @inbounds  elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
+        #move class from left to right side
+        unmerge!(momentsl,switching_class) #switching_class is 'removed' from the left variance/mean statistcs momentsl
+        merge!(momentsr,switching_class) #switching_class is 'added' to the right variance/mean statistcs momentsl
+        #sumnl-=sumnumerator[i]
+        #sumdl-=sumdenominator[i]
+        @inbounds  sumwl-=sumweight[i]
+      else
+          #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
+          @inbounds  elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
+          #move class from right to left side
+          merge!(momentsl,switching_class)
+          unmerge!(momentsr,switching_class)
+          #sumnl+=sumnumerator[i]
+            #sumdl+=sumdenominator[i]
+            @inbounds  sumwl+=sumweight[i]
+      end
+        if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
+          #vold=valnew
+          @inbounds varl=momentsl.m2
+          @inbounds varr=momentsr.m2
+          #@show fname,sumwl,weighttot-sumwl
+          valnew = -(varl+varr)
+          #if vold==valnew;@show i,valnew,sumnl,sumdl;end;
+          if valnew>val
+            val=valnew
+            chosen_subset_bitarray=copy(elementsInLeftChildBV)
+            chosen_sumwl=sumwl
+          end
+        end
+    
+    end
+    if isfinite(val)
+      #warning: if the labellist is not sorted 1:n we need to be careful here!
+      chosen_subset=labellist[chosen_subset_bitarray]
+    else
+      chosen_subset=Array{UInt}(undef,0)
+    end
+    return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
+    end
+
+    
 function calculateSplitValue(a::mseSplit,fname::Symbol,number_of_char_features::Int,labellist::Vector{T},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,moments_per_pdaclass) where T<:Unsigned
 #here randomweight==0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
@@ -74,58 +146,12 @@ return val,chosen_subset,chosen_sumwl,weighttot-chosen_sumwl
 end
 
 
-function calculateSplitValue(a::NormalDeviancePointwiseSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int,moments_per_pdaclass)
-@warn("221 this will not work yet.....")
+function calculateSplitValue(a::mseSplit,number_of_char_features::Int,labellist::Array{UInt8,1},sumnumerator::Array{Float64,1},sumdenominator::Array{Float64,1},sumweight::Array{Float64,1},countlistfloat::Array{Float64,1},minweight::Float64,subs::DTSubsets,feature_column_id::Int,moments_per_pdaclass)
+error("221x this will not work yet.....")
 #here randomweight>0
 #for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 #all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
 #convention, in the beginning everything is on the right side
-elementsInLeftChildBV=BitVector(undef,length(labellist));fill!(elementsInLeftChildBV,false) #indicates which classes belong to right child
-
-totalMeanAndVariance=copy(emptyMeanVarSeries)
-for idx=1:length(moments_per_pdaclass)
-    @inbounds  mi=moments_per_pdaclass[idx]
-    @inbounds statsI=mi.stats[1]
-    if statsI.n >0 #this is needed because of https://github.com/joshday/OnlineStats.jl/issues/125
-        @inbounds merge!(totalMeanAndVariance,mi)
-    end
-end
-
-weighttot=sum(sumweight)
-weighttot_minw=weighttot-minweight
-
-momentsl=copy(emptyMeanVarSeries) #Series(OnlineStats.Mean(),OnlineStats.Variance())
-#momentsr needs to be the 'total' at the start of this.
-momentsr=totalMeanAndVariance #copy(emptyMeanVarSeries) #Series(OnlineStats.Mean(),OnlineStats.Variance())
-
-sumwl=0.0
-this_splitlist=Array{Splitdef}(undef,0)
-
-for i in subs
-    #i is an index, it indicates which element of labellist will flip sides for the next calculation
- if elementsInLeftChildBV[i]
-    #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-    @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true) #updating needs to occur here before we copy the array (in case it is a better split than what we have seen so far)
-    #move class from left to right side
-    unmerge!(momentsl,switching_class)
-    merge!(momentsr,switching_class)
-	@inbounds   sumwl-=sumweight[i]
-  else
-    #update elementsInLeftChildBV, i.e. toggle the value of the ith component, $=XOR
-    @inbounds elementsInLeftChildBV[i]=xor(elementsInLeftChildBV[i],true)
-    #move class from right to left side
-    merge!(momentsl,switching_class)
-    unmerge!(momentsr,switching_class)
-	@inbounds   sumwl+=sumweight[i]
-  end
-    if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
-        @inbounds varl=momentsl.var
-        @inbounds varr=momentsr.var
-	  	valnew=-(varl+varr)
-        @inbounds push!(this_splitlist,Splitdef{T}(feature_column_id,feature_column_id2,fname,labellist[elementsInLeftChildBV],valnew,sumwl,weighttot-sumwl))
-    end
-end
-return this_splitlist
 end
 
 function aggregate_data_mse(f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})

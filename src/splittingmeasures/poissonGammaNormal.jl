@@ -298,7 +298,7 @@ function get_deviances(a::NormalDevianceDifferenceToMeanFitWEIGHTEDSplit,current
         @inbounds di = denominator[count]
 		#@inbounds wi = weight[count]
 		@inbounds ratioi = pointwiseRatio[count]
-        @inbounds eli = elementsInLeftChildBV[idx]        
+        @inbounds eli = elementsInLeftChildBV[idx]     
         if eli          
             dl += di*(ratioi - current_meanl)^2
         else            

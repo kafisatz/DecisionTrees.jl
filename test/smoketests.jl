@@ -62,7 +62,7 @@ strs,resm2=dtm(dtmtable,sett)
 sett.statsByVariables=Int[]
 
 #try different splitting criteria
-for splitCrit in ["difference","poissondeviance","gammadeviance","mse"],modelTYPE in ["build_tree","boosted_tree"]
+for splitCrit in ["difference","poissondeviance","gammadeviance","mse","sse","msepointwise"],modelTYPE in ["build_tree","boosted_tree"]
     updateSettingsMod!(sett,crit=splitCrit,model_type=modelTYPE)
     try 
         strs,resmT=dtm(dtmtable,sett)        

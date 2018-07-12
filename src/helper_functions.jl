@@ -2605,7 +2605,7 @@ function build_listOfMeanResponse(crit::MaxMinusValueSplit,numerator::Array{Floa
 return feature_levels,sumnumerator,sumdenominator,sumweight,countlistfloat
 end
 
-function build_listOfMeanResponse(crit::mseSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::T,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64) where T<:Union{mseSplit,sseSplit}
   ncategories=length(feature_levels)
   #calc variance for each "isolated" category
   countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_mse(features,numerator,denominator,weight)
@@ -2625,7 +2625,7 @@ end
 
 #this
 
-function build_listOfMeanResponse(crit::NormalDeviancePointwiseSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64)
+function build_listOfMeanResponse(crit::msePointwiseSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64)
   ncategories=length(feature_levels)
   #calc variance for each "isolated" category
   countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_msePointwise(features,numerator,denominator,weight)

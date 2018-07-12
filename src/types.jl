@@ -10,7 +10,8 @@ export ModelSettings,copySettingsToCurrentType
 #Splitting Criterions use multiple dispatch
 	abstract type SplittingCriterion  end
 	struct DifferenceSplit      <: SplittingCriterion end
-	struct NormalDeviancePointwiseSplit      <: SplittingCriterion end
+    struct msePointwiseSplit      <: SplittingCriterion end
+    struct sseSplit <:SplittingCriterion end
     struct mseSplit <:SplittingCriterion end
     struct NormalDevianceDifferenceToMeanFitWEIGHTEDSplit <:SplittingCriterion end
 	struct PoissonDevianceSplit      <: SplittingCriterion end
@@ -547,12 +548,12 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 	critfnstr=lowercase(critfnstr)
 	if (critfnstr=="difference"||critfnstr=="default")
 		crit=DifferenceSplit()
-	elseif (critfnstr=="msepointwise"||critfnstr=="normaldeviancepointwise" ||critfnstr=="normalpointwise" ||critfnstr=="gaussianpointwise" || critfnstr=="gaussiandeviancepointwise" || critfnstr=="rsspointwise")
-		crit=NormalDeviancePointwiseSplit()
-	elseif (critfnstr=="mse") #||critfnstr=="normaldeviance" ||critfnstr=="normal" ||critfnstr=="gaussian" || critfnstr=="gaussiandeviance" || critfnstr=="rss")
-		crit=mseSplit()
-	#elseif (critfnstr=="mseWeighted")
-	#	crit=NormalDevianceDifferenceToMeanFitWEIGHTEDSplitSplit()
+	elseif (critfnstr=="msepointwise") #||critfnstr=="normaldeviancepointwise" ||critfnstr=="normalpointwise" ||critfnstr=="gaussianpointwise" || critfnstr=="gaussiandeviancepointwise" || critfnstr=="rsspointwise")
+		crit=msePointwiseSplit()
+    elseif (critfnstr=="mse") 
+        crit=mseSplit()
+    elseif (critfnstr=="sse")
+        crit=sseSplit()
 	elseif (critfnstr=="poissondeviance"||critfnstr=="poisson")
 		crit=PoissonDevianceSplit()
 	elseif (critfnstr=="gammadeviance"||critfnstr=="gamma")
