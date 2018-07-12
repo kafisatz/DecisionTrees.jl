@@ -128,7 +128,7 @@ end
 return this_splitlist
 end
 
-function aggregate_data_msePointwise(f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
+function aggregate_data_mse(f,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1})
     #this is the core function of the modelling process
     #besides copying of the data, the vast majority of time is spent in here!
     #most of the time is spent here, if we can improve the for loop below, that would improve performance greatly!
@@ -143,7 +143,7 @@ function aggregate_data_msePointwise(f,numerator::Array{Float64,1},denominator::
     sumweight= zeros(Float64, vecsize)
     moments_per_pdaclass=Array{CustomVariance}(undef,vecsize)
     for i=1:vecsize
-        @inbounds moments_per_pdaclass[i]=deepcopy(emptyCustomVariance)
+        @inbounds moments_per_pdaclass[i]=copy(emptyCustomVariance)
     end
     @inbounds for count in f.indices[1]
         @inbounds idx=f.parent.refs[count] + ooo
@@ -235,7 +235,7 @@ function Base.merge!(a::CustomVariance,b::CustomVariance)
 end
 
 function Base.merge(a::CustomVariance,b::CustomVariance)
-    c=deepcopy(a)
+    c=copy(a)
     merge!(c,b)
     return c
 end 
@@ -263,4 +263,15 @@ function unmerge!(a::CustomVariance,b::CustomVariance)
     a.m2=m2
     a.var=var    
     return nothing
+end
+
+function Base.copy(a::CustomVariance)
+    b=CustomVariance()
+    b.sn=a.sn
+    b.sd=a.sd
+    b.n=a.n
+    b.meanratio=a.meanratio
+    b.m2=a.m2
+    b.var=a.var    
+    return b
 end

@@ -2608,7 +2608,7 @@ end
 function build_listOfMeanResponse(crit::mseSplit,numerator::Array{Float64,1},denominator::Array{Float64,1},weight::Array{Float64,1},features,feature_levels::Array{UInt8,1},minweight::Float64)
   ncategories=length(feature_levels)
   #calc variance for each "isolated" category
-  countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_mseSlit(features,numerator,denominator,weight)
+  countlist,sumnumerator,sumdenominator,sumweight,moments_per_pdaclass=aggregate_data_mse(features,numerator,denominator,weight)
   if length(countlist)!=ncategories
   #there are gaps with no data between min(features.ids),max(features.ids)
      zeroidx=findall(in(0), countlist)	 #@show length(zeroidx)
