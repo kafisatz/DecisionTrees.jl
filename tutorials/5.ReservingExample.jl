@@ -210,19 +210,21 @@ treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 
 #todo consider mse and sse
-ldfYear=1
-    selectedWeight=130000
+selectedWeight=50000
+while (selectedWeight < 130000)
+    ldfYear=1
+    #selectedWeight=130000
     settC=deepcopy(sett)
     updateSettingsMod!(settC,crit="mse")
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
-    0
 
     settC=deepcopy(sett)
     updateSettingsMod!(settC,crit="sse")
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
-    0
-
-    ldfYear=1
+    selectedWeight+=10000
+end
+   
+ldfYear=1
     selectedWeight=130000
     settC=deepcopy(sett)
     updateSettingsMod!(settC,crit="msePointwise")
@@ -232,7 +234,7 @@ ldfYear=1
     ldfYear=1
     selectedWeight=130000
     settC=deepcopy(sett)
-    updateSettingsMod!(settC,crit="difference")
+    updateSettingsMod!(settC,crit="gamma")
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
     0
 

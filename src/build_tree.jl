@@ -269,6 +269,11 @@ best_subset=Array{UInt8}(undef,0)
 trnfeatures=view(features,trnidx)
 elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let us determine elt through T
   labellist_sorted=collect(one(elt):convert(elt,length(trnfeatures.parent.pool))) #this used to be levels(features) #this also contains the val feature levels here! It is considerably faster than levels(view) \factor 100 or so
+
+  case1a=(crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+  case1b=(crit_type==GammaDevianceSplit)||(crit_type==PoissonDevianceSplit)
+  case1=(crit_type==DifferenceSplit||crit_type==GammaDevianceSplit||crit_type==PoissonDevianceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+  case2=(crit_type==msePointwiseSplit)||(crit_type==mseSplit)||(crit_type==sseSplit)  
 	# THIS IS CRITICAL
 	# THE WAY A PooledArray IS CONSTRUCTED, WE WILL ALWAYS HAVE
 	# pda.pool[2] == "some string" -> any pda.refs[x].==0x02 will be "some string" 
@@ -280,12 +285,11 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
     else
         return UInt16VECTORemptySplitDef #collect(Vector{Splitdef{T}}(undef,0))::Vector{Splitdef{T}}
     end
-  else
-	#countsort!(labellist_sorted)
+  else	
     #this may need improvement:
-	if (crit_type==DifferenceSplit||crit_type==PoissonDevianceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+	if case1
     		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat=build_listOfMeanResponse(crit,trnidx,validx,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
-	elseif (crit_type==msePointwiseSplit)||(crit_type==mseSplit)||(crit_type==sseSplit)	
+	elseif case2
 		labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass=build_listOfMeanResponse(crit,numerator,denominator,weight,trnfeatures,labellist_sorted,minweight)
 	#else #we catch this possibility earlier when checking the settings
 	#	throw(ErrorException(string("Invalid Splitting criterion $(crit)")))
@@ -299,9 +303,9 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
   else #id<0 -> we are working on a character column
 		#distinguish between exhaustive and "increasing" search for split point
 	if size(labellist_sorted,1)>catSortByThreshold
-		if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+		if case1 
 			sortlists!(catSortBy,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) #catSortBy::SortBy=SORTBYMEAN
-		elseif (crit_type==msePointwiseSplit)||(crit_type==mseSplit)||(crit_type==sseSplit)
+		elseif case2
 			sortlists!(catSortBy,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,moments_per_pdaclass)
 		end
 		subs=increasing_subsets(labellist)
@@ -312,11 +316,11 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
 	end
 
 	if randomweight==0.0
-    if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+    if case1a 
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs)
-	elseif (crit_type==msePointwiseSplit)||(crit_type==mseSplit)||(crit_type==sseSplit)
+	elseif case2 
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,moments_per_pdaclass)
-	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+	elseif case1b
 		tmp_result=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,pointwiseRatio,weight,trnfeatures)
     end
     if isfinite(tmp_result[1])
@@ -331,11 +335,11 @@ elt=T #eltype(trnfeatures.parent.refs) #not sure if this was really helping, let
     end
   else
   #randomweight>0
-	if (crit_type==DifferenceSplit||crit_type==MaxValueSplit||crit_type==MaxMinusValueSplit)
+	if case1a
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,feature_column_id)
-	elseif (crit_type==msePointwiseSplit)||(crit_type==mseSplit)||(crit_type==sseSplit)
+	elseif case2 
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,feature_column_id,moments_per_pdaclass)
-	elseif (crit_type==PoissonDevianceSplit||crit_type==GammaDevianceSplit||crit_type==NormalDevianceDifferenceToMeanFitWEIGHTEDSplit)
+	elseif case1b 
 		tmpres=calculateSplitValue(crit,fname,number_of_num_features,labellist,sumnumerator,sumdenominator,sumweight,countlistfloat,minweight,subs,numerator,denominator,pointwiseRatio,weight,trnfeatures,feature_column_id)
     end
     
