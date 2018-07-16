@@ -78,8 +78,8 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
         
         #calc some 'stats of stats'
         col_rng_stats=2:size(statsdf,2)    
-        means=map(x->mean(statsdf[x]),col_rng_stats)
-        medians=map(x->median(statsdf[x]),col_rng_stats)
+        means=map(x->Statistics.mean(statsdf[x]),col_rng_stats)
+        medians=map(x->Statistics.median(statsdf[x]),col_rng_stats)
         mins=map(x->minimum(statsdf[x]),col_rng_stats)
         maxs=map(x->maximum(statsdf[x]),col_rng_stats)
         stds=map(x->StatsBase.std(statsdf[x]),col_rng_stats)

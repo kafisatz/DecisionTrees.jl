@@ -1271,8 +1271,8 @@ function corw(x::Array{T,1},y::Array{U,1},wvec::W) where {T <: Number,U <: Numbe
   #todo this can be done more efficiently
   #soon it will probably be available in StatsBase or in some other package
   w=wvec.values
-  meanwx=mean(x,wvec)
-  meanwy=mean(y,wvec)
+  meanwx=Statistics.mean(x,wvec)
+  meanwy=Statistics.mean(y,wvec)
   #xbar=x.-meanwx
   #ybar=y.-meanwy
   res=corwInternal(w,x,y,meanwx,meanwy)
@@ -1308,17 +1308,17 @@ function calcErrorStats(fitted::Array{Float64,1},actual::Array{Float64,1},weight
 		diff=fitted.-actual
 	#least squares devaiation, mean square error
 		msevec=abs2(diff)
-		mse=mean(msevec,weightVec)
+		mse=Statistics.mean(msevec,weightVec)
 	#average deviation, mean absolute error
 		maevec=abs(diff)
-		mae=mean(maevec,weightVec)
+		mae=Statistics.mean(maevec,weightVec)
 	#relative squared error,mean realtive squared error
 		diffRel=diff./fitted
 		mrsevec=abs2(diffRel)
-		mrse=mean(mrsevec,weightVec)
+		mrse=Statistics.mean(mrsevec,weightVec)
 	#relative absolute deviation, mean relative absolute error
 		mraevec=abs(diffRel)
-		mrae=mean(mraevec,weightVec)
+		mrae=Statistics.mean(mraevec,weightVec)
 	#Pearson product moment correlation / correlation coefficient
 		pearsoncorrelation=corw(fitted,actual,weightVec)
 		res=ErrorStats(mse,mae,mrse,mrae,pearsoncorrelation)
@@ -1807,10 +1807,10 @@ function defineCandidates(feature_column,maxSplittingPoints::Int,fw::T;topAndBot
     #step 1: get quantiles of data
     local domain_i
     if method=="equalWeight"
-        domain_i = unique(quantile(feature_column, range(topAndBottomCutoff/Float64(maxSplittingPoints), stop=1.0-topAndBottomCutoff/Float64(maxSplittingPoints), length=maxSplittingPoints)))
+        domain_i = unique(Statistics.quantile(feature_column, range(topAndBottomCutoff/Float64(maxSplittingPoints), stop=1.0-topAndBottomCutoff/Float64(maxSplittingPoints), length=maxSplittingPoints)))
     else 
         #wt=fweights
-        domain_i = unique(StatsBase.quantile(feature_column, fw,range(topAndBottomCutoff/Float64(maxSplittingPoints), stop=1.0-topAndBottomCutoff/Float64(maxSplittingPoints), length=maxSplittingPoints)))  
+        domain_i = unique(StatsBase.Statistics.quantile(feature_column, fw,range(topAndBottomCutoff/Float64(maxSplittingPoints), stop=1.0-topAndBottomCutoff/Float64(maxSplittingPoints), length=maxSplittingPoints)))  
     end
 	@assert size(domain_i,1)<=maxSplittingPoints #that should not happen
 
@@ -2056,7 +2056,7 @@ function calc_sum_squares(num_actual,num_estimate,denom)
 	@assert length(num_estimate)==length(num_actual)==length(denom)
 	sstot=0.0;ssres=0.0;sstot_ratio=0.0;ssres_ratio=0.0
 	sz=length(num_actual)
-	mean_act=mean(num_actual)
+	mean_act=Statistics.mean(num_actual)
 	mean_ratio_pointwise=0.0	
 	for i=1:sz
 		@inbounds mean_ratio_pointwise += ifelse(denom[i]==0.0,0.0,num_actual[i]/denom[i])
@@ -2702,7 +2702,7 @@ function rand_bool_idx(n::Int,p::Float64)
 end
 
 #function dynamic_increment(residuals::Array{Float64,1},current_mdf::Float64,ranks_lost_pct::Float64,variable_mdf_pct::Float64)
-#    incr=quantile(residuals,ranks_lost_pct)
+#    incr=Statistics.quantile(residuals,ranks_lost_pct)
 #    incr*=variable_mdf_pct
 #  return incr
 #end
@@ -3472,11 +3472,11 @@ return result
 end
 
 #Statistics
-mean(tree::Tree)=mean(tree.rootnode)
-function mean(tree::Node{T}) where T<:Unsigned  
-return ((nodesize(tree.left)*mean(tree.left)+nodesize(tree.right)*mean(tree.right))/nodesize(tree))
+Statistics.mean(tree::Tree)=Statistics.mean(tree.rootnode)
+function Statistics.mean(tree::Node{T}) where T<:Unsigned  
+return ((nodesize(tree.left)*Statistics.mean(tree.left)+nodesize(tree.right)*Statistics.mean(tree.right))/nodesize(tree))
 end
-mean(tree::Leaf)=tree.mean
+Statistics.mean(tree::Leaf)=tree.mean
 
 fittedratio(tree::Tree)=fittedratio(tree.rootnode)
 function fittedratio(tree::Node{T}) where T<:Unsigned 
@@ -4025,7 +4025,7 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	#cumulativeToIncremental!(obsPerScore)
 	#cumulativeToIncremental!(vectorWeightPerScore)        
         
-    qtls=quantile(raw_rel_srt,StatsBase.fweights(weight_srt),range(1/nScores,stop=1,length=nScores))
+    qtls=Statistics.quantile(raw_rel_srt,StatsBase.fweights(weight_srt),range(1/nScores,stop=1,length=nScores))
     qtls=unique(qtls)
     nscoresPotentiallyReducedTWOTimes=length(qtls)
     obsPerScore=zeros(Int,nscoresPotentiallyReducedTWOTimes)

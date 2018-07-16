@@ -133,8 +133,8 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     
     #calc some 'stats of stats'
     col_rng_stats=2:size(statsdf,2)    
-    means=map(x->mean(statsdf[x]),col_rng_stats)
-    medians=map(x->median(statsdf[x]),col_rng_stats)
+    means=map(x->Statistics.mean(statsdf[x]),col_rng_stats)
+    medians=map(x->Statistics.median(statsdf[x]),col_rng_stats)
     mins=map(x->minimum(statsdf[x]),col_rng_stats)
     maxs=map(x->maximum(statsdf[x]),col_rng_stats)
     stds=map(x->StatsBase.std(statsdf[x]),col_rng_stats)
@@ -289,8 +289,8 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         
         #calc some 'stats of stats'
         col_rng_stats=2:size(statsdf,2)    
-        means=map(x->mean(statsdf[x]),col_rng_stats)
-        medians=map(x->median(statsdf[x]),col_rng_stats)
+        means=map(x->Statistics.mean(statsdf[x]),col_rng_stats)
+        medians=map(x->Statistics.median(statsdf[x]),col_rng_stats)
         mins=map(x->minimum(statsdf[x]),col_rng_stats)
         maxs=map(x->maximum(statsdf[x]),col_rng_stats)
         stds=map(x->StatsBase.std(statsdf[x]),col_rng_stats)

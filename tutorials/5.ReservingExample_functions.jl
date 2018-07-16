@@ -111,7 +111,7 @@ function getcorrectedQuantilesOfError(estPerRow,truthPerRow,qtl_range,CLTotalUlt
     #@show sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate
     @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
     errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
-    return quantile(errPerRowCorrected,qtl_range)    
+    return Statistics.quantile(errPerRowCorrected,qtl_range)    
 end
 
 function checkIfPaymentsAreIncreasing(data)

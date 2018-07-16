@@ -24,7 +24,7 @@ function _minimize_lost_ranks_maximize_5pct(labels::Array{Float64,1}, labels_ori
     labelsr=labels[!idx] #this creates a copy of the array which is very inefficient
     countl=sum(idx)
     countr=sz-countl
-return max(quantile(labelsl,0.05),quantile(labelsr,0.05)),Float64(countl),Float64(countr)
+return max(Statistics.quantile(labelsl,0.05),Statistics.quantile(labelsr,0.05)),Float64(countl),Float64(countr)
 end
 
 function _minimize_lost_ranks_maximize_minresidual(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int,moderationfactor::Float64)

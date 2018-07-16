@@ -19,7 +19,7 @@ function partialDependence(mdl::Tree,dtmtable;thisIdx::Vector{Int}=dtmtable.trni
         for i=1:length(pool)
             copyOfFeatures[thisFeature].=pool[i]        
             DecisionTrees.apply_tree_by_leaf_iteration!(idx,mdl.rootnode,copyOfFeatures,fitReused,leafnrsReused) 
-            predictedValues[i]=mean(fitReused)
+            predictedValues[i]=Statistics.mean(fitReused)
         end
         #save result in dict
         df1=DataFrame(Values=deepcopy(pool),AveragePredictions=copy(predictedValues))
@@ -50,7 +50,7 @@ function partialDependence(mdl::BoostedTree,dtmtable;fitSelection=:RawEstimate,t
         for i=1:length(pool)
             copyOfFeatures[thisFeature].=pool[i]        
             result=predict(mdl,copyOfFeatures)            
-            predictedValues[i]=mean(result[fitSelection])  
+            predictedValues[i]=Statistics.mean(result[fitSelection])  
         end
         #save result in dict
         df1=DataFrame(Values=deepcopy(pool),AveragePredictions=copy(predictedValues))

@@ -174,7 +174,7 @@ vectorWeightPerScore=Array{Float64}(nscoresPotentiallyReduced)
 
 
     @show xxx.-weight_srt
-    median(xxx)
+    Statistics.median(xxx)
     maximum(xxx)
 
     relativitiesSorted[95002]

@@ -6,6 +6,7 @@ import DataFrames: DataFrame
 import Random
 import OnlineStats
 import StatsBase
+using Statistics
 using Test 
 using DecisionTrees 
 

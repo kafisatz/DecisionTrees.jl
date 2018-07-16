@@ -46,10 +46,10 @@ function test_mean_and_var_merge(nloops,sizeofVectors)
         ratioOfND=num./denom
         #@show ratioOfND[trni]
         #@show total 
-        #@show mean(ratioOfND[trni]),total.stats[1].μ
+        #@show Statistics.mean(ratioOfND[trni]),total.stats[1].μ
         #@show StatsBase.var(ratioOfND[trni]),total.stats[2].σ2
         if length(trni)>0
-            @test isapprox(mean(view(ratioOfND,trni)),total.stats[1].μ)
+            @test isapprox(Statistics.mean(view(ratioOfND,trni)),total.stats[1].μ)
             @test isapprox(StatsBase.var(view(ratioOfND,trni),corrected=false),total.stats[2].σ2)
         end
     end
@@ -106,11 +106,11 @@ function test_mean_and_var_UNmerge(nloops,sizeofVectors)
             #=
             @show valuesRemaining
             @show reducedTotal 
-            @show mean(valuesRemaining),reducedTotal.stats[1].μ
+            @show Statistics.mean(valuesRemaining),reducedTotal.stats[1].μ
             @show StatsBase.var(valuesRemaining),reducedTotal.stats[2].σ2
             =#
             if length(trni)>0
-                @test isapprox(mean(valuesRemaining),reducedTotal.stats[1].μ)
+                @test isapprox(Statistics.mean(valuesRemaining),reducedTotal.stats[1].μ)
                 @test isapprox(StatsBase.var(valuesRemaining,corrected=false),reducedTotal.stats[2].σ2,rtol=1e-4)
             #    @show eltype(pd),pick
             end

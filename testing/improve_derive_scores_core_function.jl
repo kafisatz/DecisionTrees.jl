@@ -101,9 +101,9 @@ wperscore=wtot/nScores
 
 #@code_warntype derive_scores_main_aggregation_step!(nScores,wperscore,relativitiesSorted,weight_srt,scoreEndPoints,vectorWeightPerScore)
 
-#@btime quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nScores,stop=1-1/nScores,length=nScores))
+#@btime Statistics.quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nScores,stop=1-1/nScores,length=nScores))
 
-qtls=quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nScores,stop=1,length=nScores))
+qtls=Statistics.quantile(relativitiesSorted,StatsBase.fweights(weight_srt),range(1/nScores,stop=1,length=nScores))
 qtls=unique(qtls)
 nscoresPotentiallyReducedTWOTimes=length(qtls)
 obsPerScore=zeros(Int,nscoresPotentiallyReducedTWOTimes)

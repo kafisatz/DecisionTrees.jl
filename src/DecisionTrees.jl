@@ -30,6 +30,7 @@ import .PooledArraysDTM: PooledArray
 
 import Core 
 import Dates
+import Statistics
 import Random
 import Distributed
 import DelimitedFiles
