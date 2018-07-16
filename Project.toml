@@ -1,3 +1,8 @@
+authors = ["bernhard.koenig"]
+name = "DecisionTrees"
+uuid = "5a283280-6d82-11e8-2283-f1ea5a810282"
+version = "0.0.1"
+
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
