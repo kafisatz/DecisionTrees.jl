@@ -52,8 +52,8 @@ function calculateSplitValue(a::sseSplit,fname::Symbol,number_of_char_features::
       end
         if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
           #vold=valnew
-          @inbounds varl=momentsl.m2
-          @inbounds varr=momentsr.m2
+          varl=momentsl.m2
+          varr=momentsr.m2
           #@show fname,sumwl,weighttot-sumwl
           valnew = -(varl+varr)
           #if vold==valnew;@show i,valnew,sumnl,sumdl;end;
@@ -123,8 +123,8 @@ chosen_sumwl=NaN
   end
     if (sumwl>minweight)&&(weighttot_minw>sumwl) #do we have enough exposure? is the split valid?
 	  #vold=valnew
-      @inbounds varl=momentsl.var
-      @inbounds varr=momentsr.var
+      varl=momentsl.var
+      varr=momentsr.var
 	  #@show fname,sumwl,weighttot-sumwl
       valnew = -(varl+varr)
       #if vold==valnew;@show i,valnew,sumnl,sumdl;end;

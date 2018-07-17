@@ -18,7 +18,7 @@ Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
 Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggregate
 
-@time Distributed.@everywhere using DecisionTrees #200 seconds in 0.7beta INCLUDING precompilation (124s w/o precompilation) times are for my notebook (precompilation allocates 20GB of memory?)
+@time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time here 
 
 #folderForOutput="C:\\temp\\"
 folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180711\\"
@@ -45,7 +45,7 @@ fullData[:trnValCol]=trnValCol
 @warn("We may want to redo the whole calculation with no validation data -> the CL factors will be based on all of the data (not only the training porportion).")
 
 #The data should match this total for the column Paycum11
-expectedSum=9061763108 
+expectedSum=9061763108
 @assert sum(fullData[:PayCum11])==expectedSum "Expected $(expectedSum), have: $(sum(fullData[:PayCum11]))"
 #The data is described in the paper mentioned above
 
@@ -225,18 +225,18 @@ while (selectedWeight < 130000)
 end
    
 ldfYear=1
-    selectedWeight=130000
-    settC=deepcopy(sett)
-    updateSettingsMod!(settC,crit="msePointwise")
-    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
-    0
+selectedWeight=130000
+settC=deepcopy(sett)
+updateSettingsMod!(settC,crit="msePointwise")
+resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
+0
 
-    ldfYear=1
-    selectedWeight=130000
-    settC=deepcopy(sett)
-    updateSettingsMod!(settC,crit="gamma")
-    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
-    0
+ldfYear=1
+selectedWeight=130000
+settC=deepcopy(sett)
+updateSettingsMod!(settC,crit="gamma")
+resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
+0
 
 #actual model run (this may take a few minutes)
 @time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
