@@ -114,7 +114,8 @@ maxAY=maximum(ayears)
     #map(x->sum(fullData[.!indexOfClaimIsReportedByYE2005,x]),paycumcolumns)
     #aggregate(df,:someColumn,[sum, mean])    
     dtmKnownByYE2005,sett,dfpreppedUnused=prepare_dataframe_for_dtm!(dataKnownByYE2005,keycol="ClNr",numcol="PayCum00",trnvalcol="trnValCol",independent_vars=selected_explanatory_vars,treat_as_categorical_variable=categoricalVars);
-
+    #define general model settings
+    updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
     #a note on the data
     #dataKnownByYE2005 is a DataFrame (it contains more data such as all PayCum columns and the AY)
     #dtmKnownByYE2005 is a DTMTable object (it has a different structre than the DataFrame)    
@@ -188,7 +189,7 @@ clPerLOB["4"]=clLOB4
 modelsWeightsPerLDF=Vector{Vector{Float64}}()
 #the values were selected by expert judgement
 #primarily we considered reversals (i.e when the observed ratio in the validation data is not monotonic in the number of leaves (as the leaf number is defined such that the training observed ratios are increasing))
-push!(modelsWeightsPerLDF,[80000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
+push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
 #slightly more conservative version
 #push!(modelsWeightsPerLDF,[80000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
 #alternative
@@ -209,10 +210,34 @@ end
 treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 
-#todo consider mse and sse
-selectedWeight=50000
-while (selectedWeight < 130000)
+folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180717_sse\\"
+folderForOutput="c:\\temP\\32\\"
+@assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
+#actual model run (this may take a few minutes)
+updateSettingsMod!(sett,crit="sse",model_type="build_tree")
+@time sse_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+
+#boosted model
+updateSettingsMod!(sett,crit="sse",iterations=1*2+0*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
+@time ldfArr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+
+#=    s
+
+NN=20
+sse_ldfarr[1:NN,1]
+ldfArr[1:NN,1]
     ldfYear=1
+    selectedWeight=130000
+    settC=deepcopy(sett)
+    updateSettingsMod!(settC,crit="mse")
+    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
+    0
+
+
+#todo consider mse and sse
+selectedWeight=150000
+while (selectedWeight < 180000)
+    ldfYear=2
     #selectedWeight=130000
     settC=deepcopy(sett)
     updateSettingsMod!(settC,crit="mse")
@@ -225,10 +250,13 @@ while (selectedWeight < 130000)
 end
    
 ldfYear=1
-selectedWeight=130000
+selectedWeight=170000
 settC=deepcopy(sett)
-updateSettingsMod!(settC,crit="msePointwise")
+updateSettingsMod!(settC,crit="difference",iterations=8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
 resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
+dfpred=predict(resM,dtmKnownByYE2005.features)  
+fittedValues=dfpred[:RawEstimate]
+@show mean(fittedValues),median(fittedValues)
 0
 
 ldfYear=1
@@ -238,32 +266,7 @@ updateSettingsMod!(settC,crit="gamma")
 resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
 0
 
-#actual model run (this may take a few minutes)
-@time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
-
-settC=deepcopy(sett)
-updateSettingsMod!(settC,crit="mse")
-folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180711_mse_not_weighted\\"
-folderForOutput="c:\\temP\\331\\"
-@assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
-@time runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);    
-
-#=    
-    ldfYear=1
-    selectedWeight=130000
-    settC=deepcopy(sett)
-    updateSettingsMod!(settC,crit="mse")
-    resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
-    0
-=#
-
-#define  struct to hold resulting data
-struct ModelStats
-    comparisonByAY::DataFrame
-    comparisonByLOB::Dict
-    absErrorsByAY::Array 
-    comparisons::Dict
-end
+    =#
 
 #compare results (CL versus Tree versus Truth)
 modelIndices=sort(collect(keys(treeResultsAgg)))
@@ -276,6 +279,10 @@ for thiskey in modelIndices
     @show deltaTotalPerLOB
     modelStatistics[thiskey]=obj
 end
+
+#write whole table to csv file
+summaryByVar=vcat(collect(values(modelStatistics[1.0].comparisons)))
+CSV.write(string("C:\\temp\\results.csv"),summaryByVar)
 
 for kk in keys(modelStatistics)    
     @show kk

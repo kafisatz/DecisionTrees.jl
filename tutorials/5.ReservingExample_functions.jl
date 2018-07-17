@@ -1,4 +1,12 @@
 
+#define  struct to hold resulting data
+struct ModelStats
+    comparisonByAY::DataFrame
+    comparisonByLOB::Dict
+    absErrorsByAY::Array 
+    comparisons::Dict
+end
+
 function buildTriangle(data;rowIdentifier=:AY,columns=[Symbol(string("PayCum",lpad(string(i),2,"0"))) for i=0:11])
     res=DataFrames.aggregate(data[vcat(columns,rowIdentifier)],rowIdentifier,sum);
     res2=convert(Array,res)
@@ -129,7 +137,7 @@ end
 
 
 
-function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;writeResultToTemp=false)
+function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;writeResultToTemp=true)
     #NOTE: this function is using several global variables!
 
     #overall Result
@@ -186,11 +194,22 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
         #sort the table
         if !isa(comparison[1,Symbol(vv)],Number)
             comparison[:sort]=Meta.parse.(comparison[Symbol(vv)])
-            sort!(comparison,:sort)
-        end
+        else 
+            comparison[:sort]=deepcopy(comparison[Symbol(vv)])
+        end 
+        sort!(comparison,:sort)
+        #add variable name column
+        comparison[:variable]=vv        
+        comparison[:value]=string.(comparison[Symbol(vv)])
+        delete!(comparison, Symbol(vv))
+        #reorder columns
+        comparison = comparison[[7,1,2,3,4,5,6]]
+        
         comparisons[vv]=deepcopy(comparison)
         if writeResultToTemp
-            CSV.write(string("C:\\temp\\",vv,".csv"),comparison)
+            if (isdir("C:\\temp\\"))
+                CSV.write(string("C:\\temp\\",vv,".csv"),comparison)
+            end
         end
         println(vv," : ",ceil(Int,sum(abs.(comparison[Symbol("True Outstanding Amount")].-comparison[Symbol("Estimated Reserves")]))/1000))
     end
@@ -209,6 +228,8 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
     #array of LDFs
     LDFArray=zeros(size(dataKnownByYE2005,1),length(ayears))
     LDFArray[:,end].=1.0 #tail factor 1.0
+    LDFArraySmoohted=deepcopy(LDFArray)
+    LDFArrayUnSmoohted=deepcopy(LDFArray)
         
     for minWeightPerLDF in modelsWeightsPerLDF
         fill!(LDFArray,0.0)
@@ -221,20 +242,36 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
         
             resultingFiles,resM=runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput,settOrig)
             #apply tree to the known claims
-            fittedValues,leafNrs=predict(resM,dtmKnownByYE2005.features)            
+            if sett.model_type=="build_tree"
+                fittedValues,leafNrs=predict(resM,dtmKnownByYE2005.features)  
+            else
+                dfpred=predict(resM,dtmKnownByYE2005.features)  
+                fittedValues=dfpred[:RawEstimate]                                
+                LDFArraySmoohted[:,ldfYear].=dfpred[:SmoothedEstimate]
+                LDFArrayUnSmoohted[:,ldfYear].=dfpred[:UnsmoothedEstimate]
+            end           
             #save estimated ldf per observation 
             LDFArray[:,ldfYear].=copy(fittedValues)
         end   
 
     #consider estimated ultimates per claim 
-    estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)
-    
-    treeResults[kk]=deepcopy(estPerRow)    
+    estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)    
+    treeResults[kk]=deepcopy(estPerRow)
     treeResultsAgg[kk]=deepcopy(estAgg)
+    #for boosting also store the other estimates
+    if !(sett.model_type=="build_tree")
+        estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArraySmoohted,clAllLOBs,paidToDatePerRow)    
+        treeResults[kk+0.2]=deepcopy(estPerRow)
+        treeResultsAgg[kk+0.2]=deepcopy(estAgg)
+        estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArrayUnSmoohted,clAllLOBs,paidToDatePerRow)    
+        treeResults[kk+0.2]=deepcopy(estPerRow)
+        treeResultsAgg[kk+0.2]=deepcopy(estAgg)
+        
+    end
 
     end 
 
-return nothing
+return LDFArray
 end 
 
 function runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput,settOrig::ModelSettings)    
@@ -259,8 +296,8 @@ function runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYea
     
     sett=deepcopy(settOrig)
     critSTR=string(sett.crit)[15:22]
-    updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,minWeight=selectedWeight,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
-    resultingFiles,resM=dtm(dtmSubset,sett,file=joinpath(folderForOutput,string("LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
+    updateSettingsMod!(sett,minWeight=selectedWeight)
+    resultingFiles,resM=dtm(dtmSubset,sett,file=joinpath(folderForOutput,string(sett.model_type[1:7],"_LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
     
     return resultingFiles,resM
 end

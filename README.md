@@ -51,6 +51,7 @@ There are likely use cases in other areas, which have a similar problem setting.
 * Clean up the naming convention of the field names of ModelSettings (bool_xy, BoolXY, ...)
 * Revise and DataStreams are in the Project.toml file but not specifically needed for the package. However we are having issues with the package manager in 0.7 alpha and beta (for now). Having the two packages in the Project file solves these issues.
 * Pruning (manual pruning: add a function prune_leaf(model,leafnrs::Vector{Int}); automated pruning based on some performance metric (on trn or val data))
+* consider threading and simd to improve performance
 
 Also: 
 * To fix this: the code should not rely on dtmtable.mappings and dtmtable.candmatwomax any more (if possible). The pools have the equivalent information
