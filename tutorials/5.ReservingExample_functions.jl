@@ -264,9 +264,8 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
         treeResults[kk+0.2]=deepcopy(estPerRow)
         treeResultsAgg[kk+0.2]=deepcopy(estAgg)
         estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArrayUnSmoohted,clAllLOBs,paidToDatePerRow)    
-        treeResults[kk+0.2]=deepcopy(estPerRow)
-        treeResultsAgg[kk+0.2]=deepcopy(estAgg)
-        
+        treeResults[kk+0.4]=deepcopy(estPerRow)
+        treeResultsAgg[kk+0.4]=deepcopy(estAgg)        
     end
 
     end 

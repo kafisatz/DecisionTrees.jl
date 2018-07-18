@@ -11,7 +11,7 @@
     ###            SSRN Manuscript ID 3130560.                   ###  
     ###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
 
-using Distributed
+import Distributed
 import Random
 import DelimitedFiles
 Distributed.@everywhere import CSV
@@ -211,14 +211,14 @@ treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 
 folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180717_sse\\"
-folderForOutput="c:\\temP\\32\\"
+folderForOutput="c:\\temp\\32\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #actual model run (this may take a few minutes)
 updateSettingsMod!(sett,crit="sse",model_type="build_tree")
 @time sse_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
 #boosted model
-updateSettingsMod!(sett,crit="sse",iterations=1*2+0*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
+updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
 @time ldfArr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
 #=    s
@@ -283,6 +283,12 @@ end
 #write whole table to csv file
 summaryByVar=vcat(collect(values(modelStatistics[1.0].comparisons)))
 CSV.write(string("C:\\temp\\results.csv"),summaryByVar)
+
+summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
+CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
+
+summaryByVar=vcat(collect(values(modelStatistics[1.4].comparisons)))
+CSV.write(string("C:\\temp\\results4.csv"),summaryByVar)
 
 for kk in keys(modelStatistics)    
     @show kk
