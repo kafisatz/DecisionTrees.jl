@@ -191,9 +191,11 @@ version = "0.5.6"
 
 [[PyCall]]
 deps = ["Compat", "Conda", "MacroTools", "VersionParsing"]
-git-tree-sha1 = "dcb6e67213f812d75100cbf87e9c0fd6aebc01f5"
+git-tree-sha1 = "21e3b091c9c954ebcdc96738df69f4e73788217c"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaPy/PyCall.jl.git"
 uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
-version = "1.17.1"
+version = "1.17.1+"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets"]
