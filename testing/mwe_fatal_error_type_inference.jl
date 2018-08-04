@@ -32,6 +32,7 @@ pwd()
 @warn("""This assumes pwd() == Pkg.dir("DecisionTrees.jl")""") 
 datafile=joinpath("data","freMTPL2","freMTPL2.csv")
 if Sys.islinux()
+    #trying to unzip the file...
     pathToZip=string(splitext(datafile)[1],".zip") 
     unzipLoc=splitdir(pathToZip)[1]
     cmd=`unzip $(pathToZip) -d $(unzipLoc)`
