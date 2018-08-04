@@ -3,9 +3,10 @@
 using DecisionTree
 using ScikitLearn
 using PyPlot
+using Random
 
 # Create a random dataset
-srand(42)
+Random.seed!(42)
 X = sort(5 * rand(80))
 XX = reshape(X, 80, 1)
 y = sin.(X)

@@ -119,7 +119,7 @@ function test_mean_and_var_UNmerge(nloops,sizeofVectors)
       return nothing 
 
       end
-Random.srand(99231)
+Random.seed!(99231)
 test_mean_and_var_merge(1000,1000)
 test_mean_and_var_UNmerge(1000,1000)
 #@benchmark test_mean_and_var_UNmerge(10,100)

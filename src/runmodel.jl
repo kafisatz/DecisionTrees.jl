@@ -455,7 +455,7 @@ for x=1:size(features,2)
 	s00=hash(features[x],s00)
 end
 srandInt=floor(Int,1/3*hash(931,s00))
-Random.srand(srandInt)
+Random.seed!(srandInt)
 
 if sett.subsampling_prop <1.0 
 	@warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")

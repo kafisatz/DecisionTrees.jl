@@ -221,7 +221,7 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
 function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,settOrig::ModelSettings)
 
     kk=0
-    Random.srand(1240)
+    Random.seed!(1240)
     ayears=sort(unique(dataKnownByYE2005[:AY]))
     maxAY=maximum(ayears)
     

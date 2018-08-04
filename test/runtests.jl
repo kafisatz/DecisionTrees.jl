@@ -27,7 +27,7 @@ else
 end
 datadir=joinpath(pkgdir,"data")
 
-Random.srand(1239946)
+Random.seed!(1239946)
 DecisionTreesTests = @testset "DecisionTrees" begin
     t0runtests=time_ns()
     println("DTM: Running tests...") # Time = $(t0runtests)")

@@ -2,7 +2,7 @@ __precompile__()
 true
 
 #DTM is used as an abbreviation for DecisionTreeModels
-@warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou may want to start julia with --depwarn=no option (in case there are still deprecation warnings in this package or its dependencies). I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
+#@warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou may want to start julia with --depwarn=no option (in case there are still deprecation warnings in this package or its dependencies). I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
 
 #=
 @info "DTM: BK Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
@@ -45,7 +45,7 @@ import DataStreams #We do not really need DataStreams (explicitly) but CSV keeps
 #import MySQL, # temporarily disabled 
 #import SQLite #disabled as it uses DataFrames 0.11
 
-Random.srand(1234)
+Random.seed!(1234)
 
 #include("check_if_python_packages_are_installed.jl")
 include("types.jl")

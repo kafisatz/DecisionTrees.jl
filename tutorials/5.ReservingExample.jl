@@ -38,7 +38,7 @@ elt=vcat(elt,repeat([Float64],12))
 
 #Define a random split into training and validation data 
 #training shall be 70% of the data
-Random.srand(1239)
+Random.seed!(1239)
 trnValCol=BitArray(rand() < 0.7 for x in 1:size(fullData,1));
 fullData[:trnValCol]=trnValCol
 

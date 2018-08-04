@@ -8,7 +8,7 @@ function dtm(dtmtable::DTMTable,settingsVector::Vector{ModelSettings};file::Stri
     nSettings=length(settingsVector)
 
     intDatahash = floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
-    Random.srand(intDatahash)
+    Random.seed!(intDatahash)
     
    #initialize variables
         path_and_fn_wo_extension="some"

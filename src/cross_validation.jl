@@ -28,7 +28,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
 #set rnd state to make this function reporducible (irrespective of trn/val idx)
 #Random.srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
 	intDatahash = floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
-    Random.srand(intDatahash)
+    Random.seed!(intDatahash)
     
 #1. sample Data
     size_which_is_sampled=0
@@ -196,7 +196,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
     #set rnd state to make this function reporducible (irrespective of trn/val idx)
     #Random.srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
     intDatahash = floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
-    Random.srand(intDatahash)
+    Random.seed!(intDatahash)
     
     #1. sample Data
         size_which_is_sampled=0
