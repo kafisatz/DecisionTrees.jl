@@ -43,7 +43,8 @@ dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_
 @test_throws ErrorException prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["does_not_exist","PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
 
 #@test_throws Base.UVError prepare_dataframe_for_dtm!(df_tmp,directory="K:\\does_not_existIUDFLKJSDFEAA\\aaEFIEF_EFDXxT\\",treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
-@test_throws AssertionError prepare_dataframe_for_dtm!(df_tmp,directory="K:\\does_not_existIUDFLKJSDFEAA\\aaEFIEF_EFDXxT\\",treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
+#@test_throws AssertionError prepare_dataframe_for_dtm!(df_tmp,directory="K:\\does_not_existIUDFLKJSDFEAA\\aaEFIEF_EFDXxT\\",treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
+@test_throws Base.IOError prepare_dataframe_for_dtm!(df_tmp,directory="K:\\does_not_existIUDFLKJSDFEAA\\aaEFIEF_EFDXxT\\",treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
 
 @test_throws AssertionError prepare_dataframe_for_dtm!(df_tmp,valpct=-22.1,treat_as_categorical_variable=["PLZ_WOHNORT"],numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
 

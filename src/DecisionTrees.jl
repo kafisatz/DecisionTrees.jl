@@ -1,5 +1,5 @@
-__precompile__()
-true
+#__precompile__()
+#true
 
 #DTM is used as an abbreviation for DecisionTreeModels
 #@warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou may want to start julia with --depwarn=no option (in case there are still deprecation warnings in this package or its dependencies). I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"

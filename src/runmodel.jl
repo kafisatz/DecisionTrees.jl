@@ -458,7 +458,7 @@ srandInt=floor(Int,1/3*hash(931,s00))
 Random.seed!(srandInt)
 
 if sett.subsampling_prop <1.0 
-	@warn("BK: subsampling_prop <1. This can be terribly slow in the current implementation (need to improve this)!")
+	@warn("BK: subsampling_prop <1. This might be slow in the current implementation!")
 end
 
 #there are at least two ways to derive estimates for hold out data: either loop through the leaves of the tree or loop over the rows of the validation data setting
