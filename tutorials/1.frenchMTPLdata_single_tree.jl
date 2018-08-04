@@ -26,7 +26,7 @@ Distributed.@everywhere import DataFrames: DataFrame
 Distributed.@everywhere using DecisionTrees  #this may take some time
 
 tela = (time_ns()-t0)/1e9
-@show tela #precompilationcan take considerable time under Julia 0.7beta (up to 300 seconds in some cases (as ofJuly 3, 2018)) 
+@show tela #precompilation (first time usage) may take some time 
 
 
 ##############################
