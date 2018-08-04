@@ -62,10 +62,6 @@ dtmtable,sett,dfprepped=prepare_dataframe_for_dtm!(fullData,keycol="IDpol",trnva
     updateSettings!(sett,crit="sse",model_type="build_tree")
     resultingFiles,resM=dtm(dtmtable,sett)
 
-#this runs as expected
-    updateSettings!(sett,crit="sse",model_type="build_tree")
-    resultingFiles,resM=dtm(dtmtable,sett)
-
 #this one fails!
     updateSettings!(sett,crit="sse",model_type="boosted_tree")
     resultingFiles,resM=dtm(dtmtable,sett)
