@@ -20,7 +20,7 @@ uuid = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 version = "0.3.13"
 
 [[CodecZlib]]
-deps = ["BinaryProvider", "Compat", "Test", "TranscodingStreams"]
+deps = ["BinaryProvider", "Compat", "Libdl", "Test", "TranscodingStreams"]
 git-tree-sha1 = "82742ef572290f566c6fc6d977d87586a0d3d5f1"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.4.3"
@@ -219,9 +219,9 @@ version = "0.2.0"
 
 [[Revise]]
 deps = ["Distributed", "FileWatching", "InteractiveUtils", "LibGit2", "OrderedCollections", "Pkg", "REPL", "Random", "Test", "Unicode"]
-git-tree-sha1 = "bf6a48e92c09664ee472a8342591a17aa3e98a21"
+git-tree-sha1 = "29488a22f6ed69b86ab725be51298aa729881af3"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "0.6.3"
+version = "0.6.4"
 
 [[SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
@@ -267,10 +267,10 @@ deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[TranscodingStreams]]
-deps = ["Compat", "Pkg", "Random", "Test"]
-git-tree-sha1 = "9ace282f45e71d2fd3fcb752ca337452560f3108"
+deps = ["Pkg", "Random", "Test"]
+git-tree-sha1 = "530829b1099ad19067dad83d31f278cf81e68a51"
 uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
-version = "0.5.4"
+version = "0.6.1"
 
 [[UUIDs]]
 deps = ["Random"]
