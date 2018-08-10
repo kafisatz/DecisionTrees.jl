@@ -33,9 +33,11 @@ version = "1.0.1"
 
 [[Conda]]
 deps = ["Compat", "JSON", "VersionParsing"]
-git-tree-sha1 = "b76a441539d66a18ba34df28d34dc5b9202164a3"
+git-tree-sha1 = "a47f9a2c7b80095e6a935536795635522fe27f5d"
+repo-rev = "master"
+repo-url = "https://github.com/JuliaPy/Conda.jl.git"
 uuid = "8f4d0f93-b110-5947-807f-2305c1781a2d"
-version = "1.0.0"
+version = "1.0.0+"
 
 [[DataFrames]]
 deps = ["CategoricalArrays", "CodecZlib", "Compat", "DataStreams", "Dates", "InteractiveUtils", "LinearAlgebra", "Missings", "Pkg", "Printf", "Random", "Reexport", "SortingAlgorithms", "Statistics", "StatsBase", "Test", "TranscodingStreams", "Unicode", "WeakRefStrings"]
