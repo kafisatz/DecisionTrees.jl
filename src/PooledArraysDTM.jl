@@ -153,7 +153,7 @@ PooledArray(t::Type, r::Type{R}) where {R<:Integer} = PooledArray(Array(t,0), r)
 
 Base.size(pa::PooledArray) = size(pa.refs)
 Base.length(pa::PooledArray) = length(pa.refs)
-Base.endof(pa::PooledArray) = endof(pa.refs)
+#Base.endof(pa::PooledArray) = endof(pa.refs)
 
 Base.copy(pa::PooledArray) = PooledArray(RefArray(copy(pa.refs)), copy(pa.pool))
 # TODO: Implement copy_to()
