@@ -181,7 +181,7 @@ function Base.similar(pa::PooledArray{T,R}, S::Type, dims::Dims) where {T,R}
     PooledArray(RefArray(zeros(R, dims)), S[])
 end
 
-Base.find(pdv::PooledVector{Bool}) = findall(convert(Vector{Bool}, pdv, false))
+Base.findall(pdv::PooledVector{Bool}) = findall(convert(Vector{Bool}, pdv, false))
 
 ##############################################################################
 ##
@@ -401,7 +401,7 @@ end
 
 Base.pop!(pv::PooledVector) = pv.pool[pop!(pv.refs)]
 
-function Base.unshift!(pv::PooledVector{S,R}, v::T) where {S,R,T}
+function Base.pushfirst!(pv::PooledVector{S,R}, v::T) where {S,R,T}
     v = convert(S,v)
     pushfirst!(pv.refs, getpoolidx(pv, v))
     return v
