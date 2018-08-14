@@ -1,5 +1,3 @@
-__precompile__()
-
 module PooledArraysDTM
 # BK this is commit (the newer versions use Dicts instead of arrays for the pool which is not compatible with DTM)
 # https://github.com/JuliaComputing/PooledArrays.jl/tree/324263b39be8dc1982b0971f6031cbde92222268
