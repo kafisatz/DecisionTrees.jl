@@ -16,6 +16,8 @@ notifications:
   email: false
 script: 
   - export LLVM_ASSERTIONS=1
+  - export JULIA_LLVM_ARGS = -print-after-all
+  - export LLVM_DEBUG = 1
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - unzip /home/travis/build/kafisatz/DecisionTrees.jl/data/freMTPL2/freMTPL2.zip -d /home/travis/build/kafisatz/DecisionTrees.jl/data/freMTPL2/
   - julia -e '@assert isfile("data/freMTPL2/freMTPL2.csv")'
