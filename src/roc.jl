@@ -192,10 +192,10 @@ function Base.size(r::Roc, d::Integer)
     d==1 || error("Roc is a 1-dimensional structure")
     return length(r)
 end
-Base.start(r::Roc) = 1
-Base.done(r::Roc, state) = state>length(r)
-Base.endof(r::Roc) = length(r)
-Base.next(r::Roc, state) = (r[state], state+1)
+start(r::Roc) = 1
+done(r::Roc, state) = state>length(r)
+#Base.endof(r::Roc) = length(r)
+next(r::Roc, state) = (r[state], state+1)
 @inline iterate(x::Roc) = next(x, start(x))
 @inline iterate(x::Roc, i) = done(x, i) ? done : next(x, i)
 
