@@ -47,7 +47,7 @@ export mysortperm
 
 
 function mysortperm!(ii,A)
-    const n = length(A)
+    n = length(A)
    #ii = Array(Int,n)
 
    for i = 1:n
@@ -64,7 +64,7 @@ end # function mysortperm!
 
 
 function mysortperm(A)
-    const n = length(A)
+    n = length(A)
    ii = Array(Int,n)
 
    for i = 1:n

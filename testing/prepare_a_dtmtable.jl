@@ -1,4 +1,4 @@
-@assert VERSION>=v"0.7.0-beta" "Your Julia version does not satisfy the requirements for this package. You need to use Julia v0.7"
+@assert true "Your Julia version does not satisfy the requirements for this package. You need to use Julia v0.7"
 t0=time_ns()
 #cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 

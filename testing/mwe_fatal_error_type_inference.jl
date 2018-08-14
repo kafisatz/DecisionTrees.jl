@@ -15,7 +15,7 @@ Distributed.@everywhere using DecisionTrees
 #git clone --depth=50 --branch=master https://github.com/kafisatz/DecisionTrees.jl.git 
 #cd kafisatz/DecisionTrees.jl
 
-@assert VERSION>=v"0.7.0-rc2.0"
+@assert true
 
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
