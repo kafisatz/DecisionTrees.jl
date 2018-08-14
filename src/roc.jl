@@ -194,7 +194,6 @@ function Base.size(r::Roc, d::Integer)
 end
 start(r::Roc) = 1
 done(r::Roc, state) = state>length(r)
-#Base.endof(r::Roc) = length(r)
 next(r::Roc, state) = (r[state], state+1)
 @inline iterate(x::Roc) = next(x, start(x))
 @inline iterate(x::Roc, i) = done(x, i) ? done : next(x, i)
