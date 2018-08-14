@@ -1,5 +1,5 @@
 
-import Base: length,start,next,done,eltype,==,hash
+import Base: length,eltype,==,hash
 
 export updateSettings!,updateSettingsMod!
 export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree

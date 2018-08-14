@@ -1,5 +1,5 @@
 #from https://github.com/JuliaStats/MLBase.jl/blob/master/src/crossval.jl 
-import Base: start, next, done,length
+import Base: length
 
 abstract type CrossValGenerator end
 
