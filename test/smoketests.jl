@@ -25,10 +25,13 @@ mapToOther!(vnew,keep,9999999)
 ##################################################
 #Run Mini Tree
 ##################################################
-
+println("TMP:here0")
 dtmtableMini,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp[1:100,:],treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+println("TMP:here1")
 sett.minWeight=-.2
+println("TMP:here2")
 strs,resm=dtm(dtmtableMini,sett)
+println("TMP:here3")
 #boosting
 settB=deepcopy(sett)
 settB.model_type="boosted_tree"
@@ -39,7 +42,6 @@ strs,resm=dtm(dtmtableMini,settB)
 #run tree
 ##################################################
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
-println("TMP:hera")
 strs,resm=dtm(dtmtable,sett)
 @test typeof(resm.modelstats)==DataFrame
 @test 1==1

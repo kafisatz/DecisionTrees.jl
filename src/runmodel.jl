@@ -32,13 +32,12 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
     @assert isdir(directory)
     @assert in(methodForSplittingPointsSelection,globalConstAllowableMethodsForDefineCandidates)
 	@time (df_prepped,sett)=prepareDF!(dfin,treat_as_categorical_variable=treat_as_categorical_variable,numcol=numcol,denomcol=denomcol,weightcol=weightcol,trnvalcol=trnvalcol,valpct=valpct,keycol=keycol,independent_vars=independent_vars);
-println("TMP:hero1")
 	#set this to false
 		sett.saveJLDFile=false
 		
 	fn=joinpath(directory,"DTMResult.csv")
 	dtmtable=prep_data_from_df(df_prepped,sett,fn,methodForSplittingPointsSelection=methodForSplittingPointsSelection)
-println("TMP:hero2")
+    println("TMP:before return statement")
 	return dtmtable,sett,df_prepped
 end
 
@@ -139,7 +138,6 @@ removeUnionTypes!(dfin,independent_vars)
                 #@info "DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed."
             end
         end
-        println("TMP:x1")
         if is_categorical_column(dfin[this_name],this_name)
             push!(char_features,this_name)
         else
@@ -148,7 +146,6 @@ removeUnionTypes!(dfin,independent_vars)
 
     end
 
-println("TMP:x2")
 	@assert (length(char_features)+length(num_features)==n_indep) #this should always be the case!
 	n_char=length(char_features)
 	n_num=length(num_features)
@@ -162,7 +159,7 @@ println("TMP:x2")
     end
     
     this_sett=ModelSettings()
-println("TMP:x3")
+
     this_sett.df_name_vector=string.(names(dfres)[1+global_const_shift_cols:end])
     updateSettingsMod!(this_sett,number_of_num_features=n_num,number_of_char_features=n_char) 
     @info "Data initialization finished:"
@@ -170,7 +167,6 @@ println("TMP:x3")
     @show n_num,n_char
     @show char_features
     @show num_features
-    println("TMP:x4")
     return dfres,this_sett
 end
 
@@ -796,5 +792,6 @@ end #end distinction between three model types
 end
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
+    println("TMP:started this....")
     return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,file::String)
 end
