@@ -28,8 +28,6 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
 	
 	estimatedNumeratorForStats=zeros(obs)
-    #@show "obs original" 
-    #@show obs,size(features)
     indicatedRelativityForApplyTree_reused=zeros(obs)
 	reused_fitted_leafnr_vector=zeros(Int,obs)
     sortvec_reused_trn_only=zeros(Int,length(trnidx))
@@ -72,11 +70,11 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		if abs(sampleSizeCanBeNEGATIVE)<1
 			sampleSizeCanBeNEGATIVE=convert(Int,sign(sett.subsampling_prop))
 		end
-		abssampleSize,sampleVector=initBootstrapSample(sampleSizeCanBeNEGATIVE) #,trnidx,validx)	
-	for iter=1:iterations
+		abssampleSize,sampleVector=initBootstrapSample(sampleSizeCanBeNEGATIVE) #,trnidx,validx)
+
+        for iter=1:iterations
         @timeConditional(showTimeUsedByEachIteration, begin
 		#Build Iteration iter
-			#showTimeUsedByEachIteration&&println("Calculating iteration $(iter). Time: $(Dates.now())")
 			current_mdf=moderationvector[min(iter,size(moderationvector,1))] #mdf remains constant if a vector of size 1 was provided (instead of a vector of size iterations)			
 			
 			if showTimeUsedByEachIteration
@@ -86,8 +84,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 						tmpTree=sample_data_and_build_tree!(trnidx,validx,indicatedRelativityForApplyTree_reused,candMatWOMaxValues,mappings,deepcopy(sett),actualNumerator,estimatedNumerator,weight,features,sampleSizeCanBeNEGATIVE,abssampleSize,sampleVector,T_Uint8_or_UInt16)
 			end
 			#indicatedRelativity
-			#if (!sett.ignoreNegRelsBoosting)&&(minimum(indicatedRelativityForApplyTree_reused)<0.0)
-            if minimum(indicatedRelativityForApplyTree_reused)<0.0
+			if minimum(indicatedRelativityForApplyTree_reused)<0.0
 				#todo/tbd check this: if there are negative indicated relativites the boosting approach is not meaningful.
 				@warn("The boosting model encountered negative indicated realtivities for some leaves.")
 				@warn("This should not happen if you have only positive values for numerator and denominator.")
@@ -154,15 +151,15 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 				loc=string(excelLetter(size(cumulativeStatsPerScoreBand,2)+2),fristRowOfThisTable)				
 				thischart=defineRelativityChart(nameOfModelStatisticsSheet,nameOfModelStatisticsSheet,loc,size(statsThisIteration,1)-2,columnOfRelativityTrn,fristRowOfThisTable,xscale=2.0)
 				push!(xlData.charts,deepcopy(thischart))
-		end	)
+		end	) #end of @timeConditional
 		if showProgressBar_time #TimeUsedByEachIteration
 			ProgressMeter.next!(p)
 		end
     end
-	GC.enable(true)	#to check: is this needed? is there any benefit to it?
+	#GC.enable(true)	#to check: is this needed? is there any benefit to it?
 	#todo/tbd: note that we have at least three different estimates should we add all of them to the output?
 	
-	#one of these vectors is acutally identical to estFromScores and would not need to be recalculated
+	#one of these vectors is actually identical to estFromScores and would not need to be recalculated
 	estimatedRatioUnsmoothed=map_these_values(rawObservedRatioPerScore,scores)	
 	estimatedRatioSmoothed=map_these_values(MAPPINGSmoothedEstimatePerScore,scores)	
 	estimateRatioFromRelativities = currentRelativity.*trn_meanobservedvalue		
