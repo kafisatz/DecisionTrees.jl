@@ -40,7 +40,7 @@ import OnlineStats
 import ProgressMeter
 import StatsBase
 
-import DataStreams #We do not really need DataStreams (explicitly) but CSV keeps failing (in tests) if this is not here (on 0.7alpha)
+#import DataStreams #We do not really need DataStreams (explicitly) but CSV keeps failing (in tests) if this is not here (on 0.7alpha)
 
 #import MySQL, # temporarily disabled 
 #import SQLite #disabled as it uses DataFrames 0.11
