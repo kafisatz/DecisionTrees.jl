@@ -670,7 +670,13 @@ function checkIfSettingsAreValid(s::ModelSettings)
 		@assert length(s.df_name_vector)==(s.number_of_char_features+s.number_of_num_features)
 	end
     @assert in(s.performanceMeasure,global_statsperiter_header)
-
+    if (size(s.moderationvector,1)!=s.iterations && size(s.moderationvector,1)!=1)
+		@assert false "DTM: This should not have happend: size(moderationvector) is neither 1 nor #iterations"
+    end
+    @assert s.startAtMean "DTM: This is currently not working: please set startAtMean=true)"    
+    #@assert !s.BoolAdaptiveLearningRate "DTM: this is not yet updated to reflect numerator/denominator objectives!!"
+    @assert ((s.adaptiveLearningRate>=1.0)||(s.adaptiveLearningRate<=0.0)) "DTM: (adaptiveLearningRate is not in [0,1]). This is not yet updated to reflect numerator/denominator objectives!!"
+       
      return nothing
 end
 

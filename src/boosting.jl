@@ -15,9 +15,6 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
     #@show obsval,obstrn
 	current_error=0.0
     moderationfactor=moderationvector[1]
-	if (size(moderationvector,1)!=iterations && size(moderationvector,1)!=1)
-		error("DTM: This should not have happend: size(mdf_vector) is neither 1 nor #iterations")
-    end
 	if size(moderationvector,1)==1
 		actual_moderationvector=Array{Float64}(undef,iterations)
 		fill!(actual_moderationvector,copy(moderationvector[1]))
@@ -26,8 +23,6 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	end
 	if startAtMean
 		estimatedRatio=ones(length(weight)).*trn_meanobservedvalue
-	else
-		error("DTM: This is currently not working: please set startAtMean=true)")
 	end
 	
 	estimatedNumerator=estimatedRatio.*denominator #these are for instance the estimated losses for a LR model
@@ -63,7 +58,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
     p = ProgressMeter.Progress(iterations, 2, "Progress of Boosting Model:") # minimum update interval: x seconds (2)
     ((adaptiveLearningRate>=1.0)||(adaptiveLearningRate<=0.0)) ? (BoolAdaptiveLearningRate=false) : (BoolAdaptiveLearningRate=true)
 	#currently not supported
-		BoolAdaptiveLearningRate&&error("DTM: this is not yet updated to reflect numerator/denominator objectives!!")
+		#BoolAdaptiveLearningRate&&error("DTM: this is not yet updated to reflect numerator/denominator objectives!!")
 	#this header needs to be in line with the output of the function createTrnValStatsForThisIteration
 	statsPerIteration=global_statsperiter_header	
 	currentRelativity=Array{Float64}(undef,obs)
