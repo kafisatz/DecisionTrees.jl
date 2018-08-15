@@ -643,7 +643,8 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.writeTree
     
      if "boosted_tree"==sett.model_type
             @timeConditional(sett.print_details,begin
-            xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resulting_model=boosted_tree(dtmtable,sett)
+            resulting_model=EmptyEnsemble()
+            return filelistWithFilesToBeZipped,resulting_model   #this might fix the segfault (issue https://github.com/JuliaLang/julia/issues/28536), but it makes the package useless. #xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resulting_model=boosted_tree(dtmtable,sett)
             end)
             model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
             #this line is for  the sas,vba and csharp code
