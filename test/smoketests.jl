@@ -27,10 +27,12 @@ mapToOther!(vnew,keep,9999999)
 ##################################################
 dtmtableMini,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp[1:100,:],treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 sett.minWeight=-.2
+@info("DTM:Testing build tree (dtm mini)")
 strs,resm=dtm(dtmtableMini,sett)
 #boosting
 settB=deepcopy(sett)
 settB.model_type="boosted_tree"
+@info("DTM:Testing boosted tree (dtm mini)")
 strs,resm=dtm(dtmtableMini,settB)
 
 #selected_explanatory_vars=[    "VORSCHAEDEN_ANZAHL",    "MALLORCA_POLICE",	"SCHUTZBRIEF_INKL",	"FREIE_WERKSTATTWAHL",	"AUTOMOBILCLUB_MITGLIED_SEIT",	"BAHNCARD",	"ZAHLUNGSWEISE",	"JAHRESKARTE_OEPNV",	"MOTORRAD_BESITZER",	"AUTOMOBILCLUB",	"SFKLASSE_VOLLKASKO",	"SFKLASSE_HAFTPFLICHT",	"STELLPLATZ_ABSCHLIESSBAR",	"NAECHTLICHER_STELLPLATZ",	"NUTZUNGSWEISE",	"JAEHRLICHE_FAHRLEISTUNG",	"TSN",	"ERSTZULASSUNG",	"HSN",	"FINANZIERUNGSART",	"ZULASSUNG_AUF_VERSICHERUNGSNEHM",	"STADT",	"KENNZEICHEN",	"PLZ_DES_HALTER",	"SELBSTGENUTZTES_WOHNEIGENTUM",	"ART_DES_WOHNEIGENTUM",	"GEBURTSDATUM",	"FAMILIENSTAND",	"NATIONALITAET",	"GESCHLECHT",	"FUEHRERSCHEIN_ERWORBEN_AM",	"VORSCHAEDEN0_typeKH",	"VORSCHAEDEN0_typetk",	"VORSCHAEDEN0_month",	"VORSCHAEDEN0_year",	"VORSCHAEDEN1_typetk",	"VORSCHAEDEN1_month",	"VORSCHAEDEN1_year",	"VORSCHAEDEN2_typevk",	"VORSCHAEDEN2_month",	"VORSCHAEDEN2_year",	"adacid",	"name",	"marke",	"modell",	"preis",	"getriebeart",	"antriebsart",	"Fahrzeugklasse",	"co2klasse",	"kw",	"ps",	"tueranzahl",	"Motorart",	"Kraftstoffart",	"Motorbauart",	"Schadstoffklasse",	"Karosserie",	"Sitzanzahl",	"typklasseh_num",	"typklassetk_num",	"typklassevk_num",	"hubraum2",	"drehmoment2",	"breite2",	"radstand2",	"laenge2",	"hoehe2",	"leergewicht2",	"gesamtgewicht2",	"zuladung2",	"kofferraumvolumen_num",	"hoechstgeschwindigkeit2",	"verbrauchgesamt2",	"verbrauchausserorts2",	"verbrauchinnerorts2",	"beschleunigung2",	"tank2",	"kfzsteuer2",	"anzahlgaenge2",	"anzahlzylinder2",	"co2_wert",	"modellstart_y"]
@@ -38,6 +40,7 @@ strs,resm=dtm(dtmtableMini,settB)
 #run tree
 ##################################################
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
+@info("DTM:Testing build tree")
 strs,resm=dtm(dtmtable,sett)
 @test typeof(resm.modelstats)==DataFrame
 @test 1==1
@@ -48,6 +51,7 @@ strs,resm=dtm(dtmtable,sett)
 
 sett.iterations=10
 sett.model_type="boosted_tree"
+@info("DTM:Testing boosted tree. Iterations=$(sett.iterations)")
 strs,resm2=dtm(dtmtable,sett)
 @test typeof(resm2.modelstats)==DataFrame
 @test 1==1
@@ -56,9 +60,11 @@ strs,resm2=dtm(dtmtable,sett)
 sett.iterations=3
 
 sett.statsByVariables=Int[1,2]
+@info("DTM:Testing statsByVariables")
 strs,resm2=dtm(dtmtable,sett)
 sett.statsByVariables=Int[]
 
+@info("DTM:Testing different splitting criterias...")
 #try different splitting criteria
 for splitCrit in ["difference","poissondeviance","gammadeviance","mse","sse","msepointwise"],modelTYPE in ["build_tree","boosted_tree"]
     updateSettingsMod!(sett,crit=splitCrit,model_type=modelTYPE)
@@ -72,12 +78,14 @@ for splitCrit in ["difference","poissondeviance","gammadeviance","mse","sse","ms
     end
 end
 updateSettingsMod!(sett,crit="difference")
+@info("DTM:Finished testing different splitting criterias.")
 
 ##################################################
 #run bagging
 ##################################################
 #tbd need to update bagging to work under j0.7 version of Decisiontrees
 sett.model_type="bagged_tree"
+#@info("DTM:testing bagging")
 #dtm(dtmtable,sett)
 #@test 1==1
 
@@ -96,6 +104,7 @@ dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_
 sett.maxSplittingPoints=300
 dtmtable=prep_data_from_df(df_prepped,sett,joinpath(mktempdir(),"dtmsmoketest.csv"))
 @test eltype(dtmtable.features[:PLZ_WOHNORT].refs)==UInt16
+@info("DTM:testing maxSplittingPoints=$(sett.maxSplittingPoints)")
 strs,resm2b=dtm(dtmtable,sett)
 @test typeof(resm2b.modelstats)==DataFrame
 
@@ -110,6 +119,7 @@ settV=createGridSearchSettings(sett,
     minWeight=[-0.1,-0.2]
     ,learningRate=[0.1,0.05],iterations=[2])
 settVBoosting=deepcopy(settV)
+@info("DTM:testing gridsearch for boosting")
 a,b,allmodels=dtm(dtmtable,settV)
 @test typeof(allmodels[1].modelstats)==DataFrame
     
@@ -121,6 +131,7 @@ sett.model_type="build_tree"
 settV=createGridSearchSettings(sett,    
     minWeight=[-0.1,-0.2]
     ,learningRate=[0.1,0.05],iterations=[2])
+@info("DTM:testing gridsearch/multirun for build_tree")
 a,b,allmodels=dtm(dtmtable,settV)
 #@test typeof(allmodels[1].modelstats)==DataFrame
 
@@ -129,11 +140,14 @@ a,b,allmodels=dtm(dtmtable,settV)
 ##################################################
 sett.model_type="boosted_tree"
 cvsampler=CVOptions(-3,0.0,true)
+@info("DTM:testing cvsampler")
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 cvsampler=CVOptions(3,0.65,true)
+@info("DTM:testing cvsampler2")
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
+@info("DTM:testing cvsampler3")
 yetAnotherCVsampler=CVOptions(3,0.5,false)
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
@@ -160,8 +174,10 @@ calculatePoissonError="true",
 performanceMeasure="Average Poisson Error Val"
 )
 sett.model_type="build_tree"
+@info("DTM:testing a build_tree model")
 strs,resm3=dtm(dtmtable,sett)
 sett.model_type="boosted_tree"
+@info("DTM:testing a boosted_tree")
 strs,resm3=dtm(dtmtable,sett)
 @test typeof(resm3.modelstats)==DataFrame
 #test if files exist 
@@ -172,28 +188,33 @@ end
 #more smoketests
 sett.subsampling_prop=0.7
 sett.subsampling_features_prop=0.7
+@info("DTM:testing subsampling_features_prop and subsampling_prop")
 strs,resm4=dtm(dtmtable,sett)
 @test typeof(resm4.modelstats)==DataFrame
 
 
 sett.boolRandomizeOnlySplitAtTopNode=false
 sett.randomw=0.02
+@info("DTM:testing randomw=$(sett.randomw)")
 strs,resm5=dtm(dtmtable,sett)
 @test typeof(resm5.modelstats)==DataFrame
 
 sett.spawnsmaller=false
 sett.randomw=0.0
+@info("DTM:testing spawnsmaller=$(sett.spawnsmaller) randomw=$(sett.randomw)")
 strs,resm5b=dtm(dtmtable,sett)
 @test typeof(resm5b.modelstats)==DataFrame
     
 #minWeight too big
 oldminw=sett.minWeight
 sett.minWeight=-0.51
+@info("DTM:testing minWeight=$(sett.minWeight)")
 strs,resm6=dtm(dtmtable,sett)
 @test typeof(resm6.modelstats)==DataFrame
 
 #for coverage 
 #empty keycol
+@info("DTM:testing errors/warnings of prepare_dataframe_for_dtm")
 prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],keycol="",numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
 df_tmp2=deepcopy(df_tmp_orig)
 df_tmp2[:PREMIUM66][1:20].=-20.1
@@ -213,6 +234,7 @@ dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_
 
 #multithreaded runs
 if false  #currently disabled
+    @info("DTM:testing multithreading")
     @test Distributed.nprocs()==1 #we generally expect that tests are run on only 1 thread
     dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
     sett.model_type="boosted_tree"
@@ -228,6 +250,6 @@ if false  #currently disabled
     Distributed.rmprocs(workers())
 end
 
-DecisionTrees.absrel(rand(3),rand(3))
+#DecisionTrees.absrel(rand(3),rand(3))
 
 end #testset
