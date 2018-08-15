@@ -72,6 +72,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 		end
 		abssampleSize,sampleVector=initBootstrapSample(sampleSizeCanBeNEGATIVE) #,trnidx,validx)
 
+        #local stats,estimatedRatioUnsmoothed,estimatedRatioSmoothed,estimateRatioFromRelativities,resultingBT
+        
         for iter=1:iterations
         @timeConditional(showTimeUsedByEachIteration, begin
 		#Build Iteration iter
