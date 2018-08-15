@@ -37,7 +37,6 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
 		
 	fn=joinpath(directory,"DTMResult.csv")
 	dtmtable=prep_data_from_df(df_prepped,sett,fn,methodForSplittingPointsSelection=methodForSplittingPointsSelection)
-    println("TMP:before return statement")
 	return dtmtable,sett,df_prepped
 end
 

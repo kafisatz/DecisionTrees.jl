@@ -76,6 +76,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
         
         for iter=1:iterations
         #currently disable timeConditional as it leads to a segfault (see https://github.com/JuliaLang/julia/issues/28536) \August 15, 2018
+        #notably this segfault did not appear on 0.7beta2 (and earlier) where all tests ran perfectly fine (see travis)
         #@timeConditional(showTimeUsedByEachIteration, begin
 		#Build Iteration iter
 			current_mdf=moderationvector[min(iter,size(moderationvector,1))] #mdf remains constant if a vector of size 1 was provided (instead of a vector of size iterations)			
