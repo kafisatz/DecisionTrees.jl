@@ -1,6 +1,3 @@
-
-import Base: length,eltype,==,hash
-
 export updateSettings!,updateSettingsMod!
 export Splitdef,Rulepath,Leaf,Node,Tree,BoostedTree,SplittingCriterion,CVOptions,BaggedTree
 export ModelSettings,copySettingsToCurrentType
@@ -103,7 +100,7 @@ abstract type DTSubsets end
 	  bit_to_flip,state
 	end
     @inline iterate(x::MyGrayCodeSubsetsHALF) = next(x, start(x))
-    @inline iterate(x::MyGrayCodeSubsetsHALF, i) = done(x, i) ? done : next(x, i)
+    @inline iterate(x::MyGrayCodeSubsetsHALF, i) = done(x, i) ? nothing : next(x, i)
 
 	bitflip_graycode_subsetsHALF(xs) = MyGrayCodeSubsetsHALF(length(xs),(1 << (length(xs)-1))-2)
 
@@ -117,7 +114,7 @@ abstract type DTSubsets end
 	start(it::MyIncreasingSubsets)=zero(1) #state = simply count through the subsets
 	done(it::MyIncreasingSubsets,state)=state>=it.size_of_set-1 #we do not need to flip/change the last element (as this would resutl in an empty left child)
     @inline iterate(x::MyIncreasingSubsets) = next(x, start(x))
-    @inline iterate(x::MyIncreasingSubsets, i) = done(x, i) ? done : next(x, i)
+    @inline iterate(x::MyIncreasingSubsets, i) = done(x, i) ? nothing : next(x, i)
 
 	function next(it::MyIncreasingSubsets,state)
 		state+=one(1)

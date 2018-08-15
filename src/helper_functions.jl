@@ -1,9 +1,4 @@
 export mapToOther!,getCounts, getFittedValues, createGridSearchSettings,poissonError,confusmatBinary,confusmat,resample_trnvalidx!,removeBOM,sampleData,subset_pda_mod #for debugging purposes only
-
-import Base: append!,length,isless,eltype,resize!,convert
-import Statistics.mean
-#import PooledArrays.levels
-#import MySQL: mysql_query,mysql_display_error,mysql_store_result,mysql_affected_rows,mysql_free_result,mysql_num_fields,mysql_fetch_fields,mysql_num_rows,mysql_get_julia_type,mysql_fetch_row,MYSQL_RES,MYSQL_TYPE,MYSQL_ROW #temporarily disabled
 export createZipFile
 
 #this could certainly be done nice

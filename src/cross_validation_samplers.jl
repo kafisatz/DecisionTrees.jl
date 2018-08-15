@@ -1,5 +1,4 @@
 #from https://github.com/JuliaStats/MLBase.jl/blob/master/src/crossval.jl 
-import Base: length
 
 abstract type CrossValGenerator end
 
@@ -26,7 +25,7 @@ start(c::Kfold) = KfoldState(1, 1, round.(Integer,c.coeff))
 next(c::Kfold, s::KfoldState) = (i = s.i+1; (setdiff(1:length(c.permseq), c.permseq[s.s:s.e]), KfoldState(i, s.e+1, round.(Integer,c.coeff * i))))
 done(c::Kfold, s::KfoldState) = (s.i > c.k) 
 @inline iterate(x::Kfold) = next(x, start(x))
-@inline iterate(x::Kfold, i) = done(x, i) ? done : next(x, i)
+@inline iterate(x::Kfold, i) = done(x, i) ? nothing : next(x, i)
 
 # Repeated random sub-sampling
 
@@ -42,7 +41,7 @@ start(c::RandomSub) = 1
 next(c::RandomSub, s::Int) = (sort!(StatsBase.sample(1:c.n, c.sn; replace=false)), s+1)
 done(c::RandomSub, s::Int) = (s > c.k)
 @inline iterate(x::RandomSub) = next(x, start(x))
-@inline iterate(x::RandomSub, i) = done(x, i) ? done : next(x, i)
+@inline iterate(x::RandomSub, i) = done(x, i) ? nothing : next(x, i)
 
 #Kfold, but disjoing sets ('negation' of Kfold sets)
 struct KfoldDisjoint <: CrossValGenerator
@@ -64,7 +63,7 @@ next(c::KfoldDisjoint, s::KfoldState) =
     (i = s.i+1; (sort(c.permseq[s.s:s.e]), KfoldState(i, s.e+1, round.(Integer,c.coeff * i))))
 done(c::KfoldDisjoint, s::KfoldState) = (s.i > c.k) 
 @inline iterate(x::KfoldDisjoint) = next(x, start(x))
-@inline iterate(x::KfoldDisjoint, i) = done(x, i) ? done : next(x, i)
+@inline iterate(x::KfoldDisjoint, i) = done(x, i) ? nothing : next(x, i)
 
 #=
 

@@ -196,7 +196,7 @@ start(r::Roc) = 1
 done(r::Roc, state) = state>length(r)
 next(r::Roc, state) = (r[state], state+1)
 @inline iterate(x::Roc) = next(x, start(x))
-@inline iterate(x::Roc, i) = done(x, i) ? done : next(x, i)
+@inline iterate(x::Roc, i) = done(x, i) ? nothing : next(x, i)
 
 function Base.getindex(r::Roc, i::Integer)
     if i == length(r)

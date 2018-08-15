@@ -535,7 +535,7 @@ prnt&&println("---Model Settings------------------------------------------------
           error("Error: (bk) I do not think that _RankOpt is currently working with a single tree....")
       end
 
-     local resulting_model,resultEnsemble
+     local resulting_model #,resultEnsemble
 
       if "build_tree"==sett.model_type
           if prnt
@@ -634,84 +634,80 @@ prnt&&println("---Model Settings------------------------------------------------
                 push!(filelistWithFilesToBeZipped,this_outfile)
             end
     #end build tree
-    elseif in(sett.model_type,["bagged_tree","boosted_tree"])
-        if prnt
-            println("Type: $(sett.model_type),Iterations: $(sett.iterations),Minweight: $(sett.minWeight)")
-            if size(sett.moderationvector,1)>1;println("Moderationvector = $(join(sett.moderationvector,",")) ");else println("Moderation Factor: $(sett.learningRate)"); end;
-            println("Rnd: $(sett.randomw), NumMaxSplitPoints: $(sett.maxSplittingPoints), nScores: $(sett.nScores), Criterion: $(replace(string(sett.crit),"DecisionTrees."=>""))")
-            println("boolRandomizeOnlySplitAtTopNode: $(sett.boolRandomizeOnlySplitAtTopNode), sett.boolRankOptimization: $(sett.boolRankOptimization)")
-            println("subsampling_features_prop: $(sett.subsampling_features_prop), subsampling_prop: $(sett.subsampling_prop)")
-            println(stars)
-        end
+    
+    #temporary note: if we remove line 637 to 683, the segfault does not appear
+    elseif in(sett.model_type,["boosted_tree","bagged_tree"])
+   #@warn("TMP:re-enable this snippet (for boosting!)")    
+   #error("TMP:temporarily disabled")
 
-        if "boosted_tree"==sett.model_type
+       #if "boosted_tree"==sett.model_type
             @timeConditional(sett.print_details,begin
-                xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultEnsemble=boosted_tree(dtmtable,sett)
-            end)
-            
+                xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resulting_model=boosted_tree(dtmtable,sett)
+            end)            
             model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
             #this line is for  the sas,vba and csharp code
-            estimatesPerScoreForCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resultEnsemble.ScoreToSmoothedEstimate
-            
+            estimatesPerScoreForCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resulting_model.ScoreToSmoothedEstimate
+
             if sett.writeSasCode
                 #write SAS Code
                 println("Writing SAS Code: \n $(sas_code_file)")
                 isfile(sas_code_file)&&rm(sas_code_file)
                 if sett.roptForcedPremIncr
-                    error("this does currently not work")
+                    warn("This does currently not work")
                 else
-                    writeSasCode(estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings)
+                    writeSasCode(estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resulting_model,sett.number_of_num_features,sas_code_file,sett.df_name_vector,model_setting_string,dtmtable.mappings)
                 end
                 push!(filelistWithFilesToBeZipped,sas_code_file)
             end
             if sett.writeCsharpCode                
                 println("Writing C# Code: \n $(csharp_code_file)")
                 isfile(csharp_code_file)&&rm(csharp_code_file)                
-                writeCsharpCode(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
+                writeCsharpCode(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resulting_model,csharp_code_file,model_setting_string,dtmtable.mappings,0,sett)
                 push!(filelistWithFilesToBeZipped,csharp_code_file)
             end 
             if sett.writeVbaCode
                 println("Writing VBA Code: \n $(vba_code_file)")
                 isfile(vba_code_file)&&rm(vba_code_file)
-                writeVbaCode(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resultEnsemble,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
+                writeVbaCode(vectorOfLeafArrays,estimatesPerScoreForCode,dtmtable.candMatWOMaxValues,resulting_model,vba_code_file,model_setting_string,dtmtable.mappings,0,sett)
                 push!(filelistWithFilesToBeZipped,vba_code_file)
-            end
-        #end #boosting
-        elseif "bagged_tree"==sett.model_type
-            #bagging
-            @timeConditional(sett.print_details,begin
-            @warn("bagging is not yet updated for dtm2! This will most likely fail!")
-                xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resultEnsemble=bagged_tree(dtmtable,sett)
-                #xlData,vectorOfLeafNumbersTrn,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,est_matrixFromScoresVAL,stats,scoresval,est_matrix_val,estimateUnsmoothedVal,estimateSmoothedVal,estimateFromRelativitiesVal,estimateUnsmoothedTrn,estimateSmoothedTrn,estimateFromRelativitiesTrn,resultEnsemble=bagged_tree(mappings,candMatWOMaxValues,sett,numeratortrn,denominatortrn,weighttrn,trn_numfeatures,trn_charfeatures_PDA,numeratorval,denominatorval,weightval,val_numfeatures,val_charfeatures_PDA)
-            end)
-            #
-            model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
-        else
-            error("DTM: Unknown Model Type: $(sett.model_type) (Within Bagging/Boosting loop)")
-        end #end bagging or boosting
-
-resulting_model=resultEnsemble
-
-if sett.writeResult
-    res=hcat(key,trnidx_one_zero_full_length,resultEnsemble.scores,estimateUnsmoothed,estimateSmoothed,estimatedRatio)
-end    
-#save results as *.JLD2 file
-if sett.saveResultAsJLDFile
-    println("Saving results to jld2 file: \n $(jldresultsfile)")
-    isfile(jldresultsfile)&&rm(jldresultsfile)
-    @time JLD2.@save jldresultsfile xlData dtmtable trnidx validx vectorOfLeafNumbers vectorOfLeafArrays rawObservedRatioPerScore est_matrixFromScores stats estimateUnsmoothed estimateSmoothed estimateFromRelativities resultEnsemble
-    push!(filelistWithFilesToBeZipped,jldresultsfile)
-end
-
+            end            
+       #end #boosting
+        #=
+            elseif "bagged_tree"==sett.model_type        
+                #bagging
+                @timeConditional(sett.print_details,begin
+                @warn("bagging is not yet updated for dtm2! This will most likely fail!")
+                    xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resulting_model=bagged_tree(dtmtable,sett)
+                end)            
+                model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
+            #else
+                #error("DTM: Unknown Model Type: $(sett.model_type) (Within Bagging/Boosting loop)")
+            end #end bagging 
+        =#
+        
     #after boosting bagging  export etc
-#here we are in the "section":     #if in(sett.model_type,["bagged_tree","boosted_tree"])
-#output for boosting & bagging#write tree
+    #here we are in the "section":     #if in(sett.model_type,["bagged_tree","boosted_tree"])
+    #output for boosting & bagging#write tree
+
+    #resulting_model=resultEnsemble
+
+    if sett.writeResult
+        res=hcat(key,trnidx_one_zero_full_length,resulting_model.scores,estimateUnsmoothed,estimateSmoothed,estimatedRatio)
+    end    
+    #save results as *.JLD2 file
+    if sett.saveResultAsJLDFile
+        println("Saving results to jld2 file: \n $(jldresultsfile)")
+        isfile(jldresultsfile)&&rm(jldresultsfile)
+        @time JLD2.@save jldresultsfile xlData dtmtable trnidx validx vectorOfLeafNumbers vectorOfLeafArrays rawObservedRatioPerScore est_matrixFromScores stats estimateUnsmoothed estimateSmoothed estimateFromRelativities resulting_model
+        push!(filelistWithFilesToBeZipped,jldresultsfile)
+    end
+
     if sett.writeTree
                 #write settings
                 println("Writing tree structure to file: \n $(tree_file)")
                 isfile(tree_file)&&rm(tree_file)
                 f=open(tree_file,"w");write(f,model_setting_string);close(f);
-                write_tree(dtmtable.candMatWOMaxValues,resultEnsemble,sett.number_of_num_features,0,tree_file,sett.df_name_vector,dtmtable.mappings)
+                write_tree(dtmtable.candMatWOMaxValues,resulting_model,sett.number_of_num_features,0,tree_file,sett.df_name_vector,dtmtable.mappings)
                 push!(filelistWithFilesToBeZipped,tree_file)
     end
     #Write statistics
@@ -733,10 +729,7 @@ end
         else
             if sett.writeIterationMatrix        
                 #Matrix with Leaf Numbers
-                #currently we only have the training mat
                 leafnrfile=string(path_and_fn_wo_extension,".leafnumbers.csv")
-                #the first column is 0 until here
-                #we now fill it with the irkeys
                 vectorOfLeafNumbersMOD=hcat(key,vectorOfLeafNumbers[:,2:end])
                 println("Exporting LeafNumber Matrix: \n $(leafnrfile)")
                     isfile(leafnrfile)&&rm(leafnrfile)
@@ -751,18 +744,18 @@ end
                     push!(filelistWithFilesToBeZipped,estmat_outile2)
                 #MATRIX 2
                     estmat_outile=string(path_and_fn_wo_extension,"_iteration_matrix.csv")
-                    res_estmatrix=hcat(key,resultEnsemble.iterationmatrix)
-                    println("Exporting Estimates Matrix: \n $(estmat_outile)")
-                        #println("Saving iteration matrix to jld file; this is only a backup in case the CSV export does not work (which sometimes happens with very large files)")
-                        #@time save(string(estmat_outile,".jld"),"res_estmatrix",res_estmatrix)
+                    res_estmatrix=hcat(key,resulting_model.iterationmatrix)
+                    println("Exporting Estimates Matrix: \n $(estmat_outile)")                        
                     isfile(estmat_outile)&&rm(estmat_outile)
                     DelimitedFiles.writedlm(estmat_outile,res_estmatrix,',')
                     push!(filelistWithFilesToBeZipped,estmat_outile)
             end
         end
-else
-    error("Unknown Model Type: $(sett.model_type)")
-end #end distinction between three model types
+      
+      end #end of:  elseif in(sett.model_type,["boosted_tree","bagged_tree"])
+#else
+#    error("Unknown Model Type: $(sett.model_type)")
+#end #end distinction between three model types
 
 #NOTE: the option boolCreateZipFile should be disabled when code is run through grails
 #as the *.7z file will be created by the listener (because the *.log file will only exist when run_model terminated

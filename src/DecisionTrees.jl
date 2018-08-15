@@ -45,6 +45,9 @@ import DataStreams #We do not really need DataStreams (explicitly) but CSV keeps
 #import MySQL, # temporarily disabled 
 #import SQLite #disabled as it uses DataFrames 0.11
 
+import Base: length,eltype,==,hash,iterate,append!,isless,resize!,convert
+import Statistics.mean
+
 Random.seed!(1234)
 
 #include("check_if_python_packages_are_installed.jl")
