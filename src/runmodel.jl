@@ -530,12 +530,14 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.writeTree
       #model_setting_string=convert(String,string(model_setting_string, "\n", "Julia started at: \n not_available "))
       model_setting_string=convert(String,string(model_setting_string, "\n", "Julia (Modelling) start time: \n$(Dates.now()) "))
 
-prnt&&println("---Model Settings--------------------------------------------------------------")
-      if sett.boolRankOptimization && "build_tree"==sett.model_type
-          error("Error: (bk) I do not think that _RankOpt is currently working with a single tree....")
-      end
+    prnt&&println("---Model Settings--------------------------------------------------------------")
+    if sett.boolRankOptimization && "build_tree"==sett.model_type
+      error("Error: (bk) I do not think that _RankOpt is currently working with a single tree....")
+    end
 
-     local resulting_model #,resultEnsemble
+    local resulting_model #,resultEnsemble
+    #resulting_model=EmptyEnsemble()
+    #local xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,estimatesPerScoreForCode
 
       if "build_tree"==sett.model_type
           if prnt
@@ -633,22 +635,22 @@ prnt&&println("---Model Settings------------------------------------------------
                 DelimitedFiles.writedlm(this_outfile,res,',')
                 push!(filelistWithFilesToBeZipped,this_outfile)
             end
-    #end build tree
+        #return filelistWithFilesToBeZipped,resulting_model
+    end  #end build tree
     
-    #temporary note: if we remove line 637 to 683, the segfault does not appear
-    elseif in(sett.model_type,["boosted_tree","bagged_tree"])
-   #@warn("TMP:re-enable this snippet (for boosting!)")    
-   #error("TMP:temporarily disabled")
-
-       #if "boosted_tree"==sett.model_type
+    #output for boosting & bagging
+    if in(sett.model_type,["boosted_tree","bagged_tree"])
+    
+     if "boosted_tree"==sett.model_type
             @timeConditional(sett.print_details,begin
-                xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resulting_model=boosted_tree(dtmtable,sett)
-            end)            
+            xlData,estimatedRatio,vectorOfLeafNumbers,vectorOfLeafArrays,rawObservedRatioPerScore,est_matrixFromScores,stats,estimateUnsmoothed,estimateSmoothed,estimateFromRelativities,resulting_model=boosted_tree(dtmtable,sett)
+            end)
             model_setting_string=convert(String,string(model_setting_string, "\n", "Julia end time: \n$(Dates.now()) \n "))
             #this line is for  the sas,vba and csharp code
             estimatesPerScoreForCode = sett.smoothEstimates=="0" ? rawObservedRatioPerScore : resulting_model.ScoreToSmoothedEstimate
-
-            if sett.writeSasCode
+      end
+      
+               if sett.writeSasCode
                 #write SAS Code
                 println("Writing SAS Code: \n $(sas_code_file)")
                 isfile(sas_code_file)&&rm(sas_code_file)
@@ -757,9 +759,6 @@ prnt&&println("---Model Settings------------------------------------------------
 #    error("Unknown Model Type: $(sett.model_type)")
 #end #end distinction between three model types
 
-#NOTE: the option boolCreateZipFile should be disabled when code is run through grails
-#as the *.7z file will be created by the listener (because the *.log file will only exist when run_model terminated
-
 #this code applies to all model types
    #Create ZIP file
      #Push Log file to file list
@@ -785,6 +784,5 @@ prnt&&println("---Model Settings------------------------------------------------
 end
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
-    println("TMP:started this....")
     return run_model_actual(dtmtable::DTMTable,sett::ModelSettings,file::String)
 end
