@@ -197,7 +197,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
     #Random.srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
     intDatahash = floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
     Random.seed!(intDatahash)
-    
+    println("TMP:mira0")
     #1. sample Data
         size_which_is_sampled=0
         #local cvsampler
@@ -222,7 +222,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
                 cvsampler=Kfold(size_which_is_sampled,cvo.folds)
             end
         end
-    
+            
         #initialize variables
         path_and_fn_wo_extension="some"
         path_and_fn_wo_extension,ext=splitext(file)
@@ -230,7 +230,6 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         header_settings=Vector{String}(undef,1)
         i=1
         n_folds=abs(cvo.folds)
-
         #run an initial dummy model to get the 'structure' (ie header and size) of the output statistics
             dummySett=deepcopy(sett)
             dummySett.print_details=false;dummySett.writeTree=false;dummySett.writeSasCode=false;dummySett.writeIterationMatrix=false;dummySett.writeResult=false;dummySett.writeStatistics=false;dummySett.boolCreateZipFile=false;dummySett.writeCsharpCode=false;dummySett.writeVbaCode=false;dummySett.saveJLDFile=false;dummySett.saveResultAsJLDFile=false;dummySett.showProgressBar_time=false;dummySett.prroduceEstAndLeafMatrices=false;dummySett.write_dot_graph=false;                
@@ -242,7 +241,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
                 pushfirst!(numbrs,i)
                 pushfirst!(settingsvec,string(i))
                 pushfirst!(desc,"Number")
-                pushfirst!(desc_settingsvec,"Number")
+                pushfirst!(desc_settingsvec,"Number")                
             header=deepcopy(desc)
             header_settings=deepcopy(desc_settingsvec)
             allstats=Array{Float64,2}(undef,length(numbrs),n_folds)			
