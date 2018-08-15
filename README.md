@@ -14,9 +14,11 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 ## Installation
 
 This package only works with Julia 0.7 or higher. 
-To install DecisionTrees.jl, run `using Pkg; pkg"add https://github.com/kafisatz/DecisionTrees.jl` at the REPL. Alternatively you enter package mode by typing `]`. In package mode you can simply run `add https://github.com/kafisatz/DecisionTrees.jl`.
+To install DecisionTrees.jl, run 
+`using Pkg; pkg"add https://github.com/kafisatz/DecisionTrees.jl"` 
+at the REPL. Alternatively you can enter package mode by typing `]`. In package mode you can simply run `add https://github.com/kafisatz/DecisionTrees.jl`.
 
-We note that this package uses PyCall to create Excel files of the model results. Therefore, there are a number of dependencies (PyCall, Conda, Python). These should be installed automatically when you use the package for the first time. It might be helpful to run `pkg"test DecisionTrees"` after the installation to see whether it was installed properly.
+We note that this package uses PyCall to create Excel files of the model results. Therefore, there are a number of dependencies (PyCall, Conda, Python). These should be installed automatically when you use the package for the first time. It might be helpful to run `pkg"test DecisionTrees"` after the installation to see whether it was installed properly. You may want to run `Pkg.build("Conda");Pkg.build("PyCall");` if either of these packages is not built properly.
 
 ## Documentation
 
