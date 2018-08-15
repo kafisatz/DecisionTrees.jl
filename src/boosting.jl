@@ -75,7 +75,8 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
         #local stats,estimatedRatioUnsmoothed,estimatedRatioSmoothed,estimateRatioFromRelativities,resultingBT
         
         for iter=1:iterations
-        @timeConditional(showTimeUsedByEachIteration, begin
+        #currently disable timeConditional as it leads to a segfault (see https://github.com/JuliaLang/julia/issues/28536) \August 15, 2018
+        #@timeConditional(showTimeUsedByEachIteration, begin
 		#Build Iteration iter
 			current_mdf=moderationvector[min(iter,size(moderationvector,1))] #mdf remains constant if a vector of size 1 was provided (instead of a vector of size iterations)			
 			
@@ -153,7 +154,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 				loc=string(excelLetter(size(cumulativeStatsPerScoreBand,2)+2),fristRowOfThisTable)				
 				thischart=defineRelativityChart(nameOfModelStatisticsSheet,nameOfModelStatisticsSheet,loc,size(statsThisIteration,1)-2,columnOfRelativityTrn,fristRowOfThisTable,xscale=2.0)
 				push!(xlData.charts,deepcopy(thischart))
-		end	) #end of @timeConditional
+		#end	) #end of @timeConditional
 		if showProgressBar_time #TimeUsedByEachIteration
 			ProgressMeter.next!(p)
 		end
