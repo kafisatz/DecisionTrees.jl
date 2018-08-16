@@ -7,6 +7,12 @@ git-tree-sha1 = "ffbf89cc49b073cffdb91381b7ee60557a03ec96"
 uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
 version = "0.4.1"
 
+[[CSV]]
+deps = ["CategoricalArrays", "DataFrames", "DataStreams", "Dates", "InternedStrings", "Missings", "Mmap", "Test", "WeakRefStrings"]
+git-tree-sha1 = "38fb8a40079560da5804a280d7d3cf0180b833b1"
+uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+version = "0.3.0"
+
 [[CategoricalArrays]]
 deps = ["Compat", "Future", "JSON", "Missings", "Printf", "Reexport"]
 git-tree-sha1 = "8009a507e2e3db040d6854a82ce959fb5971cb37"
@@ -79,6 +85,12 @@ uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 [[InteractiveUtils]]
 deps = ["LinearAlgebra", "Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
+
+[[InternedStrings]]
+deps = ["Random", "Test"]
+git-tree-sha1 = "eb05b5625bc5d821b8075a77e4c421933e20c76b"
+uuid = "7d512f48-7fb1-5a58-b986-67e6dc259f01"
+version = "0.7.0"
 
 [[JLD2]]
 deps = ["CodecZlib", "DataStructures", "FileIO", "LinearAlgebra", "Mmap", "Printf", "Random", "Test"]
@@ -203,10 +215,10 @@ uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "0.2.0"
 
 [[Revise]]
-deps = ["Distributed", "FileWatching", "InteractiveUtils", "LibGit2", "OrderedCollections", "Pkg", "REPL", "Random", "Test", "Unicode"]
-git-tree-sha1 = "b5fd244df039cb69f292f13dcf7d0304b846a838"
+deps = ["Distributed", "FileWatching", "InteractiveUtils", "LibGit2", "OrderedCollections", "Pkg", "REPL", "Random", "Test", "UUIDs", "Unicode"]
+git-tree-sha1 = "f8d7ca21129e50911e3067705a61a8cebbb17337"
 uuid = "295af30f-e4ad-537b-8983-00126c2a3abe"
-version = "0.6.6"
+version = "0.6.8"
 
 [[SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"

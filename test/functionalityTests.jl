@@ -9,6 +9,8 @@ tolForTheseTests=1e-15
 #Read the data
 ##################################################
 
+cmd2=`na`
+cmd=`na`
 datafile=joinpath(datadir,"freMTPL2","freMTPL2.csv")
 if !isfile(datafile)
     @info("Data not found. Trying to unzip the data: $(datafile)")
@@ -30,7 +32,9 @@ if !isfile(datafile)
         end
     catch erO
         @warn("Failed to unzip data: $(pathToZip) \r\n Some tests will not run!")
-        @show erO        
+        @show erO  
+        @show cmd
+        @show cmd2     
     end
 end
 if !isfile(datafile)

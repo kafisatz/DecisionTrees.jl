@@ -259,6 +259,7 @@ if false  #currently disabled
     Distributed.rmprocs(workers())
 end
 
-#DecisionTrees.absrel(rand(3),rand(3))
+#coverage test of absrel
+DecisionTrees.absrel(rand(3),rand(3))
 
 end #testset
