@@ -153,7 +153,7 @@ statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 @info("DTM:testing different performance measures")
 cvsampler=CVOptions(-3,0.0,true)
-for thisPerfMeasure in global_statsperiter_header
+for thisPerfMeasure in DecisionTrees.global_statsperiter_header
     updateSettingsMod!(sett,performanceMeasure=thisPerfMeasure)
     statsdf=DataFrame()
     statsdf,settsdf,cvModels=dtm(dtmtableMini,sett,cvsampler)
