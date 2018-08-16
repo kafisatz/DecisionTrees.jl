@@ -97,3 +97,7 @@ sett.model_type="boosted_tree"
 cvsampler=CVOptions(-3,0.0,true)
 @info("DTM:testing cvsampler")
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+
+cvsampler=CVOptions(3,0.5,false)
+statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+    

@@ -7,7 +7,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     @info "DTM: (bk) You may want to consider the multi threaded verison of this function: simply call dtm(...)"
 #if folds<0 then we consider n disjoint training sets
 
-#currently we have trhee possible CVs
+#currently we have three possible CVs
 #k disjoint samples 
 #    KfoldDisjoint(length(weight),k) 
 #random sampling, k samples of size samplesize
@@ -206,7 +206,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         if cvo.training_proportion>0
             @info "DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)"
             sample_size=max(1,round(cvo.training_proportion*size_which_is_sampled))
-            cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)
+            cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)            
         else
             if cvo.folds<0
                 @info "DTM: Performing 'DISJOINT training sets' k-fold cross validation (k=$(cvo.folds))"
@@ -356,10 +356,11 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
                 dtmtable.validx=setdiff(1:size_which_is_sampled,this_sample)
             else                 
                 #here the training data is a subset of the trn orig data
-                this_trnidx=trnidx_orig[this_sample]
+                this_trnidx=deepcopy(trnidx_orig[this_sample])
                 #here we leave the val data as it is;notably trn and val "do not fill out" all data, there is third part of the data which remains unused here
             end
             dtmtable.trnidx=this_trnidx
+            
         #update minWeight
             if sett.minWeight>0 #if sett.minWeight is specified as a negative number then it will be interpreted as a percentage anyway (no need to update it)
                 sett.minWeight=minw_prop*length(dtmtable.trnidx) #note minWeight is adjusted for each run!

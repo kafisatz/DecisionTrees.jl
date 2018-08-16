@@ -1016,7 +1016,7 @@ end
 
 function absrel(x,y)
 	@assert length(x)==length(y)
-	res=zeros(x)
+	res=zero(x)
 	for i=1:length(x)
 		@inbounds xi=x[i]
 		@inbounds yi=y[i]

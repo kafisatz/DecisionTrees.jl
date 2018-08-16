@@ -192,7 +192,7 @@ git-tree-sha1 = "618dff5d17206c58174f3df457624ff67b44ad88"
 repo-rev = "master"
 repo-url = "https://github.com/JuliaPy/PyCall.jl.git"
 uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
-version = "1.17.1+"
+version = "1.18.0+"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets"]
