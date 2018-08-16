@@ -197,7 +197,6 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
     #Random.srand should not depend on sett.seed as we do not 'store' the original seed in the resulting Excel file.
     intDatahash = floor(Int,.25*hash(2231,hash(dtmtable.features,hash(dtmtable.numerator,hash(dtmtable.denominator,hash(dtmtable.weight))))))
     Random.seed!(intDatahash)
-    println("TMP:mira0")
     #1. sample Data
         size_which_is_sampled=0
         #local cvsampler
