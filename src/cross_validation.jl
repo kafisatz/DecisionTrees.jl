@@ -103,15 +103,11 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
             allmodels=Vector{Any}(n_folds)
         else			
             if !all(header[2:end].==desc[2:end])
-                @warn("Model run $(i) returned an unexpected results vector:")
-                @show desc
-                @show header
+                @warn("Model run $(i) returned an unexpected results vector:");@show desc,header
             end
             if !all(header_settings[2:end].==desc_settingsvec[2:end])
-                @warn("Model run $(i) returned an unexpected results vector:")
-                @show desc_settingsvec
-                @show header_settings
-            end
+                @warn("Model run $(i) returned an unexpected results vector:");@show desc_settingsvec,header_settings
+                end
         end
         allstats[:,i].=deepcopy(numbrs)
         allsettings[:,i].=deepcopy(settingsvec)

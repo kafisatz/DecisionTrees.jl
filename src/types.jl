@@ -16,9 +16,9 @@ export ModelSettings,copySettingsToCurrentType
 	struct MaxValueSplit      <: SplittingCriterion end
 	struct MaxAbsValueSplit      <: SplittingCriterion end
 	struct MaxMinusValueSplit      <: SplittingCriterion end	
-	struct RankOptSplit         <: SplittingCriterion end
-	struct ROptMinRLostPctSplit	   <: SplittingCriterion end
-	struct ROptMinRLostSplit	   <: SplittingCriterion end
+	#struct RankOptSplit         <: SplittingCriterion end
+	#struct ROptMinRLostPctSplit	   <: SplittingCriterion end
+	#struct ROptMinRLostSplit	   <: SplittingCriterion end
     
 	PoissonOrGamma = Union{PoissonDevianceSplit,GammaDevianceSplit}	
     
@@ -561,10 +561,10 @@ function convertFromString(oldvalue::T,critfnstr) where {T <: SplittingCriterion
 		crit=MaxAbsValueSplit()
 	elseif critfnstr=="maxminusvalue" #pick the split which leads to the maximum negative value (in either the right or left child)
 		crit=MaxMinusValueSplit()
-	elseif critfnstr=="roptminrlostpct"
-		crit=ROptMinRLostPctSplit()
-	elseif critfnstr=="roptminrlost"
-		crit=ROptMinRLostSplit()
+	#elseif critfnstr=="roptminrlostpct"
+	#	crit=ROptMinRLostPctSplit()
+	#elseif critfnstr=="roptminrlost"
+	#	crit=ROptMinRLostSplit()
 	else
 		@info "Invalid splitting criterion: $(critfnstr). Currently only the following strings are allowed as input:"
 		@info string(allowedinputstrings)
@@ -659,7 +659,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
 		error("DTM: Invalid graphvizexecutable: $(graphvizexecutable) is not a file.")
 	  end
 	if s.roptForcedPremIncr
-		@assert (s.crit==ROptMinRLostPctSplit()||s.crit==ROptMinRLostSplit())
+		#@assert (s.crit==ROptMinRLostPctSplit()||s.crit==ROptMinRLostSplit())
 	end
 	@assert !s.boolRankOptimization "this is currently not working in this version of the Code"
 	#@assert s.ishift==0 #is zero for normal models (historically this was 1 for rkoptmodels (labels_orig and so on....)
