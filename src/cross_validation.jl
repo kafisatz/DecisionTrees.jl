@@ -252,7 +252,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             fill!(defaulted_stats,0.0)
 
         #create a dictionary which contains all data
-            di=Dict("ext"=>ext,"minw_prop"=>minw_prop,"size_which_is_sampled"=>size_which_is_sampled,"defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"cvsampler"=>cvsampler,"intDatahash"=>intDatahash,"sett"=>deepcopy(sett),"cvo"=>cvo,"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
+            di=Dict("trnidx_orig"=>trnidx_orig,"ext"=>ext,"minw_prop"=>minw_prop,"size_which_is_sampled"=>size_which_is_sampled,"defaulted_settings"=>defaulted_settings,"header_settings"=>header_settings,"header"=>header,"cvsampler"=>cvsampler,"intDatahash"=>intDatahash,"sett"=>deepcopy(sett),"cvo"=>cvo,"dtmtable"=>dtmtable,"path_and_fn_wo_extension"=>path_and_fn_wo_extension,"defaulted_stats"=>defaulted_stats)
         #send data to all workers: without this command we will have a lot of overhead to send the data to the processes; but the data is constant and only needs to be sent ONCE!)        
         sendto_module(DecisionTrees,Distributed.workers(),local_data_dict=deepcopy(di))
         local_data_dict=di
@@ -340,6 +340,7 @@ function run_cvsample_on_a_process(i::Int,local_data_dict::Dict)
         sett=di["sett"]
         cvo=di["cvo"]
         dtmtable=di["dtmtable"]
+        trnidx_orig=di["trnidx_orig"]
         path_and_fn_wo_extension=di["path_and_fn_wo_extension"]
                 
         #find ith sample
