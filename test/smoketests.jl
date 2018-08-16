@@ -148,8 +148,17 @@ cvsampler=CVOptions(3,0.65,true)
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
 @info("DTM:testing cvsampler3")
-yetAnotherCVsampler=CVOptions(3,0.5,false)
+cvsampler=CVOptions(3,0.5,false)
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+
+@info("DTM:testing different performance measures")
+cvsampler=CVOptions(-3,0.0,true)
+for thisPerfMeasure in global_statsperiter_header
+    updateSettingsMod!(sett,performanceMeasure=thisPerfMeasure)
+    statsdf=DataFrame()
+    statsdf,settsdf,cvModels=dtm(dtmtableMini,sett,cvsampler)
+    @test size(statsdf,1)>0
+end
 
 #set some default settings
 updateSettingsMod!(sett,
