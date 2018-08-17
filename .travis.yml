@@ -2,8 +2,7 @@ language: julia
 os:
   - linux
   #- osx
-  #OSX (for 0.7) has been complaining about │    could not load library "libcholmod"
-  #ErrorException("could not load library "libopenblas64_"
+  #OSX is currently failing because the unzip command is invalid....
 julia:
   - 0.7
   - 1.0
