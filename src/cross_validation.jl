@@ -43,6 +43,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
     if cvo.training_proportion>0
         @info "DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)"
         sample_size=max(1,round(cvo.training_proportion*size_which_is_sampled))
+        @warn "DTM: RandomSub cvsampler is currently not working! Algorithm may crash."
         cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)
     else
         if cvo.folds<0
@@ -206,6 +207,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         if cvo.training_proportion>0
             @info "DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)"
             sample_size=max(1,round(cvo.training_proportion*size_which_is_sampled))
+            @warn "DTM: RandomSub cvsampler is currently not working! Algorithm may crash." 
             cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)            
         else
             if cvo.folds<0
