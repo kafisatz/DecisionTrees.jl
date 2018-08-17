@@ -13,7 +13,7 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 
 ## Installation
 
-This package only works with Julia 0.7 or higher. 
+This package only works with Julia 0.7 or higher. You should ideally use Julia 1.0 or higher. 
 To install DecisionTrees.jl, run 
 `using Pkg; pkg"add https://github.com/kafisatz/DecisionTrees.jl"` 
 at the REPL. Alternatively you can enter package mode by typing `]`. In package mode you can simply run `add https://github.com/kafisatz/DecisionTrees.jl`.
