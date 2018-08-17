@@ -1,7 +1,7 @@
 language: julia
 os:
   - linux
-  - osx
+  #- osx
   #OSX (for 0.7) has been complaining about │    could not load library "libcholmod"
   #ErrorException("could not load library "libopenblas64_"
 julia:
@@ -11,7 +11,7 @@ julia:
 matrix:
  allow_failures:
  - julia: nightly
- #- os: osx
+ - os: osx
 notifications:
   email: false
 script:
