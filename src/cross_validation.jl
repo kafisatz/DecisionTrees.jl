@@ -44,6 +44,7 @@ function dtm_single_threaded(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptio
         @info "DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)"
         sample_size=max(1,round(cvo.training_proportion*size_which_is_sampled))
         @warn "DTM: RandomSub cvsampler is currently not working! Algorithm may crash."
+        #need to fix line 14 of boosting where we have 'obs=obstrn+obsval' this is not meaningful if val and trn do not 'fill out' size(features,1)
         cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)
     else
         if cvo.folds<0
@@ -208,6 +209,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             @info "DTM: training_proportion > 0 provided. Performing random sampling without replacement ($(cvo.folds) samples)"
             sample_size=max(1,round(cvo.training_proportion*size_which_is_sampled))
             @warn "DTM: RandomSub cvsampler is currently not working! Algorithm may crash." 
+            #need to fix line 14 of boosting where we have 'obs=obstrn+obsval' this is not meaningful if val and trn do not 'fill out' size(features,1)
             cvsampler=RandomSub(size_which_is_sampled,sample_size,cvo.folds)            
         else
             if cvo.folds<0
