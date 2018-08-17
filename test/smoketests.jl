@@ -140,9 +140,6 @@ a,b,allmodels=dtm(dtmtable,settV)
 ##################################################
 sett.model_type="boosted_tree"
 cvsampler=CVOptions(-3,0.0,true)
-@warn("CV sampler tests are currently breaking the other tests (possibly because dtmtable is modified which should not happen!")
-@test_broken 1==2 
-if false 
 @info("DTM:testing cvsampler")
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
@@ -150,9 +147,12 @@ cvsampler=CVOptions(3,0.65,true)
 @info("DTM:testing cvsampler2")
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
-@info("DTM:testing cvsampler3")
-cvsampler=CVOptions(3,0.5,false)
-statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
+@warn("CV sampler tests are currently breaking the other tests (possibly because dtmtable is modified which should not happen!")
+@test_broken 1==2 
+if false
+    @info("DTM:testing cvsampler3")
+    cvsampler=CVOptions(3,0.5,false)
+    statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 end
 
 @info("DTM:testing different performance measures")

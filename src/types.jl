@@ -145,9 +145,22 @@ mutable struct DTMTable
 		return new(key,trnidx,validx,numerator,denominator,weight,features,cands,maps)
 	end
 end
+==(x::DTMTable,y::DTMTable)= (x.key==y.key) && (x.trnidx==y.trnidx) && (x.validx==y.validx) && (x.numerator==y.numerator) && (x.denominator==y.denominator)  && (x.weight==y.weight)  && (x.features==y.features) && (x.candMatWOMaxValues==y.candMatWOMaxValues) && (x.mappings==y.mappings)
 
 Base.size(d::DTMTable) = size(d.features)
-
+hash(x::DTMTable)=hash(x,0)
+function hash(x::DTMTable,h)
+    h=hash(x.key,h)
+    h=hash(x.trnidx,h)
+    h=hash(x.validx,h)
+    h=hash(x.numerator,h)
+    h=hash(x.denominator,h)
+    h=hash(x.weight,h)
+    h=hash(x.features,h)
+    h=hash(x.candMatWOMaxValues,h)
+    h=hash(x.mappings,h)
+    return h    
+end
 
 function getindex_internal(r::DTMTable,idx;compact_features=false) where T <: Number
     #this is currently not working for boolean indices (BitVector)
