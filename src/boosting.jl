@@ -15,7 +15,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
     obs = size(features,1)
     #obs=obstrn+obsval  assumes that trn and val idx form a partition!
     if size(features,1) != obstrn+obsval 
-        @warn("DTM: obstrn+obsval != size(features,1). This is experimental.")
+#        @warn("DTM: obstrn+obsval != size(features,1). This is experimental.")
     end
     
 	current_error=0.0
