@@ -11,11 +11,12 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	obstrn,obsval,trn_meanobservedvalue,val_meanobservedvalue,trn_numtot,val_numtot,trn_denomtot,val_denomtot,empty_rows_after_iteration_stats,showTimeUsedByEachIteration,chosen_apply_tree_fn,startAtMean,adaptiveLearningRate,moderationvector,iterations,nameOflistofpredictorsSheet,nameOfpredictorsSheet,nameOfModelStatisticsSheet,nameOfScoresSheet,nameOfOverviewSheet,nameOfSettingsSheet,nameOfValidationSheet,xlData,showProgressBar_time,prroduceEstAndLeafMatrices=initSettingsWhichAreTheSameForBoostingAndBagging(trnidx,validx,actualNumerator,denominator,sett)
 	#trn_meanobservedvalue is the mean observed RATIO, i.e. sum(numerator)/sum(denominator) for the training data
 	T_Uint8_or_UInt16=find_max_type(features)
-    obs=obstrn+obsval
-    #obs = size(features,1) #max(maximum(trnidx),maximum(validx)) #obs = obstrn+obsval #this assumes that trn and val idx form a partition!
-    #if size(features,1) != obstrn+obsval 
-    #    @warn("DTM: obstrn+obsval != size(features,1). This is experimental.")
-    #end
+    #obs=obstrn+obsval
+    obs = size(features,1)
+    #obs=obstrn+obsval  assumes that trn and val idx form a partition!
+    if size(features,1) != obstrn+obsval 
+#        @warn("DTM: obstrn+obsval != size(features,1). This is experimental.")
+    end
     
 	current_error=0.0
     moderationfactor=moderationvector[1]

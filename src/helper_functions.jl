@@ -4001,8 +4001,8 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
     denominator=view(denominator_full_vec,trnidx)
     estimatedRatioPerRow=view(estimatedRatioPerRow_full_vec,trnidx)
 	
-	#srt::Vector{Int}=sortperm(raw_rel,alg=QuickSort) #we could use RadixSort here, it uses about 40m of memory for 5m obs, AND I am unsure how easy it is to get the permutation (compared to sorting in place). But the algorithm is about 50% faster for random floats than QuickSort.
-	#sortperm!(srt,raw_rel,alg=QuickSort)
+	#srt::Vector{Int}=sortperm(raw_rel,alg=QuickSort) 
+	#sortperm!(srt,raw_rel,alg=QuickSort) #as of julia 1.0.0 the custom sortperm code is about 25% faster but uses a lot of memory (compared to sortperm!)
 	my_sortperm_you_should_regularily_check_if_sortperm_in_base_has_become_more_efficient!(srt,raw_rel) #we could use RadixSort here, it uses about 40m of memory for 5m obs, AND I am unsure how easy it is to get the permutation (compared to sorting in place). But the algorithm is about 50% faster for random floats than QuickSort.
 	obs=length(raw_rel)
 	raw_rel_srt=view(raw_rel,srt)	

@@ -147,7 +147,8 @@ cvsampler=CVOptions(3,0.65,true)
 @info("DTM:testing cvsampler2")
 statsdf,settsdf,cvModels=dtm(dtmtable,sett,cvsampler)
 
-@warn("CV sampler tests are currently breaking the other tests (possibly because dtmtable is modified which should not happen!")
+@warn("we can probably enable that 'test' now (it should run fine)")
+@warn("CV sampler tests were breaking the other tests (possibly because dtmtable is modified which should not happen!")
 @test_broken 1==2 
 if false
     @info("DTM:testing cvsampler3")
