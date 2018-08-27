@@ -41,6 +41,7 @@ datafile=joinpath("data","reservingAccident","Simulated.Cashflows.csv")
 @assert isfile(datafile) "File not found: $(datafile). Consider the readme.txt in the folder data\\reservingAccident\\"
 elt=[String,String,String,Int,Int,Int,String,Int]
 elt=vcat(elt,repeat([Float64],12))
+@info("Reading data...")
 @time fullData=CSV.read(datafile,types=elt,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
 #Define a random split into training and validation data 
@@ -133,11 +134,13 @@ paidToDatePerRow=getPaidToDatePerRow(dataKnownByYE2005)
 #trueReservePerRow=trueUltimatePerRow.-paidToDatePerRow #this is not meaningful either
 
 #build 'triangle' (in this case, we will atualls get a retangle rather than a triangle)
+@info("Fitting 'plain' CL to all data (including 'unknown' part of the triangle)")
 triangleInclIBNyRClaims=buildTriangle(fullData)
 trueUltimate=triangleInclIBNyRClaims[:,end]
 
 #CL
 #consider aggregate CL Model
+@info("Fitting 'plain' CL to all data")
 triangle=buildTriangle(dataKnownByYE2005)
 clAllLOBs=chainLadder(triangle)
 
@@ -157,6 +160,7 @@ end
 CLTotalUltimate=sum(CLUltimatePerRow)
 
 #consider CL per LoB
+@info("Fitting 'plain' CL models to each LoB")
 LOB="1";triangleLOB1=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB1=chainLadder(triangleLOB1);trueUltimateLOB1=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end];clLOB1[:trueReserves]=trueUltimateLOB1.-clLOB1[:paidToDate];clLOB1[:error]=clLOB1[:trueReserves].-clLOB1[:reserves];
 LOB="2";triangleLOB2=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB2=chainLadder(triangleLOB2);trueUltimateLOB2=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end];clLOB2[:trueReserves]=trueUltimateLOB2.-clLOB2[:paidToDate];clLOB2[:error]=clLOB2[:trueReserves].-clLOB2[:reserves];
 LOB="3";triangleLOB3=buildTriangle(dataKnownByYE2005[dataKnownByYE2005[:LoB].==LOB,:]);clLOB3=chainLadder(triangleLOB3);trueUltimateLOB3=buildTriangle(fullData[fullData[:LoB].==LOB,:])[:,end];clLOB3[:trueReserves]=trueUltimateLOB3.-clLOB3[:paidToDate];clLOB3[:error]=clLOB3[:trueReserves].-clLOB3[:reserves];
@@ -218,7 +222,7 @@ treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 
 @info("Starting model fit...")
-
+@show size(modelsWeightsPerLDF)
 #folderForOutput should be defined further above
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #actual model run (this may take a few minutes)
