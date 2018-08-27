@@ -199,9 +199,10 @@ push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,2400
 #push!(modelsWeightsPerLDF,[80000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
 #alternative
 #
+
 #WEIGHTS FOR DIFFERENCE FN: push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
 #version where the weigth is increasing
-push!(modelsWeightsPerLDF,[80000,170000,240000,220000,240000,240000,240000,240000,240000,240000,15000000])
+#push!(modelsWeightsPerLDF,[80000,170000,240000,220000,240000,240000,240000,240000,240000,240000,15000000])
 
 #You can provide additional sets of minimum weights to see the differences between two models
 #push!(modelsWeightsPerLDF,[70000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
@@ -221,12 +222,12 @@ treeResultsAgg=Dict{Float64,DataFrame}()
 updateSettingsMod!(sett,crit="sse",model_type="build_tree")
 @time sse_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
+@info("Finished building models.")
 #boosted model
 #=
     updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
     @time ldfArr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 =#
-
 
 if false
     #compare results (CL versus Tree versus Truth)
