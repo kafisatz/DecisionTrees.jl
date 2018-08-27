@@ -11,6 +11,7 @@
     ###            SSRN Manuscript ID 3130560.                   ###  
     ###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
 
+@warn("You need to install DecisionTrees.jl. Consider the readme of this page: 'https://github.com/kafisatz/DecisionTrees.jl'")
 @warn("You need to make sure that CSV and DataFrames are installed for this code to run.")
 
 using Distributed
@@ -216,6 +217,8 @@ end
 treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 
+@info("Starting model fit...")
+
 #folderForOutput should be defined further above
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #actual model run (this may take a few minutes)
@@ -230,6 +233,7 @@ updateSettingsMod!(sett,crit="sse",model_type="build_tree")
 =#
 
 if false
+    @info("Deriving statistics...")
     #compare results (CL versus Tree versus Truth)
     modelIndices=sort(collect(keys(treeResultsAgg)))
     modelStatistics=Dict{Float64,ModelStats}()
@@ -241,6 +245,8 @@ if false
         @show deltaTotalPerLOB
         modelStatistics[thiskey]=obj
     end
+
+    @info("Writing data to disk...")
 
     #write tables to csv file
     summaryByVar=vcat(collect(values(modelStatistics[1.0].comparisons)))
