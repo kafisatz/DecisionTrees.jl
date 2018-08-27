@@ -230,6 +230,7 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
     LDFArray[:,end].=1.0 #tail factor 1.0
     LDFArraySmoohted=deepcopy(LDFArray)
     LDFArrayUnSmoohted=deepcopy(LDFArray)
+    some_stars="******************************************************************************"
         
     for minWeightPerLDF in modelsWeightsPerLDF
         fill!(LDFArray,0.0)
@@ -237,9 +238,14 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
         kk+=1
         for ldfYear=1:length(ayears)-1 
             selectedWeight=minWeightPerLDF[ldfYear]  
-            @show ldfYear
-            @show selectedWeight
-        
+            println(some_stars)
+            println(some_stars)
+            println(some_stars)
+            @info("Modelling LDF Year $(ldfYear). Selected minimum weight per leaf is $(selectedWeight)")
+            println(some_stars)
+            println(some_stars)
+            println(some_stars)
+                       
             resultingFiles,resM=runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput,settOrig)
             #apply tree to the known claims
             if sett.model_type=="build_tree"

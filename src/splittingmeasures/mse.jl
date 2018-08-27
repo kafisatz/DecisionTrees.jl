@@ -1,5 +1,5 @@
 #=
-    this splitting criterion considers the  ratio = sum(numerator)/sum(denominator) (for each split§)
+    this splitting criterion considers the  ratio = sum(numerator)/sum(denominator) (for each split)
     we minimize the (ratio.-meanLeft)^2 of both children
 =#
 

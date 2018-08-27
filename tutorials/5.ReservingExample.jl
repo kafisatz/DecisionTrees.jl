@@ -11,9 +11,13 @@
     ###            SSRN Manuscript ID 3130560.                   ###  
     ###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
 
-import Distributed
-import Random
-import DelimitedFiles
+@warn("You need to make sure that CSV and DataFrames are installed for this code to run.")
+
+using Distributed
+using Random
+using DelimitedFiles 
+using Pkg
+
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
 Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggregate
@@ -21,7 +25,8 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 @time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time here 
 
 #folderForOutput="C:\\temp\\"
-folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180711\\"
+#folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180827\\"
+folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180827\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
 #include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
@@ -30,6 +35,7 @@ include(joinpath(Pkg.dir("DecisionTrees"),"tutorials","5.ReservingExample_functi
 ##############################
 #Read the data
 ##############################
+#note: the underyling data was generated with R (consider the readme.txt in the folder data\\reservingAccident\\)
 datafile=joinpath("data","reservingAccident","Simulated.Cashflows.csv")
 @assert isfile(datafile) "File not found: $(datafile). Consider the readme.txt in the folder data\\reservingAccident\\"
 elt=[String,String,String,Int,Int,Int,String,Int]
@@ -175,7 +181,6 @@ clPerLOB["4"]=clLOB4
 @assert all(isapprox.(vcat(trueReserves,sum(trueReserves)).-clLOB1[:trueReserves].-clLOB2[:trueReserves].-clLOB3[:trueReserves].-clLOB4[:trueReserves],0))
 @assert all(isapprox.(trueUltimate.-trueUltimateLOB1.-trueUltimateLOB2.-trueUltimateLOB3.-trueUltimateLOB4,0))
 
-
 ##############################
 #Consider CL decision trees
 ##############################
@@ -210,19 +215,64 @@ end
 treeResults=Dict{Float64,DataFrame}()
 treeResultsAgg=Dict{Float64,DataFrame}()
 
-folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180717_sse\\"
-folderForOutput="c:\\temp\\32\\"
+#folderForOutput should be defined further above
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #actual model run (this may take a few minutes)
 updateSettingsMod!(sett,crit="sse",model_type="build_tree")
 @time sse_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
 #boosted model
-updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
-@time ldfArr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+#=
+    updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
+    @time ldfArr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+=#
 
-#=    s
 
+if false
+    #compare results (CL versus Tree versus Truth)
+    modelIndices=sort(collect(keys(treeResultsAgg)))
+    modelStatistics=Dict{Float64,ModelStats}()
+    for thiskey in modelIndices
+        @show thiskey
+        resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
+        obj=ModelStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
+        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        @show deltaTotalPerLOB
+        modelStatistics[thiskey]=obj
+    end
+
+    #write tables to csv file
+    summaryByVar=vcat(collect(values(modelStatistics[1.0].comparisons)))
+    CSV.write(string("C:\\temp\\results.csv"),summaryByVar)
+
+    summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
+    CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
+
+    summaryByVar=vcat(collect(values(modelStatistics[1.4].comparisons)))
+    CSV.write(string("C:\\temp\\results3.csv"),summaryByVar)
+
+    for kk in keys(modelStatistics)    
+        @show kk
+        obj=modelStatistics[kk]
+        trueTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2]),string.(collect(1:4)))
+        treeTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        clTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,4]),string.(collect(1:4)))
+        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        @show deltaTotalPerLOB,sum(deltaTotalPerLOB)
+        @show clTotal,sum(clTotal)
+        @show treeTotal,sum(treeTotal)
+        @show trueTotal,sum(trueTotal)
+    end
+end
+#=
+    customSummary(treeResultsAgg[2],treeResults[2],writeResultToTemp=true)
+=#
+
+@warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
+@warn("Make a note that 5m claims is a large data set! In practice less data might be availabe but the concept can be applied nevertheless")
+
+#=    
+#try some alternative models
 NN=20
 sse_ldfarr[1:NN,1]
 ldfArr[1:NN,1]
@@ -234,7 +284,7 @@ ldfArr[1:NN,1]
     0
 
 
-#todo consider mse and sse
+#tbd: compare mse versus sse
 selectedWeight=150000
 while (selectedWeight < 180000)
     ldfYear=2
@@ -267,45 +317,3 @@ resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedW
 0
 
     =#
-
-#compare results (CL versus Tree versus Truth)
-modelIndices=sort(collect(keys(treeResultsAgg)))
-modelStatistics=Dict{Float64,ModelStats}()
-for thiskey in modelIndices
-    @show thiskey
-    resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
-    obj=ModelStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
-    deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-    @show deltaTotalPerLOB
-    modelStatistics[thiskey]=obj
-end
-
-#write whole table to csv file
-summaryByVar=vcat(collect(values(modelStatistics[1.0].comparisons)))
-CSV.write(string("C:\\temp\\results.csv"),summaryByVar)
-
-summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
-CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
-
-summaryByVar=vcat(collect(values(modelStatistics[1.4].comparisons)))
-CSV.write(string("C:\\temp\\results4.csv"),summaryByVar)
-
-for kk in keys(modelStatistics)    
-    @show kk
-    obj=modelStatistics[kk]
-    trueTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2]),string.(collect(1:4)))
-    treeTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-    clTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,4]),string.(collect(1:4)))
-    deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-    @show deltaTotalPerLOB,sum(deltaTotalPerLOB)
-    @show clTotal,sum(clTotal)
-    @show treeTotal,sum(treeTotal)
-    @show trueTotal,sum(trueTotal)
-end
-
-#=
-    customSummary(treeResultsAgg[2],treeResults[2],writeResultToTemp=true)
-=#
-
-@warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
-@warn("make a note that 5m claims is a large data set! (in practice less data might be availabe but the concept can be applied nevertheless)")
