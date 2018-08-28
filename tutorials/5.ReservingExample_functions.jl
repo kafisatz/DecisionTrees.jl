@@ -207,7 +207,7 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
         
         comparisons[vv]=deepcopy(comparison)
         if writeResultToTemp
-            if (isdir("C:\\temp\\"))
+            if isdir("C:\\temp\\")
                 CSV.write(string("C:\\temp\\",vv,".csv"),comparison)
             end
         end
@@ -228,8 +228,8 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
     #array of LDFs
     LDFArray=zeros(size(dataKnownByYE2005,1),length(ayears))
     LDFArray[:,end].=1.0 #tail factor 1.0
-    LDFArraySmoohted=deepcopy(LDFArray)
-    LDFArrayUnSmoohted=deepcopy(LDFArray)
+    LDFArraySmoothed=deepcopy(LDFArray)
+    LDFArrayUnSmoothed=deepcopy(LDFArray)
     some_stars="******************************************************************************"
         
     for minWeightPerLDF in modelsWeightsPerLDF
@@ -238,11 +238,10 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
         kk+=1
         for ldfYear=1:length(ayears)-1 
             selectedWeight=minWeightPerLDF[ldfYear]  
-            println(some_stars)
+            println("")
             println(some_stars)
             println(some_stars)
             @info("Modelling LDF Year $(ldfYear). Selected minimum weight per leaf is $(selectedWeight)")
-            println(some_stars)
             println(some_stars)
             println(some_stars)
                        
@@ -253,8 +252,8 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
             else
                 dfpred=predict(resM,dtmKnownByYE2005.features)  
                 fittedValues=dfpred[:RawEstimate]                                
-                LDFArraySmoohted[:,ldfYear].=dfpred[:SmoothedEstimate]
-                LDFArrayUnSmoohted[:,ldfYear].=dfpred[:UnsmoothedEstimate]
+                LDFArraySmoothed[:,ldfYear].=dfpred[:SmoothedEstimate]
+                LDFArrayUnSmoothed[:,ldfYear].=dfpred[:UnsmoothedEstimate]
             end           
             #save estimated ldf per observation 
             LDFArray[:,ldfYear].=copy(fittedValues)
@@ -266,10 +265,10 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
     treeResultsAgg[kk]=deepcopy(estAgg)
     #for boosting also store the other estimates
     if !(sett.model_type=="build_tree")
-        estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArraySmoohted,clAllLOBs,paidToDatePerRow)    
+        estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArraySmoothed,clAllLOBs,paidToDatePerRow)    
         treeResults[kk+0.2]=deepcopy(estPerRow)
         treeResultsAgg[kk+0.2]=deepcopy(estAgg)
-        estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArrayUnSmoohted,clAllLOBs,paidToDatePerRow)    
+        estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArrayUnSmoothed,clAllLOBs,paidToDatePerRow)    
         treeResults[kk+0.4]=deepcopy(estPerRow)
         treeResultsAgg[kk+0.4]=deepcopy(estAgg)        
     end
@@ -323,4 +322,55 @@ function addTotal!(d::DataFrame)
     totRow[:factorsToUltimate]=totRow[:ultimate][end]/totRow[:paidToDate][end]
     append!(d,totRow)
     return nothing
+end
+
+function CL_est_per_variable(fullData,cldf::DataFrame;writeResultToTemp=true) #(dataKnownByYE2005,CLLDFperRow,CLUltimatePerRow,paidToDatePerRow)
+    #@assert size(dataKnownByYE2005,1)==length(CLUltimatePerRow)==length(CLLDFperRow)==length(paidToDatePerRow)
+    comparisons=Dict{String,DataFrame}()
+    byVars=["cc","inj_part","age","LoB"]
+    for vv in byVars
+        #attach explanatory data to the data
+        cldf[Symbol(vv)]=dataKnownByYE2005[Symbol(vv)]
+        #create comparison table
+        comparison=DataFrames.aggregate(fullData[vcat(Symbol(vv),:PayCum11, :paidToDate)],Symbol(vv),sum)
+        #rename table
+        names!(comparison,vcat(Symbol(vv),:PayCum11, :paidToDate))
+        #calculate reserves
+        comparison[Symbol("True Outstanding Amount")]=comparison[:PayCum11].-comparison[:paidToDate]
+        sort!(comparison,Symbol(vv))
+        #calculate estimated reserves
+        est=DataFrames.aggregate(cldf[vcat(Symbol(vv),:ultimate, :reserves,:paidToDate)],Symbol(vv),sum)
+        sort!(est,Symbol(vv))
+        #rename table
+        names!(est,vcat(Symbol(vv),:ultimate,:reserves, :paidToDate))
+        #check
+        @assert all(isapprox.(est[:paidToDate].-comparison[:paidToDate],0))
+        #attach estimated data (this should be a join (but as long as all values occurr in the data, we are fine))
+        comparison[Symbol("Estimated Reserves")]=est[:reserves]
+        #reorder columns
+        comparison=comparison[[1,4,5,3,2]]
+        #sort the table
+        if !isa(comparison[1,Symbol(vv)],Number)
+            comparison[:sort]=Meta.parse.(comparison[Symbol(vv)])
+        else 
+            comparison[:sort]=deepcopy(comparison[Symbol(vv)])
+        end 
+        sort!(comparison,:sort)
+        #add variable name column
+        comparison[:variable]=vv        
+        comparison[:value]=string.(comparison[Symbol(vv)])
+        delete!(comparison, Symbol(vv))
+        #reorder columns
+        comparison = comparison[[7,1,2,3,4,5,6]]
+        
+        comparisons[vv]=deepcopy(comparison)
+        if writeResultToTemp
+            if isdir("C:\\temp\\")
+                CSV.write(string("C:\\temp\\",vv,".csv"),comparison)
+            end
+        end
+        println(vv," : ",ceil(Int,sum(abs.(comparison[Symbol("True Outstanding Amount")].-comparison[Symbol("Estimated Reserves")]))/1000))
+    end
+
+    return comparisons
 end

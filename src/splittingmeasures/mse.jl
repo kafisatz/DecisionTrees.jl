@@ -186,6 +186,7 @@ end
 
 
 mutable struct CustomVariance
+    #considers the variance of d_i*(n_i/d_i-fittedMean)^2 where n_i/d_i is calculated pointwise and fitted mean is (sum(n_i)/sum(d_i))
     meanratio::Float64
     sn::Float64 #sum nominator
     sd::Float64 #sum denominator    
@@ -230,6 +231,7 @@ function removeSinglePoint!(a::CustomVariance,num,denom)
 end
 
 function addSinglePoint!(a::CustomVariance,num,denom)
+    #considers the variance of d_i*(n_i/d_i-fittedMean)^2 where n_i/d_i is calculated pointwise and fitted mean is (sum(n_i)/sum(d_i))
     sn=a.sn+num
     sd=a.sd+denom   
     a.n=a.n+1
@@ -243,6 +245,7 @@ function addSinglePoint!(a::CustomVariance,num,denom)
 end
 
 function Base.merge!(a::CustomVariance,b::CustomVariance)
+    #considers the variance of d_i*(n_i/d_i-fittedMean)^2 where n_i/d_i is calculated pointwise and fitted mean is (sum(n_i)/sum(d_i))
     #merges b into a
     #i.e. the points form b are 'added' to a
     sn=a.sn+b.sn
@@ -261,6 +264,7 @@ function Base.merge!(a::CustomVariance,b::CustomVariance)
 end
 
 function Base.merge(a::CustomVariance,b::CustomVariance)
+    #considers the variance of d_i*(n_i/d_i-fittedMean)^2 where n_i/d_i is calculated pointwise and fitted mean is (sum(n_i)/sum(d_i))
     c=copy(a)
     merge!(c,b)
     return c
@@ -274,6 +278,7 @@ If this is not the case, the result of this function is most likely meaningless
 That is to say "subtract" the series b from the series a and update the mean and variance of a accordingly
 """
 function unmerge!(a::CustomVariance,b::CustomVariance)
+    #considers the variance of d_i*(n_i/d_i-fittedMean)^2 where n_i/d_i is calculated pointwise and fitted mean is (sum(n_i)/sum(d_i))
     sn=a.sn-b.sn
     sd=a.sd-b.sd   
     n=a.n-b.n

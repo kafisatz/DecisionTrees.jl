@@ -31,7 +31,7 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 
 #folderForOutput="C:\\temp\\"
 #folderForOutput="H:\\Privat\\"
-folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180827\\"
+folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180828\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
 #include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
@@ -159,6 +159,12 @@ ayperRow=dataKnownByYE2005[:AY]
 CLfactorsToUltimate=clAllLOBs[:factorsToUltimate]
 CLLDFperRow=map(x->CLfactorsToUltimate[x-1993],ayperRow)
 CLUltimatePerRow=CLLDFperRow.*paidToDatePerRow
+cldf=DataFrame(ldf=CLLDFperRow,ultimate=CLUltimatePerRow,paidToDate=paidToDatePerRow)
+cldf[:reserves]=cldf[:ultimate].-cldf[:paidToDate]
+CLcomparisons=CL_est_per_variable(fullData,cldf)
+summaryByVar=vcat(collect(values(CLcomparisons)))
+CSV.write(string(folderForOutput,"resultsCL.csv"),summaryByVar)
+
 @assert isapprox(0,sum(CLUltimatePerRow)-sum(clAllLOBs[:ultimate]),atol=1e-4) #should be zero 
 for i in ayears
     idx=ayperRow.==i
@@ -206,18 +212,19 @@ clPerLOB["4"]=clLOB4
 modelsWeightsPerLDF=Vector{Vector{Float64}}()
 #the values were selected by expert judgement
 #primarily we considered reversals (i.e when the observed ratio in the validation data is not monotonic in the number of leaves (as the leaf number is defined such that the training observed ratios are increasing))
-push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
-#slightly more conservative version
-#push!(modelsWeightsPerLDF,[80000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
-#alternative
-#
+push!(modelsWeightsPerLDF,[150000,200000,270000,220000,235000,210000,200000,240000,130000,130000,15000000])
+
+#alternatives
+
+#old weights for sse
+#push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
+
+#You can provide additional sets of minimum weights to see the differences between two models
+#push!(modelsWeightsPerLDF,[70000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
 
 #WEIGHTS FOR DIFFERENCE FN: push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
 #version where the weight is increasing
 #push!(modelsWeightsPerLDF,[80000,170000,240000,220000,240000,240000,240000,240000,240000,240000,15000000])
-
-#You can provide additional sets of minimum weights to see the differences between two models
-#push!(modelsWeightsPerLDF,[70000,170000,200000,220000,235000,210000,200000,240000,200000,130000,15000000])
 
 for i=1:length(modelsWeightsPerLDF)
     @assert length(modelsWeightsPerLDF[i])==length(ayears)-1 # == number of LDFs
@@ -234,13 +241,13 @@ treeResultsAgg=Dict{Float64,DataFrame}()
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #actual model run (this may take a few minutes)
 updateSettingsMod!(sett,crit="sse",model_type="build_tree")
-@time sse_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+@time this_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
 @info("Finished building models.")
 #boosted model
 #=
     updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
-    @time ldfArr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+    @time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 =#
 
 if true
@@ -259,7 +266,7 @@ if true
         @info("Writing data to disk...")
         #write tables to csv file
         summaryByVar=vcat(collect(values(modelStatistics[thiskey].comparisons)))
-        CSV.write(string("C:\\temp\\results",thiskey,".csv"),summaryByVar)
+        CSV.write(string(folderForOutput,"results",thiskey,".csv"),summaryByVar)
     end
 
     #summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
@@ -288,12 +295,12 @@ end
 #=    
 #try some alternative models
 NN=20
-sse_ldfarr[1:NN,1]
+this_ldfarr[1:NN,1]
 ldfArr[1:NN,1]
-    ldfYear=1
-    selectedWeight=130000
+    ldfYear=4
+    selectedWeight=250000
     settC=deepcopy(sett)
-    updateSettingsMod!(settC,crit="mse")
+    updateSettingsMod!(settC,crit="sse")
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
     0
 
