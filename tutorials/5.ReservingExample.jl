@@ -18,6 +18,7 @@
 @warn("You need to install DecisionTrees.jl. Consider the readme of this page: 'https://github.com/kafisatz/DecisionTrees.jl'")
 @warn("You need to make sure that CSV and DataFrames are installed for this code to run.")
 
+using Statistics
 using Distributed
 using Random
 using DelimitedFiles 
@@ -244,11 +245,6 @@ updateSettingsMod!(sett,crit="sse",model_type="build_tree")
 @time this_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
 @info("Finished building models.")
-#boosted model
-#=
-    updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
-    @time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
-=#
 
 if true
     @info("Deriving statistics...")
@@ -288,6 +284,51 @@ end
 #=
     customSummary(treeResultsAgg[2],treeResults[2],writeResultToTemp=true)
 =#
+
+#boosted model
+
+@info("Starting Boosting models...")
+
+treeResults=Dict{Float64,DataFrame}()
+treeResultsAgg=Dict{Float64,DataFrame}()
+updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
+@time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+
+if true
+    @info("Deriving statistics...")
+    #compare results (CL versus Tree versus Truth)
+    modelIndices=sort(collect(keys(treeResultsAgg)))
+    modelStatistics=Dict{Float64,ModelStats}()
+    for thiskey in modelIndices
+        @show thiskey
+        resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
+        obj=ModelStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
+        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        @show deltaTotalPerLOB
+        modelStatistics[thiskey]=obj
+
+        @info("Writing data to disk...")
+        #write tables to csv file
+        summaryByVar=vcat(collect(values(modelStatistics[thiskey].comparisons)))
+        CSV.write(string(folderForOutput,"results",thiskey,".csv"),summaryByVar)
+    end
+
+    #summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
+    #CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
+
+    for kk in keys(modelStatistics)    
+        @show kk
+        obj=modelStatistics[kk]
+        trueTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2]),string.(collect(1:4)))
+        treeTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        clTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,4]),string.(collect(1:4)))
+        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        @show deltaTotalPerLOB,sum(deltaTotalPerLOB)
+        @show clTotal,sum(clTotal)
+        @show treeTotal,sum(treeTotal)
+        @show trueTotal,sum(trueTotal)
+    end
+end
 
 @warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
 @warn("Make a note that 5m claims is a large data set! In practice less data might be availabe but the concept can be applied nevertheless")

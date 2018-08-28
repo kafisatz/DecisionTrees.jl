@@ -251,14 +251,26 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
                 fittedValues,leafNrs=predict(resM,dtmKnownByYE2005.features)  
             else
                 dfpred=predict(resM,dtmKnownByYE2005.features)  
+                #@show ldfYear
+                #@show dfpred[1:2,:]
                 fittedValues=dfpred[:RawEstimate]                                
                 LDFArraySmoothed[:,ldfYear].=dfpred[:SmoothedEstimate]
                 LDFArrayUnSmoothed[:,ldfYear].=dfpred[:UnsmoothedEstimate]
             end           
             #save estimated ldf per observation 
-            LDFArray[:,ldfYear].=copy(fittedValues)
+            LDFArray[:,ldfYear].=copy(fittedValues)            
         end   
+        
+        #@show LDFArray[1:2,:]        
+        #@show LDFArraySmoothed[1:2,:]
+        #@show LDFArrayUnSmoothed[1:2,:]
 
+    if !(sett.model_type=="build_tree")
+        if length(ayears)-1==ldfYear
+            @warn("BK: Over writing ldf factors for year=$(ldfYear)") #there seems to be an issue for the last year in the model when no split is found
+            LDFArray[:,ldfYear]=median(LDFArrayUnSmoothed[:ldfYear])
+        end
+    end
     #consider estimated ultimates per claim 
     estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)    
     treeResults[kk]=deepcopy(estPerRow)
