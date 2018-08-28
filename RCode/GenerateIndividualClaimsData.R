@@ -79,7 +79,7 @@ add.obs[,4] <- 1994:2005
 add.obs[,9:20] <- 0
 output <- rbind(output,add.obs)
 
-#alreadyReportedby2005<-output[output$AY+output$RepDel<=2005,]
+alreadyReportedby2005<-output[output$AY+output$RepDel<=2005,]
 
 ### Cumulative cash flows
 #cum_CF <- round((1000)^(-1)*ddply(output, .(AY), summarise, CF00=sum(Pay00),CF01=sum(Pay01),CF02=sum(Pay02),CF03=sum(Pay03),CF04=sum(Pay04),CF05=sum(Pay05),CF06=sum(Pay06),CF07=sum(Pay07),CF08=sum(Pay08),CF09=sum(Pay09),CF10=sum(Pay10),CF11=sum(Pay11))[,2:13])
