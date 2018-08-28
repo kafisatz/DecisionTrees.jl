@@ -11,6 +11,10 @@
     ###            SSRN Manuscript ID 3130560.                   ###  
     ###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
 
+#
+@assert splitdir(pwd())[2]=="DecisionTrees.jl" """Error. The working directory should be the DecisionTrees.jl folder.\r\nUse 'cd("C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl")' or similar to change the working dir in Julia"""
+#if the working dir is not correct, the include command further down will fail 
+
 @warn("You need to install DecisionTrees.jl. Consider the readme of this page: 'https://github.com/kafisatz/DecisionTrees.jl'")
 @warn("You need to make sure that CSV and DataFrames are installed for this code to run.")
 
@@ -26,12 +30,15 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 @time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time here 
 
 #folderForOutput="C:\\temp\\"
-#folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180827\\"
-folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Privat\\SAV\\Fachgruppe Data Science\\ReservingTrees\\20180827\\"
+#folderForOutput="H:\\Privat\\"
+folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180827\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
 #include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
-include(joinpath(Pkg.dir("DecisionTrees"),"tutorials","5.ReservingExample_functions.jl"))
+#include(joinpath(Pkg.dir("DecisionTrees"),"tutorials","5.ReservingExample_functions.jl")) #this may not use the most current file but rather the file in the folder with compiled julia code, e.g. C:\\Users\\bernhard.konig\\.julia\\packages\\DecisionTrees\\3AXAR\\.... or similar
+fn_file=joinpath(pwd(),"tutorials","5.ReservingExample_functions.jl") 
+@assert isfile(fn_file) 
+include(fn_file)
 
 ##############################
 #Read the data
@@ -109,7 +116,7 @@ end
 paidToDateFullDataPerRow=getPaidToDatePerRow(fullData)
 fullData[:paidToDate]=paidToDateFullDataPerRow
 
-#consider the Accient Years
+#consider the Accident Years
 ayears=sort(unique(fullData[:AY]))
 maxAY=maximum(ayears)
 @assert maxAY==2005
@@ -133,7 +140,7 @@ paidToDatePerRow=getPaidToDatePerRow(dataKnownByYE2005)
 #trueUltimatePerRow (this is not meaningful because we have two sets of claims: fullData[:PayCum11] AND dtmKnownByYE2005[:PayCum11])
 #trueReservePerRow=trueUltimatePerRow.-paidToDatePerRow #this is not meaningful either
 
-#build 'triangle' (in this case, we will atualls get a retangle rather than a triangle)
+#build 'triangle' (in this case, we will actually get a rectangle rather than a triangle)
 @info("Fitting 'plain' CL to all data (including 'unknown' part of the triangle)")
 triangleInclIBNyRClaims=buildTriangle(fullData)
 trueUltimate=triangleInclIBNyRClaims[:,end]
@@ -206,7 +213,7 @@ push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,2400
 #
 
 #WEIGHTS FOR DIFFERENCE FN: push!(modelsWeightsPerLDF,[130000,170000,240000,220000,235000,210000,200000,240000,130000,130000,15000000])
-#version where the weigth is increasing
+#version where the weight is increasing
 #push!(modelsWeightsPerLDF,[80000,170000,240000,220000,240000,240000,240000,240000,240000,240000,15000000])
 
 #You can provide additional sets of minimum weights to see the differences between two models
@@ -236,7 +243,7 @@ updateSettingsMod!(sett,crit="sse",model_type="build_tree")
     @time ldfArr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 =#
 
-if false
+if true
     @info("Deriving statistics...")
     #compare results (CL versus Tree versus Truth)
     modelIndices=sort(collect(keys(treeResultsAgg)))
