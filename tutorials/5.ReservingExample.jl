@@ -255,19 +255,15 @@ if true
         deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
         @show deltaTotalPerLOB
         modelStatistics[thiskey]=obj
+
+        @info("Writing data to disk...")
+        #write tables to csv file
+        summaryByVar=vcat(collect(values(modelStatistics[thiskey].comparisons)))
+        CSV.write(string("C:\\temp\\results",thiskey,".csv"),summaryByVar)
     end
 
-    @info("Writing data to disk...")
-
-    #write tables to csv file
-    summaryByVar=vcat(collect(values(modelStatistics[1.0].comparisons)))
-    CSV.write(string("C:\\temp\\results.csv"),summaryByVar)
-
-    summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
-    CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
-
-    summaryByVar=vcat(collect(values(modelStatistics[1.4].comparisons)))
-    CSV.write(string("C:\\temp\\results3.csv"),summaryByVar)
+    #summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
+    #CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
 
     for kk in keys(modelStatistics)    
         @show kk
