@@ -219,7 +219,6 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
     
     
 function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,settOrig::ModelSettings)
-
     kk=0
     Random.seed!(1240)
     ayears=sort(unique(dataKnownByYE2005[:AY]))
@@ -241,7 +240,7 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
             println("")
             println(some_stars)
             println(some_stars)
-            @info("Modelling LDF Year $(ldfYear). Selected minimum weight per leaf is $(selectedWeight)")
+            println("Modelling LDF Year $(ldfYear). Selected minimum weight per leaf is $(selectedWeight)")
             println(some_stars)
             println(some_stars)
                        
@@ -258,17 +257,17 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
                 LDFArrayUnSmoothed[:,ldfYear].=dfpred[:UnsmoothedEstimate]
             end           
             #save estimated ldf per observation 
-            LDFArray[:,ldfYear].=copy(fittedValues)            
+            LDFArray[:,ldfYear].=copy(fittedValues) 
+            if (!(sett.model_type=="build_tree"))&&(length(ayears)-1==ldfYear)
+                @warn("BK: Over writing ldf factors for year=$(ldfYear)") #there seems to be an issue for the last year in the model when no split is found
+                LDFArray[:,ldfYear].=median(LDFArrayUnSmoothed[:,ldfYear])
+            end           
         end   
         
         #@show LDFArray[1:2,:]        
         #@show LDFArraySmoothed[1:2,:]
         #@show LDFArrayUnSmoothed[1:2,:]
-
-    if (!(sett.model_type=="build_tree"))&& (length(ayears)-1==ldfYear)
-            @warn("BK: Over writing ldf factors for year=$(ldfYear)") #there seems to be an issue for the last year in the model when no split is found
-            LDFArray[:,ldfYear]=median(LDFArrayUnSmoothed[:ldfYear])
-    end
+   
     #consider estimated ultimates per claim 
     estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)    
     treeResults[kk]=deepcopy(estPerRow)

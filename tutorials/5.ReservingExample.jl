@@ -16,13 +16,15 @@
 #if the working dir is not correct, the include command further down will fail 
 
 @warn("You need to install DecisionTrees.jl. Consider the readme of this page: 'https://github.com/kafisatz/DecisionTrees.jl'")
-@warn("You need to make sure that CSV and DataFrames are installed for this code to run.")
+@warn("You need to make sure that the required packages are are installed for this code to run.")
 
-using Statistics
-using Distributed
-using Random
-using DelimitedFiles 
-using Pkg
+using Revise
+#stdlib packages:
+    using Statistics
+    using Distributed
+    using Random
+    using DelimitedFiles 
+    using Pkg
 
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
@@ -57,7 +59,7 @@ elt=vcat(elt,repeat([Float64],12))
         @warn("Subsetting data:")
         rnd=rand(size(fullData,1))
         srtTmp=sortperm(rnd)
-        subsetIdx=srtTmp[1:50000]
+        subsetIdx=srtTmp[1:200000]
         fullData=fullData[subsetIdx,:]
         folderForOutput="C:\\temp\\"
     end
@@ -178,10 +180,12 @@ CLcomparisons=CL_est_per_variable(fullData,cldf)
 summaryByVar=vcat(collect(values(CLcomparisons)))
 CSV.write(string(folderForOutput,"resultsCL.csv"),summaryByVar)
 
-@assert isapprox(0,sum(CLUltimatePerRow)-sum(clAllLOBs[:ultimate]),atol=1e-4) #should be zero 
-for i in ayears
-    idx=ayperRow.==i
-    @assert isapprox(0,sum(CLUltimatePerRow[idx])-clAllLOBs[:ultimate][i-1993],atol=1e-4) #should be zero for each year
+if !debug 
+    @assert isapprox(0,sum(CLUltimatePerRow)-sum(clAllLOBs[:ultimate]),atol=1e-4) #should be zero 
+    for i in ayears
+        idx=ayperRow.==i
+        @assert isapprox(0,sum(CLUltimatePerRow[idx])-clAllLOBs[:ultimate][i-1993],atol=1e-4) #should be zero for each year
+    end
 end
 CLTotalUltimate=sum(CLUltimatePerRow)
 
@@ -209,9 +213,10 @@ clPerLOB["2"]=clLOB2
 clPerLOB["3"]=clLOB3
 clPerLOB["4"]=clLOB4
 
-@assert all(isapprox.(vcat(trueReserves,sum(trueReserves)).-clLOB1[:trueReserves].-clLOB2[:trueReserves].-clLOB3[:trueReserves].-clLOB4[:trueReserves],0))
-@assert all(isapprox.(trueUltimate.-trueUltimateLOB1.-trueUltimateLOB2.-trueUltimateLOB3.-trueUltimateLOB4,0))
-
+if !debug 
+    @assert all(isapprox.(vcat(trueReserves,sum(trueReserves)).-clLOB1[:trueReserves].-clLOB2[:trueReserves].-clLOB3[:trueReserves].-clLOB4[:trueReserves],0))
+    @assert all(isapprox.(trueUltimate.-trueUltimateLOB1.-trueUltimateLOB2.-trueUltimateLOB3.-trueUltimateLOB4,0))
+end
 ##############################
 #Consider CL decision trees
 ##############################
@@ -219,7 +224,7 @@ clPerLOB["4"]=clLOB4
 #Define minimum weight per leaf (depending on the development year)
 #note:these weights are calibrated for a total training weight of 3477583 (Notably the number of claims will be smaller for higher LDFs!)
 @show sum(dataKnownByYE2005[:trnValCol]) #expected value: 3477583
-@assert sum(dataKnownByYE2005[:trnValCol])==3477583
+@assert debug||(sum(dataKnownByYE2005[:trnValCol])==3477583)
 
 #each entry corresponds to an LDF Year
 modelsWeightsPerLDF=Vector{Vector{Float64}}()
