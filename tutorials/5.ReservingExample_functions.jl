@@ -265,11 +265,9 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
         #@show LDFArraySmoothed[1:2,:]
         #@show LDFArrayUnSmoothed[1:2,:]
 
-    if !(sett.model_type=="build_tree")
-        if length(ayears)-1==ldfYear
+    if (!(sett.model_type=="build_tree"))&& (length(ayears)-1==ldfYear)
             @warn("BK: Over writing ldf factors for year=$(ldfYear)") #there seems to be an issue for the last year in the model when no split is found
             LDFArray[:,ldfYear]=median(LDFArrayUnSmoothed[:ldfYear])
-        end
     end
     #consider estimated ultimates per claim 
     estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)    
@@ -385,4 +383,42 @@ function CL_est_per_variable(fullData,cldf::DataFrame;writeResultToTemp=true) #(
     end
 
     return comparisons
+end
+
+function write_results(treeResults,treeResultsAgg,folderForOutput)
+    #if true
+    @info("Deriving statistics...")
+    #compare results (CL versus Tree versus Truth)
+    modelIndices=sort(collect(keys(treeResultsAgg)))
+    modelStatistics=Dict{Float64,ModelStats}()
+    for thiskey in modelIndices
+        @show thiskey
+        resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
+        obj=ModelStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
+        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        @show deltaTotalPerLOB
+        modelStatistics[thiskey]=obj
+
+        @info("Writing data to disk...")
+        #write tables to csv file
+        summaryByVar=vcat(collect(values(modelStatistics[thiskey].comparisons)))
+        CSV.write(string(folderForOutput,"results",thiskey,".csv"),summaryByVar)
+    end
+
+    #summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
+    #CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
+
+    for kk in keys(modelStatistics)    
+        @show kk
+        obj=modelStatistics[kk]
+        trueTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2]),string.(collect(1:4)))
+        treeTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        clTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,4]),string.(collect(1:4)))
+        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
+        @show deltaTotalPerLOB,sum(deltaTotalPerLOB)
+        @show clTotal,sum(clTotal)
+        @show treeTotal,sum(treeTotal)
+        @show trueTotal,sum(trueTotal)
+    end
+    return modelStatistics
 end

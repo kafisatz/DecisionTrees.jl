@@ -30,7 +30,6 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 
 @time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time here 
 
-#folderForOutput="C:\\temp\\"
 #folderForOutput="H:\\Privat\\"
 folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180828\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
@@ -52,6 +51,17 @@ elt=vcat(elt,repeat([Float64],12))
 @info("Reading data...")
 @time fullData=CSV.read(datafile,types=elt,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
+#for development only: define random subset of data
+    debug=true
+    if debug 
+        @warn("Subsetting data:")
+        rnd=rand(size(fullData,1))
+        srtTmp=sortperm(rnd)
+        subsetIdx=srtTmp[1:50000]
+        fullData=fullData[subsetIdx,:]
+        folderForOutput="C:\\temp\\"
+    end
+
 #Define a random split into training and validation data 
 #training shall be 70% of the data
 Random.seed!(1239)
@@ -62,7 +72,9 @@ fullData[:trnValCol]=trnValCol
 
 #The data should match this total for the column Paycum11
 expectedSum=9061763108
-@assert sum(fullData[:PayCum11])==expectedSum "Expected $(expectedSum), have: $(sum(fullData[:PayCum11]))"
+if !debug
+    @assert sum(fullData[:PayCum11])==expectedSum "Expected $(expectedSum), have: $(sum(fullData[:PayCum11]))"
+end
 #The data is described in the paper mentioned above
 
 #We provide a short summary from the Readme of Wuethrich and Gabrielli
@@ -246,89 +258,18 @@ updateSettingsMod!(sett,crit="sse",model_type="build_tree")
 
 @info("Finished building models.")
 
-if true
-    @info("Deriving statistics...")
-    #compare results (CL versus Tree versus Truth)
-    modelIndices=sort(collect(keys(treeResultsAgg)))
-    modelStatistics=Dict{Float64,ModelStats}()
-    for thiskey in modelIndices
-        @show thiskey
-        resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
-        obj=ModelStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
-        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-        @show deltaTotalPerLOB
-        modelStatistics[thiskey]=obj
+mdl_stats=write_results(treeResults,treeResultsAgg,folderForOutput)
 
-        @info("Writing data to disk...")
-        #write tables to csv file
-        summaryByVar=vcat(collect(values(modelStatistics[thiskey].comparisons)))
-        CSV.write(string(folderForOutput,"results",thiskey,".csv"),summaryByVar)
-    end
-
-    #summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
-    #CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
-
-    for kk in keys(modelStatistics)    
-        @show kk
-        obj=modelStatistics[kk]
-        trueTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2]),string.(collect(1:4)))
-        treeTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-        clTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,4]),string.(collect(1:4)))
-        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-        @show deltaTotalPerLOB,sum(deltaTotalPerLOB)
-        @show clTotal,sum(clTotal)
-        @show treeTotal,sum(treeTotal)
-        @show trueTotal,sum(trueTotal)
-    end
-end
-#=
-    customSummary(treeResultsAgg[2],treeResults[2],writeResultToTemp=true)
-=#
 
 #boosted model
-
 @info("Starting Boosting models...")
 
-treeResults=Dict{Float64,DataFrame}()
-treeResultsAgg=Dict{Float64,DataFrame}()
+treeResultsBoosting=Dict{Float64,DataFrame}()
+treeResultsAggBoosting=Dict{Float64,DataFrame}()
 updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
 @time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
-if true
-    @info("Deriving statistics...")
-    #compare results (CL versus Tree versus Truth)
-    modelIndices=sort(collect(keys(treeResultsAgg)))
-    modelStatistics=Dict{Float64,ModelStats}()
-    for thiskey in modelIndices
-        @show thiskey
-        resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
-        obj=ModelStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
-        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-        @show deltaTotalPerLOB
-        modelStatistics[thiskey]=obj
-
-        @info("Writing data to disk...")
-        #write tables to csv file
-        summaryByVar=vcat(collect(values(modelStatistics[thiskey].comparisons)))
-        CSV.write(string(folderForOutput,"results",thiskey,".csv"),summaryByVar)
-    end
-
-    #summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
-    #CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
-
-    for kk in keys(modelStatistics)    
-        @show kk
-        obj=modelStatistics[kk]
-        trueTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2]),string.(collect(1:4)))
-        treeTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-        clTotal=map(x->1/1e6.*(obj.comparisonByLOB[x][end,4]),string.(collect(1:4)))
-        deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
-        @show deltaTotalPerLOB,sum(deltaTotalPerLOB)
-        @show clTotal,sum(clTotal)
-        @show treeTotal,sum(treeTotal)
-        @show trueTotal,sum(trueTotal)
-    end
-end
+mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folderForOutput)
 
 @warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
 @warn("Make a note that 5m claims is a large data set! In practice less data might be availabe but the concept can be applied nevertheless")
