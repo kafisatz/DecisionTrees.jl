@@ -33,7 +33,7 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 @time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time here 
 
 #folderForOutput="H:\\Privat\\"
-folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180829\\"
+lfolderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180829\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
 #include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
