@@ -33,7 +33,7 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 @time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time here 
 
 #folderForOutput="H:\\Privat\\"
-folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180828\\"
+folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180829\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
 #include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
@@ -54,7 +54,7 @@ elt=vcat(elt,repeat([Float64],12))
 @time fullData=CSV.read(datafile,types=elt,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 
 #for development only: define random subset of data
-    debug=true
+    debug=false
     if debug 
         @warn("Subsetting data:")
         rnd=rand(size(fullData,1))
@@ -272,7 +272,7 @@ mdl_stats=write_results(treeResults,treeResultsAgg,folderForOutput)
 treeResultsBoosting=Dict{Float64,DataFrame}()
 treeResultsAggBoosting=Dict{Float64,DataFrame}()
 updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
-@time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+@time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResultsBoosting,treeResultsAggBoosting,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
 
 mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folderForOutput)
 
@@ -325,3 +325,23 @@ resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedW
 0
 
     =#
+
+
+#=
+#test algorithm on smaller data Set
+
+if debug 
+    @warn("Subsetting data:")
+    this_ldfy=1
+    this_selectedWeight=Int(round(1/size(fullData,1)*modelsWeightsPerLDF[1][this_ldfy]*trnsize,digits=0))
+    this_selectedWeight=5500
+    trnsize=40000
+    cvsampler=CVOptions(0,0.0,true)
+    test_on_subset(dataKnownByYE2005,this_ldfy,folderForOutput,sett,trnsize,this_selectedWeight,cvsampler)
+
+    cvsampler=CVOptions(-2,0.0,true)
+    test_on_subset(dataKnownByYE2005,this_ldfy,folderForOutput,sett,trnsize,this_selectedWeight,cvsampler)
+0
+end
+
+=#

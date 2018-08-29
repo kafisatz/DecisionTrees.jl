@@ -421,3 +421,42 @@ function write_results(treeResults,treeResultsAgg,folderForOutput)
     end
     return modelStatistics
 end
+
+function test_on_subset(dataKnownByYE2005,ldfYear,folderForOutput,settOrig::ModelSettings,trnsize::Integer,selectedWeight::Integer,cvsampler)
+    cumulativePaymentCol=Symbol(string("PayCum",lpad(ldfYear,2,"0")))
+    cumulativePaymentColPrev=Symbol(string("PayCum",lpad(ldfYear-1,2,"0")))
+
+    #subset data, conditions are: 
+    #1) AY < 2005-ldfYear
+    #2) positive denominator
+    #3) cumPay is NOT zero for both ldfYear and ldfYear-1 (these rows do not add any value and can be discarded)    
+    subsetIdx=(dataKnownByYE2005[:AY].<=(maxAY-ldfYear)) .& (dataKnownByYE2005[cumulativePaymentCol] .> 0) .& (.! ((dataKnownByYE2005[cumulativePaymentCol].==0) .& (dataKnownByYE2005[cumulativePaymentColPrev].==0)))    
+    #subsetIdx is a boolean index, we need to convert it to an integer index for the next step
+    subsetIdxInteger=findall(subsetIdx)
+    
+    @warn("Randomly sampling from data")
+    #consider random subset
+    rnd=rand(length(subsetIdxInteger))
+    srtTmp=sortperm(rnd)
+    subsetIdxInteger=subsetIdxInteger[srtTmp[1:min(trnsize,length(subsetIdxInteger))]]
+    
+    #this step also creates a copy of the data (which is intended)
+    dtmSubset=dtmKnownByYE2005[subsetIdxInteger]
+    #redefine numerator and denominator (we are considering different PayCum columns of the data for each development year)
+    dtmSubset.numerator=dataKnownByYE2005[cumulativePaymentColPrev][subsetIdxInteger]
+    dtmSubset.denominator=dataKnownByYE2005[cumulativePaymentCol][subsetIdxInteger]    
+    
+    sett=deepcopy(settOrig)
+    critSTR=string(sett.crit)[15:22]
+    updateSettingsMod!(sett,minWeight=selectedWeight)
+    if cvsampler.folds==0
+        @show 1
+        resultingFiles,resM=dtm(dtmSubset,sett,file=joinpath(folderForOutput,string(sett.model_type[1:7],"_LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
+        return resM 
+    else 
+        @show 2
+        #statsdf,settsdf,allmodel=dtm_single_threaded(dtmSubset,sett,cvsampler,file=joinpath(folderForOutput,string(sett.model_type[1:7],"_LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
+        statsdf,settsdf,allmodel=dtm(dtmSubset,sett,cvsampler,file=joinpath(folderForOutput,string(sett.model_type[1:7],"_LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
+        return  statsdf,settsdf,allmodel
+    end
+end

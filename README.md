@@ -72,3 +72,4 @@ Also:
 * Clean up code (too many type annotations, ... )
 * Consider a nicer representation (such as https://github.com/sisl/D3Trees.jl)
 * 'Remove' variables which are not used by a model from the generated SAS/VBA/C#code (e.g. 'dim XY' in VBA)
+* Review of cross validation samplers (are all options working as intended?)
