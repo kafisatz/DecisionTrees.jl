@@ -25,10 +25,10 @@ Still, we currently recommend that you perform the following
 2. Test the PyCall package with `using Pkg;pkg"test PyCall"`
 
 If any of the PyCall tests fail, do the following
-a) download Anaconda with Python 2 (e.g. 2.7)
-b) set `ENV["PYTHON"]` to the location of python.exe of the Anaconda version you just installed. The default might be `ENV["PYTHON"]=C:\\Users\\User-Name\\AppData\\Local\\Continuum\\Anaconda2\\python.exe"`
-c) perform `Pkg.build("PyCall")`
-d) restart the Julia session and test PyCall again. If any of the tests still fail, you need to fix PyCall in another way.
+1. download Anaconda with Python 2 (e.g. 2.7)
+2. set `ENV["PYTHON"]` to the location of python.exe of the Anaconda version you just installed. The default might be `ENV["PYTHON"]=C:\\Users\\User-Name\\AppData\\Local\\Continuum\\Anaconda2\\python.exe"`
+3. perform `Pkg.build("PyCall")`
+4. restart the Julia session and test PyCall again. If any of the tests still fail, you need to fix PyCall in another way.
 
 Eventually you should run `pkg"test DecisionTrees"` to see whether it was installed properly.
 NOTE (!): if any of the tests of DecisionTrees fails, the package may not work properly.
