@@ -19,7 +19,21 @@ To install DecisionTrees.jl, run
 at the REPL. Alternatively you can enter package mode by typing `]`. In package mode you can simply run 
 ```add https://github.com/kafisatz/DecisionTrees.jl```
 
-We note that this package uses PyCall to create Excel files of the model results. Therefore, there are a number of dependencies (PyCall, Conda, Python). These should be installed automatically when you use the package for the first time. It might be helpful to run `pkg"test DecisionTrees"` after the installation to see whether it was installed properly. You may want to run `Pkg.build("Conda");Pkg.build("PyCall");` if either of these packages is not built properly.
+We note that this package uses PyCall to create Excel files of the model results. Therefore, there are a number of dependencies (PyCall, Conda, Python). These should be installed automatically when you use the package for the first time. 
+Still, we currently recommend that you perform the following
+1. Install the following packages: PyCall, DataFrames, CSV (`using Pkg;add("PyCall");add("DataFrames");add("CSV")`)
+2. Test the PyCall package with `using Pkg;pkg"test PyCall"`
+
+If any of the PyCall tests fail, do the following
+a) download Anaconda with Python 2 (e.g. 2.7)
+b) set `ENV["PYTHON"]` to the location of python.exe of the Anaconda version you just installed. The default might be `ENV["PYTHON"]=C:\\Users\\User-Name\\AppData\\Local\\Continuum\\Anaconda2\\python.exe"`
+c) perform `Pkg.build("PyCall")`
+d) restart the Julia session and test PyCall again. If any of the tests still fail, you need to fix PyCall in another way.
+
+Eventually you should run `pkg"test DecisionTrees"` to see whether it was installed properly.
+NOTE (!): if any of the tests of DecisionTrees fails, the package may not work properly.
+
+Depending on the issue at hand, either `Pkg.build("Conda")` or `Pkg.build("PyCall")` might help (i.e. re-building these).
 
 ## Documentation
 
