@@ -28,7 +28,7 @@ If any of the PyCall tests fail, do the following
 1. Download Python (https://www.python.org/downloads/)
 2. Set `ENV["PYTHON"]` to the location of python.exe. The default location might be similar to `ENV["PYTHON"]=C:\\Users\\User-Name\\AppData\Local\\Programs\\Python\\Python37-32\\python.exe"`
 3. Perform `Pkg.build("PyCall")`. You should check the log to ensure that the correct python executable is used.
-4. Restart the Julia session and test PyCall again `using Pkg;pkg"test PyCall"`. If any of the tests still fail, you need to fix PyCall in another way.
+4. Restart the Julia session and test PyCall again `using Pkg;pkg"test PyCall"`. If any of the tests still fail, you need to fix PyCall in another way. If all tests of PyCall pass, you should run the DecisionTrees tests `using Pkg;pgk"test DecisionTrees"`.
 
 Eventually you should run `pkg"test DecisionTrees"` to see whether it was installed properly. All tests should pass if the package is properly installed.
 
