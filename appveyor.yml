@@ -24,6 +24,7 @@ install:
 build_script:
   - echo "%JL_BUILD_SCRIPT%"
   - C:\julia\bin\julia -e "%JL_BUILD_SCRIPT%"
+  - C:\julia\bin\julia -e "using Pkg;using Conda;isdir(Conda.ROOTENV)&&rm(Conda.ROOTENV, recursive=true);ENV[\"CONDA_JL_VERSION\"]=3;Pkg.build(\"Conda\");"
 
 test_script:
   - echo "%JL_TEST_SCRIPT%"
