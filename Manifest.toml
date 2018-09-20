@@ -158,10 +158,10 @@ uuid = "925886fa-5bf2-5e8e-b522-a9147a512338"
 version = "0.9.1"
 
 [[OrderedCollections]]
-deps = ["InteractiveUtils", "Pkg", "Random", "Serialization", "Test"]
-git-tree-sha1 = "27af6dc22697bf20ace8e3a45f404a34eaf0b819"
+deps = ["Pkg", "Random", "Serialization", "Test"]
+git-tree-sha1 = "41da1edba028376b58520ca01d9a41e29f855d55"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.0.0"
+version = "1.0.1"
 
 [[PenaltyFunctions]]
 deps = ["InteractiveUtils", "LearnBase", "LinearAlgebra", "RecipesBase", "Reexport", "Test"]
@@ -185,9 +185,9 @@ version = "0.6.0"
 
 [[PyCall]]
 deps = ["Compat", "Conda", "MacroTools", "Statistics", "VersionParsing"]
-git-tree-sha1 = "db5df6f1c43547c89b69be32ef931028b3ba791b"
+git-tree-sha1 = "f56428481fd0caf01cc8ecd2a0892fdaf8fddd50"
 uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
-version = "1.18.3"
+version = "1.18.4"
 
 [[REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets"]
