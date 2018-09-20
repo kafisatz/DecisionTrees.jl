@@ -23,8 +23,11 @@ if !isfile(datafile)
             try
                 run(cmd2)
             catch
+                #7z failed...
             end
         else 
+            #OS is not windows
+            #this should work on Linux
             cmd=`unzip $(pathToZip) -d $(unzipLoc)`
         end
         if !isfile(datafile)
