@@ -13,11 +13,11 @@
 ##############################
 #Load packages
 ##############################
-@assert VERSION>=v"0.7.0-beta" "Your Julia version does not satisfy the requirements for this package. You need to use Julia v0.7"
+@assert VERSION>=v"1.0" "Your Julia version does not satisfy the requirements for this package. You need to use Julia v1.x"
 t0=time_ns()
 #cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 
-import Distributed
+using Distributed
 #addprocs(22)
 #Distributed.@everywhere using Revise
 Distributed.@everywhere import CSV

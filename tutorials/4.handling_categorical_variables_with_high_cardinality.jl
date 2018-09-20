@@ -4,7 +4,7 @@
 #This snippet shall merely show the functionality of the two very simple Julia funcitons mapToOther! and getCounts 
 #We refer to the general literature on data preprocessing (specifically for high cardinality categorical data) and feature generation
 
-import Distributed
+using Distributed
 #Distributed.@everywhere using Revise
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames

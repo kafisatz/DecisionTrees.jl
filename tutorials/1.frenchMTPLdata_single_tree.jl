@@ -13,11 +13,12 @@
 ##############################
 #Load packages
 ##############################
-@assert VERSION>=v"0.7.0-beta" "Your Julia version does not satisfy the requirements for this package. You need to use Julia v0.7"
+@assert VERSION>=v"1.0" "Your Julia version does not satisfy the requirements for this package. You need to use Julia v1.x"
 t0=time_ns()
 #cd(string(ENV["HOMEPATH"],"\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"))
 
-import Distributed
+using Distributed
+import Pkg
 #Distributed.@everywhere using Revise
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
@@ -33,6 +34,9 @@ tela = (time_ns()-t0)/1e9
 #Read the data
 ##############################
 datafile=joinpath("data","freMTPL2","freMTPL2.csv")
+if !isdir(splitdir(datafile)[1])
+    datafile=joinpath(Pkg.dir("DecisionTrees"),datafile)
+end
 @assert isfile(datafile) "You need to unzip the file freMTPL2.zip in the folder data/freMTPL2"
 @time fullData=CSV.read(datafile,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
 

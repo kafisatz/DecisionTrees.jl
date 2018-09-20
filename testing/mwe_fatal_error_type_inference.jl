@@ -5,7 +5,7 @@
 #(search the code for that expression)
 #I am quite sure that this did not happen on 0.7beta2
 
-import Distributed
+using Distributed
 using Pkg
 pkg"develop https://github.com/kafisatz/DecisionTrees.jl#master"
 pkg"activate DecisionTrees.jl"

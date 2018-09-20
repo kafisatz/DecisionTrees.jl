@@ -4,7 +4,7 @@ import Core
 import Dates
 println(Dates.now())
 import Random
-import Distributed
+using Distributed
 import DelimitedFiles
 import PyCall
 import DataFrames

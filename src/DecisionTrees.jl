@@ -30,7 +30,7 @@ import Core
 import Dates
 import Statistics
 import Random
-import Distributed
+using Distributed
 import DelimitedFiles
 import PyCall
 import DataFrames
