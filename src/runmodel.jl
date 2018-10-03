@@ -25,8 +25,8 @@ function run_model(ARGS;nrows::Int=-1)
    end
 end
 
-"""
-prepare\_dataframe\_for\_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat\_as\_categorical\_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent\_vars::Vector{String}=Vector{String}())
+""" 
+prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 """
 function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}(),methodForSplittingPointsSelection::String="basedOnWeightVector")
     @assert isdir(directory)
@@ -355,7 +355,7 @@ end
 """
 This is the core modelling function of DecisionTrees
     
-run\_model\_actual(dtmtable::DTMTable,input\_setttings::ModelSettings,fn::String)
+run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 """
 function run_model_actual(dtmtable::DTMTable,input_setttings::ModelSettings,fn::String)
 #this function is called with prepped julia data, this is the core modelling function (all previous ones are for preparational tasks only)
