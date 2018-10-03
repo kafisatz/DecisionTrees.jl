@@ -1,32 +1,10 @@
-#consider the functions
-#prepareDF -> prepares an arbitrary df from the dtm models
-#prepare_non_jld_data
 
-function run_model(ARGS;nrows::Int=-1)
-   #the first call of this function takes about 15 seconds (probably the first call of the module takes that much time....)
-   failed_return_value=String["false"] #should be of the same type as the result of run_model
-   try
-        #first function which is called by run.jl:
-        settingsFilename,dataFilename,datafolder,outfilename,outfileStringOnly=return_file_and_folders(ARGS)
-        result_of_runmodel,resulting_model=run_model_main(settingsFilename,dataFilename,convert(String,datafolder),outfilename,outfileStringOnly,nrows=nrows)
-        if typeof(result_of_runmodel)==Array{String,1}
-            return result_of_runmodel
-        else
-            @warn("Unexpected Model result:")
-            @show typeof(result_of_runmodel)
-            @show result_of_runmodel
-            dump(result_of_runmodel)
-            return failed_return_value
-        end
-   catch model_error
-        @show model_error
-        @warn("An error occurred during modelling phase. See above.")
-        return failed_return_value
-   end
-end
-
-""" 
+"""
 prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+
+Prepares a DataFrame for the modelling.
+
+returns dtmtable::DTMTable,sett::ModelSettings,df_prepped::DataFrame
 """
 function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}(),methodForSplittingPointsSelection::String="basedOnWeightVector")
     @assert isdir(directory)
@@ -780,6 +758,30 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.writeTree
   #return true
 
  return filelistWithFilesToBeZipped,resulting_model
+end
+
+
+function run_model(ARGS;nrows::Int=-1)
+   #the first call of this function takes about 15 seconds (probably the first call of the module takes that much time....)
+   failed_return_value=String["false"] #should be of the same type as the result of run_model
+   try
+        #first function which is called by run.jl:
+        settingsFilename,dataFilename,datafolder,outfilename,outfileStringOnly=return_file_and_folders(ARGS)
+        result_of_runmodel,resulting_model=run_model_main(settingsFilename,dataFilename,convert(String,datafolder),outfilename,outfileStringOnly,nrows=nrows)
+        if typeof(result_of_runmodel)==Array{String,1}
+            return result_of_runmodel
+        else
+            @warn("Unexpected Model result:")
+            @show typeof(result_of_runmodel)
+            @show result_of_runmodel
+            dump(result_of_runmodel)
+            return failed_return_value
+        end
+   catch model_error
+        @show model_error
+        @warn("An error occurred during modelling phase. See above.")
+        return failed_return_value
+   end
 end
 
 function dtm(dtmtable::DTMTable,sett::ModelSettings;file::String=joinpath(mktempdir(),defaultModelNameWtihCSVext))
