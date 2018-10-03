@@ -119,12 +119,6 @@ function graph(node::Leaf,counter::Int,parentname::String,sett::ModelSettings,ed
     dot_graph *= """$(parentname)->$(name_of_this_node) [label="$(edge_from_parent_description)"]\n"""
 end
 
-#
-#    miha=graph(resulting_model);
-# print(miha)
-
-
-
 function draw_dot_graph(gvloc::String,dot_txt_file::String,outputfilename::String;format="pdf")
 #
 #This function prints a representaion of the tree based on an input specified in DOT format, see

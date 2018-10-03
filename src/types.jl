@@ -808,9 +808,9 @@ cvo=CVOptions(folds, training_proportion, use_all_data)
 
 folds is an integer. If folds<0 then we consider n disjoint training sets
 
-use_all_data::Bool #if set to false, the CVOptions will never use the 'original' validation rows in the data
+    use_all_data::Bool #if set to false, the CVOptions will never use the 'original' validation rows in the data
 
-training_proportion::Float64 #size of trn data. The value must be >0 and <1
+    training_proportion::Float64 #size of trn data. The value must be >0 and <1
 
 More precisely the evaluation is as follows
 

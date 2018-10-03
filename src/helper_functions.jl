@@ -1732,7 +1732,7 @@ end
 
 
 """adds numerical explanatory variables as PooledArrays to the input DataFrame wholeDF
-add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},maxSplittingPoints::Int,features::DataFrame)
+    add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},maxSplittingPoints::Int,features::DataFrame)
 """
 function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},maxSplittingPoints::Int,features::DataFrame,weight::Vector{Float64},methodForSplittingPointsSelection) #Version where no candidates are supplied -> Julia chooses the candidates
   nobs=length(trn_val_idx)
