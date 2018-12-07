@@ -63,6 +63,8 @@ https://en.wikipedia.org/wiki/DOT_(graph_description_language)
 http://www.graphviz.org/content/dot-language
 */
 
+margin = 0
+
 """
     return string("digraph tree {",leading_comment,dot_graph,"\n}")
     
