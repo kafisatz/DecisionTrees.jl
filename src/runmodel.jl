@@ -419,7 +419,7 @@ denominator=dtmtable.denominator
 trnidx_one_zero_full_length=map(x->length(searchsorted(trnidx,x)),1:length(key))
 
 #define 'version', we store the sha1 hash of the current commit in sett.version
-sett.version=get_sha1()
+sett.version="--" #get_sha1() #need to fix this/ find out how to read package hash in Julia code
 
 #initialize random number generator
     #we may want to make this independent from the data (trn), then again different data should/will lead to a different result.
