@@ -12,7 +12,7 @@
     ###  Authors: Andrea Gabrielli, Mario V. Wuthrich    ###
 
 #
-@assert splitdir(pwd())[2]=="DecisionTrees.jl" """Error. The working directory should be the DecisionTrees.jl folder.\r\nUse 'cd("C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl")' or similar to change the working dir in Julia"""
+@assert splitdir(pwd())[2]=="DecisionTrees.jl" """Error. The working directory should be the DecisionTrees.jl folder.\r\nUse 'cd("C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl")' or similar to change the working dir in Julia """
 #if the working dir is not correct, the include command further down will fail 
 
 @warn("You need to install DecisionTrees.jl. Consider the readme of this page: 'https://github.com/kafisatz/DecisionTrees.jl'")
@@ -21,9 +21,12 @@
 using Revise
 #stdlib packages:
     using Statistics
+    using StatsBase 
+    import StatPlots #statPlots has a predict function which is alos exported by DecisionTrees
+    #using Plots
     using Distributed
     using Random
-    using DelimitedFiles 
+    using DelimitedFiles     
     using Pkg
 
 Distributed.@everywhere import CSV
@@ -33,7 +36,9 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 @time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time here 
 
 #folderForOutput="H:\\Privat\\"
-lfolderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20180829\\"
+#folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20181203\\"
+folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\Paper July 2018\\"
+
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
 #include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
@@ -88,16 +93,32 @@ end
 #age is the age of the injured that should be of integer type and may take the values 15; : : : ; 70.
 #inj_part is the body part injured that should be of factor type (categorical) and may take the labels 1; : : : ; 99 (with gaps).
 
+#see what Plot backend is used
+#backend() #e.g. Plots.GRBackend
+
 #set independent variables
 selected_explanatory_vars=["AQ","LoB","age","cc","inj_part"]
 categoricalVars=["LoB","inj_part","cc"]
 
 #check type of each column
-for x in selected_explanatory_vars
+for x in vcat(selected_explanatory_vars,"AY")
     println(x)
     println(eltype(fullData[Symbol(x)]))
     println("first ten values")
     print(fullData[1:10,Symbol(x)])
+
+    #count frequencies
+    ft=countmap(fullData[Symbol(x)])
+    #sort data to be plotted
+    ks=collect(keys(ft))
+    srt=sortperm(ks)
+    vs=collect(values(ft))
+    ks=ks[srt]
+    vs=vs[srt]
+    #plot the frequency count
+    StatPlots.bar(ks,vs,title="",label="",xaxis=x,yaxis="number of claims",fmt=:svg)
+    savedir=joinpath(folderForOutput,"figures") #folderForOutput #"C:\\temp\\"
+    isdir(savedir)&&StatPlots.savefig(joinpath(savedir,string(x,"_graph.pdf")))
     println("")
 end
 
@@ -107,6 +128,16 @@ for x in 1:size(fullData,2)
     println(names(fullData)[x])
     @show size(unique(fullData[:,x]))
 end
+
+#=
+#consider a sample of the data (PayCum01-PayCum11)
+fullData[1:400,10:end-1]
+
+any(fullData[:PayCum01].!=fullData[:PayCum02])
+any(fullData[:PayCum10].!=fullData[:PayCum11])
+=#
+
+
 
 #=
     #Let us see whether all claims are 'increasing' in time (i.e. whether all incremental payments are non-negative)
@@ -178,7 +209,8 @@ cldf=DataFrame(ldf=CLLDFperRow,ultimate=CLUltimatePerRow,paidToDate=paidToDatePe
 cldf[:reserves]=cldf[:ultimate].-cldf[:paidToDate]
 CLcomparisons=CL_est_per_variable(fullData,cldf)
 summaryByVar=vcat(collect(values(CLcomparisons)))
-CSV.write(string(folderForOutput,"resultsCL.csv"),summaryByVar)
+clResultsFolder=joinpath(folderForOutput,"clResults")
+isdir(clResultsFolder)&&CSV.write(joinpath(clResultsFolder,"resultsCL.csv"),summaryByVar)
 
 if !debug 
     @assert isapprox(0,sum(CLUltimatePerRow)-sum(clAllLOBs[:ultimate]),atol=1e-4) #should be zero 
@@ -256,25 +288,27 @@ treeResultsAgg=Dict{Float64,DataFrame}()
 @info("Starting model fit...")
 @show size(modelsWeightsPerLDF)
 #folderForOutput should be defined further above
-@assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
+folderForSingleTreeResults=joinpath(folderForOutput,"figures","SingleTreeApproach")
+@assert isdir(folderForSingleTreeResults) "Directory does not exist: $(folderForSingleTreeResults)"
 #actual model run (this may take a few minutes)
 updateSettingsMod!(sett,crit="sse",model_type="build_tree")
-@time this_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+@time this_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForSingleTreeResults,clAllLOBs,paidToDatePerRow,sett);
 
 @info("Finished building models.")
 
-mdl_stats=write_results(treeResults,treeResultsAgg,folderForOutput)
+mdl_stats=write_results(treeResults,treeResultsAgg,folderForSingleTreeResults)
 
 
 #boosted model
 @info("Starting Boosting models...")
-
+folderForBoostingResults=joinpath(folderForOutput,"figures","boostingResults")
+@assert isdir(folderForBoostingResults) "Directory does not exist: $(folderForBoostingResults)"
 treeResultsBoosting=Dict{Float64,DataFrame}()
 treeResultsAggBoosting=Dict{Float64,DataFrame}()
 updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
-@time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResultsBoosting,treeResultsAggBoosting,selected_explanatory_vars,categoricalVars,folderForOutput,clAllLOBs,paidToDatePerRow,sett);
+@time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResultsBoosting,treeResultsAggBoosting,selected_explanatory_vars,categoricalVars,folderForBoostingResults,clAllLOBs,paidToDatePerRow,sett);
 
-mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folderForOutput)
+mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folderForBoostingResults)
 
 @warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
 @warn("Make a note that 5m claims is a large data set! In practice less data might be availabe but the concept can be applied nevertheless")

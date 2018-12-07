@@ -103,7 +103,7 @@ for (i in 0:11){reserves[i+1,2] <- round(Mack$FullTriangle[i+1,12]-Mack$FullTria
 reserves[13,2] <- sum(reserves[1:12,2])
 reserves[1:12,3] <- round(Mack$Mack.S.E[,12])
 reserves[13,3] <- round(Mack$Total.Mack.S.E)
-reserves                           # true reserves, chain-ladder reserves and square-rooted MSEP
+reserves # true reserves, chain-ladder reserves and square-rooted MSEP
 
 #write triangle to file
 write.table(tri_dat, "./triangle.csv", sep=",", row.names=FALSE)
@@ -163,4 +163,3 @@ output2$Open10 <- NULL
 output2$Open11 <- NULL
 
 write.table(output2, "./Simulated.Cashflows.csv", sep=",", row.names=FALSE)
-#the data should be copied into the folder data\reservingAccident of the DecisionTrees.jl Julia package

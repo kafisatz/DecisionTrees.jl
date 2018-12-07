@@ -247,9 +247,9 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
             resultingFiles,resM=runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,maxAY,selected_explanatory_vars,categoricalVars,folderForOutput,settOrig)
             #apply tree to the known claims
             if sett.model_type=="build_tree"
-                fittedValues,leafNrs=predict(resM,dtmKnownByYE2005.features)  
+                fittedValues,leafNrs=DecisionTrees.predict(resM,dtmKnownByYE2005.features)  
             else
-                dfpred=predict(resM,dtmKnownByYE2005.features)  
+                dfpred=DecisionTrees.predict(resM,dtmKnownByYE2005.features)  
                 #@show ldfYear
                 #@show dfpred[1:2,:]
                 fittedValues=dfpred[:RawEstimate]                                
