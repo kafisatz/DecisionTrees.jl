@@ -56,7 +56,7 @@ function chainLadder(x;tail=1.0)
     reverse!(LDFs)
     reverse!(factorsToUltimate)
     df=DataFrame(LDFS=LDFs,factorsToUltimate=factorsToUltimate,paidToDate=paidToDate,reserves=reserves,ultimate=ultimate)
-    return df #LDFs,factorsToUltimate,ultimate,reserves,paidToDate
+    return df 
 end
 
 function aggregateReservesOfIndividualCLModels(fullData,leafNrs)
@@ -74,8 +74,7 @@ end
 function calculateEstimates(fullData,LDFArray,aggCL,paidToDatePerRow)
     ayears=unique(fullData[:AY])
     #apply Chainladder to each row
-    ultimatePerRow=zeros(size(fullData,1))
-    #paidToDatePerRow=zeros(size(fullData,1))
+    ultimatePerRow=zeros(size(fullData,1))    
     cumulativefactors=zeros(size(fullData,1))
     ultimatePerAY=zeros(length(ayears))
     truthPerAY=zeros(length(ayears))
@@ -85,14 +84,13 @@ function calculateEstimates(fullData,LDFArray,aggCL,paidToDatePerRow)
         @inbounds row=fullData[:AY][iRow]-minAY+1
         @inbounds rowInversed = length(ayears) - row + 1
         @inbounds cumulativefactor=prod(1 ./ LDFArray[iRow,rowInversed:end])
-        @inbounds cumulativefactors[iRow] = cumulativefactor
-        #@inbounds paidToDatePerRow[iRow] = fullData[paycumcols[rowInversed]][iRow]
+        @inbounds cumulativefactors[iRow] = cumulativefactor        
         @inbounds ultimatePerRow[iRow] = cumulativefactor*paidToDatePerRow[iRow]        
         @inbounds ultimatePerAY[row] += ultimatePerRow[iRow]
         @inbounds truthPerAY[row] += fullData[:PayCum11][iRow]
     end    
     reservesPerAY=ultimatePerAY.-aggCL[:paidToDate]
-    errPerAY=ultimatePerAY.-truthPerAY #aggCL[:ultimate]
+    errPerAY=ultimatePerAY.-truthPerAY 
     dfPerRow=DataFrame(paidToDate=paidToDatePerRow,reserves=ultimatePerRow.-paidToDatePerRow,ultimate=ultimatePerRow,cumulativefactors=cumulativefactors)
     df=DataFrame(paidToDate=deepcopy(aggCL[:paidToDate]),reserves=reservesPerAY,ultimate=ultimatePerAY,truth=truthPerAY,error=errPerAY)
     return dfPerRow,df 
@@ -115,8 +113,7 @@ function getcorrectedQuantilesOfError(estPerRow,truthPerRow,qtl_range,CLTotalUlt
     errPerRow=estPerRow[:ultimate]-truthPerRow
     totalUltimate=sum(estPerRow[:ultimate])    
     #what if we correct the ultimate total to match the CL total?
-    corrFactor=1/totalUltimate*CLTotalUltimate
-    #@show sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate
+    corrFactor=1/totalUltimate*CLTotalUltimate    
     @assert isapprox(0,sum(corrFactor.*estPerRow[:ultimate])-CLTotalUltimate,atol=1e-6)
     errPerRowCorrected=corrFactor.*estPerRow[:ultimate]-truthPerRow    
     return Statistics.quantile(errPerRowCorrected,qtl_range)    
@@ -129,17 +126,13 @@ function checkIfPaymentsAreIncreasing(data)
     data2=data[paymCols]
     dataAsArray=transpose(convert(Array,data2))    
     for ii=1:size(data2,1)        
-        @inbounds isNonDecreasing[ii]=issorted(dataAsArray[:,ii])
-        #@inbounds isNonDecreasing[ii]=issorted(view(dataAsArray,:,ii))        
+        @inbounds isNonDecreasing[ii]=issorted(dataAsArray[:,ii])        
     end
     return isNonDecreasing
 end
 
-
-
 function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;writeResultToTemp=true)
     #NOTE: this function is using several global variables!
-
     #overall Result
     comparisonByAY=hcat(ayears,trueReserves,treeEstimateAgg[:reserves],clAllLOBs[:reserves])
     comparisonByAY=vcat(comparisonByAY,sum(comparisonByAY,dims=1))
@@ -155,11 +148,8 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
     treeEstimatePerRow[:AY]=dataKnownByYE2005[:AY]
     comparisonByLOB=Dict{String,DataFrame}()
     for lob in sort(unique(dataKnownByYE2005[:LoB]))
-        sumRes=DataFrames.aggregate(treeEstimatePerRow[dataKnownByYE2005[:LoB].==lob,[:reserves,:AY]],:AY,sum)
-        #names!(sumRes,[:AY,:reserves])
+        sumRes=DataFrames.aggregate(treeEstimatePerRow[dataKnownByYE2005[:LoB].==lob,[:reserves,:AY]],:AY,sum)        
         sumRes2=hcat(ayears,trueReservesPerLOB[lob][1:end-1],sumRes[:reserves_sum],clPerLOB[lob][:reserves][1:end-1])
-        #sumRes[:CLReserves]=clPerLOB[lob][:reserves]
-        #sumRes[:trueReserves]=trueReservesPerLOB[lob]
         sumRes2=vcat(sumRes2,sum(sumRes2,dims=1))
         sumRes2[end,1]=9999
         sumRes3=DataFrame(sumRes2)
@@ -167,7 +157,6 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
         comparisonByLOB[lob]=deepcopy(sumRes3)
     end
     
-
     comparisons=Dict{String,DataFrame}()
     byVars=["cc","inj_part","age","LoB"]
     for vv in byVars
@@ -250,8 +239,7 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
                 fittedValues,leafNrs=DecisionTrees.predict(resM,dtmKnownByYE2005.features)  
             else
                 dfpred=DecisionTrees.predict(resM,dtmKnownByYE2005.features)  
-                #@show ldfYear
-                #@show dfpred[1:2,:]
+                #@show ldfYear                
                 fittedValues=dfpred[:RawEstimate]                                
                 LDFArraySmoothed[:,ldfYear].=dfpred[:SmoothedEstimate]
                 LDFArrayUnSmoothed[:,ldfYear].=dfpred[:UnsmoothedEstimate]
@@ -263,11 +251,7 @@ function runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeR
                 LDFArray[:,ldfYear].=median(LDFArrayUnSmoothed[:,ldfYear])
             end           
         end   
-        
-        #@show LDFArray[1:2,:]        
-        #@show LDFArraySmoothed[1:2,:]
-        #@show LDFArrayUnSmoothed[1:2,:]
-   
+                
     #consider estimated ultimates per claim 
     estPerRow,estAgg=calculateEstimates(dataKnownByYE2005,LDFArray,clAllLOBs,paidToDatePerRow)    
     treeResults[kk]=deepcopy(estPerRow)
@@ -401,11 +385,9 @@ function write_results(treeResults,treeResultsAgg,folderForOutput)
         @info("Writing data to disk...")
         #write tables to csv file
         summaryByVar=vcat(collect(values(modelStatistics[thiskey].comparisons)))
-        CSV.write(string(folderForOutput,"results",thiskey,".csv"),summaryByVar)
+        fi=joinpath(folderForOutput,string("results",thiskey,".csv"))
+        CSV.write(fi,summaryByVar)
     end
-
-    #summaryByVar=vcat(collect(values(modelStatistics[1.2].comparisons)))
-    #CSV.write(string("C:\\temp\\results2.csv"),summaryByVar)
 
     for kk in keys(modelStatistics)    
         @show kk
@@ -454,8 +436,7 @@ function test_on_subset(dataKnownByYE2005,ldfYear,folderForOutput,settOrig::Mode
         resultingFiles,resM=dtm(dtmSubset,sett,file=joinpath(folderForOutput,string(sett.model_type[1:7],"_LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
         return resM 
     else 
-        @show 2
-        #statsdf,settsdf,allmodel=dtm_single_threaded(dtmSubset,sett,cvsampler,file=joinpath(folderForOutput,string(sett.model_type[1:7],"_LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
+        @show 2        
         statsdf,settsdf,allmodel=dtm(dtmSubset,sett,cvsampler,file=joinpath(folderForOutput,string(sett.model_type[1:7],"_LDF_Year_",ldfYear,"crt_",critSTR,"_minw_",sett.minWeight,".txt")))    
         return  statsdf,settsdf,allmodel
     end

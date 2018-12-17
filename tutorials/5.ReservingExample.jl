@@ -22,7 +22,7 @@ using Revise
 #stdlib packages:
     using Statistics
     using StatsBase 
-    import StatPlots #statPlots has a predict function which is alos exported by DecisionTrees
+    import StatPlots #statPlots has a predict function which is also exported by DecisionTrees
     #using Plots
     using Distributed
     using Random
@@ -297,7 +297,6 @@ updateSettingsMod!(sett,crit="sse",model_type="build_tree")
 @info("Finished building models.")
 
 mdl_stats=write_results(treeResults,treeResultsAgg,folderForSingleTreeResults)
-
 
 #boosted model
 @info("Starting Boosting models...")
