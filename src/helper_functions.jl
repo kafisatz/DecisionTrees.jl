@@ -812,8 +812,6 @@ for intVarname in integerVarlist
 	#create stats
 	for thresh in list
 		strthresh=string(thresh)
-		#trn_matched=(view(feat,trnidx).==thresh)	
-		#val_matched=(view(feat,validx).==thresh)
 		update_matched_vectors!(trnidx,validx,trnMatched,valMatched,feat,thresh)
 
 		v1=view(actualNumerator,trnMatched)
@@ -1300,7 +1298,7 @@ function calcErrorStats(fitted::Array{Float64,1},actual::Array{Float64,1},weight
 	@assert length(weight)==length(actual)==length(fitted)
 	#this function can probably be optimized quited a bit as many of the quantities could be derived in one go (see also calcErrors where we calculate UNWEIGHTED errors for TariffEstimation Statistics)
 	#note stats below could be calculated more efficiently, however if we only have 20 groups runtime should not be any issue
-		weightVec=FrequencyWeights(weight)
+		weightVec=StatsBase.AnalyticWeights(weight)
 		diff=fitted.-actual
 	#least squares devaiation, mean square error
 		msevec=abs2(diff)
@@ -1737,7 +1735,7 @@ end
 function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::Vector{UInt8},maxSplittingPoints::Int,features::DataFrame,weight::Vector{Float64},methodForSplittingPointsSelection) #Version where no candidates are supplied -> Julia chooses the candidates
   nobs=length(trn_val_idx)
   cols=sett.number_of_num_features 
-  freqweights=StatsBase.fweights(weight) #Frequency Weights
+  freqweights=StatsBase.aweights(weight) #Frequency Weights
   
   local this_column #need to initialize the variable here otherwise it will only exist locally in the try loop
   candMatWOMaxValues=Array{Array{Float64,1}}(undef,0)
@@ -1798,14 +1796,13 @@ defineCandidates(feature_column,maxSplittingPoints::Int)
 returns a candidate list of split values which considers the distribution of the data where each 
 data point has the same weight (i.e. the weight/exposure vector of dtmtable is NOT used for this function)
 """
-function defineCandidates(feature_column,maxSplittingPoints::Int,fw::T;topAndBottomCutoff=0.5,method="basedOnWeightVector") where T<:StatsBase.FrequencyWeights
+function defineCandidates(feature_column,maxSplittingPoints::Int,fw::T;topAndBottomCutoff=0.5,method="basedOnWeightVector") where T<:StatsBase.AnalyticWeights
     @assert in(method,globalConstAllowableMethodsForDefineCandidates)
     #step 1: get quantiles of data
     local domain_i
     if method=="equalWeight"
         domain_i = unique(Statistics.quantile(feature_column, range(topAndBottomCutoff/Float64(maxSplittingPoints), stop=1.0-topAndBottomCutoff/Float64(maxSplittingPoints), length=maxSplittingPoints)))
-    else 
-        #wt=fweights
+    else         
         domain_i = unique(StatsBase.Statistics.quantile(feature_column, fw,range(topAndBottomCutoff/Float64(maxSplittingPoints), stop=1.0-topAndBottomCutoff/Float64(maxSplittingPoints), length=maxSplittingPoints)))  
     end
 	@assert size(domain_i,1)<=maxSplittingPoints #that should not happen
@@ -1830,7 +1827,7 @@ end
 #=
     this_column=fullData[:Density]
     weights=fullData[:Exposure]
-    fw=fweights(weights)
+    fw=StatsBase.aweights(weights)
     maxSplittingPoints=250
     candlist1=defineCandidates(this_column,10,fw)
     candlist2=defineCandidates(this_column,10,fw,method="basedOnWeightVector")
@@ -3816,9 +3813,7 @@ function lowessSmoothVector!(estimatedRatioPerScore::Array{Float64,1},span::Floa
 	#thisRange[thispoint]=smoothed	#this seems to make it worse
   end
 
-  #middle part
-  #thisRangeMid=length(thisRange)+1
-  #wVec=FrequencyWeights(w)
+  #middle part    
   while thispoint<=nScores-intSpan
     thispoint+=1
     next=estimatedRatioPerScore[thispoint+intSpan-1]
@@ -3878,7 +3873,7 @@ function mylinreg(x::Array{Float64,1},y::Array{Float64,1},w::Array{Float64,1})
 end
 #=
 @inline function mylinreg(x::Array{Float64,1},y::Array{Float64,1},w::Array{Float64,1})
-	return mylinreg(x,y,FrequencyWeights(w))
+	return mylinreg(x,y,StatsBase.AnalyticWeights(w))
 end
 =#
 function mylinreg(x::Array{Float64,1},y::Array{Float64,1},w::W) where {W <: StatsBase.AbstractWeights}	
@@ -4021,7 +4016,7 @@ function constructScores!(deriveFitPerScoreFromObservedRatios::Bool,trnidx::Vect
 	#cumulativeToIncremental!(obsPerScore)
 	#cumulativeToIncremental!(vectorWeightPerScore)        
         
-    qtls=Statistics.quantile(raw_rel_srt,StatsBase.fweights(weight_srt),range(1/nScores,stop=1,length=nScores))
+    qtls=Statistics.quantile(raw_rel_srt,StatsBase.aweights(weight_srt),range(1/nScores,stop=1,length=nScores))
     qtls=unique(qtls)
     nscoresPotentiallyReducedTWOTimes=length(qtls)
     obsPerScore=zeros(Int,nscoresPotentiallyReducedTWOTimes)
@@ -4248,8 +4243,8 @@ function createPredictorData(idx::Vector{Int},nameOfpredictorsSheet,mappings,can
 		denominator=view(denominatorfull,idx)
 		weight=view(weightfull,idx)
 		finalEstimateForCharts=view(finalEstimateForChartsfull,idx)
-		features=view(featuresfull,idx)
-
+		features=view(featuresfull,idx) #this line may need revision if DtaFrames is ever updated past v0.17.0 (which may involve quite some work, see changes to views here  https://github.com/JuliaData/DataFrames.jl/releases/tag/v0.17.0 )
+		
 		colnames=String["Variable Name" "Weight" "Numerator" "Denominator" "Observed Ratio" "Estimate" "Difference" "Average  Score"]
 		predictorsData=repeat([""],1,length(colnames))
 		numeratorEst=denominator.*finalEstimateForCharts
