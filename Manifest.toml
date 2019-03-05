@@ -50,7 +50,7 @@ pinned = true
 repo-rev = "v0.16.0"
 repo-url = "https://github.com/JuliaData/DataFrames.jl.git"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "0.17.1+"
+version = "0.16.0"
 
 [[DataStreams]]
 deps = ["Dates", "Missings", "Test", "WeakRefStrings"]
