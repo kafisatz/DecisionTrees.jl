@@ -1,7 +1,7 @@
 # DecisionTrees.jl
 Decision Tree Algorithms for Regression
 
-This package is under development
+This package is working with Julia version 1.0.
 
 Linux: [![Build Status](https://travis-ci.org/kafisatz/DecisionTrees.jl.svg?branch=master)](https://travis-ci.org/kafisatz/DecisionTrees.jl)
 
@@ -13,7 +13,7 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 
 ## Installation
 
-This package only works with Julia 0.7 or higher. You should ideally use Julia 1.0 or higher. 
+Check the build status (as shown above) to see for which Julia versions the package is working (i.e. tests pass).
 To install DecisionTrees.jl, run
 ```using Pkg; pkg"add https://github.com/kafisatz/DecisionTrees.jl"``` 
 at the REPL. Alternatively you can enter package mode by typing `]`. In package mode you can simply run 
