@@ -1,6 +1,5 @@
 environment:
-  matrix:
-  - julia_version: 0.7
+  matrix:  
   - julia_version: 1.0
   - julia_version: latest
 
@@ -11,6 +10,10 @@ branches:
   only:
     - master
     - /release-.*/
+
+matrix:
+  allow_failures:
+  - julia_version: latest
 
 notifications:
   - provider: Email
