@@ -1000,8 +1000,7 @@ function writeAllFieldsToString(s)
 	return res
 end
 
-function writeAllFieldsToArray(s)
-	#nn=fieldnames(typeof(s))
+function writeAllFieldsToArray(s)	
 	nn=fieldnames(typeof(s))
 	res=Array{AbstractString}(undef,length(nn),2)
 	i=0
