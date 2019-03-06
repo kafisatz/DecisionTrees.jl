@@ -21,9 +21,9 @@ version = "0.5.2"
 
 [[CodeTracking]]
 deps = ["Test", "UUIDs"]
-git-tree-sha1 = "591b73b37c92ed7d55d3a14e266829c21aa3a7eb"
+git-tree-sha1 = "12aa4d41c7926afd7a71af5af603a4d8b94292c2"
 uuid = "da1fd8a2-8d9e-5ec2-8556-3022fb5608a2"
-version = "0.3.0"
+version = "0.3.1"
 
 [[CodecZlib]]
 deps = ["BinaryProvider", "Libdl", "Test", "TranscodingStreams"]
@@ -46,8 +46,11 @@ version = "1.2.0"
 [[DataFrames]]
 deps = ["CategoricalArrays", "CodecZlib", "Compat", "DataStreams", "Dates", "InteractiveUtils", "IteratorInterfaceExtensions", "LinearAlgebra", "Missings", "Printf", "Random", "Reexport", "SortingAlgorithms", "Statistics", "StatsBase", "TableTraits", "Tables", "Test", "TranscodingStreams", "Unicode", "WeakRefStrings"]
 git-tree-sha1 = "ad34fefb72b18a8dd5c17fab9089d11111b61935"
+pinned = true
+repo-rev = "a0d44f6f4905d70b69d61654b2687de3197c5ce9"
+repo-url = "https://github.com/JuliaData/DataFrames.jl.git"
 uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
-version = "0.14.1"
+version = "0.17.1+"
 
 [[DataStreams]]
 deps = ["Dates", "Missings", "Test", "WeakRefStrings"]
