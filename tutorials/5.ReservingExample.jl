@@ -16,18 +16,18 @@
 #if the working dir is not correct, the include command further down will fail 
 
 @warn("You need to install DecisionTrees.jl. Consider the readme of this page: 'https://github.com/kafisatz/DecisionTrees.jl'")
-@warn("You need to make sure that the required packages are are installed for this code to run.")
+@warn("You need to ensure that the required packages are are installed for this code to run.")
 
 using Revise
-#stdlib packages:
-    using Statistics
-    using StatsBase 
-    import StatsPlots #note: statPlots has a predict function which is also exported by DecisionTrees
-    #using Plots
-    using Distributed
-    using Random
-    using DelimitedFiles     
-    using Pkg
+using Statistics
+using StatsBase 
+import StatsPlots
+#using Plots
+#these are std lib packages and installed by default
+using Distributed
+using Random
+using DelimitedFiles     
+using Pkg
 
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
@@ -276,7 +276,8 @@ end
 modelsWeightsPerLDF=Vector{Vector{Float64}}()
 #the values were selected by expert judgement
 #primarily we considered reversals (i.e when the observed ratio in the validation data is not monotonic in the number of leaves (as the leaf number is defined such that the training observed ratios are increasing))
-push!(modelsWeightsPerLDF,[150000,200000,270000,220000,235000,210000,200000,240000,130000,130000,15000000])
+push!(modelsWeightsPerLDF,[150000,200000,270000,250000,235000,210000,200000,240000,180000,130000,130000])
+#alternative push!(modelsWeightsPerLDF,[150000,200000,270000,220000,235000,210000,200000,200000,130000,130000,15000000])
 
 #alternatives
 
@@ -305,7 +306,7 @@ treeResultsAgg=Dict{Float64,DataFrame}()
 folderForSingleTreeResults=joinpath(folderForOutput,"figures","SingleTreeApproach")
 @assert isdir(folderForSingleTreeResults) "Directory does not exist: $(folderForSingleTreeResults)"
 #actual model run (this may take a few minutes)
-updateSettingsMod!(sett,crit="sse",model_type="build_tree")
+updateSettingsMod!(sett,crit="sse",model_type="build_tree",subsampling_features_prop=1.0)
 @time this_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForSingleTreeResults,clAllLOBs,paidToDatePerRow,sett);
 
 @info("Finished building models.")
@@ -322,10 +323,13 @@ updateSettingsMod!(sett,crit="sse",iterations=8,learningRate=.15,model_type="boo
 @time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResultsBoosting,treeResultsAggBoosting,selected_explanatory_vars,categoricalVars,folderForBoostingResults,clAllLOBs,paidToDatePerRow,sett);
 
 mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folderForBoostingResults)
+#Note that the boosing model results in three different estimates
+#the dictionary mdl_statsBoosting has entries 1.0, 1.2 and 1.4.
+#1.0 canonical estimate from the boosting model
+#1.4 the estimates were grouped in N groups of equal size (N is user parameter, default is 1000) and then averaged, thus there are at most 1000 distinct estimated values
+#1.2 a moving average is applied to the fitted values of "1.4" above
 
 @warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
-
-@warn("Add a short comment on the files 'results 1.0, 1.2 and 1.4'")
 
 #=    
 #try some alternative models
@@ -341,22 +345,22 @@ ldfArr[1:NN,1]
 
 
 #tbd: compare mse versus sse
-selectedWeight=150000
+selectedWeight=270000
 while (selectedWeight < 180000)
-    ldfYear=2
+    ldfYear=3
     #selectedWeight=130000
     settC=deepcopy(sett)
     updateSettingsMod!(settC,crit="mse")
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
 
     settC=deepcopy(sett)
-    updateSettingsMod!(settC,crit="sse")
+    updateSettingsMod!(settC,crit="sse",subsampling_features_prop=1.0)
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
     selectedWeight+=10000
 end
    
-ldfYear=1
-selectedWeight=170000
+ldfYear=9
+selectedWeight=180000
 settC=deepcopy(sett)
 updateSettingsMod!(settC,crit="difference",iterations=8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
 resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)

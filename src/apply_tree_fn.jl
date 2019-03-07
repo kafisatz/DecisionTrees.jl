@@ -71,8 +71,7 @@ function predictConsistentFeatures(x::Tree,f::DataFrame)
   return apply_tree_by_leaf(x.rootnode,f)
 end
 
-function predictConsistentFeatures(x::BoostedTree,f::DataFrame;prroduceEstAndLeafMatrices::Bool=false)
-  #warn("need to ensure, data is consistent with the data used to derive the tree!")
+function predictConsistentFeatures(x::BoostedTree,f::DataFrame;prroduceEstAndLeafMatrices::Bool=false)  
   @assert assert_consistent_features(x.featurepools,f)
   
   obs=size(f,1)
