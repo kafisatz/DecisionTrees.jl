@@ -244,10 +244,25 @@ clPerLOB["2"]=clLOB2
 clPerLOB["3"]=clLOB3
 clPerLOB["4"]=clLOB4
 
+##
+#Combine the four CL models on the whole data 
+#LDF = Loss Development Factor (also chain ladder factor)
+ayAndLOBperRow=dataKnownByYE2005[[:AY,:LoB]]
+CLLDFperRow_byLOB=map(x->clPerLOB[String(ayAndLOBperRow[x,2])][:factorsToUltimate][ayAndLOBperRow[x,1]-1993],1:size(ayAndLOBperRow,1))
+CLUltimatePerRow_byLOB=CLLDFperRow_byLOB.*paidToDatePerRow
+cldf_byLOB=DataFrame(ldf=CLLDFperRow_byLOB,ultimate=CLUltimatePerRow_byLOB,paidToDate=paidToDatePerRow)
+cldf_byLOB[:reserves]=cldf_byLOB[:ultimate].-cldf_byLOB[:paidToDate]
+CLcomparisons_byLOB=CL_est_per_variable(fullData,cldf_byLOB)
+summaryByVar_byLOB=vcat(collect(values(CLcomparisons_byLOB)))
+isdir(clResultsFolder)&&CSV.write(joinpath(clResultsFolder,"resultsCL_by_LOB.csv"),summaryByVar_byLOB)
+
+##
+
 if !debug 
     @assert all(isapprox.(vcat(trueReserves,sum(trueReserves)).-clLOB1[:trueReserves].-clLOB2[:trueReserves].-clLOB3[:trueReserves].-clLOB4[:trueReserves],0))
     @assert all(isapprox.(trueUltimate.-trueUltimateLOB1.-trueUltimateLOB2.-trueUltimateLOB3.-trueUltimateLOB4,0))
 end
+
 ##############################
 #Consider CL decision trees
 ##############################
