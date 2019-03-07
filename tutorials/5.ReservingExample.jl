@@ -1,4 +1,4 @@
-#Date: July 1, 2018
+#Date: March 1, 2019
 #Author: Bernhard König
 #Title: An application of Regression Trees for Reserving 
 
@@ -22,7 +22,7 @@ using Revise
 #stdlib packages:
     using Statistics
     using StatsBase 
-    import StatPlots #statPlots has a predict function which is also exported by DecisionTrees
+    import StatsPlots #note: statPlots has a predict function which is also exported by DecisionTrees
     #using Plots
     using Distributed
     using Random
@@ -33,9 +33,8 @@ Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
 Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggregate
 
-@time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time here 
+@time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time 
 
-#folderForOutput="H:\\Privat\\"
 #folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20181203\\"
 folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\Paper July 2018\\"
 
@@ -304,13 +303,14 @@ folderForBoostingResults=joinpath(folderForOutput,"figures","boostingResults")
 @assert isdir(folderForBoostingResults) "Directory does not exist: $(folderForBoostingResults)"
 treeResultsBoosting=Dict{Float64,DataFrame}()
 treeResultsAggBoosting=Dict{Float64,DataFrame}()
-updateSettingsMod!(sett,crit="sse",iterations=0*2+1*8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
+updateSettingsMod!(sett,crit="sse",iterations=8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
 @time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResultsBoosting,treeResultsAggBoosting,selected_explanatory_vars,categoricalVars,folderForBoostingResults,clAllLOBs,paidToDatePerRow,sett);
 
 mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folderForBoostingResults)
 
 @warn("If we were to update the 'tree-CL' factors such that they are based on all data (currently they are only using the training data), the model might further improve.")
-@warn("Make a note that 5m claims is a large data set! In practice less data might be availabe but the concept can be applied nevertheless")
+
+@warn("Add a short comment on the files 'results 1.0, 1.2 and 1.4'")
 
 #=    
 #try some alternative models

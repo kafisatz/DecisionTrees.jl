@@ -2038,7 +2038,7 @@ function createTrnValStatsForThisIteration(description,iter::Int,scorebandsstart
 		cumulativeStatsMatrix=[description sumweighttrn sumweightval sumnumeratortrn sumnumeratorval sumdenominatortrn sumdenominatorval observedratiotrn observedratioval sumnumeratorEstimatetrn sumnumeratorEstimateval fittedratiotrn fittedratioval relativitytrn relativityval]
 		reltrntitle="Relativity Trn (Observed)" #this is used for the charts
 		header=["Cumulative Stats n=$(iter)" "Weight Trn" "Weight Val" "Numerator Trn" "Numerator Val" "Denominator Trn" "Denominator Val" "Observed Ratio Trn" "Observed Ratio Val" "Numerator Est Trn" "Numerator Est Val" "Fitted Ratio Trn" "Fitted Ratio Val" reltrntitle "Relativity Val (Observed)"]
-		columnOfRelativityTrn=findall(in([reltrntitle]), header)[1]
+		columnOfRelativityTrn=convert(Int,findall(in([reltrntitle]), header)[1])
 		cumulativeStatsMatrix=vcat(header,cumulativeStatsMatrix)
 		singleRowWithKeyMetrics=[iter correlation stddevtrn stddevval stddevratio lifttrn liftval reversalstrn reversalsval relDiffTrnObsVSValObs relDiffValObsVSTrnFitted minimum(relativitytrn) maximum(relativitytrn) minimum(observedratiotrn) maximum(observedratiotrn) minimum(relativityval) maximum(relativityval) minimum(observedratioval) maximum(observedratioval) normalized_unweighted_gini_numeratorTrn normalized_unweighted_gini_numeratorVal gini_single_argtrn gini_single_argval r2_of_ratiotrn r2_of_ratioval r2_of_numeratortrn r2_of_numeratorval residual_sum_squares_of_ratioTrn residual_sum_squares_of_ratioVal residual_sum_squares_of_numeratorTrn residual_sum_squares_of_numeratorVal poissonErrTrn poissonErrVal]
 return cumulativeStatsMatrix,singleRowWithKeyMetrics,columnOfRelativityTrn
