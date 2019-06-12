@@ -159,7 +159,7 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame,
     
     comparisons=Dict{String,DataFrame}()
     #byVars=["cc","inj_part","age","LoB"]
-    byVars=["cc","inj_part","age","LoB","tenGroupsSortedByUltimate", "twentyGroupsSortedByUltimate"]
+    byVars=["tenGroupsSortedByUltimate", "twentyGroupsSortedByUltimate","cc","inj_part","age","LoB"]
     for vv in byVars
         #attach explanatory data to the tree estimates
         treeEstimatePerRow[Symbol(vv)]=dataKnownByYE2005[Symbol(vv)]

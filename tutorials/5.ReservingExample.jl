@@ -282,7 +282,9 @@ modelsWeightsPerLDF=Vector{Vector{Float64}}()
 #the values were selected by expert judgement
 #primarily we considered reversals (i.e when the observed ratio in the validation data is not monotonic in the number of leaves (as the leaf number is defined such that the training observed ratios are increasing))
 push!(modelsWeightsPerLDF,[150000,200000,270000,250000,235000,210000,200000,240000,180000,130000,130000])
-#alternative push!(modelsWeightsPerLDF,[150000,200000,270000,220000,235000,210000,200000,200000,130000,130000,15000000])
+#modelsWeightsPerLDF=Vector{Vector{Float64}}()
+#alternative 
+#push!(modelsWeightsPerLDF,[150000,200000,270000,220000,235000,210000,200000,200000,130000,130000,15000000])
 
 #alternatives
 
@@ -318,7 +320,9 @@ updateSettingsMod!(sett,crit="sse",model_type="build_tree",subsampling_features_
 #write data to disk
 mdl_stats=write_results(treeResults,treeResultsAgg,folderForSingleTreeResults,trueReservesPerLOB,clPerLOB)
 
+############################################################
 #boosted model
+############################################################
 @info("Starting Boosting models...")
 folderForBoostingResults=joinpath(folderForOutput,"figures","boostingResults")
 @assert isdir(folderForBoostingResults) "Directory does not exist: $(folderForBoostingResults)"
@@ -400,8 +404,21 @@ if debug
     test_on_subset(dataKnownByYE2005,this_ldfy,folderForOutput,sett,trnsize,this_selectedWeight,cvsampler)
 0
 end
+=#
 
 #
+#Alternative Model: build a (plain) CL model for each Leaf indicated by the decision tree for the first develoment year
+#
+
+folderForOneCLModelPerLeaf=joinpath(splitdir(folderForSingleTreeResults)[1],"oneCLModelPerLeaf")
+@assert isdir(folderForOneCLModelPerLeaf)
+
+ldfYear=1
+selectedWeight=150000
+settC=deepcopy(sett)
+updateSettingsMod!(settC,crit="sse",model_type="build_tree",subsampling_features_prop=1.0)
+resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,selected_explanatory_vars,categoricalVars,folderForOneCLModelPerLeaf,settC)
+
 fitted,leafNrs=DecisionTrees.predict(resM,dtmKnownByYE2005.features)
 list_of_leafnumbers=sort(unique(leafNrs))
 thisLeafNr=list_of_leafnumbers[3]
@@ -419,17 +436,11 @@ for thisLeafNr in list_of_leafnumbers
 end
 
 #derive statistics
-ayAndLeafNrPerRow=hcat(dataKnownByYE2005[:AY],leafNrs)
-CLLDFperRow_byLeaf=map(x->clPerLeaf[ayAndLeafNrPerRow[x,2]][:factorsToUltimate][ayAndLeafNrPerRow[x,1]-1993],1:size(ayAndLeafNrPerRow,1))
-CLUltimatePerRow_byLeaf=CLLDFperRow_byLeaf.*paidToDatePerRow
-cldf_byLeaf=DataFrame(ldf=CLLDFperRow_byLeaf,ultimate=CLUltimatePerRow_byLeaf,paidToDate=paidToDatePerRow)
-cldf_byLeaf[:reserves]=cldf_byLeaf[:ultimate].-cldf_byLeaf[:paidToDate]
-CLcomparisons_byLeaf=CL_est_per_variable(fullData,cldf_byLeaf)
-summaryByVar_byLeaf=vcat(collect(values(CLcomparisons_byLeaf)))
-isdir(clResultsFolder)&&CSV.write(joinpath(clResultsFolder,"resultsCL_by_LeafNr.csv"),summaryByVar_byLeaf)
-
-
-
-
-
-=#
+    ayAndLeafNrPerRow=hcat(dataKnownByYE2005[:AY],leafNrs)
+    CLLDFperRow_byLeaf=map(x->clPerLeaf[ayAndLeafNrPerRow[x,2]][:factorsToUltimate][ayAndLeafNrPerRow[x,1]-1993],1:size(ayAndLeafNrPerRow,1))
+    CLUltimatePerRow_byLeaf=CLLDFperRow_byLeaf.*paidToDatePerRow
+    cldf_byLeaf=DataFrame(ldf=CLLDFperRow_byLeaf,ultimate=CLUltimatePerRow_byLeaf,paidToDate=paidToDatePerRow)
+    cldf_byLeaf[:reserves]=cldf_byLeaf[:ultimate].-cldf_byLeaf[:paidToDate]
+    CLcomparisons_byLeaf=CL_est_per_variable(fullData,cldf_byLeaf)
+    summaryByVar_byLeaf=vcat(collect(values(CLcomparisons_byLeaf)))
+    isdir(clResultsFolder)&&CSV.write(joinpath(clResultsFolder,"resultsCL_by_LeafNr.csv"),summaryByVar_byLeaf)
