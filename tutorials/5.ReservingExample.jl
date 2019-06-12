@@ -23,25 +23,21 @@ using Statistics
 using StatsBase 
 import StatsPlots
 #using Plots
+
 #these are std lib packages and installed by default
-using Distributed
-using Random
-using DelimitedFiles     
-using Pkg
+using Distributed, Random, DelimitedFiles,Pkg
 
 Distributed.@everywhere import CSV
 Distributed.@everywhere import DataFrames
 Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggregate
 
-@time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time 
+@time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time
 
-#folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\publicnl\\Personal\\Bernhard\\Projects & Meetings\\2018 SAV Vortrag MV\\ReservingTreesData\\20181203\\"
 folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\Paper July 2018\\"
-
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
 #include(joinpath(@__DIR__,"..","tutorials","5.ReservingExample_functions.jl"))
-#include(joinpath(Pkg.dir("DecisionTrees"),"tutorials","5.ReservingExample_functions.jl")) #this may not use the most current file but rather the file in the folder with compiled julia code, e.g. C:\\Users\\bernhard.konig\\.julia\\packages\\DecisionTrees\\3AXAR\\.... or similar
+#include(joinpath(Pkg.dir("DecisionTrees"),"tutorials","5.ReservingExample_functions.jl")) #this may not use the most current file but rather the file in the folder with compiled julia code, e.g. C:\\Users\\your_username\\.julia\\packages\\DecisionTrees\\3AXAR\\.... or similar
 fn_file=joinpath(pwd(),"tutorials","5.ReservingExample_functions.jl") 
 @assert isfile(fn_file) 
 include(fn_file)
@@ -73,6 +69,15 @@ elt=vcat(elt,repeat([Float64],12))
 Random.seed!(1239)
 trnValCol=BitArray(rand() < 0.7 for x in 1:size(fullData,1));
 fullData[:trnValCol]=trnValCol
+
+#consider deciles (and 'twenty'-iles) of ultimate claim amounts
+decilesThresholds=quantile(fullData[:PayCum11],collect(range(0.1,step=.1,stop=.91)))
+twentythresholds=quantile(fullData[:PayCum11],collect(range(0.05,step=.05,stop=.96)))
+
+dec=map(x->searchsortedfirst(decilesThresholds,x),fullData[:PayCum11])
+twen=map(x->searchsortedfirst(twentythresholds,x),fullData[:PayCum11])
+fullData[:tenGroupsSortedByUltimate]=dec
+fullData[:twentyGroupsSortedByUltimate]=twen
 
 @warn("We may want to redo the whole calculation with no validation data -> the CL factors will be based on all of the data (not only the training porportion).")
 
@@ -115,9 +120,9 @@ for x in vcat(selected_explanatory_vars,"AY")
     ks=ks[srt]
     vs=vs[srt]
     #plot the frequency count
-    StatPlots.bar(ks,vs,title="",label="",xaxis=x,yaxis="number of claims",fmt=:svg)
+    StatsPlots.bar(ks,vs,title="",label="",xaxis=x,yaxis="number of claims",fmt=:svg)
     savedir=joinpath(folderForOutput,"figures") #folderForOutput #"C:\\temp\\"
-    isdir(savedir)&&StatPlots.savefig(joinpath(savedir,string(x,"_graph.pdf")))
+    isdir(savedir)&&StatsPlots.savefig(joinpath(savedir,string(x,"_graph.pdf")))
     println("")
 end
 
@@ -178,7 +183,7 @@ maxAY=maximum(ayears)
     updateSettingsMod!(sett,ignoreZeroDenominatorValues=true,model_type="build_tree",write_dot_graph=true,writeTree=false,graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
     #a note on the data
     #dataKnownByYE2005 is a DataFrame (it contains more data such as all PayCum columns and the AY)
-    #dtmKnownByYE2005 is a DTMTable object (it has a different structre than the DataFrame)    
+    #dtmKnownByYE2005 is a DTMTable struct (it has a different structre than the DataFrame)    
 
 #consider paidToDate and 'truth'
 paidToDatePerRow=getPaidToDatePerRow(dataKnownByYE2005)
@@ -310,8 +315,8 @@ updateSettingsMod!(sett,crit="sse",model_type="build_tree",subsampling_features_
 @time this_ldfarr=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResults,treeResultsAgg,selected_explanatory_vars,categoricalVars,folderForSingleTreeResults,clAllLOBs,paidToDatePerRow,sett);
 
 @info("Finished building models.")
-
-mdl_stats=write_results(treeResults,treeResultsAgg,folderForSingleTreeResults)
+#write data to disk
+mdl_stats=write_results(treeResults,treeResultsAgg,folderForSingleTreeResults,trueReservesPerLOB,clPerLOB)
 
 #boosted model
 @info("Starting Boosting models...")
@@ -322,7 +327,7 @@ treeResultsAggBoosting=Dict{Float64,DataFrame}()
 updateSettingsMod!(sett,crit="sse",iterations=8,learningRate=.15,model_type="boosted_tree",subsampling_features_prop=0.6)
 @time ldfArrBoosting=runModels!(dataKnownByYE2005,dtmKnownByYE2005,modelsWeightsPerLDF,treeResultsBoosting,treeResultsAggBoosting,selected_explanatory_vars,categoricalVars,folderForBoostingResults,clAllLOBs,paidToDatePerRow,sett);
 
-mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folderForBoostingResults)
+mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folderForBoostingResults,trueReservesPerLOB,clPerLOB)
 #Note that the boosing model results in three different estimates
 #the dictionary mdl_statsBoosting has entries 1.0, 1.2 and 1.4.
 #1.0 canonical estimate from the boosting model
@@ -336,10 +341,10 @@ mdl_statsBoosting=write_results(treeResultsBoosting,treeResultsAggBoosting,folde
 NN=20
 this_ldfarr[1:NN,1]
 ldfArr[1:NN,1]
-    ldfYear=4
-    selectedWeight=250000
+    ldfYear=1
+    selectedWeight=150000
     settC=deepcopy(sett)
-    updateSettingsMod!(settC,crit="sse")
+    updateSettingsMod!(settC,crit="sse",subsampling_features_prop=1.0)
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
     0
 
@@ -347,8 +352,8 @@ ldfArr[1:NN,1]
 #tbd: compare mse versus sse
 selectedWeight=270000
 while (selectedWeight < 180000)
-    ldfYear=3
-    #selectedWeight=130000
+    ldfYear=1
+    #selectedWeight=150000
     settC=deepcopy(sett)
     updateSettingsMod!(settC,crit="mse")
     resultingFiles,resM= runSingleModel(dataKnownByYE2005,dtmKnownByYE2005,selectedWeight,ldfYear,2005,               selected_explanatory_vars,categoricalVars,"C:\\temp\\331\\",settC)
@@ -395,5 +400,36 @@ if debug
     test_on_subset(dataKnownByYE2005,this_ldfy,folderForOutput,sett,trnsize,this_selectedWeight,cvsampler)
 0
 end
+
+#
+fitted,leafNrs=DecisionTrees.predict(resM,dtmKnownByYE2005.features)
+list_of_leafnumbers=sort(unique(leafNrs))
+thisLeafNr=list_of_leafnumbers[3]
+clPerLeaf=Dict{Int,DataFrame}()
+for thisLeafNr in list_of_leafnumbers
+    idx=leafNrs.==thisLeafNr
+    subsetOfData=dataKnownByYE2005[idx,:]
+    subTriangle=buildTriangle(subsetOfData)
+    subCL=chainLadder(subTriangle)
+    subTrueUltimate=subTriangle[:,end]
+    subCL[:trueReserves]=subTrueUltimate.-subCL[:paidToDate]
+    subCL[:error]=subCL[:trueReserves].-subCL[:reserves]
+    #fill dictionary
+    clPerLeaf[thisLeafNr]=deepcopy(subCL)
+end
+
+#derive statistics
+ayAndLeafNrPerRow=hcat(dataKnownByYE2005[:AY],leafNrs)
+CLLDFperRow_byLeaf=map(x->clPerLeaf[ayAndLeafNrPerRow[x,2]][:factorsToUltimate][ayAndLeafNrPerRow[x,1]-1993],1:size(ayAndLeafNrPerRow,1))
+CLUltimatePerRow_byLeaf=CLLDFperRow_byLeaf.*paidToDatePerRow
+cldf_byLeaf=DataFrame(ldf=CLLDFperRow_byLeaf,ultimate=CLUltimatePerRow_byLeaf,paidToDate=paidToDatePerRow)
+cldf_byLeaf[:reserves]=cldf_byLeaf[:ultimate].-cldf_byLeaf[:paidToDate]
+CLcomparisons_byLeaf=CL_est_per_variable(fullData,cldf_byLeaf)
+summaryByVar_byLeaf=vcat(collect(values(CLcomparisons_byLeaf)))
+isdir(clResultsFolder)&&CSV.write(joinpath(clResultsFolder,"resultsCL_by_LeafNr.csv"),summaryByVar_byLeaf)
+
+
+
+
 
 =#

@@ -131,7 +131,7 @@ function checkIfPaymentsAreIncreasing(data)
     return isNonDecreasing
 end
 
-function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;writeResultToTemp=true)
+function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame,trueReservesPerLOB,clPerLOB;writeResultToTemp=true)
     #NOTE: this function is using several global variables!
     #overall Result
     comparisonByAY=hcat(ayears,trueReserves,treeEstimateAgg[:reserves],clAllLOBs[:reserves])
@@ -158,7 +158,8 @@ function customSummary(treeEstimateAgg::DataFrame,treeEstimatePerRow::DataFrame;
     end
     
     comparisons=Dict{String,DataFrame}()
-    byVars=["cc","inj_part","age","LoB"]
+    #byVars=["cc","inj_part","age","LoB"]
+    byVars=["cc","inj_part","age","LoB","tenGroupsSortedByUltimate", "twentyGroupsSortedByUltimate"]
     for vv in byVars
         #attach explanatory data to the tree estimates
         treeEstimatePerRow[Symbol(vv)]=dataKnownByYE2005[Symbol(vv)]
@@ -320,7 +321,8 @@ end
 function CL_est_per_variable(fullData,cldf::DataFrame;writeResultToTemp=true) #(dataKnownByYE2005,CLLDFperRow,CLUltimatePerRow,paidToDatePerRow)
     #@assert size(dataKnownByYE2005,1)==length(CLUltimatePerRow)==length(CLLDFperRow)==length(paidToDatePerRow)
     comparisons=Dict{String,DataFrame}()
-    byVars=["cc","inj_part","age","LoB"]
+    #byVars=["cc","inj_part","age","LoB"]
+    byVars=["cc","inj_part","age","LoB","tenGroupsSortedByUltimate", "twentyGroupsSortedByUltimate"]    
     for vv in byVars
         #attach explanatory data to the data
         cldf[Symbol(vv)]=dataKnownByYE2005[Symbol(vv)]
@@ -368,7 +370,7 @@ function CL_est_per_variable(fullData,cldf::DataFrame;writeResultToTemp=true) #(
     return comparisons
 end
 
-function write_results(treeResults,treeResultsAgg,folderForOutput)
+function write_results(treeResults,treeResultsAgg,folderForOutput,trueReservesPerLOB,clPerLOB)
     #if true
     @info("Deriving statistics...")
     #compare results (CL versus Tree versus Truth)
@@ -376,7 +378,7 @@ function write_results(treeResults,treeResultsAgg,folderForOutput)
     modelStatistics=Dict{Float64,ModelStats}()
     for thiskey in modelIndices
         @show thiskey
-        resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey])
+        resultTuple=customSummary(treeResultsAgg[thiskey],treeResults[thiskey],trueReservesPerLOB,clPerLOB)
         obj=ModelStats(resultTuple[1],resultTuple[2],resultTuple[3],resultTuple[4])
         deltaTotalPerLOB=map(x->1/1e6.*(obj.comparisonByLOB[x][end,2].-obj.comparisonByLOB[x][end,3]),string.(collect(1:4)))
         @show deltaTotalPerLOB
