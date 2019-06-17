@@ -249,6 +249,10 @@ clPerLOB["2"]=clLOB2
 clPerLOB["3"]=clLOB3
 clPerLOB["4"]=clLOB4
 
+#=
+for i=1:4;tmp=@eval $(Symbol(string("triangleLOB",i)));writedlm(joinpath(folderForOutput,"Arius","triangle_LOB$(i).csv"),tmp,',');end;
+=#
+
 ##
 #Combine the four CL models on the whole data 
 #LDF = Loss Development Factor (also chain ladder factor)
@@ -427,6 +431,8 @@ for thisLeafNr in list_of_leafnumbers
     idx=leafNrs.==thisLeafNr
     subsetOfData=dataKnownByYE2005[idx,:]
     subTriangle=buildTriangle(subsetOfData)
+    #write triangle to disk
+    writedlm(joinpath(folderForOneCLModelPerLeaf,"triangle_of_leaf_number_$(thisLeafNr).csv"),subTriangle,',')
     subCL=chainLadder(subTriangle)
     subTrueUltimate=subTriangle[:,end]
     subCL[:trueReserves]=subTrueUltimate.-subCL[:paidToDate]
@@ -443,4 +449,4 @@ end
     cldf_byLeaf[:reserves]=cldf_byLeaf[:ultimate].-cldf_byLeaf[:paidToDate]
     CLcomparisons_byLeaf=CL_est_per_variable(fullData,cldf_byLeaf)
     summaryByVar_byLeaf=vcat(collect(values(CLcomparisons_byLeaf)))
-    isdir(clResultsFolder)&&CSV.write(joinpath(clResultsFolder,"resultsCL_by_LeafNr.csv"),summaryByVar_byLeaf)
+    isdir(folderForOneCLModelPerLeaf)&&CSV.write(joinpath(folderForOneCLModelPerLeaf,"resultsCL_by_LeafNr.csv"),summaryByVar_byLeaf)
