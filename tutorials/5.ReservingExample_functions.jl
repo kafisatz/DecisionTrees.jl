@@ -443,3 +443,65 @@ function test_on_subset(dataKnownByYE2005,ldfYear,folderForOutput,settOrig::Mode
         return  statsdf,settsdf,allmodel
     end
 end
+
+
+"""
+for a sorted vector vsorted this function returns the percentage of the aggregate amount which is represented by the smallest "claim_count_pct" percent of elements (e.g. claims)
+"""
+function aggLossPctSortedInput(claim_count_pct,vsorted,vsum)
+    @assert 1>=claim_count_pct>=0
+    #@assert issorted(vsorted)
+    claim_count=floor(Int,length(vsorted)*claim_count_pct)
+    if claim_count>0
+        p=sum(view(vsorted,1:claim_count))/vsum #/sum(vsorted)
+        #@show claim_count,p
+    else 
+        p=zero(eltype(vsorted))
+    end
+    return p
+end
+
+function count_vs_agg_amount(vsorted,nsteps::Int)
+    @assert issorted(vsorted)
+    @assert nsteps>0
+    res=zeros(eltype(vsorted),nsteps,4)
+    vsize=length(vsorted)
+    vsum=sum(vsorted)
+    startPrev=vsize
+    for i=nsteps:-1:1
+        j=nsteps-i+1
+        start=floor(Int,(i/nsteps)*vsize)
+        @inbounds res[j,3]=sum(view(vsorted,start:startPrev))
+        startPrev=start
+        @inbounds res[i,1]=i/nsteps
+        if j>1
+            res[j,3]+=res[j-1,3]
+        end
+    end
+    res[:,4]=res[:,3]./vsum
+    res[:,2]=res[:,1].*vsize
+    #output format: row count in percentage, row count, aggregate sum, aggregate sum in percentage
+    return res
+end
+
+#count_vs_agg_amount(vsorted,10)
+#=
+tbl=count_vs_agg_amount(vsorted,10);
+@btime count_vs_agg_amount($vsorted,1000);
+=#
+
+"""
+for a sorted vector vsorted this function returns the percentage of the aggregate amount which is represented by the smallest "claim_count_pct" percent of elements (e.g. claims)
+"""
+function aggLossPctSortedInput(claim_count_pct,vsorted,vsum)
+    @assert 1>=claim_count_pct>=0
+    #@assert issorted(vsorted)
+    claim_count=floor(Int,length(vsorted)*claim_count_pct)
+    if claim_count>0
+        p=sum(view(vsorted,1:claim_count))/vsum #/sum(vsorted)
+        #@show claim_count,p
+    else 
+        p=zero(eltype(vsorted))
+    end
+    return p
+end

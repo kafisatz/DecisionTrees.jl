@@ -33,6 +33,7 @@ Distributed.@everywhere import DataFrames: DataFrame,groupby,combine,names!,aggr
 
 @time Distributed.@everywhere using DecisionTrees #first time usage (precompilation) may take some time
 
+folderForOutput="C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Privat\\SAV\\Fachgruppe Data Science\\Paper July 2018\\"
 folderForOutput="H:\\Privat\\SAV\\Fachgruppe Data Science\\Paper July 2018\\"
 @assert isdir(folderForOutput) "Directory does not exist: $(folderForOutput)"
 #define functions
@@ -52,6 +53,31 @@ elt=[String,String,String,Int,Int,Int,String,Int]
 elt=vcat(elt,repeat([Float64],12))
 @info("Reading data...")
 @time fullData=CSV.read(datafile,types=elt,rows_for_type_detect=100000,allowmissing=:none,categorical=false);
+
+#=
+ecdf11=ecdf(fullData[:PayCum11])
+using ORCA 
+using PlotlyJS
+x_values=collect(0:1000:maximum(ecdf11))
+x_values=collect(0:1000:50000)
+y_values=ecdf11.(x_values)
+layout = Layout(;title="Cumulative claim count distribution",ylabel="Percentage of Claims",font_size=23)	
+pl=PlotlyJS.plot(x_values,y_values,layout,xaxis=("Claim Size"),ticks = :native,dpi=200,show=true)
+#PlotlyJS.savefig(pl,"c:\\temp\\plot.jpeg")
+
+#consider claim count in percentage versus total aggregate loss amount (in percentage)
+#plot cumulative distribution of PayCum11
+vsorted=sort(deepcopy(fullData[:PayCum11]))
+tbl=count_vs_agg_amount(vsorted,1000)
+writedlm(joinpath(folderForOutput,"ExcelTables","agg_claim_distribution.csv"),tbl,',')
+
+
+paycum11sorted=deepcopy(fullData[:PayCum11])
+sort!(paycum11sorted)
+vsum=sum(paycum11sorted) 
+@btime aggLossPctSortedInput(.99,$paycum11sorted,vsum)
+
+=#
 
 #for development only: define random subset of data
     debug=false
