@@ -453,8 +453,16 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.writeTree
 #general_settings=convert(String,string(general_settings,))
     char_levels=map(x->length(features[x].pool),sett.number_of_num_features+1:sett.number_of_num_features+sett.number_of_char_features)
     num_levels=map(x->length(features[x].pool),1:sett.number_of_num_features)
-    max_c0=maximum(char_levels)
-    max_n0=maximum(num_levels)
+    if length(char_levels)>0
+        max_c0=maximum(char_levels)
+    else
+        max_c0=0
+    end
+    if length(num_levels)>0
+        max_n0=maximum(num_levels)
+    else
+        max_n0=0
+    end
     max_levels_uint8=typemax(UInt8)
     if max(max_c0,max_n0)>max_levels_uint8
         @info("DTM: At least one variable has more than $(max_levels_uint8) potential splitting points. \r\nThis is experimental and not yet fully tested.")        

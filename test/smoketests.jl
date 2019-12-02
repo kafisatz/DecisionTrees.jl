@@ -14,6 +14,35 @@ thisfile=joinpath(datadir,"GermanMotorPremiums","data1Small.csv")
 @time df_tmp=CSV.read(thisfile,allowmissing=:none,types=eltypesData1,categorical=false,rows_for_type_detect=10000);
 df_tmp_orig=deepcopy(df_tmp)
 
+#example with only char columns
+selected_explanatory_vars_char_only=["ART_DES_WOHNEIGENTUM","FAMILIENSTAND","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
+dtmtableMini,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp[1:100,:],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars_char_only);
+sett.minWeight=-.2
+@info("DTM:Testing build tree (dtm mini; only character independent variables)")
+strs,resm=dtm(dtmtableMini,sett)
+@test true
+
+settB=deepcopy(sett)
+settB.model_type="boosted_tree"
+@info("DTM:Testing boosted tree (dtm mini; only character independent variables)")
+strs,resm=dtm(dtmtableMini,settB)
+@test true
+
+#example with only numeric columns
+selected_explanatory_vars_num_only=["GEBURTSDATUM","VORSCHAEDEN_ANZAHL","AUTOMOBILCLUB_MITGLIED_SEIT"]
+dtmtableMini,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp[1:100,:],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars_num_only);
+sett.minWeight=-.2
+@info("DTM:Testing build tree (dtm mini; only numerical independent variables)")
+strs,resm=dtm(dtmtableMini,sett)
+@test true
+
+settB=deepcopy(sett)
+settB.model_type="boosted_tree"
+@info("DTM:Testing boosted tree (dtm mini; only numerical independent variables)")
+strs,resm=dtm(dtmtableMini,settB)
+
+
+#other tests:
 selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 
 #keep 10 largest PLZ only
@@ -29,6 +58,7 @@ dtmtableMini,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp[1:100,:],treat_as
 sett.minWeight=-.2
 @info("DTM:Testing build tree (dtm mini)")
 strs,resm=dtm(dtmtableMini,sett)
+
 #boosting
 settB=deepcopy(sett)
 settB.model_type="boosted_tree"

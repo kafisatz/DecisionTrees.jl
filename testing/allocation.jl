@@ -1,3 +1,8 @@
+#=
+    pt="C:\\Users\\bernhard.konig\\Documents\\ASync\\home\\Code\\Julia\\DecisionTrees.jl"
+    using Pkg 
+    Pkg.activate(pt)
+=#
 import CSV
 import DataFrames
 import DataFrames: DataFrame
