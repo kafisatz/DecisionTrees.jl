@@ -15,9 +15,9 @@ Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kaf
 
 Check the build status (as shown above) to see for which Julia versions the package is working (i.e. tests pass).
 To install DecisionTrees.jl, run
-```using Pkg; pkg"add https://github.com/kafisatz/DecisionTrees.jl"``` 
+```using Pkg; Pkg.add(PackageSpec(url="https://github.com/kafisatz/DecisionTrees.jl/",rev="master"))``` 
 at the REPL. Alternatively you can enter package mode by typing `]`. In package mode you can simply run 
-```add https://github.com/kafisatz/DecisionTrees.jl```
+```add https://github.com/kafisatz/DecisionTrees.jl#master```
 
 We note that this package uses PyCall to create Excel files of the model results. Therefore, there are a number of dependencies (PyCall, Conda, Python). These should be installed automatically when you use the package for the first time. 
 Still, we currently recommend that you perform the following
