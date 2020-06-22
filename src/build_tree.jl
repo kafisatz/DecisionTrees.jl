@@ -122,6 +122,10 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
         countr=size(r,1)
         sumwl=sum(view(weight,l))
         sumwr=sum(view(weight,r))
+		#@show size(trnidx,1)
+	#	@show countl+countr
+#		@show countl,countr,sumwl,sumwr
+#		@show id,subset
 
 	leftchildwillbefurthersplit=sumwl<2*minweight
 	rightchildwillbefurthersplit=sumwr<2*minweight
