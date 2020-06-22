@@ -3,7 +3,7 @@ Decision Tree Algorithms for Regression
 
 This package is working with Julia version 1.0.
 
-Linux: [![Build Status](https://travis-ci.com/kafisatz/DecisionTrees.jl.svg?branch=master)](https://travis-ci.org/kafisatz/DecisionTrees.jl)
+Linux: [![Build Status](https://travis-ci.com/kafisatz/DecisionTrees.jl.svg?branch=master)](https://travis-ci.com/kafisatz/DecisionTrees.jl)
 
 Windows: [![Build Status](https://ci.appveyor.com/api/projects/status/github/kafisatz/DecisionTrees.jl?branch=master&svg=true)](https://ci.appveyor.com/project/kafisatz/DecisionTrees-jl/branch/master)
 

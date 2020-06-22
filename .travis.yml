@@ -5,8 +5,11 @@ os:
   #OSX is currently failing because the unzip command is invalid....
 julia:  
   - 1.0
-  #- 1.1
-  #- nightly  
+  - 1.1
+  - 1.2
+  - 1.3
+  - 1.4  
+  - nightly  
 matrix:
  allow_failures:
  - julia: nightly
