@@ -1,4 +1,8 @@
 language: julia
+
+codecov: true
+coveralls: true
+
 os:
   - linux
   #- osx
