@@ -237,11 +237,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
             somestrings,model=run_model_actual(dtmtable,dummySett,fnmod)
             desc,numbrs,desc_settingsvec,settingsvec,selectedPerformanceMeasure=get_stats(model,perfMeasure=sett.performanceMeasure)
             #add first column
-			@show size(numbrs)
-			@show size(settingsvec)
-			@show size(desc)
-			@show size(desc_settingsvec)			
-                pushfirst!(numbrs,i)
+			    pushfirst!(numbrs,i)
                 pushfirst!(settingsvec,string(i))
                 pushfirst!(desc,"Number")
                 pushfirst!(desc_settingsvec,"Number")                
