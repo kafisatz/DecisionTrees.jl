@@ -28,4 +28,4 @@ script:
   - julia -e 'try;import Pkg;println("");println("Building PyCall for Travis...");ENV["PYTHON"]="";Pkg.build("Conda");Pkg.build("PyCall");using PyCall;global const pyModPandas = PyNULL();global const pyModxlsxwriter = PyNULL();copy!(pyModPandas, pyimport_conda("pandas","pandas"));copy!(pyModxlsxwriter, pyimport_conda("xlsxwriter","xlsxwriter"));writer=pyModPandas[:ExcelWriter]("blabla_deletme.xlsx", engine = "xlsxwriter");@show typeof(writer);println("If this worked, then pandas and xlsxwriter should be installed");println("Done building PyCall.Restarting Julia...");catch e;println("this did not work");@show e;end;exit();'
   - julia -e 'import Pkg;@show pwd();Pkg.build("DecisionTrees");Pkg.test("DecisionTrees"; coverage=true)'
 after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder()) ; Coveralls.submit(Coveralls.process_folder())'
