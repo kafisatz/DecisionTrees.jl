@@ -1,4 +1,4 @@
-#from https://github.com/JuliaStats/MLBase.jl/blob/master/src/crossval.jl 
+# from https://github.com/JuliaStats/MLBase.jl/blob/master/src/crossval.jl 
 
 abstract type CrossValGenerator end
 
@@ -21,8 +21,8 @@ struct KfoldState
     e::Int      # ending index
 end
 
-start(c::Kfold) = KfoldState(1, 1, round.(Integer,c.coeff))
-next(c::Kfold, s::KfoldState) = (i = s.i+1; (setdiff(1:length(c.permseq), c.permseq[s.s:s.e]), KfoldState(i, s.e+1, round.(Integer,c.coeff * i))))
+start(c::Kfold) = KfoldState(1, 1, round.(Integer, c.coeff))
+next(c::Kfold, s::KfoldState) = (i = s.i + 1; (setdiff(1:length(c.permseq), c.permseq[s.s:s.e]), KfoldState(i, s.e + 1, round.(Integer, c.coeff * i))))
 done(c::Kfold, s::KfoldState) = (s.i > c.k) 
 @inline iterate(x::Kfold) = next(x, start(x))
 @inline iterate(x::Kfold, i) = done(x, i) ? nothing : next(x, i)
@@ -38,12 +38,12 @@ end
 length(c::RandomSub) = c.k
 
 start(c::RandomSub) = 1
-next(c::RandomSub, s::Int) = (sort!(StatsBase.sample(1:c.n, c.sn; replace=false)), s+1)
+next(c::RandomSub, s::Int) = (sort!(StatsBase.sample(1:c.n, c.sn; replace=false)), s + 1)
 done(c::RandomSub, s::Int) = (s > c.k)
 @inline iterate(x::RandomSub) = next(x, start(x))
 @inline iterate(x::RandomSub, i) = done(x, i) ? nothing : next(x, i)
 
-#Kfold, but disjoing sets ('negation' of Kfold sets)
+# Kfold, but disjoing sets ('negation' of Kfold sets)
 struct KfoldDisjoint <: CrossValGenerator
     permseq::Vector{Int}
     k::Int
@@ -51,21 +51,21 @@ struct KfoldDisjoint <: CrossValGenerator
 
     function KfoldDisjoint(n::Int, k::Int)
         2 <= k <= n || error("DTM: (KfoldDisjoint CV Sampler): The value of k must be in [2, length(a)]. You provided k=$(k)")
-        #2 <= k <= n || error("The value of k must be in [2, length(a)].")
+        # 2 <= k <= n || error("The value of k must be in [2, length(a)].")
         new(Random.randperm(n), k, n / k)
     end
 end
 
 length(c::KfoldDisjoint) = c.k
 
-start(c::KfoldDisjoint) = KfoldState(1, 1, round.(Integer,c.coeff))
+start(c::KfoldDisjoint) = KfoldState(1, 1, round.(Integer, c.coeff))
 next(c::KfoldDisjoint, s::KfoldState) =
-    (i = s.i+1; (sort(c.permseq[s.s:s.e]), KfoldState(i, s.e+1, round.(Integer,c.coeff * i))))
+    (i = s.i + 1; (sort(c.permseq[s.s:s.e]), KfoldState(i, s.e + 1, round.(Integer, c.coeff * i))))
 done(c::KfoldDisjoint, s::KfoldState) = (s.i > c.k) 
 @inline iterate(x::KfoldDisjoint) = next(x, start(x))
 @inline iterate(x::KfoldDisjoint, i) = done(x, i) ? nothing : next(x, i)
 
-#=
+#= 
 
 #testing 
 
@@ -79,5 +79,4 @@ collect(Kfold(10,3))
     for i in sampled_kfold
         @show i    
         @show setdiff(1:nn,i)
-    end
-=#
+    end =#

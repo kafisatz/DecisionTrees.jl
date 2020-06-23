@@ -1,20 +1,20 @@
 import PyCall
-#check if python has the requird Packages installed
+# check if python has the requird Packages installed
 
-required_python_packages=["numpy","pandas","xlsxwriter"] # for testing this functionality you can add some package like "nose" "SymPy" "nltk" "Scapy" ....
+required_python_packages = ["numpy","pandas","xlsxwriter"] # for testing this functionality you can add some package like "nose" "SymPy" "nltk" "Scapy" ....
 try
-     for x in required_python_packages
+    for x in required_python_packages
     	PyCall.pywrap(PyCall.pyimport(x))         
-     end
- catch
+    end
+catch
     	@info "One of the required python packages was not found on your system:"
     	println(required_python_packages)
-      for x in required_python_packages
+    for x in required_python_packages
         println(x)
-      end
+    end
     	@info "Trying to install those packages..."
     		# Use eventual proxy info
-    		proxy_arg=Array{AbstractString}(undef,0)
+    		proxy_arg = Array{AbstractString}(undef, 0)
     		if haskey(ENV, "http_proxy")
     			push!(proxy_arg, "--proxy")
     			push!(proxy_arg, ENV["http_proxy"])

@@ -3,11 +3,11 @@
 # Note: this file may cause issues when copy/pasted to julia with autohotkey
 # it is best to include it include("thisfile") and then test the functions
 
-#Copyright (c) 2014--2015 David A. van Leeuwen
-#The Julia package "ROC.jl" is licenced under the MIT License.
-#Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-#The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-#THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+# Copyright (c) 2014--2015 David A. van Leeuwen
+# The Julia package "ROC.jl" is licenced under the MIT License.
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## roc.jl  Receiver Operating Characteristics computations
 ## (c) 2013--2015 David A. van Leeuwen
@@ -26,7 +26,7 @@ the (minimalized) arrays for probabilities of false-alarm and miss---the coordin
 curve---, they are the threshold for these, a boolean whether-or-not this point lies on the 
 convex hull, and the associated optimal log-likelihood-ratio associated to the line segment. 
 """    
-mutable struct Roc{T<:Real}
+mutable struct Roc{T <: Real}
     pfa::Vector{Float64}        # probability of false alarm
     pmiss::Vector{Float64}      # probability of miss
     ch::BitArray                # point lies on convex hull
@@ -59,15 +59,15 @@ function roc(tar::Vector{T}, non::Vector{T}; laplace::Bool=false, collapse=true)
     ## first collect point of the same threshold (for discrete score data)
     theta, tc, nc, = binscores(xo, tc)
     ## now we can compute pmiss and pfa
-    pfa = [1; 1 - cumsum(nc)/length(non)]
-    pmiss = [0; cumsum(tc)/length(tar)]
+    pfa = [1; 1 - cumsum(nc) / length(non)]
+    pmiss = [0; cumsum(tc) / length(tar)]
     ## convex hull and llr
     ch, llr = chllr(tc, nc, xo, laplace=laplace)
     if collapse
         ## remove points on the ROC in the middle of a horizontal or vertical segment
         changes = changepoints(pfa, pmiss)
-        (pfa, pmiss, ch) = map(a -> a[changes], (pfa, pmiss, ch))
-        (llr, theta) = map(a -> a[changes[1:end-1]], (llr, theta))
+        (pfa, pmiss, ch) = map(a->a[changes], (pfa, pmiss, ch))
+        (llr, theta) = map(a->a[changes[1:end - 1]], (llr, theta))
     end
     Roc(pfa, pmiss, ch, theta, llr)
 end
@@ -83,28 +83,28 @@ function sortscores(tar::Vector{T}, non::Vector{T}) where {T <: Real}
 end    
 
 ## bins scores that are the same into aggredated score counts
-function binscores(xo::Vector{T},tc::Vector{Int}) where {T <: Real}
+function binscores(xo::Vector{T}, tc::Vector{Int}) where {T <: Real}
     nc = 1 - tc
     changes = findall([true; diff(xo) .!= 0; true]) # points where threshold change
     theta = xo                                       # threshold
     keep = trues(length(tc))
-    @inbounds for i=1:length(changes)-1
+    @inbounds for i = 1:length(changes) - 1
         start = changes[i]
-        stop = changes[i+1]-1
-        if stop>start
+        stop = changes[i + 1] - 1
+        if stop > start
             tc[start] = sum(tc[start:stop])
             nc[start] = sum(nc[start:stop])
-            keep[start+1:stop]= false
+            keep[start + 1:stop] = false
         end
     end
-    (tc, nc, theta) = map(a -> a[keep], (tc, nc, theta))
+    (tc, nc, theta) = map(a->a[keep], (tc, nc, theta))
     return theta, tc, nc, keep
 end
 ## This finds the change points on the ROC (the corner points)
 function changepoints(pfa::Vector{Float64}, pmiss::Vector{Float64})
-    (const_pfa, const_pmiss) = map(a -> diff(a) .== 0, (pfa, pmiss)) # no changes
-    return [true; ! (const_pfa[1:end-1]  &  const_pfa[2:end] | 
-                     const_pmiss[1:end-1] & const_pmiss[2:end]); true]
+    (const_pfa, const_pmiss) = map(a->diff(a) .== 0, (pfa, pmiss)) # no changes
+    return [true; ! (const_pfa[1:end - 1]  &  const_pfa[2:end] | 
+                     const_pmiss[1:end - 1] & const_pmiss[2:end]); true]
 end
 
 ## compute convex hull and optimal llr from target count, nontarget count, and ordered scores
@@ -117,8 +117,8 @@ function chllr(tc::Vector{Int}, nc::Vector{Int}, xo::Vector{T}; laplace::Bool=tr
     ntar = sum(tc)
     nnon = sum(nc)
 #    if fast
-        pfa = [1; 1 - cumsum(nc)/nnon] # use rationals for accuracy of the convex hull
-        pmiss = [0; cumsum(tc)/ntar]
+        pfa = [1; 1 - cumsum(nc) / nnon] # use rationals for accuracy of the convex hull
+        pmiss = [0; cumsum(tc) / ntar]
         index = rochull(pfa, pmiss)
 #    else
 #        pfa = [1, 1 - cumsum(nc)/nnon]
@@ -130,20 +130,20 @@ function chllr(tc::Vector{Int}, nc::Vector{Int}, xo::Vector{T}; laplace::Bool=tr
     ch = falses(length(pfa))
     ch[index] = true
     ## LLR
-    (dpfa, dpmiss) = map(a -> diff(a[ch]), (pfa, pmiss))
-    llr = log(abs(dpmiss ./ dpfa))[cumsum(ch)[1:end-1]]
+    (dpfa, dpmiss) = map(a->diff(a[ch]), (pfa, pmiss))
+    llr = log(abs(dpmiss ./ dpfa))[cumsum(ch)[1:end - 1]]
     if laplace
-        return [true; ch[4:end-3]; true], llr[3:end-2]
+        return [true; ch[4:end - 3]; true], llr[3:end - 2]
     else
         return ch, llr
-    end
+end
 end
 
 ## returns positive number if test point is "left" of line (x1,y1) -- (x2,y2)
 ## positive: left, negative: right, zero: on
 ## This works best with rationals, but that makes it slow 
 function isleft(x1::T, y1::T, x2::T, y2::T, xt::T, yt::T) where {T <: Real}
-    (x2 - x1)*(yt - y1) - (xt - x1)*(y2 - y1) 
+    (x2 - x1) * (yt - y1) - (xt - x1) * (y2 - y1) 
 end
 
 ## Andrew's Monotone Chain Algorithm, from http://geomalgorithms.com/a10-_hull-1.html
@@ -156,7 +156,7 @@ function rochull(pfa::Vector{T}, pmiss::Vector{T}) where {T <: Real}
     ## minmin and minmax
     i = 1
     while i < n
-        if pmiss[i+1] == pmiss[1]
+        if pmiss[i + 1] == pmiss[1]
             i += 1
         else
             break
@@ -165,14 +165,14 @@ function rochull(pfa::Vector{T}, pmiss::Vector{T}) where {T <: Real}
     minmin = i
     minmax = 1
     ## maxmin and maxmax
-    maxmin = maxmax = n+1       # virtual point for now
+    maxmin = maxmax = n + 1       # virtual point for now
     stack = [minmin]
-    for i=minmin+1:n
+    for i = minmin + 1:n
         if isleft(pmiss[minmin], pfa[minmin], two, two, pmiss[i], pfa[i]) >= zero(T)
             continue
         end
         while length(stack) >= 2
-            if isleft(pmiss[stack[end-1]], pfa[stack[end-1]],
+            if isleft(pmiss[stack[end - 1]], pfa[stack[end - 1]],
                       pmiss[stack[end]], pfa[stack[end]], pmiss[i], pfa[i]) > zero(T)
                 break
             else
@@ -189,12 +189,12 @@ end
 Base.length(r::Roc) = length(r.pfa)
 Base.size(r::Roc) = (length(r),)
 function Base.size(r::Roc, d::Integer)
-    d==1 || error("Roc is a 1-dimensional structure")
+    d == 1 || error("Roc is a 1-dimensional structure")
     return length(r)
 end
 start(r::Roc) = 1
-done(r::Roc, state) = state>length(r)
-next(r::Roc, state) = (r[state], state+1)
+done(r::Roc, state) = state > length(r)
+next(r::Roc, state) = (r[state], state + 1)
 @inline iterate(x::Roc) = next(x, start(x))
 @inline iterate(x::Roc, i) = done(x, i) ? nothing : next(x, i)
 
@@ -203,7 +203,7 @@ function Base.getindex(r::Roc, i::Integer)
         return (r.pfa[i], r.pmiss[i], Inf, r.ch[i], Inf)
     else
         return (r.pfa[i], r.pmiss[i], r.theta[i], r.ch[i], r.llr[i])
-    end
+end
 end
 
 ## R terminology, quantile function qnorm() and cumulative distribution pnorm()
@@ -211,13 +211,12 @@ end
 # pnorm(x) = (1 + erf(x/v2)) / 2 
 
 ## The probability that a random non-target score is higher than a target score
-auc(r::Roc) = -dot(r.pmiss[1:end-1] + r.pmiss[2:end], diff(r.pfa)) / 2
+auc(r::Roc) = -dot(r.pmiss[1:end - 1] + r.pmiss[2:end], diff(r.pfa)) / 2
 auc(tar::Vector, non::Vector) = auc(roc(tar, non))
 
-#=
+#= 
 	#test
 	x=[.1 .91 0.1 0 0][:]
 	y=[1.0 1 0 1 0][:]
 	rr=roc(x,y)
-	a=auc(x,y)
-=#
+	a=auc(x,y) =#

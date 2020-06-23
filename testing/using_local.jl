@@ -1,4 +1,4 @@
-#pth=joinpath(@__DIR__,"..","test",filename)
+# pth=joinpath(@__DIR__,"..","test",filename)
 cd(Pkg.dir("DecisionTrees")) #
 import Core 
 import Dates
@@ -16,12 +16,12 @@ import StatsBase
 import DataStreams
 import CSV
 
-#try PyCall
+# try PyCall
 global const pyAB = PyCall.PyNULL()
 global const pyCD = PyCall.PyNULL()
-copy!(pyAB, PyCall.pyimport_conda("pandas","pandas"))
-copy!(pyCD, PyCall.pyimport_conda("xlsxwriter","xlsxwriter"))
+copy!(pyAB, PyCall.pyimport_conda("pandas", "pandas"))
+copy!(pyCD, PyCall.pyimport_conda("xlsxwriter", "xlsxwriter"))
 
-#using dt:
+# using dt:
 using DecisionTrees
 println(Dates.now())

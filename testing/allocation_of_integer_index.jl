@@ -1,9 +1,9 @@
 using BenchmarkTools 
 
-nn=600000
+nn = 600000
 
 function newIdx(n)
-    return zeros(Float64,nn)
+    return zeros(Float64, nn)
 end
 
 @btime newIdx(nn)

@@ -1,8 +1,8 @@
-LetUsPretendThisIsAnIterator=1:10
+LetUsPretendThisIsAnIterator = 1:10
 
-z=0
+z = 0
 for i in LetUsPretendThisIsAnIterator
-	z+=i*i
+	z += i * i
 end
 
-h=i+1
+h = i + 1

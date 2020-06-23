@@ -1,5 +1,5 @@
-#for Julia v0.6
-#Pkg.add("ScikitLearn")
+# for Julia v0.6
+# Pkg.add("ScikitLearn")
 using DecisionTree
 using ScikitLearn
 using PyPlot
@@ -34,4 +34,4 @@ plot(X_test, y_3, c="b", label="RandomForestClassifier", linewidth=2)
 xlabel("data")
 ylabel("target")
 title("Decision Tree Regression")
-legend(prop=Dict("size"=>10));
+legend(prop=Dict("size" => 10));

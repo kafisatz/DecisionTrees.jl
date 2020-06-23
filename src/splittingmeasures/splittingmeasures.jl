@@ -1,20 +1,20 @@
-#include("splitting_measures_mse.jl")
+# include("splitting_measures_mse.jl")
 include("difference.jl")
 include("msePointwise.jl")
 include("mse.jl")
 include("poissonGammaNormal.jl")
 
-#these are not maintained any more
+# these are not maintained any more
 include("maxsplitvalue.jl")
 include("maxabssplitvalue.jl")
 include("maxminussplitvalue.jl")
 
-#these are not maintained and most most certainly not working .
-#include("ROptMinRLost.jl")
-#include("ROptMinRLostPct.jl")
-#include("rankopt.jl")
+# these are not maintained and most most certainly not working .
+# include("ROptMinRLost.jl")
+# include("ROptMinRLostPct.jl")
+# include("rankopt.jl")
 
-#=
+#= 
 #some old code snippets
 function _minimize_lost_ranks_maximize_5pct(labels::Array{Float64,1}, labels_orig::Array{Float64,1}, labels_new::Array{Float64,1}, features::Array{Float64,1}, thresh::Float64,minweight::Float64,prem_buffer::Int,moderationfactor::Float64)
     sz=size(labels,1)
@@ -474,6 +474,4 @@ function _sum_abs_error(labels::Array{Float64,1},features,subset::Array{UInt8,1}
       end
     end
     return res, Float64(countl),Float64(countr)
-end
-
-=#
+end =#

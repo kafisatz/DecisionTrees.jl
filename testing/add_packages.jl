@@ -11,8 +11,8 @@ for x in ["OnlineStats",
 "ProfileView",
 "Coverage",
 "PyCall"]
-@show x
-Pkg.add(x)
+    @show x
+    Pkg.add(x)
 end
 Pkg.update();
 using WinRPM

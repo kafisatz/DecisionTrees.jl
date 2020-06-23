@@ -1,11 +1,11 @@
-#SnoopComplie
+# SnoopComplie
 
 using SnoopCompile
 
 ### Log the compiles
 # This only needs to be run once (to generate "/tmp/images_compiles.csv")
 SnoopCompile.@snoop "C:\\temp\\__snoop_dtm_compiles.csv" begin
-    include(Pkg.dir("DecisionTrees", "test","runtests.jl")    )
+    include(Pkg.dir("DecisionTrees", "test", "runtests.jl"))
 end
 
 
