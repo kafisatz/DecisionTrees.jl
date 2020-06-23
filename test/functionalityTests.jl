@@ -15,7 +15,8 @@
         @info("Data not found. Trying to unzip the data: $(datafile)")
         try 
             pathToZip = string(splitext(datafile)[1], ".zip") 
-            unzipLoc = splitdir(pathToZip)[1]        
+            unzipLoc = splitdir(pathToZip)[1]    
+            @show pathToZip    
             
             cmd=myunzip(pathToZip,unzipLoc)
             run(cmd)
