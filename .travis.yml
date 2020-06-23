@@ -27,4 +27,4 @@ script:
   - julia -e '@assert isfile("data/freMTPL2/freMTPL2.csv")'  
   - julia -e 'import Pkg;@show pwd();Pkg.build("DecisionTrees");Pkg.test("DecisionTrees"; coverage=true)'
 after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; pcsd=process_folder();Coveralls.submit(pcsd);Codecov.submit(pcsd);
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; pcsd=process_folder();Coveralls.submit(pcsd);Codecov.submit(pcsd);'

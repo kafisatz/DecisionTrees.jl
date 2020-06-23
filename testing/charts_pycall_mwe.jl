@@ -1,3 +1,27 @@
+using DataFrames 
+using PyCall 
+
+mutable struct Chart	
+	sheet::String
+	chartDict::Dict{AbstractString,Dict{AbstractString,Any}}
+	location::String
+end
+
+mutable struct ExcelSheet
+	name::String #I think this name is currently not used anywhere
+	data::DataFrame
+end
+
+mutable struct ExcelData
+	sheets::Array{ExcelSheet,1}
+    charts::Array{Chart,1}
+    function ExcelData()
+        return new(Array{ExcelSheet}(undef,0),Array{Chart}(undef,0))
+    end
+    function ExcelData(a,b)
+        return  new(a,b)
+    end
+end
 
 function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObject, chartDict::Dict{AbstractString,Dict{AbstractString,Any}}, location::AbstractString) # ;properties=["set_x_axis", "set_y_axis","set_legend"])
 	chart = PyCall.pycall(workbook."add_chart", PyCall.PyAny, chartDict["add_chart"])
@@ -33,13 +57,18 @@ function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObje
 		# combine the charts
 		PyCall.pycall(chart."combine", PyCall.PyAny, second_chart)		
 	end
-	# set other properties
+    # set other properties
+    
+    xlData = ExcelData(Array{ExcelSheet}(undef, 0), Array{Chart}(undef, 0))
+    
+    #chartDict::Dict{AbstractString,Dict{AbstractString,Any}}
+    chart = PyCall.pycall(workbook."add_chart", PyCall.PyAny, chartDict["add_chart"])
+
 	for x in keys(chartDict)
 		fieldsWhichAreAlreadySet = [convert(String, string("series", zz)) for zz in 1:i]
 		resevedKeywords = ["combChart","series_comb1","series_comb2","series_comb3", "series_comb4"] # currently limited to 1+4 series for combined charts
-		append!(fieldsWhichAreAlreadySet, ["add_series","add_chart"])
-		append!(fieldsWhichAreAlreadySet, resevedKeywords)		
-		if !in(x, fieldsWhichAreAlreadySet)
+		somefields=["add_series","add_chart"]		
+		if !in(x, somefields)
             # TBD: unclear how to fix this line...
             # TBD: unclear how to fix this line... (deprecated syntax...)
             PyCall.pycall(chart[x], PyCall.PyAny, chartDict[x])	 # TBD: unclear how to fix this line...
