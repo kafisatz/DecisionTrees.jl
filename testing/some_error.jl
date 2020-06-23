@@ -22,4 +22,4 @@ function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(
     function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
 
 
-        DecisionTrees.prepareDF!(dfin, treat_as_categorical_variable=treat_as_categorical_variable, numcol=numcol, denomcol=denomcol, weightcol=weightcol, trnvalcol=trnvalcol, valpct=valpct, keycol=keycol, independent_vars=independent_vars);            
+        DecisionTrees.prepareDF!(dfin, treat_as_categorical_variable=treat_as_categorical_variable, numcol=numcol, denomcol=denomcol, weightcol=weightcol, trnvalcol=trnvalcol, valpct=valpct, keycol=keycol, independent_vars=independent_vars);                    

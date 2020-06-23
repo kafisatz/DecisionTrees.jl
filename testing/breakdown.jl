@@ -286,4 +286,4 @@ else
     
 	if randomweight == 0.0
 	if (crit_type == DifferenceSplit || crit_type == MaxValueSplit || crit_type == MaxMinusValueSplit)
-		tmp_result = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs)                                    
+		tmp_result = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs)                                                            
