@@ -14,7 +14,7 @@ mutable struct Chart
 end
 
 mutable struct ExcelSheet
-	name::String #I think this name is currently not used anywhere
+	name::String
 	data::DataFrame
 end
 
@@ -77,18 +77,26 @@ chartDict=Dict{AbstractString,Dict{AbstractString,Any}}(
   writer = writeDFtoExcel(excelData, statsfile, 0, 0, true,false)
   workbook = writer.book    
   chart = PyCall.pycall(workbook."add_chart", PyCall.PyAny, chartDict["add_chart"])
-  
-  for x in keys(chartDict)
-      fieldsWhichAreAlreadySet = [convert(String, string("series", zz)) for zz in 1:5]
-      resevedKeywords = ["combChart","series_comb1","series_comb2","series_comb3", "series_comb4"] # currently limited to 1+4 series for combined charts
-      append!(fieldsWhichAreAlreadySet, ["add_series","add_chart"])
-      append!(fieldsWhichAreAlreadySet, resevedKeywords)		
-      if !in(x, fieldsWhichAreAlreadySet)
-          # TBD: unclear how to fix this line... (deprecated syntax...)
-          @show x
-          PyCall.pycall(chart[x], PyCall.PyAny, chartDict[x])	 # TBD: unclear how to fix this line...
-      end			
-  end
+
+for x in keys(chartDict)
+    fieldsWhichAreAlreadySet = [convert(String, string("series", zz)) for zz in 1:5]
+    resevedKeywords = ["combChart","series_comb1","series_comb2","series_comb3", "series_comb4"] # currently limited to 1+4 series for combined charts
+    append!(fieldsWhichAreAlreadySet, ["add_series","add_chart"])
+    append!(fieldsWhichAreAlreadySet, resevedKeywords)		
+    if !in(x, fieldsWhichAreAlreadySet)
+        # TBD: unclear how to fix this line... (deprecated syntax...)
+        y=chartDict[x]
+        @show x
+        @show y
+        PyCall.pycall(chart[x], PyCall.PyAny, y)  #works (unclear if this syntax is indeed deprecated or not; if so, how to fix it?)
+        # TBD: unclear how to fix this line...
+        #PyCall.pycall(chart.$(x), PyCall.PyAny, y) #does NOT work
+        #PyCall.pycall(chart.x, PyCall.PyAny, y)  #does NOT work
+        #PyCall.pycall(chart."x", PyCall.PyAny, y)  #does NOT work
+        #PyCall.pycall(chart."$(x)", PyCall.PyAny, y)  #does NOT work
+        #PyCall.pycall("chart.$(x)", PyCall.PyAny, y)  #does NOT work
+    end			
+end
 
 function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObject, chartDict::Dict{AbstractString,Dict{AbstractString,Any}}, location::AbstractString) # ;properties=["set_x_axis", "set_y_axis","set_legend"])
 	chart = PyCall.pycall(workbook."add_chart", PyCall.PyAny, chartDict["add_chart"])
