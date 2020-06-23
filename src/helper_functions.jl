@@ -5549,7 +5549,7 @@ end
 mapToOther(v,keepvals::Vector{String},newValue::String)
 overwrites all values in v that are not in keepvals with newValue
 """
-function mapToOther!(v, keepvals::Vector{T}, newValue::T) where T
+function mapToOther!(v, keepvals::Vector{T}, newValue) where T
     for i in eachindex(v)
         @inbounds vi = v[i]
         if in(vi, keepvals)
