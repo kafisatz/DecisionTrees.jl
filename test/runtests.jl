@@ -1,4 +1,8 @@
 t0 = time_ns()
+#=
+    cd("/home/bernhard/DecisionTrees.jl");using Pkg;Pkg.activate(pwd());
+    Pkg.test();
+=#
 
 # test
 import CSV
