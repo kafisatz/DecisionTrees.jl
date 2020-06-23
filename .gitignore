@@ -33,3 +33,4 @@ RCode/.Rhistory
 .vscode/settings.json
 sync.ffs_db
 *.bak
+*.ffs_db
