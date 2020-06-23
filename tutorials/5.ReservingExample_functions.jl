@@ -283,7 +283,7 @@ function runSingleModel(dataKnownByYE2005, dtmKnownByYE2005, selectedWeight, ldf
     # 1) AY < 2005-ldfYear
     # 2) positive denominator
     # 3) cumPay is NOT zero for both ldfYear and ldfYear-1 (these rows do not add any value and can be discarded)    
-    subsetIdx = (dataKnownByYE2005[:AY] .<= (maxAY - ldfYear)) .& (dataKnownByYE2005[cumulativePaymentCol] .> 0) .& (.! ((dataKnownByYE2005[cumulativePaymentCol] .== 0) .& (dataKnownByYE2005[cumulativePaymentColPrev] .== 0)))    
+    subsetIdx = (dataKnownByYE2005[:AY] .<= (maxAY - ldfYear)) .& (dataKnownByYE2005[cumulativePaymentCol] .> 0) .& (.!((dataKnownByYE2005[cumulativePaymentCol] .== 0) .& (dataKnownByYE2005[cumulativePaymentColPrev] .== 0)))    
     # subsetIdx is a boolean index, we need to convert it to an integer index for the next step
     subsetIdxInteger = findall(subsetIdx)
     # this step also creates a copy of the data (which is intended)

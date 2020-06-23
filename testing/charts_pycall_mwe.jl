@@ -29,25 +29,66 @@ mutable struct ExcelData
     end
 end
 
-cdict=Dict{AbstractString,Dict{AbstractString,Any}}(
-  "set_y_axis" => Dict{AbstractString,Any}("name"=>"Observed Ratio","major_gridlines"=>Dict{Any,Any}("visible"=>true)),
-  "set_legend" => Dict{AbstractString,Any}("position"=>"right"),
-  "set_size"   => Dict{AbstractString,Any}("y_scale"=>1.5,"x_scale"=>2.4),
-  "series1"    => Dict{AbstractString,Any}("name"=>"=ModelStatistics!\$A\$1","values"=>"=ModelStatistics!\$F\$3:\$F\$6","categories"=>"=ModelStatistics!\$A\$3:\$A\$6"),
-  "add_chart"  => Dict{AbstractString,Any}("type"=>"column")
-)
+function create_custom_dict(df::DataFrame)	
+	header = propertynames(df)
+	d = Dict{AbstractString,Array{Any,1}}()
+    for i = 1:length(header)	
+		d[string(header[i])] = df[!,i]
+	end
+	return d
+end
 
-aChart=Chart("sheet1",cdict,"K2")
-
-xlData=ExcelData()
-sheet1df=DataFrame(rand(10,10))
-xlSheet=ExcelSheet("sheet1",sheet1df)
-
-push!(xlData.sheets,xlSheet)
-push!(xlData.charts,aChart)
-
-dir=mktempdir()
-statsfile=joinpath(dir,"anExcelFile.xlsx")
+function writeDFtoExcel(excelData::ExcelData, existingFile::T, row::Int, col::Int, write_header::Bool, write_index::Bool) where {T <: AbstractString}
+    # http://search.cpan.org/~jmcnamara/Excel-Writer-XLSX/lib/Excel/Writer/XLSX.pm
+        @assert min(row, col) >= 0
+        writer = pyModPandas.ExcelWriter(existingFile, engine="xlsxwriter")
+        
+        for xlSheet in excelData.sheets
+            df = xlSheet.data
+            sheet = xlSheet.name
+            # create python dataframe	
+            dataDict = create_custom_dict(df)
+            pyDF = PyCall.pycall(pyModPandas.DataFrame, PyCall.PyObject, dataDict, columns=propertynames(df))		
+            PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col, encoding="utf-8")  # index=false suppress the rowcount		
+        end
+        return writer        
+    end
+    
+chartDict=Dict{AbstractString,Dict{AbstractString,Any}}(
+    "set_y_axis" => Dict{AbstractString,Any}("name"=>"Observed Ratio","major_gridlines"=>Dict{Any,Any}("visible"=>true)),
+    "set_legend" => Dict{AbstractString,Any}("position"=>"right"),
+    "set_size"   => Dict{AbstractString,Any}("y_scale"=>1.5,"x_scale"=>2.4),
+    "series1"    => Dict{AbstractString,Any}("name"=>"=ModelStatistics!\$A\$1","values"=>"=ModelStatistics!\$F\$3:\$F\$6","categories"=>"=ModelStatistics!\$A\$3:\$A\$6"),
+    "add_chart"  => Dict{AbstractString,Any}("type"=>"column")
+  )
+  
+  aChart=Chart("ModelStatistics",chartDict,"K2")
+  
+  excelData=ExcelData()
+  sheet1df=DataFrame(rand(10,10))
+  xlSheet=ExcelSheet("ModelStatistics",sheet1df)
+  
+  push!(excelData.sheets,xlSheet)
+  push!(excelData.charts,aChart)
+  
+  dir=mktempdir()
+  statsfile=joinpath(dir,"anExcelFile.xlsx")
+  
+  writer = writeDFtoExcel(excelData, statsfile, 0, 0, true,false)
+  workbook = writer.book    
+  chart = PyCall.pycall(workbook."add_chart", PyCall.PyAny, chartDict["add_chart"])
+  
+  for x in keys(chartDict)
+      fieldsWhichAreAlreadySet = [convert(String, string("series", zz)) for zz in 1:5]
+      resevedKeywords = ["combChart","series_comb1","series_comb2","series_comb3", "series_comb4"] # currently limited to 1+4 series for combined charts
+      append!(fieldsWhichAreAlreadySet, ["add_series","add_chart"])
+      append!(fieldsWhichAreAlreadySet, resevedKeywords)		
+      if !in(x, fieldsWhichAreAlreadySet)
+          # TBD: unclear how to fix this line... (deprecated syntax...)
+          @show x
+          PyCall.pycall(chart[x], PyCall.PyAny, chartDict[x])	 # TBD: unclear how to fix this line...
+      end			
+  end
 
 function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObject, chartDict::Dict{AbstractString,Dict{AbstractString,Any}}, location::AbstractString) # ;properties=["set_x_axis", "set_y_axis","set_legend"])
 	chart = PyCall.pycall(workbook."add_chart", PyCall.PyAny, chartDict["add_chart"])
@@ -92,6 +133,7 @@ function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObje
 		if !in(x, fieldsWhichAreAlreadySet)
             # TBD: unclear how to fix this line...
             # TBD: unclear how to fix this line... (deprecated syntax...)
+            @show x
             PyCall.pycall(chart[x], PyCall.PyAny, chartDict[x])	 # TBD: unclear how to fix this line...
 		end			
 	end
@@ -99,22 +141,6 @@ function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObje
 	# writer[:save]()
 end
 
-function writeDFtoExcel(excelData::ExcelData, existingFile::T, row::Int, col::Int, write_header::Bool, write_index::Bool) where {T <: AbstractString}
-# http://search.cpan.org/~jmcnamara/Excel-Writer-XLSX/lib/Excel/Writer/XLSX.pm
-    @assert min(row, col) >= 0
-    writer = pyModPandas.ExcelWriter(existingFile, engine="xlsxwriter")
-    
-    for xlSheet in excelData.sheets
-        df = xlSheet.data
-        sheet = xlSheet.name
-        # create python dataframe	
-        dataDict = create_custom_dict(df)
-        pyDF = PyCall.pycall(pyModPandas.DataFrame, PyCall.PyObject, dataDict, columns=propertynames(df))		
-        PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col, encoding="utf-8")  # index=false suppress the rowcount		
-    end
-    return writer        
-end
-    
 function writeStatistics(excelData::ExcelData, statsfile::T, write_header::Bool, write_index::Bool) where {T <: AbstractString}
 	# writing an Excel file seems very slow if the file already exists!
 	isfile(statsfile) && rm(statsfile)
@@ -132,4 +158,7 @@ function writeStatistics(excelData::ExcelData, statsfile::T, write_header::Bool,
 	return nothing
 end
 
-writeStatistics(xlData,statsfile,true,false)
+#to write the Excel file:
+  writeStatistics(excelData,statsfile,true,false)
+  @show statsfile
+  
