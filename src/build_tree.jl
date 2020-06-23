@@ -75,7 +75,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 	catSortBy=settings.catSortBy
 
 	nobs=size(numerator,1)
-	fnames=names(features)
+	fnames=propertynames(features)
 	#@code_warntype _split(settings.number_of_num_features,trnidx,validx,numerator,denominator,pointwiseRatio,weight,fnames,features, minweight, depth,randomweight,crit,parallel_level_threshold,parallel_weight_threshold,inds,catSortByThreshold,catSortBy)
 	#T_Uint8_or_UInt16=T_Uint8_or_UInt16 #T_Uint8_or_UInt16=find_max_type(features)::DataType #Union{UInt8,UInt16}
 	best_split = _split(one(T_Uint8_or_UInt16),settings.number_of_num_features,trnidx,validx,numerator,denominator,pointwiseRatio,weight,fnames,features, minweight, depth,randomweight,crit,inds,catSortByThreshold,catSortBy)
@@ -91,6 +91,9 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 
 	#check if no split was found
   #this can happen (EVEN AT THE TOP NODE) if subsampling (of data and or features) is enabled: it may be that there is in fact no split possible (e.g. if all variables are constant)
+  #@show id,nobs,size(trnidx),subset
+  #@show sum(view(weight,trnidx))
+  #@show sum(view(weight,validx))
   if id == 0
 	if (depth==0)
 		@warn("DTM: No split was found at the top node. This is generally not expected.")
@@ -106,7 +109,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 		this_right_rp=deepcopy(parent_rp);
 		push!(this_left_rp,Rulepath(id,subset,true));
 		push!(this_right_rp,Rulepath(id,subset,false));
-		if id<0 #(id<0 == !isa(features[id2].pool[1],Number)) #pool cannot be empty here, thus accessing the first element should be fine alternatively eltype(x)<:Number might be faster..
+		if id<0 #(id<0 == !isa(features[!,id2].pool[1],Number)) #pool cannot be empty here, thus accessing the first element should be fine alternatively eltype(x)<:Number might be faster..
 			#split by character variable       
             for u in subset
                 intVarsUsed[-id+settings.number_of_num_features][u]+=1
@@ -116,16 +119,17 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
             #todo check performance of this and improve
             intVarsUsed[id][subset[end]]+=1 #set this value to true to indicate, that is is used by the tree
         end
-        l,r=lrIndices(trnidx,features[id2],subset)
+        l,r=lrIndices(trnidx,features[!,id2],subset)
+
+        #needs review: are these checks meaningful (June18 2020 ) 
+        length(r),length(l),length(trnidx)
+        @assert length(l) < length(trnidx)
+        @assert length(r) < length(trnidx)
         
         countl=size(l,1)
         countr=size(r,1)
         sumwl=sum(view(weight,l))
         sumwr=sum(view(weight,r))
-		#@show size(trnidx,1)
-	#	@show countl+countr
-#		@show countl,countr,sumwl,sumwr
-#		@show id,subset
 
 	leftchildwillbefurthersplit=sumwl<2*minweight
 	rightchildwillbefurthersplit=sumwr<2*minweight
@@ -183,7 +187,7 @@ function build_tree_iteration!(trnidx::Vector{Int},validx::Vector{Int},settings:
 						if rightchildwillbefurthersplit
 							fill_some_elements!(fitted_values,r,mean_observedr)
                remote_ref_build_tree_rightchild = Leaf(length(r),mean_observedr,fitted_labelsr,sumwr, depth+1, this_right_rp,trnsumnr,trnsumdr,-1)
-            else
+            else                
               remote_ref_build_tree_rightchild = build_tree_iteration!(r,validx,settings,thisTree,numerator,denominator,pointwiseRatio,weight,features,depth+1,newrandomweight,this_right_rp,Distributed.myid(),fitted_values,T_Uint8_or_UInt16)
             end
         end
@@ -213,8 +217,8 @@ function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vec
 		for i in inds
 			#ATTENTION: for char variables we pass the variable i with a negative sing!!
 			#this allows us to distinguish whether we are working on a char or num variable later on
-			modified_i = eltype(features[i])<:AbstractString ? number_of_num_features - i  :  i 
-			tmplist=_split_feature(val_of_some_UInt_type,number_of_num_features,trnidx,validx,numerator,denominator,pointwiseRatio,weight,fnames[i],features[i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef{T}}
+			modified_i = eltype(features[!,i])<:AbstractString ? number_of_num_features - i  :  i 
+			tmplist=_split_feature(val_of_some_UInt_type,number_of_num_features,trnidx,validx,numerator,denominator,pointwiseRatio,weight,fnames[i],features[!,i],minweight,crit,modified_i,randomweight,catSortByThreshold,catSortBy)::Vector{Splitdef{T}}
 			append!(tmp_splitlist,tmplist)
 		end
 
@@ -246,11 +250,10 @@ function _split(val_of_some_UInt_type::T,number_of_num_features::Int,trnidx::Vec
 								#deterministic choice (greedy)
 								spl=splitlist_sorted[1]::Splitdef{T}
 							end #"if condition randomweight>0"
-
 							if isfinite(spl.splitvalue) && (spl.featid<0)				
 								#For Character variables: The split can be defined by the subset or its complement, We choose to define it via the subset which defines the smaller child node such that when new values arrive (in out of sample testing) they will "go with the larger child node"
 								if spl.weightl>spl.weightr
-										lvls=unique(view(features[spl.featid_new_positive].refs,trnidx))
+										lvls=unique(view(features[!,spl.featid_new_positive].refs,trnidx))
 										spl=Splitdef(spl.featid,spl.featid_new_positive,spl.featurename,convert(Vector{T},setdiff(lvls,spl.subset)),spl.splitvalue,spl.weightl,spl.weightr)::Splitdef{T}
 								end
 							end #isfinite(best_value_split) && (best[1]<0)

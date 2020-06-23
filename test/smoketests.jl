@@ -11,7 +11,7 @@ import Random: rand,randstring
 
 thisfile=joinpath(datadir,"GermanMotorPremiums","data1Small.csv")
 @test isfile(thisfile)
-@time df_tmp=CSV.read(thisfile,allowmissing=:none,types=eltypesData1,categorical=false,rows_for_type_detect=10000);
+@time df_tmp=CSV.read(thisfile,strict=true,types=eltypesData1,categorical=false,pool=true,copycols=true);
 df_tmp_orig=deepcopy(df_tmp)
 
 #example with only char columns
@@ -46,9 +46,9 @@ strs,resm=dtm(dtmtableMini,settB)
 selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 
 #keep 10 largest PLZ only
-vorig=deepcopy(df_tmp[:PLZ_WOHNORT])
+vorig=deepcopy(df_tmp[!,:PLZ_WOHNORT])
 counts,freqs,vals,keep=getCounts(vorig,threshold=10)
-vnew=df_tmp[:PLZ_WOHNORT]
+vnew=df_tmp[!,:PLZ_WOHNORT]
 mapToOther!(vnew,keep,9999999)
 
 ##################################################
@@ -127,7 +127,7 @@ sett.model_type="bagged_tree"
 counts,freqs,vals,keep=getCounts(vorig,threshold=300)
 vnew=deepcopy(vorig)
 mapToOther!(vnew,keep,9999999)
-df_tmp[:PLZ_WOHNORT]=vnew
+df_tmp[!,:PLZ_WOHNORT] = vnew
 
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
@@ -262,13 +262,13 @@ strs,resm6=dtm(dtmtable,sett)
 @info("DTM:testing errors/warnings of prepare_dataframe_for_dtm")
 prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],keycol="",numcol="LOSS20HALF",independent_vars=selected_explanatory_vars);
 df_tmp2=deepcopy(df_tmp_orig)
-df_tmp2[:PREMIUM66][1:20].=-20.1
+df_tmp2[!,:PREMIUM66][1:20].=-20.1
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
-df_tmp2[:PREMIUM66][1:20].=0.0
+df_tmp2[!,:PREMIUM66][1:20].=0.0
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
-df_tmp2[:LOSS20HALF][1:20].=0.0
+df_tmp2[!,:LOSS20HALF][1:20].=0.0
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
-df_tmp2[:LOSS20HALF][1:20].=-20
+df_tmp2[!,:LOSS20HALF][1:20].=-20
 dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_variable=["PLZ_WOHNORT"],weightcol="EXPOSURE",numcol="LOSS20HALF",denomcol="PREMIUM66",independent_vars=selected_explanatory_vars);
 
 

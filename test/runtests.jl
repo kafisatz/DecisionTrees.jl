@@ -12,6 +12,7 @@ using Distributed #only for Tests?
 using Statistics
 using Pkg #only for Tests?
 using Test #only for Tests? 
+#using Pkg; Pkg.activate(normpath(joinpath(pwd(),".."));Pkg.instantiate();#Pkg.test() 
 using DecisionTrees
 
 println("Time for using & import: ",round((time_ns()-t0)/1e9,digits=3),"s")
@@ -22,8 +23,8 @@ global testdir = joinpath(dirname(@__FILE__),"") #joinpath(@__DIR__,"..","test",
 #the following if clause is for "direct execution" (e.g. in VScode where @__FILE__ does not seem to work)
 if testdir==""
     try 
-        global pkgdir=Pkg.dir("DecisionTrees") #how long will this remain supported?
-        global testdir=joinpath(pkgdir,"test")
+        global pkgdir = normpath(joinpath(dirname(pathof(DecisionTrees)), ".."))
+        global testdir = joinpath(pkgdir,"test")
     catch
     end
 else 

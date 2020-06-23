@@ -20,19 +20,19 @@ end
 
 function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
     sz=size(dfin,1)
-    dfnames=names(dfin)
+    dfnames=propertynames(dfin)
 
     @assert ((valpct<1)&&(valpct>0))
     @assert length(numcol)>0 "Error: No argument numcol provided."
     @assert in(Symbol(numcol),dfnames) "Numerator column not found. We searched for the column $(numcol) in the vector $(string.(dfnames))"
-    numDA=dfin[Symbol(numcol)]
+    numDA=dfin[!,Symbol(numcol)]
 
     if denomcol==""
         @info "Using constant denominator for each row (.==1)" #of the form ones(size(yourIntputDataFrame,1))"        
         denomDA=ones(sz)        
     else
         @assert in(Symbol(denomcol),dfnames) "Denominator column not found. We searched for the column $(denomcol) in the vector $(string.(dfnames))"
-        denomDA=dfin[Symbol(denomcol)]
+        denomDA=dfin[!,Symbol(denomcol)]
     end
 
     if weightcol==""
@@ -40,7 +40,7 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
         weightDA=ones(sz)
     else
         @assert in(Symbol(weightcol),dfnames) "Weight column not found. We searched for the column $(weightcol) in the vector $(string.(dfnames))"
-        weightDA=dfin[Symbol(weightcol)]
+        weightDA=dfin[!,Symbol(weightcol)]
     end
 
     if trnvalcol==""
@@ -48,7 +48,7 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
         trnvalDA=map(x->x>valpct ? 1.0 : 0.0,rand(sz))
     else
         @assert in(Symbol(trnvalcol),dfnames) "Training-Validation column not found. We searched for the column $(trnvalcol) in the vector $(string.(dfnames))"
-        trnvalDA=dfin[Symbol(trnvalcol)]
+        trnvalDA=dfin[!,Symbol(trnvalcol)]
         #tbd ensure trnvalDA has only 0 and 1 entries
         tmp_found_vals=float.(sort(unique(trnvalDA))[:])
         tmp_expected_vals=Float64[0 1][:]
@@ -64,7 +64,7 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
         irkeyDA=collect(1:sz)
     else
         @assert in(Symbol(keycol),dfnames) "Identifier column not found. We searched for the column $(keycol) in the vector $(string.(dfnames))"
-        irkeyDA=dfin[Symbol(keycol)]
+        irkeyDA=dfin[!,Symbol(keycol)]
     end
 
 #remove union types (especially missing if there are any!)
@@ -74,11 +74,11 @@ removeUnionTypes!(dfin,independent_vars)
 #requirements on the first 5 columns: irkey (=string identifier), numerator, denominator, weight, training_validation_bool (0 or 1)
     #'main' columns
     dfres=DataFrame()
-    dfres[:irkey]=irkeyDA
-    dfres[:numerator]=numDA
-    dfres[:denominator]=denomDA
-    dfres[:weight]=weightDA
-    dfres[:training_validation_bool]=trnvalDA
+    dfres[!,:irkey]=irkeyDA
+    dfres[!,:numerator]=numDA
+    dfres[!,:denominator]=denomDA
+    dfres[!,:weight]=weightDA
+    dfres[!,:training_validation_bool]=trnvalDA
 
 #explanatory columns
     if length(independent_vars)==0
@@ -107,15 +107,15 @@ removeUnionTypes!(dfin,independent_vars)
         @assert in(Symbol(this_name),dfnames) "Error: explanatory column $(this_name) not found in data."
         if in(this_name,Symbol.(treat_as_categorical_variable))
             #change variable type in original dataframe
-            if !is_categorical_column(dfin[this_name],this_name)
+            if !is_categorical_column(dfin[!,this_name],this_name)
                 @info "DTM: Converting the column $(this_name) from $(eltype(dfin[this_name])) to String."
-                dfin[this_name]=string.(dfin[this_name])
+                dfin[!,this_name]=string.(dfin[!,this_name])
                 this_is_a_string=true
             else
                 #@info "DTM: Variable $(this_name) is already categorical in the input data. No type conversion performed."
             end
         end
-        if is_categorical_column(dfin[this_name],this_name)
+        if is_categorical_column(dfin[!,this_name],this_name)
             push!(char_features,this_name)
         else
             push!(num_features,this_name)
@@ -128,16 +128,21 @@ removeUnionTypes!(dfin,independent_vars)
 	n_num=length(num_features)
 
   #@warn("this might benefit from optimization. I am not entirely sure, how the code performs for larger data sets")
-    if n_num>0        
-        dfres[num_features]=dfin[num_features]
-    end
-    if n_char>0        
-        dfres[char_features]=dfin[char_features]
-    end
+    #if n_num>0        
+     #   @show num_features
+     #!WARN this also sets the ORDER of the COLUMNS, which is imporant (unfortunately....). numeric columns need to come first.
+        for x in vcat(num_features,char_features)
+            dfres[!, x] = dfin[!, x] 
+        end
+        #dfres[num_features]=dfin[!,num_features]
+    #end
+    #if n_char>0        
+        #dfres[char_features]=dfin[!,char_features]
+    #end
     
     this_sett=ModelSettings()
 
-    this_sett.df_name_vector=string.(names(dfres)[1+global_const_shift_cols:end])
+    this_sett.df_name_vector=string.(propertynames(dfres)[1+global_const_shift_cols:end])
     updateSettingsMod!(this_sett,number_of_num_features=n_num,number_of_char_features=n_char) 
     @info "Data initialization finished:"
     @show size(dfres)
@@ -154,7 +159,7 @@ tries to convert all types of Union{Missing,T} to T
 function removeUnionTypes!(dfin,independent_vars::Vector{String})
 for v in independent_vars
     vsymb=Symbol(v)
-    col=dfin[vsymb]
+    col=dfin[!,vsymb]
     elt=eltype(col)
     typeOfelt=typeof(elt)
     if typeOfelt!=DataType
@@ -196,13 +201,13 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
 
     @assert check_for_missing_data(dfIndata,global_const_shift_cols) "Error dataset contains missing (NA) values! ABORT."
    
-    key=convert(Vector{String},string.(dfIndata[:irkey]))
-    trn_val_idx=convert(Vector{UInt8},UInt8.(dfIndata[:training_validation_bool]))
+    key=convert(Vector{String},string.(dfIndata[!,:irkey]))
+    trn_val_idx=convert(Vector{UInt8},UInt8.(dfIndata[!,:training_validation_bool]))
     @assert sort(unique(trn_val_idx))==[0x00,0x01] "DTM: training validation column contains values not equal to 0 or 1." 
     #construct data
-        numerator=convert(Array{Float64,1},dfIndata[:numerator])
-        denominator=convert(Array{Float64,1},dfIndata[:denominator])
-        weight=convert(Array{Float64,1},dfIndata[:weight])
+        numerator=convert(Array{Float64,1},dfIndata[!,:numerator])
+        denominator=convert(Array{Float64,1},dfIndata[!,:denominator])
+        weight=convert(Array{Float64,1},dfIndata[!,:weight])
         
     count_neg_denom=sum(denominator.<=0)
     if count_neg_denom>0 
@@ -241,7 +246,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
         end
     end
 
-    df_names=sett.df_name_vector #names(dfIndata)
+    df_names=sett.df_name_vector #propertynames(dfIndata)
     #this DataFrame will contain both categorical and numerical features
     features=DataFrame() 
     
@@ -252,8 +257,8 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
     #IMPORTANT convention  numerical data 'comes first' (i.e. first x columns are numerical), then categorical
     print("Preparing character variables...")
     for i=1:sett.number_of_char_features
-        if !(eltype(dfIndata[global_const_shift_cols+i+sett.number_of_num_features])<:AbstractString) 
-            @show eltype(dfIndata[global_const_shift_cols+i+sett.number_of_num_features])
+        if !(eltype(dfIndata[!,global_const_shift_cols+i+sett.number_of_num_features])<:AbstractString) 
+            @show eltype(dfIndata[!,global_const_shift_cols+i+sett.number_of_num_features])
             @show dfIndata[1:min(10,size(dfIndata,1)),global_const_shift_cols+i+sett.number_of_num_features]
             error("DTM: Character variable $(i) = $(sett.df_name_vector[i+sett.number_of_num_features]) is not <:AbstractString in the dataframe.")
             #@warn("It may be that the variable was exported as character (by SAS) even though it is infact an integer. Please check!")            
@@ -261,13 +266,13 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
       try
         colnumber=global_const_shift_cols+sett.number_of_num_features+i
         thisname=Symbol(df_names[i+sett.number_of_num_features]) 
-        thiscol_as_utf8=dfIndata[thisname] 
+        thiscol_as_utf8=dfIndata[!,thisname] 
         if eltype(thiscol_as_utf8)!=String
             thiscol_as_utf8=convert(Array{String,1},thiscol_as_utf8)
         end
-        features[thisname]=DecisionTrees.PooledArraysDTM.PooledArray(thiscol_as_utf8)
-        if length(features[thisname].pool)>255
-            @show nlevels=length(features[thisname].pool)
+        features[!,thisname]=DecisionTrees.PooledArraysDTM.PooledArray(thiscol_as_utf8)
+        if length(features[!,thisname].pool)>255
+            @show nlevels=length(features[!,thisname].pool)
             @warn("DTM: Variable $(string(thisname)) has more than 255 levels, namely $(nlevels)\nThe tree may take very long to be constructed.")            
         end
       catch this_error
@@ -275,7 +280,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
         error("DTM: Unable to initialize character variable $(i) = $(sett.df_name_vector[i+sett.number_of_num_features]) (see error message above).")
       end      
     end
-    mappings=deepcopy(map(i->features[i].pool,sett.number_of_num_features+1:size(features,2)))
+    mappings=deepcopy(map(i->features[!,i].pool,sett.number_of_num_features+1:size(features,2)))
     
     println(" done.")
     wlo,whi=extrema(weight)
@@ -284,7 +289,7 @@ function prep_data_from_df(df_userinput::DataFrame,sett::ModelSettings,fn_with_e
         #@info("Currently the automatic choice of splitting points does not consider the weight distribution!")
     end
     
-    pools=map(i->features[i].pool,1:size(features,2)) 
+    pools=map(i->features[!,i].pool,1:size(features,2)) 
     pool_lengths=length.(pools)
     for i=1:length(pool_lengths)
         if pool_lengths[i]==1
@@ -426,7 +431,7 @@ sett.version="--" #get_sha1() #need to fix this/ find out how to read package ha
 #hash of DF is not working properly, thus we need to iteration over the columns of the DF (this can be simpplified later on.)
 s00=hash(trnidx,hash(validx,hash(sett.seed,hash(numerator,hash(denominator,hash(weight))))))
 for x=1:size(features,2)
-    s00=hash(features[x],s00)
+    s00=hash(features[!,x],s00)
 end
 srandInt=floor(Int,1/3*hash(931,s00))
 Random.seed!(srandInt)
@@ -451,8 +456,8 @@ end
 prnt=sett.print_details
 general_settings=convert(String,string("Write tree to txt file: $(sett.writeTree), statsByVariables=$(join(sett.statsByVariables,','))"))
 #general_settings=convert(String,string(general_settings,))
-    char_levels=map(x->length(features[x].pool),sett.number_of_num_features+1:sett.number_of_num_features+sett.number_of_char_features)
-    num_levels=map(x->length(features[x].pool),1:sett.number_of_num_features)
+    char_levels=map(x->length(features[!,x].pool),sett.number_of_num_features+1:sett.number_of_num_features+sett.number_of_char_features)
+    num_levels=map(x->length(features[!,x].pool),1:sett.number_of_num_features)
     if length(char_levels)>0
         max_c0=maximum(char_levels)
     else
@@ -570,7 +575,7 @@ general_settings=convert(String,string("Write tree to txt file: $(sett.writeTree
             end
             z=permutedims(overallstats,(2,1))
             dfStats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
-            DataFrames.names!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
+            DataFrames.rename!(dfStats,Symbol[Symbol(x) for x in view(z,1,:)])
             resulting_model.modelstats=dfStats
             if sett.saveResultAsJLDFile
                 println("Saving results to jld2 file: \n $(jldresultsfile)")

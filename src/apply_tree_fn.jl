@@ -35,7 +35,7 @@ function apply_tree_by_leaf_iteration!(idx::Vector{Int},t::Node{T},features::Dat
        return nothing
      end
     subset=t.subset 
-    idxlInteger,idxrInteger=lrIndices(idx,features[t.featid_new_positive],subset)  
+    idxlInteger,idxrInteger=lrIndices(idx,features[!,t.featid_new_positive],subset)  
     apply_tree_by_leaf_iteration!(idxlInteger,t.left,features,fit,leaf)
     apply_tree_by_leaf_iteration!(idxrInteger,t.right,features,fit,leaf)
     return nothing 
@@ -151,7 +151,7 @@ function assert_consistent_features(fp,f::DataFrame)
   #the above condition could also be weakend (as could the loop below) we only need to check the variables that were actually used by the model. 
   for j=1:length(fp)
     if !(fp[j]==f[j].pool)
-      #@show names(f)[j]
+      #@show propertynames(f)[j]
       #@show fp[j]
       #@show f[j].pool
       #@show f[j].pool.==fp[j]

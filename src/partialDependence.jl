@@ -1,7 +1,7 @@
 export partialDependence 
 
-function partialDependence(mdl::Tree,dtmtable;thisIdx::Vector{Int}=dtmtable.trnidx,listOfFeatures::Vector{Symbol}=names(dtmtable.features))
-    @assert issubset(listOfFeatures,names(dtmtable.features)) "DTM: At least one of the feature names you provided were not found in the names of the feature dataframe\r\nYou provided: $(listOfFeatures)\r\names(dtmtable.features)=$(names(dtmtable.features))"
+function partialDependence(mdl::Tree,dtmtable;thisIdx::Vector{Int}=dtmtable.trnidx,listOfFeatures::Vector{Symbol}=propertynames(dtmtable.features))
+    @assert issubset(listOfFeatures,propertynames(dtmtable.features)) "DTM: At least one of the feature names you provided were not found in the names of the feature dataframe\r\nYou provided: $(listOfFeatures)\rpropertynames(dtmtable.features)=$(propertynames(dtmtable.features))"
 
     copyOfFeatures=deepcopy(dtmtable.features[thisIdx,:])
 
@@ -31,8 +31,8 @@ function partialDependence(mdl::Tree,dtmtable;thisIdx::Vector{Int}=dtmtable.trni
 end
 
 #this function is currently very slow....
-function partialDependence(mdl::BoostedTree,dtmtable;fitSelection=:RawEstimate,thisIdx::Vector{Int}=dtmtable.trnidx,listOfFeatures::Vector{Symbol}= names(dtmtable.features))
-    @assert issubset(listOfFeatures,names(dtmtable.features)) "DTM: At least one of the feature names you provided were not found in the names of the feature dataframe\r\nYou provided: $(listOfFeatures)\r\names(dtmtable.features)=$(names(dtmtable.features))"
+function partialDependence(mdl::BoostedTree,dtmtable;fitSelection=:RawEstimate,thisIdx::Vector{Int}=dtmtable.trnidx,listOfFeatures::Vector{Symbol}= propertynames(dtmtable.features))
+    @assert issubset(listOfFeatures,propertynames(dtmtable.features)) "DTM: At least one of the feature names you provided were not found in the names of the feature dataframe\r\nYou provided: $(listOfFeatures)\rpropertynames(dtmtable.features)=$(propertynames(dtmtable.features))"
 
    copyOfFeatures=deepcopy(dtmtable.features[thisIdx,:])
    

@@ -10,7 +10,7 @@ function find_max_type(x::DataFrame)::DataType #T where T<:Union{UInt8,UInt16}
     #    end
     #end
     for col in 1:size(x,2)
-        @inbounds xi=x[col]
+        @inbounds xi=x[!,col]
         if eltype(xi.refs)==UInt16
             return UInt16
         end
@@ -46,7 +46,7 @@ function get_stats(model::Tree;perfMeasure::String="not_applicable_for_singe_tre
     stats=statsdf[rows[1]:end,1:2]    
     desc=string.(stats[:,1])
     numbers=float.(stats[:,2])[:]
-	@show size(numbers)
+    #@show size(numbers)
     setti=model.exceldata.sheets[1].data[:,2]
     setti_desc=string.(model.exceldata.sheets[1].data[:,1])
     return desc,numbers,setti_desc,setti,perfMeasure
@@ -60,8 +60,8 @@ function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lif
     end
     #@assert minOrmax=="min"||minOrmax=="max"
     #last iteration
-    #numbersLastIteration=convert(Array{Float64,2},DataFrame(model.modelstats[end,:]))[:]    
-    desc=string.(names(model.modelstats))
+    #numbersLastIteration=convert(Array{Float64,2},model.modelstats[end,:])[:]    
+    desc=string.(propertynames(model.modelstats))
     
     #best iteration
     #look for min or max
@@ -74,9 +74,9 @@ function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lif
         bestValue,bestRow=findmax(perfCol)
     end
     #@show bestRow,bestValue    
-	dfrow=model.modelstats[bestRow,:] 
-	numbersBestIteration=permutedims(Vector(dfrow))[:]
-	#numbersBestIteration=convert(Array{Float64,2},dfr)[:]
+    dfrow=model.modelstats[bestRow,:] 
+    numbersBestIteration=permutedims(Vector(dfrow))[:]
+    #numbersBestIteration=convert(Array{Float64,2},dfr)[:]
     
     settdf=convert(DataFrame,writeAllFieldsToArray(model.settings))
     setti_desc=string.(settdf[:,1])
@@ -256,7 +256,7 @@ function limit_estimate!(est::Array{T,1},mi::Number,ma::Number) where {T <: Numb
 end
 
 function select_metric_col(allmodelStats::DataFrame,metric::AbstractString)
-    @assert in(Symbol(metric),names(allmodelStats)) "DataFrame has no column named $(metric)"
+    @assert in(Symbol(metric),propertynames(allmodelStats)) "DataFrame has no column named $(metric)"
     return allmodelStats[Symbol(metric)]
 end
 
@@ -809,7 +809,7 @@ for intVarname in integerVarlist
         @assert eltype(feat)==UInt8    
     elseif intVarname>0
         strVarname=sett.df_name_vector[intVarname]
-        feat=features[intVarname]
+        feat=features[!,intVarname]
         list=feat.pool #list=features[intVarname+sett.number_of_char_feautres].pool #candMatWOMaxValues[intVarname]
     end
     #create stats
@@ -1097,11 +1097,6 @@ function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::V
     #granular up to .2
         histbins=collect(0.0:0.001:0.2) #steps of 1 per mille
         histbinsChartRows=length(histbins)
-        
-        @warn("check if this is a dataframe")
-        @show size(estimateUnsmoothed)
-        
-        
         errorhist=errorhistogram(histbins,view(actualNumerator,trnidx),view(estimateUnsmoothed,trnidx),view(estimateSmoothed,trnidx),view(estimateFromRelativities,trnidx),view(actualNumerator,validx),view(estimateUnsmoothed,validx),view(estimateSmoothed,validx),view(estimateFromRelativities,validx))
         errorhist=vcat(errorhistheader,errorhist)
     #granular up to 1
@@ -1748,7 +1743,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
   candMatWOMaxValues=Array{Array{Float64,1}}(undef,0)
   for i=1:cols
     thisname=Symbol(sett.df_name_vector[i])    
-    original_data_vector=wholeDF[thisname]     
+    original_data_vector=wholeDF[!,thisname]     
     header=deepcopy(sett.df_name_vector) 
     elt=eltype(original_data_vector)
     @assert (elt<:Number) "Datatype of numeric predictor $(i):$(header[i]) is not numeric in the CSV. Please check the order of the columns in the data, their type and the value of number_of_num_features in the settings!" #the assert is probably not needed here, as we try to convert afterwards anyway
@@ -1780,7 +1775,7 @@ function add_coded_numdata!(wholeDF::DataFrame,sett::ModelSettings,trn_val_idx::
     #@assert length(candlist)<255 "Currently at most 254 splitting points are supported. Please choose less splitting points for numeric column $(i):$(header[i])" #see note below
     #prepare trn data    
     compressed_vector=map_numdata_to_candidates(this_column,candlist)
-    features[thisname]=PooledArray(compressed_vector)
+    features[!,thisname]=PooledArray(compressed_vector)
 end
 
 return candMatWOMaxValues
@@ -2507,8 +2502,8 @@ function aggregate_data(f::T,scores,numeratorEst,numerator,denominator,weight)  
     lo=one(eltype(f.parent.refs)) #UInt8(1)    
     hi=convert(eltype(f.parent.refs),length(f.parent.pool)) #hi=convert(UInt8,length(f.parent.pool))
 
-	#@show hi,lo
-	#@show extrema(view(f.parent.refs,f.indices[1]))
+    #@show hi,lo
+    #@show extrema(view(f.parent.refs,f.indices[1]))
 
     ooo=one(lo)-lo
     vecsize=hi+ooo
@@ -2520,33 +2515,33 @@ function aggregate_data(f::T,scores,numeratorEst,numerator,denominator,weight)  
     sumscores=zeros(eltype(scores),vecsize)        
     
      #=
-		 @show f 
-		 @show f.parent.refs
-		 @show size(f)
-		 @show f.parent.pool
-		 @show size(f.parent.pool) 
-		 @show lo,hi
-		 @show size(cnt)
-		 @show vecsize
-		 @show size(f.parent)
-		 @show size(f.parent.refs)
-		 @show numeratorEst
-	 =#
-	 countingONEtoN=1
-	 
-	 #@warn("need to remove assertions...")
-	 
-	 valuelist=unique(f)
-	 sort!(valuelist,by=(x->findfirst(f.parent.pool.==x)))
-	 
-	 #@assert issorted(f.indices[1]) #other wise this loop will not work (inconsistency with countingONEtoN)
-	 
+         @show f 
+         @show f.parent.refs
+         @show size(f)
+         @show f.parent.pool
+         @show size(f.parent.pool) 
+         @show lo,hi
+         @show size(cnt)
+         @show vecsize
+         @show size(f.parent)
+         @show size(f.parent.refs)
+         @show numeratorEst
+     =#
+     countingONEtoN=1
+     
+     #@warn("need to remove assertions...")
+     
+     valuelist=unique(f)
+     sort!(valuelist,by=(x->findfirst(f.parent.pool.==x)))
+     
+     #@assert issorted(f.indices[1]) #other wise this loop will not work (inconsistency with countingONEtoN)
+     
      for count in f.indices[1]
         #@show count
         idx=f.parent.refs[count] + ooo
-		#tr=isequal(idx,f.parent.refs[f.indices[1][countingONEtoN]] + ooo)
-	#	@show tr 
-	#	@assert tr
+        #tr=isequal(idx,f.parent.refs[f.indices[1][countingONEtoN]] + ooo)
+    #    @show tr 
+    #    @assert tr
         #@show idx
         cnt[idx] += 1
         sumnumeratorEst[idx] += numeratorEst[countingONEtoN]
@@ -2554,25 +2549,25 @@ function aggregate_data(f::T,scores,numeratorEst,numerator,denominator,weight)  
         sumdenominator[idx] += denominator[countingONEtoN]
         sumweight[idx] += weight[countingONEtoN]
         sumscores[idx] += scores[countingONEtoN]
-		countingONEtoN +=1
+        countingONEtoN +=1
     end
-	
-	#@assert size(cnt)==size(valuelist) "DTM: vector sizes are not matching (1)"
-	
-	#@show "bef" 
-	#@show cnt
-	#@show size(cnt)
-	
+    
+    #@assert size(cnt)==size(valuelist) "DTM: vector sizes are not matching (1)"
+    
+    #@show "bef" 
+    #@show cnt
+    #@show size(cnt)
+    
     #is the following faster, if we do rows_to_be_deleted=findin(cnt,0);deleteat!(cnt,rows_to_be_deleted);....
     for i=vecsize:-1:1
-	#@show i
+    #@show i
         if cnt[i]==0
-		#@show "del"
+        #@show "del"
     #if length(f.values)!=vecsize #delete some rows
             #@warn("BK, I am not sure if this works as anticipated")
         #for i in rows_to_be_deleted
             deleteat!(cnt,i)
-			#deleteat!(valuelist,i) #(by definition this vector) does not contain the entries which occur zero times 
+            #deleteat!(valuelist,i) #(by definition this vector) does not contain the entries which occur zero times 
             deleteat!(sumscores,i)
             deleteat!(sumnumeratorEst,i)
             deleteat!(sumnumerator,i)
@@ -2580,17 +2575,17 @@ function aggregate_data(f::T,scores,numeratorEst,numerator,denominator,weight)  
             deleteat!(sumweight,i)
         end        
     end
-	
-	#@show f 
-	#@show cnt
-	#@show size(cnt),size(valuelist) 
-	#@show cnt 
-#	@show valuelist
-#	@show size(valuelist)
-#	@show size(cnt)
-	
-	#@assert size(cnt)==size(valuelist) "DTM: vector sizes are not matching (2)"
-	
+    
+    #@show f 
+    #@show cnt
+    #@show size(cnt),size(valuelist) 
+    #@show cnt 
+#    @show valuelist
+#    @show size(valuelist)
+#    @show size(cnt)
+    
+    #@assert size(cnt)==size(valuelist) "DTM: vector sizes are not matching (2)"
+    
   return valuelist,cnt,sumscores,sumnumeratorEst,sumnumerator,sumdenominator,sumweight
 end
 
@@ -3741,11 +3736,11 @@ end
 
   function check_for_missing_data(dfIndata::DataFrame,const_shift_cols::Int)
     #Ensure that data has no missing values
-    namevec=names(dfIndata)
+    namevec=propertynames(dfIndata)
     for ii=1:size(dfIndata,2)
       if ii!=const_shift_cols
-      if any(ismissing,dfIndata[ii])
-        idx=ismissing(dfIndata[ii])
+      if any(ismissing,dfIndata[!,ii])
+        idx=ismissing(dfIndata[!,ii])
         narows=findall(idx)
         @assert length(narows)>0 "this should not have happend" #narows should be >0 by definition
         @warn("Missing values detected. Rows= $(narows[1]), Column=$(ii):$(namevec[ii])")
@@ -4334,13 +4329,16 @@ end
 #univariate graphs output
 function createPredictorData(idx::Vector{Int},nameOfpredictorsSheet,mappings,candMatWOMaxValues,sett,scoresfull,actualNumeratorfull,denominatorfull,weightfull,finalEstimateForChartsfull,featuresfull)
     #Create tables (=data) and  Charts
-        scores=view(scoresfull,idx)
-        actualNumerator=view(actualNumeratorfull,idx)
-        denominator=view(denominatorfull,idx)
-        weight=view(weightfull,idx)
-        finalEstimateForCharts=view(finalEstimateForChartsfull,idx)
-        #@which view(featuresfull,idx)
-        features=view(featuresfull,idx,:) #this line may need revision if DtaFrames is ever updated past v0.17.0 (which may involve quite some work, see changes to views here  https://github.com/JuliaData/DataFrames.jl/releases/tag/v0.17.0 )
+        scores=view(scoresfull,idx,:)
+        actualNumerator=view(actualNumeratorfull,idx,:)
+        denominator=view(denominatorfull,idx,:)
+        weight=view(weightfull,idx,:)
+        finalEstimateForCharts=view(finalEstimateForChartsfull,idx,:)
+        #@show featuresfull[1:20,1:6]
+        #@show featuresfull[!,2]
+        #@show typeof(featuresfull[!,2])
+        #@show featuresfull[!,2].pool
+        features=view(featuresfull,idx,:) #this line may need revision if DataFrames is ever updated past v0.17.0 (which may involve quite some work, see changes to views here  https://github.com/JuliaData/DataFrames.jl/releases/tag/v0.17.0 )
         
         colnames=String["Variable Name" "Weight" "Numerator" "Denominator" "Observed Ratio" "Estimate" "Difference" "Average  Score"]
         predictorsData=repeat([""],1,length(colnames))
@@ -4359,14 +4357,13 @@ function createPredictorData(idx::Vector{Int},nameOfpredictorsSheet,mappings,can
         for i=1:nfeat #length(numfeatures)
             lastchartrow=currentchartrow            
             vname=deepcopy(sett.df_name_vector[i])
-            feat=features[i]
+            feat=features[!,i]
             thischart=defineUnivariateChart(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol,currentchartrow)),vname,length(DataFrames.levels(feat)),1,8,2,headerrow)
             predictorCharts[i]=deepcopy(thischart)
             thischart=defineUnivariateChartWith2Lines(nameOfpredictorsSheet,nameOfpredictorsSheet,convert(typeof(nameOfpredictorsSheet),string(chartscol2,currentchartrow)),vname,length(DataFrames.levels(feat)),1,5,6,2,headerrow)
             predictorCharts[nfeat+i]=deepcopy(thischart)
             #todo,tbd maybe this can be replaced with feat.parent.pool
-            #@show typeof(features[i]) 
-            mp = features[i].parent.pool  #this is the FULL pool, in the selected data only a subset might exist.        
+            mp = features[!,i].parent.pool  #this is the FULL pool, in the selected data only a subset might exist.        
             tbl=addPredictorData(mp,colnames,sett,scores,numeratorEst,actualNumerator,denominator,weight,finalEstimateForCharts,feat,i)
             predictorsData=vcat(predictorsData,tbl)
             currentchartrow=max(lastchartrow+addchartrow,size(predictorsData,1)+1)
@@ -4426,7 +4423,7 @@ function addPredictorData(listOfValues,colnames,sett::ModelSettings,scores,numer
             @show f.pool
         catch
             @show f.parent.pool
-			@show size(f.parent.pool)
+            @show size(f.parent.pool)
         end
         @show valuelist
         #@show size(f.ids)
@@ -5340,7 +5337,7 @@ end
 function get_feature_pools(f::DataFrame)
     fp=Vector{Union{Vector{String},Vector{Float64}}}(undef,0)
     @inbounds for i in 1:size(f,2)
-        push!(fp,f[i].pool)
+        push!(fp,f[!,i].pool)
     end
     return fp::Vector{Union{Vector{String},Vector{Float64}}}
 end

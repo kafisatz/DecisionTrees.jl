@@ -13,7 +13,7 @@
 @info "DTM: BK To check if sortperm! performance has improved in newer Julia versions"
 @info "DTM: BK To fix this: the code should not rely on dtmtable.mappings and dtmtable.candmatwomax anymore (if possible). The pools have the equivalent information"
 @info "DTM: BK To add purity improvement for each split! Stop splitting if it is > some_specified_threshold"
-@info "DTM: BK Do not use df_name_vector anymore, but the symbol in the subset or simply names(features)"
+@info "DTM: BK Do not use df_name_vector anymore, but the symbol in the subset or simply propertynames(features)"
 @info "DTM: BK Add yes/no to the top of each printed DOT graph (in the PDF output) indicating that 'yes goes left'"
 @info "DTM: BK Try to avoid branching in critical functions; use ifelse or similar constructs (this might improve the performance)"
 =#

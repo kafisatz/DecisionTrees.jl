@@ -231,7 +231,7 @@ function boosted_tree(dtmtable::DTMTable,sett::ModelSettings)
 	end
 	z=deepcopy(stats[1:sett.iterations+1,:])
 	modelstats=DataFrame(convert(Array{Float64,2},z[2:size(z,1),:]))
-	DataFrames.names!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
+	DataFrames.rename!(modelstats,Symbol[Symbol(x) for x in view(z,1,:)])
 #resulting BT
 	#create trnidx
 	@assert issorted(trnidx)
