@@ -9,7 +9,7 @@
 	
 =#
 
-./julia/bin/julia
+./julia1.2/bin/julia
 
 cd("/home/bernhard/DecisionTrees.jl") 
 using Pkg
