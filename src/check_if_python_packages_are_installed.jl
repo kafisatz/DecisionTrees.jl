@@ -1,8 +1,7 @@
 import PyCall
 #check if python has the requird Packages installed
 
-#required_python_packages=["numpy","pandas","xlsxwriter"] # for testing this functionality you can add some package like "nose" "SymPy" "nltk" "Scapy" ....
-required_python_packages=["pandas","xlsxwriter"] # for testing this functionality you can add some package like "nose" "SymPy" "nltk" "Scapy" ....
+required_python_packages=["numpy","pandas","xlsxwriter"] # for testing this functionality you can add some package like "nose" "SymPy" "nltk" "Scapy" ....
 try
      for x in required_python_packages
     	PyCall.pywrap(PyCall.pyimport(x))         
