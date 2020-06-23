@@ -1,5 +1,5 @@
 using DataFrames 
-using PyCall 
+using PyCall
 
 mutable struct Chart	
 	sheet::String
@@ -22,6 +22,46 @@ mutable struct ExcelData
         return  new(a,b)
     end
 end
+
+cdict=Dict{AbstractString,Dict{AbstractString,Any}}(
+  "set_y_axis" => Dict{AbstractString,Any}("name"=>"Observed Ratio","major_gridlines"=>Dict{Any,Any}("visible"=>true)),
+  "set_legend" => Dict{AbstractString,Any}("position"=>"right"),
+  "set_size"   => Dict{AbstractString,Any}("y_scale"=>1.5,"x_scale"=>2.4),
+  "series1"    => Dict{AbstractString,Any}("name"=>"=ModelStatistics!\$A\$1","values"=>"=ModelStatistics!\$F\$3:\$F\$6","categories"=>"=ModelStatistics!\$A\$3:\$A\$6"),
+  "add_chart"  => Dict{AbstractString,Any}("type"=>"column")
+)
+
+aChart=Chart("sheet1",cdict,"K2")
+
+xlData=ExcelData()
+sheet1df=DataFrame(rand(10,10)))
+xlSheet=ExcelSheet("sheet1",sheet1df)
+
+push!(xlData.sheets,sheet1df)
+push!(xlData.charts,aChart)
+
+ct.sheet
+julia> resm.exceldata.charts[1].sheet
+
+
+function writeStatistics(excelData::ExcelData, statsfile::T, write_header::Bool, write_index::Bool) where {T <: AbstractString} # ,charts::Array{Chart,1})		
+	# writing an Excel file seems very slow if the file already exists!
+	isfile(statsfile) && rm(statsfile)
+	
+	writer = writeDFtoExcel(excelData, statsfile, 0, 0, write_header, write_index)
+	workbook = writer.book
+	# Plot charts	
+	for c in excelData.charts
+		sheetWhereChartIsLocated = c.sheet		
+		worksheet = writer.sheets[sheetWhereChartIsLocated]
+		addChartToWorkbook!(workbook, worksheet, c.chartDict, c.location);
+	end
+	# save (=write) Excel file and close it	
+	writer.save()
+	return nothing
+end
+
+
 
 function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObject, chartDict::Dict{AbstractString,Dict{AbstractString,Any}}, location::AbstractString) # ;properties=["set_x_axis", "set_y_axis","set_legend"])
 	chart = PyCall.pycall(workbook."add_chart", PyCall.PyAny, chartDict["add_chart"])
