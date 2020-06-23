@@ -102,7 +102,6 @@ function writeDFtoExcel(excelData::ExcelData, existingFile::T, row::Int, col::In
 	    sheet = xlSheet.name
 		# create python dataframe	
 		dataDict = create_custom_dict(df)
-		dataDict = create_custom_dict(df)
 		pyDF = PyCall.pycall(pyModPandas.DataFrame, PyCall.PyObject, dataDict, columns=propertynames(df))		
 		PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col, encoding="utf-8")  # index=false suppress the rowcount		
 	end

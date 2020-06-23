@@ -70,7 +70,7 @@ include("partialDependence.jl")
 include("apply_tree_fn_unseen.jl")
 include("unpack.jl")
 
-global const pyModnumpy = PyCall.PyNULL()
+#global const pyModnumpy = PyCall.PyNULL()
 global const pyModPandas = PyCall.PyNULL()
 global const pyModxlsxwriter = PyCall.PyNULL()
 
@@ -109,7 +109,7 @@ global const CSHARP_VALID_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRS
 
 function __init__()
 	# the following lines may trigger the installation of the respective python packages	
-    copy!(pyModnumpy, PyCall.pyimport_conda("numpy", "numpy"))
+    #copy!(pyModnumpy, PyCall.pyimport_conda("numpy", "numpy"))
     copy!(pyModPandas, PyCall.pyimport_conda("pandas", "pandas"))
     copy!(pyModxlsxwriter, PyCall.pyimport_conda("xlsxwriter", "xlsxwriter"))    
 end
