@@ -7,6 +7,9 @@ PooledArrays itself is partially based on DataArrays.jl, Copyright (c) 2012: Har
 
 The cross validators are based on https://github.com/JuliaStats/MLBase.jl/ Copyright (c) 2013 Dahua Lin
 
+The code of the function myunzip was taken from DataDeps.jl package (which is licensed under the MIT License)
+The unpack command functionality originally appeared in BinDeps.jl (MIT License)
+
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

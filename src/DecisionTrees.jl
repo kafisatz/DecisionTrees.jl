@@ -68,6 +68,7 @@ include("cross_validation.jl")
 include("show.jl")
 include("partialDependence.jl")
 include("apply_tree_fn_unseen.jl")
+include("unpack.jl")
 
 global const pyModnumpy = PyCall.PyNULL()
 global const pyModPandas = PyCall.PyNULL()

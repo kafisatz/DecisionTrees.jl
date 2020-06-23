@@ -9,35 +9,20 @@
 # Read the data
 ##################################################
 
-    cmd2 = `na`
-    cmd = `na`
+    local cmd 
     datafile = joinpath(datadir, "freMTPL2", "freMTPL2.csv")
     if !isfile(datafile)
         @info("Data not found. Trying to unzip the data: $(datafile)")
         try 
             pathToZip = string(splitext(datafile)[1], ".zip") 
             unzipLoc = splitdir(pathToZip)[1]        
-            if Sys.iswindows()            
-                cmd = `powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('$(pathToZip)', '$(unzipLoc)'); }"`
-                cmd2 = `7z e $(pathToZip) -o$(unzipLoc)`
-                try
-                    run(cmd2)
-                catch
-                # 7z failed...
-                end
-            else 
-            # OS is not windows
-            # this should work on Linux
-                cmd = `unzip $(pathToZip) -d $(unzipLoc)`
-            end
-            if !isfile(datafile)
-                run(cmd)
-            end
+            
+            cmd=myunzip(pathToZip,unzipLoc)
+            run(cmd)
         catch erO
             @warn("Failed to unzip data: $(pathToZip) \r\n Some tests will not run!")
             @show erO  
             @show cmd
-            @show cmd2     
         end
     end
     if !isfile(datafile)
