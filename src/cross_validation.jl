@@ -276,7 +276,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         #3. aggregate some statistics
         statsdf=DataFrame(transpose(allstats))    
         settsdf=DataFrame(permutedims(allsettings,[2,1]))
-        DataFrames.names!(settsdf,Symbol.(header_settings))
+        DataFrames.rename!(settsdf,Symbol.(header_settings))
     
         fld,namestr=splitdir(path_and_fn_wo_extension)
         filen=string(path_and_fn_wo_extension,"_multistats.xlsx")
@@ -287,12 +287,12 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         
         #calc some 'stats of stats'
         col_rng_stats=2:size(statsdf,2)    
-        means=map(x->Statistics.mean(statsdf[x]),col_rng_stats)
-        medians=map(x->Statistics.median(statsdf[x]),col_rng_stats)
-        mins=map(x->minimum(statsdf[x]),col_rng_stats)
-        maxs=map(x->maximum(statsdf[x]),col_rng_stats)
-        stds=map(x->StatsBase.std(statsdf[x]),col_rng_stats)
-        sums=map(x->sum(statsdf[x]),col_rng_stats)
+        means=map(x->Statistics.mean(statsdf[!,x]),col_rng_stats)
+        medians=map(x->Statistics.median(statsdf[!,x]),col_rng_stats)
+        mins=map(x->minimum(statsdf[!,x]),col_rng_stats)
+        maxs=map(x->maximum(statsdf[!,x]),col_rng_stats)
+        stds=map(x->StatsBase.std(statsdf[!,x]),col_rng_stats)
+        sums=map(x->sum(statsdf[!,x]),col_rng_stats)
     
         stats_of_stats=hcat(means,medians,mins,maxs,stds,sums)
         titles=["Mean","Median","Min","Max","Std Dev","Sum"]
@@ -302,7 +302,7 @@ function dtm(dtmtable::DTMTable,sett::ModelSettings,cvo::CVOptions;file::String=
         allstats_with_stats=vcat(transpose(allstats),stats_of_stats)
         #NOTE! statsdf is RE defined here!
         statsdf=DataFrame(allstats_with_stats)
-        DataFrames.names!(statsdf,Symbol.(header))
+        DataFrames.rename!(statsdf,Symbol.(header))
         
         #define Exceldata
         sh1=ExcelSheet("settings",settsdf)

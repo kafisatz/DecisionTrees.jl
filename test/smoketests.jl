@@ -133,7 +133,7 @@ dtmtable,sett,df_prepped=prepare_dataframe_for_dtm!(df_tmp,treat_as_categorical_
 
 sett.maxSplittingPoints=300
 dtmtable=prep_data_from_df(df_prepped,sett,joinpath(mktempdir(),"dtmsmoketest.csv"))
-@test eltype(dtmtable.features[:PLZ_WOHNORT].refs)==UInt16
+@test eltype(dtmtable.features[!,:PLZ_WOHNORT].refs)==UInt16
 @info("DTM:testing maxSplittingPoints=$(sett.maxSplittingPoints)")
 strs,resm2b=dtm(dtmtable,sett)
 @test typeof(resm2b.modelstats)==DataFrame

@@ -6,14 +6,14 @@
 
 thisfile=joinpath(datadir,"GermanMotorPremiums","data1Small.csv")
 @test isfile(thisfile)
-@time df_tmp=CSV.read(thisfile,strict=true,types=eltypesData1,categorical=false);
+@time df_tmp=CSV.read(thisfile,strict=true,types=eltypesData1,categorical=false,copycols=true);
 
 selected_explanatory_vars=["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 
 #keep 10 largest PLZ only
-vorig=deepcopy(df_tmp[:PLZ_WOHNORT])
+vorig=deepcopy(df_tmp[!,:PLZ_WOHNORT])
 counts,freqs,vals,keep=getCounts(vorig,threshold=10)
-vnew=df_tmp[:PLZ_WOHNORT]
+vnew=df_tmp[!,:PLZ_WOHNORT]
 mapToOther!(vnew,keep,9999999)
 
 ##################################################

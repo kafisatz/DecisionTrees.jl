@@ -66,7 +66,7 @@ function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lif
     #best iteration
     #look for min or max
     @assert in(perfMeasure,desc) "DTM: invalid performance measure specified. $(perfMeasure) was not found in $(desc)"
-    perfCol=model.modelstats[Symbol(perfMeasure)]
+    perfCol=model.modelstats[!,Symbol(perfMeasure)]
     #@show minimum(perfCol)
     if minOrmax=="min"
         bestValue,bestRow=findmin(perfCol)
