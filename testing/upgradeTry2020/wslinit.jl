@@ -14,6 +14,7 @@
 cd("/home/bernhard/DecisionTrees.jl") 
 using Pkg
 Pkg.activate(pwd())
+Pkg.test(;coverage=true)
 
 using Revise 
 
