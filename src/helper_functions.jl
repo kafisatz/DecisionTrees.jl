@@ -2174,7 +2174,10 @@ function createTrnValStats!(trnidx::Vector{Int}, validx::Vector{Int}, sett::Mode
 
     thisresdf = DataFrame([something.(col, missing) for col in eachcol(thisres[2:end, :])], Symbol.(map(i->string("x",i),1:size(thisres,2))))
     modelStatisticsSheet = ExcelSheet(nameOfModelStatisticsSheet, thisresdf)
-    modelsettingsSheet = ExcelSheet(nameOfSettingsSheet, convert(DataFrame, writeAllFieldsToArray(sett)))
+    
+    thissettarr = writeAllFieldsToArray(sett)
+    thissettdf = DataFrame([something.(col, missing) for col in eachcol(thissettarr[2:end, :])], Symbol.(map(i->string("x",i),1:size(thissettarr,2))))
+    modelsettingsSheet = ExcelSheet(nameOfSettingsSheet, thissettdf)
     xlData.sheets = [modelsettingsSheet,modelStatisticsSheet]
     # add charts
     thischart = defineRelativityChart(nameOfModelStatisticsSheet, nameOfModelStatisticsSheet, "K2", size(leaves_of_tree, 1), 1, 1, headerrow2=5 + size(leaves_of_tree, 1) + 1, headercol2=1, datarow2=5 + size(leaves_of_tree, 1) + 2 + 1, xtitle="Segment", ytitle="Observed Ratio", xscale=2.4, title="Observed Ratio per Segment", datarow=3, valuescol=6, categoriescol=1, valuescol2=6, yscale=1.5)
