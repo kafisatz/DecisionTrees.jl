@@ -711,8 +711,8 @@ mutable struct Tree <: DTModel
 		@assert length(settings.df_name_vector)==nf
 		variableImp1Dim=zeros(Int,nf)
 		variableImp2Dim=zeros(Int,div(nf*(nf-1),2))
-		#ms = DataFrame(Array{Any}(undef,0,0),:auto)
-        ms = DataFrame(Array{Any}(undef,0,0))
+		ms = DataFrame() #s.DataFrame(Array{Any}(undef,0,0),:auto)
+        #ms = DataFrame(Array{Any}(undef,0,0))
 		return new(rootnode,intVarsUsed,candMatWOMaxValues,charMappings,inds_considered,settings,variableImp1Dim,variableImp2Dim,ms,exceldata,fp)
 	end
 	function Tree()		
