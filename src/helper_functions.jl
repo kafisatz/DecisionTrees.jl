@@ -2172,8 +2172,8 @@ function createTrnValStats!(trnidx::Vector{Int}, validx::Vector{Int}, sett::Mode
     poiErr_rowval = ["Average Poisson Error Val" poissonErrVal repeat([""], 1, size(thisres, 2) - 2)]
     thisres = [thisres;poiErr_rowval];overallstats = [overallstats;poiErr_rowval];
 
-
-    modelStatisticsSheet = ExcelSheet(nameOfModelStatisticsSheet, thisres)
+    thisresdf = DataFrame(thisres) 
+    modelStatisticsSheet = ExcelSheet(nameOfModelStatisticsSheet, thisresdf)
     modelsettingsSheet = ExcelSheet(nameOfSettingsSheet, convert(DataFrame, writeAllFieldsToArray(sett)))
     xlData.sheets = [modelsettingsSheet,modelStatisticsSheet]
     # add charts
