@@ -573,8 +573,8 @@ function run_model_actual(dtmtable::DTMTable, input_setttings::ModelSettings, fn
         if sett.writeStatistics
             writeStatisticsFile!(statsfileExcel, xlData, filelistWithFilesToBeZipped)
         end
-        z = permutedims(overallstats, (2, 1))
-        dfStats = DataFrame(convert(Array{Float64,2}, z[2:size(z, 1),:]))
+        z = permutedims(overallstats, (2, 1))        
+        dfStats = DataFrame(convert(Array{Float64,2}, z[2:size(z, 1),:]),Symbol[Symbol(x) for x in view(z, 1, :)])
         DataFrames.rename!(dfStats, Symbol[Symbol(x) for x in view(z, 1, :)])
         resulting_model.modelstats = dfStats
         if sett.saveResultAsJLDFile
