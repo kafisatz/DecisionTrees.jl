@@ -204,16 +204,16 @@ function boosted_tree(dtmtable::DTMTable, sett::ModelSettings)
 		predictorsData, predictorCharts = createPredictorData(trnidx, nameOfpredictorsSheet, mappings, candMatWOMaxValues, sett, scores, actualNumerator, denominator, weight, selectedEstimatedRatioForStats, features)
 	# push predictorCharts into Excelobject
 		push!(xlData.charts, predictorCharts...)
-		predictorsSheet = ExcelSheet(nameOfpredictorsSheet, convert(DataFrame, predictorsData))
+		predictorsSheet = ExcelSheet(nameOfpredictorsSheet,  DataFrame(predictorsData,:auto))
 	# Populate ExcelSheet object with data
-		statsSheet = ExcelSheet(nameOfModelStatisticsSheet, convert(DataFrame, stats))
+		statsSheet = ExcelSheet(nameOfModelStatisticsSheet, DataFrame(stats,:auto))
 		overviewSheet = ExcelSheet(nameOfOverviewSheet, DataFrame())
-		scoreMatrixDF = convert(DataFrame, scoreMatrix)
+		scoreMatrixDF = DataFrame(scoreMatrix,:auto)
 		scoresSheet = ExcelSheet(nameOfScoresSheet, scoreMatrixDF)
-		modelsettingsSheet = ExcelSheet(nameOfSettingsSheet, convert(DataFrame, writeAllFieldsToArray(sett)))
+		modelsettingsSheet = ExcelSheet(nameOfSettingsSheet, DataFrame( writeAllFieldsToArray(sett),:auto))
 # Create two way validation charts
 	twoWayValidation, validationCharts = createTwoWayValidationCharts(trnidx, validx, nameOfValidationSheet, scoreBandLabels, mappings, candMatWOMaxValues, sett, scores, actualNumerator, denominator, weight, selectedEstimatedRatioForStats, features)
-	validationSheet = ExcelSheet(nameOfValidationSheet, convert(DataFrame, twoWayValidation))
+	validationSheet = ExcelSheet(nameOfValidationSheet, DataFrame(twoWayValidation,:auto))
 	push!(xlData.charts, validationCharts...)
 # Define Excel
 	xlData.sheets = [modelsettingsSheet,overviewSheet,statsSheet,scoresSheet,predictorsSheet,validationSheet]
@@ -227,10 +227,10 @@ function boosted_tree(dtmtable::DTMTable, sett::ModelSettings)
 			statsSheetINDEX2 = statsSheetINDEX[1]
 			errors_num_estimates = vcat(errors_num_estimates, repeat([""], size(stats, 1) - size(errors_num_estimates, 1), size(errors_num_estimates, 2)))
 			stats = hcat(stats, errors_num_estimates)
-			xlData.sheets[statsSheetINDEX2] = ExcelSheet(nameOfModelStatisticsSheet, convert(DataFrame, stats))
+			xlData.sheets[statsSheetINDEX2] = ExcelSheet(nameOfModelStatisticsSheet, DataFrame( stats,:auto))
 	end
 	z = deepcopy(stats[1:sett.iterations + 1,:])
-	modelstats = DataFrame(convert(Array{Float64,2}, z[2:size(z, 1),:]))
+	modelstats = DataFrame(convert(Array{Float64,2}, z[2:size(z, 1),:]),:auto)
 	DataFrames.rename!(modelstats, Symbol[Symbol(x) for x in view(z, 1, :)])
 # resulting BT
 	# create trnidx

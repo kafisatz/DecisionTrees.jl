@@ -165,22 +165,22 @@ function bagged_tree(dtmtable::DTMTable, sett::ModelSettings)
 		predictorsData, predictorCharts = createPredictorData(trnidx, nameOfpredictorsSheet, mappings, candMatWOMaxValues, sett, scores, actualNumerator, denominator, weight, finalEstimateForCharts, features)
 	# push predictorCharts into Excelobject
 		push!(xlData.charts, predictorCharts...)
-		predictorsSheet = ExcelSheet(nameOfpredictorsSheet, convert(DataFrame, predictorsData))
+		predictorsSheet = ExcelSheet(nameOfpredictorsSheet, DataFrame(predictorsData,:auto))
 	# Populate ExcelSheet object with data
-		statsSheet = ExcelSheet(nameOfModelStatisticsSheet, convert(DataFrame, stats))
+		statsSheet = ExcelSheet(nameOfModelStatisticsSheet, DataFrame(stats,:auto))
 		overviewSheet = ExcelSheet(nameOfOverviewSheet, DataFrame())
-		scoreMatrixDF = convert(DataFrame, scoreMatrix)
+		scoreMatrixDF = DataFrame( scoreMatrix,:auto)
 		scoresSheet = ExcelSheet(nameOfScoresSheet, scoreMatrixDF)
-		modelsettingsSheet = ExcelSheet(nameOfSettingsSheet, convert(DataFrame, writeAllFieldsToArray(sett)))
+		modelsettingsSheet = ExcelSheet(nameOfSettingsSheet, DataFrame( writeAllFieldsToArray(sett),:auto))
 # Create two way validation charts
 	twoWayValidation, validationCharts = createTwoWayValidationCharts(trnidx, validx, nameOfValidationSheet, scoreBandLabels, mappings, candMatWOMaxValues, sett, scores, actualNumerator, denominator, weight, finalEstimateForCharts, features)
-	validationSheet = ExcelSheet(nameOfValidationSheet, convert(DataFrame, twoWayValidation))
+	validationSheet = ExcelSheet(nameOfValidationSheet, DataFrame(twoWayValidation,:auto))
 	push!(xlData.charts, validationCharts...)
 # Define Excel
 	xlData.sheets = [modelsettingsSheet,overviewSheet,statsSheet,scoresSheet,predictorsSheet,validationSheet]
 
 	z = deepcopy(stats[1:sett.iterations + 1,:])
-	modelstats = DataFrame(convert(Array{Float64,2}, z[2:size(z, 1),:]))
+	modelstats = DataFrame(convert(Array{Float64,2}, z[2:size(z, 1),:]), :auto)
 	DataFrames.names!(modelstats, Symbol[Symbol(x) for x in view(z, 1, :)])
 # resulting Bagged Tree, construct Bagged Tree
 	intVarsUsed = [x.tree.intVarsUsed for x in vecTreesWErrs]

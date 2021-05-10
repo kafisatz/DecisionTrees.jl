@@ -65,8 +65,8 @@ function dtm(dtmtable::DTMTable, settingsVector::Vector{ModelSettings};file::Str
     end
     
         # 3. aggregate some statistics
-    statsdf = DataFrame(transpose(allstats))    
-    settsdf = DataFrame(permutedims(allsettings, [2,1]))
+    statsdf = DataFrame(transpose(allstats), :auto)    
+    settsdf = DataFrame(permutedims(allsettings, [2,1]), :auto)
     DataFrames.rename!(settsdf, Symbol.(header_settings))
     
     fld, namestr = splitdir(path_and_fn_wo_extension)
@@ -92,7 +92,7 @@ function dtm(dtmtable::DTMTable, settingsVector::Vector{ModelSettings};file::Str
         
     allstats_with_stats = vcat(transpose(allstats), stats_of_stats)
         # NOTE! statsdf is RE defined here!
-    statsdf = DataFrame(allstats_with_stats)
+    statsdf = DataFrame(allstats_with_stats, :auto)
     DataFrames.rename!(statsdf, Symbol.(header))
         
         # define Exceldata
@@ -166,7 +166,7 @@ end	 # singleRunDtm
 
 function get_model_stats(resulting_model::DTModel, defaulted_modelstats_df::DataFrame, i::Int)	
 	thesemodelstats = deepcopy(resulting_model.modelstats)	
-	nm = DataFrame(ones(Int, size(thesemodelstats, 1), 1) .* i)	
+	nm = DataFrame(ones(Int, size(thesemodelstats, 1), 1) .* i, :auto)	
 	DataFrames.names!(nm, Symbol[symbol("ModelNumber")])	
 	return  thesemodelstats = hcat(nm, thesemodelstats)
 end

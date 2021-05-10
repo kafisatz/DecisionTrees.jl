@@ -118,8 +118,8 @@ function dtm_single_threaded(dtmtable::DTMTable, sett::ModelSettings, cvo::CVOpt
     end # this_sample in cvsampler
 
     # 3. aggregate some statistics
-    statsdf = DataFrame(transpose(allstats))    
-    settsdf = DataFrame(permutedims(allsettings, [2,1]))
+    statsdf = DataFrame(transpose(allstats), :auto)    
+    settsdf = DataFrame(permutedims(allsettings, [2,1]), :auto)
     DataFrames.names!(settsdf, Symbol.(header_settings))
 
     fld, namestr = splitdir(path_and_fn_wo_extension)
@@ -145,7 +145,7 @@ function dtm_single_threaded(dtmtable::DTMTable, sett::ModelSettings, cvo::CVOpt
     
     allstats_with_stats = vcat(transpose(allstats), stats_of_stats)
     # NOTE! statsdf is RE defined here!
-    statsdf = DataFrame(allstats_with_stats)
+    statsdf = DataFrame(allstats_with_stats, :auto)
     DataFrames.names!(statsdf, Symbol.(header))
     
     # define Exceldata
@@ -274,8 +274,8 @@ function dtm(dtmtable::DTMTable, sett::ModelSettings, cvo::CVOptions;file::Strin
     end
     
         # 3. aggregate some statistics
-    statsdf = DataFrame(transpose(allstats))    
-    settsdf = DataFrame(permutedims(allsettings, [2,1]))
+    statsdf = DataFrame(transpose(allstats), :auto)    
+    settsdf = DataFrame(permutedims(allsettings, [2,1]), :auto)
     DataFrames.rename!(settsdf, Symbol.(header_settings))
     
     fld, namestr = splitdir(path_and_fn_wo_extension)
@@ -301,7 +301,7 @@ function dtm(dtmtable::DTMTable, sett::ModelSettings, cvo::CVOptions;file::Strin
         
     allstats_with_stats = vcat(transpose(allstats), stats_of_stats)
         # NOTE! statsdf is RE defined here!
-    statsdf = DataFrame(allstats_with_stats)
+    statsdf = DataFrame(allstats_with_stats, :auto)
     DataFrames.rename!(statsdf, Symbol.(header))
         
         # define Exceldata

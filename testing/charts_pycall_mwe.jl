@@ -65,7 +65,7 @@ chartDict=Dict{AbstractString,Dict{AbstractString,Any}}(
   aChart=Chart("ModelStatistics",chartDict,"K2")
   
   excelData=ExcelData()
-  sheet1df=DataFrame(rand(10,10))
+  sheet1df=DataFrame(rand(10,10), :auto)
   xlSheet=ExcelSheet("ModelStatistics",sheet1df)
   
   push!(excelData.sheets,xlSheet)
