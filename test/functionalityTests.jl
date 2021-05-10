@@ -30,7 +30,7 @@
         @test "CSV DATA NOT FOUND" == "$(datafile) was not found. Functionality tests not run."
         @warn("You may want to manually unzip the zip file in this location $(splitdir(datafile)[1]) as some of the tests rely on that CSV file.")
     else
-        @time fullData = CSV.read(datafile, strict=true, copycols=true, categorical=false);
+        @time fullData = CSV.read(datafile, DataFrame,strict=true, copycols=true);
 
     # add AreaInteger as new variable, i.e. A:F -> 1:6
         areasSorted = sort(unique(fullData[!,:Area]))

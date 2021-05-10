@@ -6,7 +6,7 @@
 
     thisfile = joinpath(datadir, "GermanMotorPremiums", "data1Small.csv")
     @test isfile(thisfile)
-    @time df_tmp = CSV.read(thisfile, strict=true, types=eltypesData1, categorical=false, copycols=true);
+    @time df_tmp = CSV.read(thisfile, DataFrame,strict=true, types=eltypesData1,  copycols=true);
 
     selected_explanatory_vars = ["PLZ_WOHNORT","ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 

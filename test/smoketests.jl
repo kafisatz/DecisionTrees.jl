@@ -11,7 +11,7 @@
 
     thisfile = joinpath(datadir, "GermanMotorPremiums", "data1Small.csv")
     @test isfile(thisfile)
-    @time df_tmp = CSV.read(thisfile, strict=true, types=eltypesData1, categorical=false, pool=true, copycols=true);
+    @time df_tmp = CSV.read(thisfile, DataFrame,strict=true, types=eltypesData1,  pool=true, copycols=true);
     df_tmp_orig = deepcopy(df_tmp)
 
 # example with only char columns
