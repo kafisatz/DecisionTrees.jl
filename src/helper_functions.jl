@@ -2651,42 +2651,6 @@ function aggregate_data_rklostcount(f::PooledArray, increasedPremiumVector::Arra
     return cnt, intSumrklost, sumweight
 end
 
-function build_listOfMeanResponse(crit::MaxValueSplit, numerator::Array{Float64,1}, denominator::Array{Float64,1}, weight::Array{Float64,1}, features::PooledArray, feature_levels::Array{UInt8,1}, minweight::Float64)
-  # todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
-    ncategories = length(feature_levels)
-  # countlist,sumobservedlist=aggregate_data_diff(features,numerator,denominator,weight)
-    countlist, sumnumerator, sumdenominator, sumweight = aggregate_data_diff(features, numerator, denominator, weight)
-    if length(countlist) != ncategories
-  # there are gaps with no data between min(features.ids),max(features.ids)
-        zeroidx = findall(in(0), countlist)     # @show length(zeroidx)
-        deleteat!(countlist, zeroidx)
-        deleteat!(sumnumerator, zeroidx)
-        deleteat!(sumdenominator, zeroidx)
-        deleteat!(sumweight, zeroidx)
-    end
-    countlistfloat = Float64(countlist)
-  # sorting is not done here! if we want the data sorted, is suggest to do this in another function which uses the output from this fn
-    return feature_levels, sumnumerator, sumdenominator, sumweight, countlistfloat
-end
-
-function build_listOfMeanResponse(crit::MaxMinusValueSplit, numerator::Array{Float64,1}, denominator::Array{Float64,1}, weight::Array{Float64,1}, features::PooledArray, feature_levels::Array{UInt8,1}, minweight::Float64)
-  # todo/tbd if we sort the features anyway here, then, we can determine "feature_levels" more efficiently after the sorting (without using the levels function)
-    ncategories = length(feature_levels)
-  # countlist,sumobservedlist=aggregate_data_diff(features,numerator,denominator,weight)
-    countlist, sumnumerator, sumdenominator, sumweight = aggregate_data_diff(features, numerator, denominator, weight)
-    if length(countlist) != ncategories
-  # there are gaps with no data between min(features.ids),max(features.ids)
-        zeroidx = findall(in(0), countlist)     # @show length(zeroidx)
-        deleteat!(countlist, zeroidx)
-        deleteat!(sumnumerator, zeroidx)
-        deleteat!(sumdenominator, zeroidx)
-        deleteat!(sumweight, zeroidx)
-    end
-    countlistfloat = Float64(countlist)
-  # sorting is not done here! if we want the data sorted, is suggest to do this in another function which uses the output from this fn
-    return feature_levels, sumnumerator, sumdenominator, sumweight, countlistfloat
-end
-
 function build_listOfMeanResponse(crit::T, numerator::Array{Float64,1}, denominator::Array{Float64,1}, weight::Array{Float64,1}, features, feature_levels::Array{UInt8,1}, minweight::Float64) where T <: Union{mseSplit,sseSplit}
     ncategories = length(feature_levels)
   # calc variance for each "isolated" category
@@ -2704,8 +2668,6 @@ function build_listOfMeanResponse(crit::T, numerator::Array{Float64,1}, denomina
   # sorting is not done here! if we want the data sorted, is suggest to do this in another function which uses the output from this fn
     return feature_levels, sumnumerator, sumdenominator, sumweight, countlistfloat, moments_per_pdaclass
 end
-
-# this
 
 function build_listOfMeanResponse(crit::msePointwiseSplit, numerator::Array{Float64,1}, denominator::Array{Float64,1}, weight::Array{Float64,1}, features, feature_levels::Array{UInt8,1}, minweight::Float64)
     ncategories = length(feature_levels)
@@ -2727,6 +2689,16 @@ end
 
 # this fn is identical for Difference, Gamma and Poisson
 function build_listOfMeanResponse(crit::T, trnidx::Vector{Int}, validx::Vector{Int}, numerator::Array{Float64,1}, denominator::Array{Float64,1}, weight::Array{Float64,1}, features, feature_levels, minweight::Float64) where T <: Union{PoissonDevianceSplit,GammaDevianceSplit}
+    return build_listOfMeanResponse(DifferenceSplit(), trnidx, validx, numerator, denominator, weight, features, feature_levels, minweight)
+end 
+
+function build_listOfMeanResponse(crit::MaxValueSplit, trnidx::Vector{Int}, validx::Vector{Int}, numerator::Array{Float64,1}, denominator::Array{Float64,1}, weight::Array{Float64,1}, features, feature_levels, minweight::Float64)
+    return build_listOfMeanResponse(DifferenceSplit(), trnidx, validx, numerator, denominator, weight, features, feature_levels, minweight)
+end 
+function build_listOfMeanResponse(crit::MaxMinusValueSplit, trnidx::Vector{Int}, validx::Vector{Int}, numerator::Array{Float64,1}, denominator::Array{Float64,1}, weight::Array{Float64,1}, features, feature_levels, minweight::Float64)
+    return build_listOfMeanResponse(DifferenceSplit(), trnidx, validx, numerator, denominator, weight, features, feature_levels, minweight)
+end 
+function build_listOfMeanResponse(crit::MaxAbsValueSplit, trnidx::Vector{Int}, validx::Vector{Int}, numerator::Array{Float64,1}, denominator::Array{Float64,1}, weight::Array{Float64,1}, features, feature_levels, minweight::Float64)
     return build_listOfMeanResponse(DifferenceSplit(), trnidx, validx, numerator, denominator, weight, features, feature_levels, minweight)
 end 
 

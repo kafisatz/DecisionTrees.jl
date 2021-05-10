@@ -35,3 +35,15 @@ xlabel("data")
 ylabel("target")
 title("Decision Tree Regression")
 legend(prop=Dict("size" => 10));
+
+
+
+updateSettingsMod!(sett, crit="difference")
+strs, resmT = dtm(dtmtable, sett)
+updateSettingsMod!(sett, crit="maxabsvalue")
+strs, resmT = dtm(dtmtable, sett)
+updateSettingsMod!(sett, crit="maxminusvalue")
+strs, resmT = dtm(dtmtable, sett)
+updateSettingsMod!(sett, crit="maxvalue")
+strs, resmT = dtm(dtmtable, sett)
+

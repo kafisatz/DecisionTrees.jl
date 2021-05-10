@@ -276,9 +276,9 @@ function _split_feature(ONE_return_type::T, number_of_num_features::Int, trnidx:
     elt = T # eltype(trnfeatures.parent.refs) #not sure if this was really helping, let us determine elt through T
     labellist_sorted = collect(one(elt):convert(elt, length(trnfeatures.parent.pool))) # this used to be levels(features) #this also contains the val feature levels here! It is considerably faster than levels(view) \factor 100 or so
 
-    case1a = (crit_type == DifferenceSplit || crit_type == MaxValueSplit || crit_type == MaxMinusValueSplit)
+    case1a = (crit_type == DifferenceSplit || crit_type == MaxValueSplit || crit_type == MaxMinusValueSplit || crit_type == MaxAbsValueSplit)
     case1b = (crit_type == GammaDevianceSplit) || (crit_type == PoissonDevianceSplit)
-    case1 = (crit_type == DifferenceSplit || crit_type == GammaDevianceSplit || crit_type == PoissonDevianceSplit || crit_type == MaxValueSplit || crit_type == MaxMinusValueSplit)
+    case1 = (crit_type == DifferenceSplit || crit_type == GammaDevianceSplit || crit_type == PoissonDevianceSplit || crit_type == MaxValueSplit || crit_type == MaxMinusValueSplit || crit_type == MaxAbsValueSplit)
     case2 = (crit_type == msePointwiseSplit) || (crit_type == mseSplit) || (crit_type == sseSplit)  
 	# THIS IS CRITICAL
 	# THE WAY A PooledArray IS CONSTRUCTED, WE WILL ALWAYS HAVE
@@ -295,60 +295,59 @@ function _split_feature(ONE_return_type::T, number_of_num_features::Int, trnidx:
     # this may need improvement:
 	if case1
     		labellist, sumnumerator, sumdenominator, sumweight, countlistfloat = build_listOfMeanResponse(crit, trnidx, validx, numerator, denominator, weight, trnfeatures, labellist_sorted, minweight)
-	elseif case2
-		labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, moments_per_pdaclass = build_listOfMeanResponse(crit, numerator, denominator, weight, trnfeatures, labellist_sorted, minweight)
-	# else #we catch this possibility earlier when checking the settings
-	#	throw(ErrorException(string("Invalid Splitting criterion $(crit)")))
+	    elseif case2
+		    labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, moments_per_pdaclass = build_listOfMeanResponse(crit, numerator, denominator, weight, trnfeatures, labellist_sorted, minweight)
+        # else #we catch this possibility earlier when checking the settings
+        #	throw(ErrorException(string("Invalid Splitting criterion $(crit)")))
 	end
   # todo/tbd
   # here we can introduce the possiblity to sort the labellist (e.g. by meanobserved or median (to be calculated)).
   # then we could only loop through the "increasing list" of sorted labels (instead of doing the 2^ncategories exhaustive search (bitflip_graycode_subsets))
-        if feature_column_id > 0 # id>0 -> we are working on a numeric column
-		# only consider to split at the candidate split points
-		subs = increasing_subsets(labellist)
-        else # id<0 -> we are working on a character column
+    if feature_column_id > 0 # id>0 -> we are working on a numeric column
+		# only consider to split at the candidate split points        
+		subs = increasing_subsets(labellist)        
+    else # id<0 -> we are working on a character column
 		# distinguish between exhaustive and "increasing" search for split point
-	if size(labellist_sorted, 1) > catSortByThreshold
-		if case1 
-			sortlists!(catSortBy, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat) # catSortBy::SortBy=SORTBYMEAN
-		elseif case2
-			sortlists!(catSortBy, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, moments_per_pdaclass)
-		end
+	    if size(labellist_sorted, 1) > catSortByThreshold
+		    if case1 
+                sortlists!(catSortBy, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat) # catSortBy::SortBy=SORTBYMEAN
+            elseif case2
+			    sortlists!(catSortBy, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, moments_per_pdaclass)
+		    end
 		subs = increasing_subsets(labellist)
 	else
-	# perform exhaustive search
-		subs = bitflip_graycode_subsetsHALF(labellist)
-	end
+	    # perform exhaustive search
+            subs = bitflip_graycode_subsetsHALF(labellist)
+        end
 	end
 
 	if randomweight == 0.0
-            if case1a 
-		tmp_result = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs)
-	elseif case2 
-		tmp_result = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, moments_per_pdaclass)
-	elseif case1b
-		tmp_result = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, numerator, denominator, pointwiseRatio, weight, trnfeatures)
-            end
-            if isfinite(tmp_result[1])
-                feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id) + number_of_num_features : feature_column_id
-                return [Splitdef(feature_column_id, feature_column_id2, fname, Vector{T}(tmp_result[2]), tmp_result[1], tmp_result[3], tmp_result[4])]::Vector{Splitdef{T}}
-            else    
-                if T == UInt8
-                    return UInt8VECTORemptySplitDef
-                else
-                    return UInt16VECTORemptySplitDef # collect(Vector{Splitdef{T}}(undef,0))::Vector{Splitdef{T}}
-                end      
-            end
-        else
+        if case1a
+            tmp_result = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs)
+        elseif case2 
+            tmp_result = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, moments_per_pdaclass)
+        elseif case1b
+            tmp_result = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, numerator, denominator, pointwiseRatio, weight, trnfeatures)
+        end
+        if isfinite(tmp_result[1])
+            feature_column_id2 = feature_column_id < 0 ? abs(feature_column_id) + number_of_num_features : feature_column_id
+            return [Splitdef(feature_column_id, feature_column_id2, fname, Vector{T}(tmp_result[2]), tmp_result[1], tmp_result[3], tmp_result[4])]::Vector{Splitdef{T}}
+        else    
+            if T == UInt8
+                return UInt8VECTORemptySplitDef
+            else
+                return UInt16VECTORemptySplitDef # collect(Vector{Splitdef{T}}(undef,0))::Vector{Splitdef{T}}
+            end      
+        end
+    else
   # randomweight>0
-	if case1a
-		tmpres = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, feature_column_id)
-	elseif case2 
-		tmpres = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, feature_column_id, moments_per_pdaclass)
-	elseif case1b 
-		tmpres = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, numerator, denominator, pointwiseRatio, weight, trnfeatures, feature_column_id)
-            end
-    
+        if case1a
+            tmpres = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, feature_column_id)
+        elseif case2 
+            tmpres = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, feature_column_id, moments_per_pdaclass)
+        elseif case1b 
+            tmpres = calculateSplitValue(crit, fname, number_of_num_features, labellist, sumnumerator, sumdenominator, sumweight, countlistfloat, minweight, subs, numerator, denominator, pointwiseRatio, weight, trnfeatures, feature_column_id)
+        end
             return tmpres::Vector{Splitdef{T}}    
         end
     end

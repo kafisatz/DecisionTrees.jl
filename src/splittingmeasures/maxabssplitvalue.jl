@@ -1,4 +1,4 @@
-function calculateSplitValue(a::MaxAbsValueSplit, number_of_char_features::Int, labellist::Array{UInt8,1}, sumnumerator::Array{Float64,1}, sumdenominator::Array{Float64,1}, sumweight::Array{Float64,1}, countlistfloat::Array{Float64,1}, minweight::Float64, subs::DTSubsets)
+function calculateSplitValue(a::MaxAbsValueSplit, fname::Symbol,number_of_char_features::Int, labellist::Array{T}, sumnumerator::Array{Float64,1}, sumdenominator::Array{Float64,1}, sumweight::Array{Float64,1}, countlistfloat::Array{Float64,1}, minweight::Float64, subs::DTSubsets) where T <: Unsigned
 # here randomweight==0
 # for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 # all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner
@@ -53,7 +53,7 @@ function calculateSplitValue(a::MaxAbsValueSplit, number_of_char_features::Int, 
 end
 
 
-function calculateSplitValue(a::MaxAbsValueSplit, number_of_char_features::Int, labellist::Array{UInt8,1}, sumnumerator::Array{Float64,1}, sumdenominator::Array{Float64,1}, sumweight::Array{Float64,1}, countlistfloat::Array{Float64,1}, minweight::Float64, subs::DTSubsets, feature_column_id::Int)
+function calculateSplitValue(a::MaxAbsValueSplit, fname, number_of_char_features::Int, labellist::Array{T,1}, sumnumerator::Array{Float64,1}, sumdenominator::Array{Float64,1}, sumweight::Array{Float64,1}, countlistfloat::Array{Float64,1}, minweight::Float64, subs::DTSubsets, feature_column_id::Int) where T <: Unsigned
 # here randomweight>0
 # for subsets, exhaustive search with flipping members (gray code) or "increasing" subset search ({1}, {1,2}, {1,2,3}, .... {1,2,3, ....., n-1,2})
 # all input lists (labellist,sumnumerator,sumdenominator,sumweight,countlistfloat) need to be sorted in the same manner

@@ -106,7 +106,7 @@ DecisionTrees.predict(resm2, dtmtable.features)
     for splitCrit in ["difference","poissondeviance","gammadeviance","mse","sse","msepointwise"], modelTYPE in ["build_tree","boosted_tree"]
         updateSettingsMod!(sett, crit=splitCrit, model_type=modelTYPE)
         try 
-            strs, resmT = dtm(dtmtable, sett)        
+            strs, resmT = dtm(dtmtable, sett)
             @test typeof(resmT.modelstats) == DataFrame
         catch thisErr
             @show stacktrace()

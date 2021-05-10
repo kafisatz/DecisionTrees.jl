@@ -1,21 +1,18 @@
-# __precompile__()
-# true
-
 # DTM is used as an abbreviation for DecisionTreeModels
-# @warn "BK: DTM may have a performance regression of roughly 50% in Julia 0.7alpha versus 0.6.3. \nYou may want to start julia with --depwarn=no option (in case there are still deprecation warnings in this package or its dependencies). I expect that this will vanish as 0.7 matures (or the bottleneck will hopefully be identified through profiling)"
 
 #= 
-@info "DTM: BK Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
-@info "DTM: BK 'Remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)"
-@info "DTM: BK Add 'time_finished' to model result (and possibly the time needed for the modelling)"
-@info "DTM: BK Need to ensure that the code runs smoothly even when no split is found (e.g. minWeight too big)"
-@info "DTM: BK Possibly introduce an option not to calculate certain intermediate metrics (scoring, sorting, ...) -> faster runtime"
-@info "DTM: BK To check if sortperm! performance has improved in newer Julia versions"
-@info "DTM: BK To fix this: the code should not rely on dtmtable.mappings and dtmtable.candmatwomax anymore (if possible). The pools have the equivalent information"
-@info "DTM: BK To add purity improvement for each split! Stop splitting if it is > some_specified_threshold"
-@info "DTM: BK Do not use df_name_vector anymore, but the symbol in the subset or simply propertynames(features)"
-@info "DTM: BK Add yes/no to the top of each printed DOT graph (in the PDF output) indicating that 'yes goes left'"
-@info "DTM: BK Try to avoid branching in critical functions; use ifelse or similar constructs (this might improve the performance)" =#
+    @info "DTM: BK Possibly add trnidx and validx to the resulting ensemble. This is relevant in case of a CV sampling which is performed. Otherwise it is not possible to reconstruct the Excel statistics after the model has run."
+    @info "DTM: BK 'Remove' variables which are not used by a model from the SAS/VBA/CSharp code (e.g. dim command in VBA)"
+    @info "DTM: BK Add 'time_finished' to model result (and possibly the time needed for the modelling)"
+    @info "DTM: BK Need to ensure that the code runs smoothly even when no split is found (e.g. minWeight too big)"
+    @info "DTM: BK Possibly introduce an option not to calculate certain intermediate metrics (scoring, sorting, ...) -> faster runtime"
+    @info "DTM: BK To check if sortperm! performance has improved in newer Julia versions"
+    @info "DTM: BK To fix this: the code should not rely on dtmtable.mappings and dtmtable.candmatwomax anymore (if possible). The pools have the equivalent information"
+    @info "DTM: BK To add purity improvement for each split! Stop splitting if it is > some_specified_threshold"
+    @info "DTM: BK Do not use df_name_vector anymore, but the symbol in the subset or simply propertynames(features)"
+    @info "DTM: BK Add yes/no to the top of each printed DOT graph (in the PDF output) indicating that 'yes goes left'"
+    @info "DTM: BK Try to avoid branching in critical functions; use ifelse or similar constructs (this might improve the performance)"
+=#
 
 module DecisionTrees
 
@@ -39,17 +36,11 @@ import OnlineStats
 import ProgressMeter
 import StatsBase
 
-# import DataStreams #We do not really need DataStreams (explicitly) but CSV keeps failing (in tests) if this is not here (on 0.7alpha)
-
-# import MySQL, # temporarily disabled 
-# import SQLite #disabled as it uses DataFrames 0.11
-
 import Base: length,eltype,==,hash,iterate,append!,isless,resize!,convert
 import Statistics.mean
 
 Random.seed!(1234)
 
-# include("check_if_python_packages_are_installed.jl")
 include("types.jl")
 include("cross_validation_samplers.jl") # needs to be included early on as types are in here
 include("sorting.jl")
@@ -70,7 +61,6 @@ include("partialDependence.jl")
 include("apply_tree_fn_unseen.jl")
 include("unpack.jl")
 
-#global const pyModnumpy = PyCall.PyNULL()
 global const pyModPandas = PyCall.PyNULL()
 global const pyModxlsxwriter = PyCall.PyNULL()
 
@@ -108,15 +98,12 @@ global const global_byte_order_mark = '\ufeff'
 global const CSHARP_VALID_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_123456789äëöüïÿâêîôûàèìòùáéíóúý" # the list is probably much longer, but this will do for now
 
 function __init__()
-	# the following lines may trigger the installation of the respective python packages	
-    #copy!(pyModnumpy, PyCall.pyimport_conda("numpy", "numpy"))
+	# the following lines may trigger the installation of the respective python packages	    
     copy!(pyModPandas, PyCall.pyimport_conda("pandas", "pandas"))
     copy!(pyModxlsxwriter, PyCall.pyimport_conda("xlsxwriter", "xlsxwriter"))    
 end
 
 function get_sha1()
-	# which_res=@which DecisionTrees.__init__()
-	# dtpath=splitdir(splitext(string(which_res.file))[1])[1][1:end-4]
 	dtpath = dirname(@__FILE__)
 	current_path = pwd()
 	cd(dtpath)	
@@ -130,9 +117,6 @@ function get_sha1()
 	cd(current_path)
 	return sha1_of_dt
 end
-
-# Precompile files
-    include(joinpath("precompile", "precompile_DecisionTrees.jl"))	
 
 global const DoubleQuote = '\"' # note, this is here at the end only because Notepad++ messes up the context highlighting after this definition
 	
