@@ -52,7 +52,7 @@ datafile = joinpath("data", "reservingAccident", "Simulated.Cashflows.csv")
 elt = [String,String,String,Int,Int,Int,String,Int]
 elt = vcat(elt, repeat([Float64], 12))
 @info("Reading data...")
-@time fullData = CSV.read(datafile, types=elt, rows_for_type_detect=100000, allowmissing=:none, categorical=false);
+@time fullData = CSV.read(datafile, DataFrame, types=elt, strict=true);
 
 #= 
 ecdf11=ecdf(fullData[:PayCum11])

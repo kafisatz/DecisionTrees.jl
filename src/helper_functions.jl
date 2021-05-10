@@ -5579,3 +5579,26 @@ function deleteSomeElementsInDegenerateCase!(obsPerScore, vectorWeightPerScore, 
         return length(obsPerScore)
 end
 end
+
+export gettree
+function gettree(bt::BoostedTree,n)
+    #extracts tree number n from bt
+    iterations = size(bt.trees,1)
+    @assert n<=iterations "Please provide n <= $(iterations) (number of iterations)"
+
+    leaves_array = create_leaves_array(bt.trees[n])
+    
+    sett = bt.settings
+    number_of_num_features = sett.number_of_num_features
+    df_name_vector = sett.df_name_vector
+    var_imp1d_str_arr, var_imp2d_str_arr, onedimintvec, twodimintvec = variable_importance(leaves_array, df_name_vector, number_of_num_features)
+    var_imp1d = var_imp1d_str_arr[:,2]
+    var_imp2d = var_imp2d_str_arr[:,3]
+
+    xld =  ExcelData()
+    t = Tree(bt.trees[n],bt.intVarsUsed[n],bt.candMatWOMaxValues,bt.charMappings,bt.inds_considered[n],bt.settings,xld,bt.featurepools)
+    t.modelstats = DataFrame(bt.modelstats[n,:])
+    #t.variableImp1Dim = parse.(Float64,var_imp1d)
+    #t.variableImp2Dim = parse.(Float64,var_imp2d)
+    return t 
+end

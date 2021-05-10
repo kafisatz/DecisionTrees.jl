@@ -15,7 +15,7 @@ Distributed.@everywhere using DecisionTrees
 elt = [Int,	Float64,	Float64,	Float64,	Float64,	Float64,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	String,	String,	String,	String,	String,	String,	Int,	String,	Int,	String,	String,	Int,	String,	String,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	String,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	Int,	String,	Int,	String,	String,	String,	Int,	String,	String,	String,	String,	Int,	Int,	Int,	String,	String,	String,	String,	String,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Int,	Float64,	Int,	Float64,	Float64,	Float64,	Float64,	Int,	Int,	Int,	Int,	Int,	Int]
 datafile = joinpath("data", "GermanMotorPremiums", "data1small.csv")
 @assert isfile(datafile);
-@time df_tmp = CSV.read(datafile, types=elt, rows_for_type_detect=20000, allowmissing=:none, categorical=false); 
+@time df_tmp = CSV.read(datafile, DataFrame, types=elt, strict=true);
 
 selected_explanatory_vars = ["ART_DES_WOHNEIGENTUM","GEBURTSDATUM","FAMILIENSTAND","NATIONALITAET","PLZ_WOHNORT","GESCHLECHT","FINANZIERUNGSART","STADT","KENNZEICHEN"]
 

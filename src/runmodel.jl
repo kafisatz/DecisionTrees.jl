@@ -701,6 +701,30 @@ function run_model_actual(dtmtable::DTMTable, input_setttings::ModelSettings, fn
             write_tree(dtmtable.candMatWOMaxValues, resulting_model, sett.number_of_num_features, 0, tree_file, sett.df_name_vector, dtmtable.mappings)
             push!(filelistWithFilesToBeZipped, tree_file)
         end
+    # DOT Graphs for boosted trees
+        if sett.write_dot_graph
+            println("Writing DOT tree structure to file: \n $(dot_graph_TXT_file)")
+            fnbase,ext = splitext(dot_graph_TXT_file)
+            for i=1:sett.iterations
+                #txt filename
+                dot_graph_TXT_file = string(fnbase,".tree.",i,ext)
+                #dot graph pdf filename 
+                dot_graph_visualization_file = string(fnbase,".tree.",i,".pdf")
+
+                #write each tree
+                tree = gettree(resulting_model,i)
+                dot_graph = graph(tree)
+                
+                isfile(dot_graph_TXT_file) && rm(dot_graph_TXT_file)                
+                f = open(dot_graph_TXT_file, "w");
+                    write(f, "\n\n", dot_graph, "\n\n");
+                close(f);
+                #dot_graph_visualization_file = "C:\\Users\\BERNHA~1.KON\\AppData\\Local\\Temp\\jl_ta4Y2r\\dtmresult.dot.pdf"
+                draw_dot_graph(sett.graphvizexecutable, dot_graph_TXT_file, dot_graph_visualization_file)
+                push!(filelistWithFilesToBeZipped, dot_graph_TXT_file)
+                isfile(dot_graph_visualization_file) && push!(filelistWithFilesToBeZipped, dot_graph_visualization_file)
+            end
+        end
     # Write statistics
         if sett.writeStatistics
             writeStatisticsFile!(statsfileExcel, xlData, filelistWithFilesToBeZipped)

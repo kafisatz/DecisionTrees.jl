@@ -31,7 +31,7 @@ tela = (time_ns() - t0) / 1e9
 ##############################
 datafile = joinpath("data", "freMTPL2", "freMTPL2.csv")
 @assert isfile(datafile);
-@time fullData = CSV.read(datafile, rows_for_type_detect=100000, allowmissing=:none, categorical=false);
+@time fullData = CSV.read(datafile, DataFrame, strict=true);
 
 # the data is described in the R package CASdatasets
 # also the Noll, Salzmann, Wüthrich Paper has some descriptive graphs of the data.
@@ -99,7 +99,7 @@ dtmtable.features # explanatory variables
 # we realize that it may be sutiable to define the splitting in a different manner (than uniformly spaced).
 # this feature might be added at a later time. You can consider the function add_coded_numdata!(...) to see how splitting points are chosen
 
-originalTrnValIndex = deepcopy(fullData[:trnTest])    
+originalTrnValIndex = deepcopy(fullData[:trnTest])
 
 # Redefine trn and val data sets
 # if you prefer train on X% of the data, you can use this function to adjust the training set. By default it is sampled randomly

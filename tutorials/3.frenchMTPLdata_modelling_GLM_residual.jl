@@ -23,7 +23,7 @@ tela = (time_ns() - t0) / 1e9
 ##############################
 datafile = joinpath("data", "freMTPL2", "freMTPL2.csv")
 @assert isfile(datafile);
-@time fullData = CSV.read(datafile, rows_for_type_detect=100000, allowmissing=:none, categorical=false);
+@time fullData = CSV.read(datafile, DataFrame, strict=true);
 
 # add AreaInteger as new variable, i.e. A:F -> 1:6 (as suggested in the paper of Wüthrich, Noll, Salzmann)
 areasSorted = sort(unique(fullData[:Area]))

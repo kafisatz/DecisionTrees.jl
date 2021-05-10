@@ -38,7 +38,7 @@ if !isdir(splitdir(datafile)[1])
     datafile = joinpath(Pkg.dir("DecisionTrees"), datafile)
 end
 @assert isfile(datafile) "You need to unzip the file freMTPL2.zip in the folder data/freMTPL2"
-@time fullData = CSV.read(datafile, rows_for_type_detect=100000, allowmissing=:none, categorical=false);
+@time fullData = CSV.read(datafile, DataFrame,strict=true);
 
 # the data is described in the R package CASdatasets
 # also the Noll, Salzmann, Wüthrich Paper has some descriptive graphs of the data.
