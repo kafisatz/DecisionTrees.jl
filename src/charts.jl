@@ -2,7 +2,7 @@
 export writeStatistics
 
 function create_dataframe(arr::Array{U,2}, header::Array{T,1}) where {T <: AbstractString,U <: Any}
-	res = convert(DataFrame, arr)
+	res = DataFrame( arr,:auto)
 	hsym = Symbol[x for x in header]
 	DataFrames.names!(res, hsym)
 	return res
@@ -11,8 +11,7 @@ end
 function create_custom_dict(df::DataFrame)	
 	header = propertynames(df)
 	d = Dict{AbstractString,Array{Any,1}}()
-    for i = 1:length(header)	
-        # @show df[!,i]		
+    for i = 1:length(header)
 		d[string(header[i])] = df[!,i]
 	end
 	return d
@@ -59,13 +58,11 @@ function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObje
 		append!(fieldsWhichAreAlreadySet, ["add_series","add_chart"])
 		append!(fieldsWhichAreAlreadySet, resevedKeywords)		
 		if !in(x, fieldsWhichAreAlreadySet)
-            # TBD: unclear how to fix this line...
-            # TBD: unclear how to fix this line... (deprecated syntax...)
-            PyCall.pycall(chart[x], PyCall.PyAny, chartDict[x])	 # TBD: unclear how to fix this line...
+            PyCall.pycall(chart[x], PyCall.PyAny, chartDict[x])	# TBD: unclear how to fix this line... (deprecated syntax...)
+            #
 		end			
 	end
 	PyCall.pycall(worksheet."insert_chart", PyCall.PyAny, location, chart)
-	# writer[:save]()
 end
 
 function writeStatistics(excelData::ExcelData, statsfile::T, write_header::Bool, write_index::Bool) where {T <: AbstractString} # ,charts::Array{Chart,1})		

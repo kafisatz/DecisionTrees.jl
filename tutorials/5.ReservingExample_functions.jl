@@ -137,7 +137,7 @@ function customSummary(treeEstimateAgg::DataFrame, treeEstimatePerRow::DataFrame
     comparisonByAY = hcat(ayears, trueReserves, treeEstimateAgg[:reserves], clAllLOBs[:reserves])
     comparisonByAY = vcat(comparisonByAY, sum(comparisonByAY, dims=1))
     comparisonByAY[end,1] = 9999
-    comparisonByAY2 = DataFrame(comparisonByAY)
+    comparisonByAY2 = DataFrame(comparisonByAY, :auto)
     names!(comparisonByAY2, [:AY,Symbol("True Outstanding Amount"),Symbol("Estimated Reserves"),Symbol("CL Estimated Reserves")])
     
     absErrorsByAY = ceil.(Int, abs.(comparisonByAY[:,2] .- comparisonByAY[:,3]) / 1000)
@@ -152,7 +152,7 @@ function customSummary(treeEstimateAgg::DataFrame, treeEstimatePerRow::DataFrame
         sumRes2 = hcat(ayears, trueReservesPerLOB[lob][1:end - 1], sumRes[:reserves_sum], clPerLOB[lob][:reserves][1:end - 1])
         sumRes2 = vcat(sumRes2, sum(sumRes2, dims=1))
         sumRes2[end,1] = 9999
-        sumRes3 = DataFrame(sumRes2)
+        sumRes3 = DataFrame(sumRes2, :auto)
         names!(sumRes3, [:AY,Symbol("True Outstanding Amount"),Symbol("Estimated Reserves"),Symbol("CL Estimated Reserves")])
         comparisonByLOB[lob] = deepcopy(sumRes3)
     end

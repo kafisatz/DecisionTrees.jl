@@ -78,7 +78,7 @@ function get_stats(model::Union{BoostedTree,BaggedTree};perfMeasure::String="Lif
     numbersBestIteration = permutedims(Vector(dfrow))[:]
     # numbersBestIteration=convert(Array{Float64,2},dfr)[:]
     
-    settdf = convert(DataFrame, writeAllFieldsToArray(model.settings))
+    settdf = DataFrame(writeAllFieldsToArray(model.settings),:auto)
     setti_desc = string.(settdf[:,1])
     setti = settdf[:,2]
     return desc, numbersBestIteration, setti_desc, setti, perfMeasure
@@ -439,7 +439,7 @@ end
 function write_any_array_to_excel_file(arr::Array, file::String)
     ascii(file)
     isfile(file) && rm(file)
-    sheets = [ExcelSheet("sheet1", convert(DataFrame, arr))]
+    sheets = [ExcelSheet("sheet1", DataFrame(arr,:auto))]
     xld = ExcelData(sheets, Array{Chart}(undef, 0))
     writeStatistics(xld, file, false, false)
     return nothing
@@ -448,7 +448,7 @@ end
 function write_any_array_to_excel_file(arr::Array, arr2::Array, file::String)
     ascii(file)
     isfile(file) && rm(file)
-    sheets = [ExcelSheet("sheet1", convert(DataFrame, arr)),ExcelSheet("sheet2", convert(DataFrame, arr2))]
+    sheets = [ExcelSheet("sheet1", DataFrame(arr,:auto)),ExcelSheet("sheet2", DataFrame(arr2,:auto))]
     xld = ExcelData(sheets, Array{Chart}(undef, 0))
     writeStatistics(xld, file, false, false)
     return nothing
@@ -457,7 +457,7 @@ end
 function write_any_array_to_excel_file(arr::Array, arr2::Array, arr3::Array, file::String)
     ascii(file)
     isfile(file) && rm(file)
-    sheets = [ExcelSheet("sheet1", convert(DataFrame, arr)),ExcelSheet("sheet2", convert(DataFrame, arr2)),ExcelSheet("sheet3", convert(DataFrame, arr3))]
+    sheets = [ExcelSheet("sheet1", DataFrame(arr,:auto)),ExcelSheet("sheet2", DataFrame(arr2,:auto)),ExcelSheet("sheet3", DataFrame(arr3,:auto))]
     xld = ExcelData(sheets, Array{Chart}(undef, 0))
     writeStatistics(xld, file, false, false)
     return nothing
@@ -466,7 +466,7 @@ end
 function write_any_array_to_excel_file(arr::Array, arr2::Array, arr3::Array, arr4::Array, file::String)
     ascii(file)
     isfile(file) && rm(file)
-    sheets = [ExcelSheet("sheet1", convert(DataFrame, arr)),ExcelSheet("sheet2", convert(DataFrame, arr2)),ExcelSheet("sheet3", convert(DataFrame, arr3)),ExcelSheet("sheet4", convert(DataFrame, arr4))]
+    sheets = [ExcelSheet("sheet1", DataFrame(arr, :auto)),ExcelSheet("sheet2", DataFrame(arr2, :auto)),ExcelSheet("sheet3", DataFrame(arr3, :auto)),ExcelSheet("sheet4", DataFrame(arr4, :auto))]
     xld = ExcelData(sheets, Array{Chart}(undef, 0))
     writeStatistics(xld, file, false, false)
     return nothing
@@ -475,7 +475,7 @@ end
 function write_any_array_to_excel_file(arr::Array{Array{T,2},1}, file::String) where {T <: Any}
     ascii(file)
     isfile(file) && rm(file)
-    sheets = [ExcelSheet(string("sheet", i), convert(DataFrame, arr[i])) for i = 1:length(arr)]
+    sheets = [ExcelSheet(string("sheet", i), DataFrame(arr[i], :auto)) for i = 1:length(arr)]
     xld = ExcelData(sheets, Array{Chart}(undef, 0))
     writeStatistics(xld, file, false, false)
     return nothing
@@ -1115,7 +1115,7 @@ function addTariffEstimationStatsAndGraphs!(xlData,trnidx::Vector{Int},validx::V
     # attach histogram
     result = vcat(result, errorhist)
     # add sheet to Excel
-    resultDF = convert(DataFrame, result)
+    resultDF = DataFrame(result, :auto)
     tariffestsheetname = "NumeratorEstimationError" # NOTE: if we have a space in the sheetname then the functions which produce the graphs need to be adjusted slighty: the formula must have single quotes around the sheetname
     tariffEstErrorSheet = ExcelSheet(tariffestsheetname, resultDF)
     push!(xlData.sheets, tariffEstErrorSheet)
@@ -5597,8 +5597,6 @@ function gettree(bt::BoostedTree,n)
 
     xld =  ExcelData()
     t = Tree(bt.trees[n],bt.intVarsUsed[n],bt.candMatWOMaxValues,bt.charMappings,bt.inds_considered[n],bt.settings,xld,bt.featurepools)
-    t.modelstats = DataFrame(bt.modelstats[n,:])
-    #t.variableImp1Dim = parse.(Float64,var_imp1d)
-    #t.variableImp2Dim = parse.(Float64,var_imp2d)
+    t.modelstats = DataFrame(bt.modelstats[n,:], :auto)
     return t 
 end
