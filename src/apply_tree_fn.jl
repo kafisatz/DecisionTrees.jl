@@ -138,28 +138,20 @@ function predictConsistentFeatures(x::BoostedTree, f::DataFrame;prroduceEstAndLe
     est_SmoothedEstFromScores
 
     result = DataFrame()
-    result[:scores] = scores
-    result[:SmoothedEstimate] = est_SmoothedEstFromScores
-    result[:UnsmoothedEstimate] = est_UnSmoothedEstFromScores
-    result[:RawEstimate] = est_RawRelativities
+    result[!,:scores] = scores
+    result[!,:SmoothedEstimate] = est_SmoothedEstFromScores
+    result[!,:UnsmoothedEstimate] = est_UnSmoothedEstFromScores
+    result[!,:RawEstimate] = est_RawRelativities
   
     return result
 end
 
 function assert_consistent_features(fp, f::DataFrame)
     @assert length(fp) == size(f, 2)
-  # the above condition could also be weakend (as could the loop below) we only need to check the variables that were actually used by the model. 
+    # the above condition could also be weakend (as could the loop below) we only need to check the variables that were actually used by the model. 
     for j = 1:length(fp)
-        if !(fp[j] == f[j].pool)
-      # @show propertynames(f)[j]
-      # @show fp[j]
-      # @show f[j].pool
-      # @show f[j].pool.==fp[j]
-      # @show f[j].pool.-fp[j]
-      # @show !(fp[j]==f[j].pool)
-      # @show issubset(f[j].pool,fp[j])
-      
-      # Note: this condition could be weakend: the features of the data which is provided only needs to be a subset of the pools used during modelling
+        if !(fp[j] == f[!,j].pool)
+            # Note: this condition could be weakend: the features of the data which is provided only needs to be a subset of the pools used during modelling
             @warn("DTM: Features do not match model features!\r\nAlgorithm may abort.")
             return false
         end

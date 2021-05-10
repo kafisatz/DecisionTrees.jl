@@ -1,7 +1,7 @@
 #= 
     this splitting criterion considers the  ratio = sum(numerator)/sum(denominator) (for each split)
-    we minimize the (ratio.-meanLeft)^2 of both children =#
-
+    we minimize the (ratio.-meanLeft)^2 of both children 
+=#
 
 function calculateSplitValue(a::sseSplit, fname::Symbol, number_of_char_features::Int, labellist::Vector{T}, sumnumerator::Array{Float64,1}, sumdenominator::Array{Float64,1}, sumweight::Array{Float64,1}, countlistfloat::Array{Float64,1}, minweight::Float64, subs::DTSubsets, moments_per_pdaclass) where T <: Unsigned
     # here randomweight==0
@@ -182,7 +182,6 @@ function aggregate_data_mse(f, numerator::Array{Float64,1}, denominator::Array{F
     end
     return cnt, sumnumerator, sumdenominator, sumweight, moments_per_pdaclass
 end
-
 
 mutable struct CustomVariance
     # considers the variance of d_i*(n_i/d_i-fittedMean)^2 where n_i/d_i is calculated pointwise and fitted mean is (sum(n_i)/sum(d_i))

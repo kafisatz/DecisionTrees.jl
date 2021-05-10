@@ -115,4 +115,7 @@
     test_mean_and_var_merge(1000, 1000)
     test_mean_and_var_UNmerge(1000, 1000)
 
-end
+    #some test for coverage 
+    DecisionTrees.get_sha1()
+
+end #end testset

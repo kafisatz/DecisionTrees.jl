@@ -75,6 +75,9 @@
     @test typeof(resm.modelstats) == DataFrame
     @test 1 == 1
 
+# predict 
+    DecisionTrees.predict(resm, dtmtable.features)  
+
 ##################################################
 # run boosting
 ##################################################
@@ -95,8 +98,12 @@
     sett.statsByVariables = Int[]
 
     @info("DTM:Testing different splitting criterias...")
+
+# predict 
+DecisionTrees.predict(resm2, dtmtable.features)  
+
 # try different splitting criteria
-    for splitCrit in ["difference","poissondeviance","gammadeviance","mse","sse","msepointwise"],modelTYPE in ["build_tree","boosted_tree"]
+    for splitCrit in ["difference","poissondeviance","gammadeviance","mse","sse","msepointwise"], modelTYPE in ["build_tree","boosted_tree"]
         updateSettingsMod!(sett, crit=splitCrit, model_type=modelTYPE)
         try 
             strs, resmT = dtm(dtmtable, sett)        
@@ -107,6 +114,21 @@
             @test "This one failed->" == string("crit=", splitCrit, "; model_type=", modelTYPE)
         end
     end
+
+    # try different splitting criteria with randomw > 0 
+    for splitCrit in ["difference","poissondeviance","gammadeviance"], modelTYPE in ["build_tree","boosted_tree"]
+        updateSettingsMod!(sett, crit=splitCrit, model_type=modelTYPE)
+        updateSettingsMod!(sett, randomw = 0.05)
+        try 
+            strs, resmT = dtm(dtmtable, sett)        
+            @test typeof(resmT.modelstats) == DataFrame
+        catch thisErr
+            @show stacktrace()
+            @show thisErr        
+            @test "This one failed->" == string("crit=", splitCrit, "; model_type=", modelTYPE, "; randomw=", rw)
+        end
+    end
+
     updateSettingsMod!(sett, crit="difference")
     @info("DTM:Finished testing different splitting criterias.")
 
