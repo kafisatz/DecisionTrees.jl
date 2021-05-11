@@ -667,10 +667,27 @@ function checkIfSettingsAreValid(s::ModelSettings)
 	  @assert s.scorebandsstartingpoints[end]<s.nScores
 	  @assert s.nScores>8 "Please set nScores to a value greater than 8" #Less than 8 scores makes it hard/impossible for the moving average
 	  @assert in(s.smoothEstimates,["0" "1"]) #this is currently a string since there could (in the future) be multiple smoothing methods
-	  if !(length(s.graphvizexecutable)<1||isfile(s.graphvizexecutable))
-		@show s.graphvizexecutable
-		error("DTM: Invalid graphvizexecutable: $(graphvizexecutable) is not a file.")
-	  end
+      #check graphvizexecutable
+
+      if s.write_dot_graph 
+        gcmd = `$(graphvizexe) "-V"`      
+        try 
+            gres = run(gcmd)                
+            if gres.exitcode != 0 
+                @warn("Please review the graphvizexecutable path in the settings")
+                @show s.write_dot_graph 
+                @show s.graphvizexecutable
+                @show gcmd                
+                @show gres.exitcode
+            end
+        catch 
+            @warn("Please review the graphvizexecutable path in the settings")
+            println("Unable to issue command:\r\n $(gcmd)")
+            @show s.write_dot_graph
+            @show s.graphvizexecutable
+        end
+    end # if s.write_dot_graph
+	
 	if s.roptForcedPremIncr
 		#@assert (s.crit==ROptMinRLostPctSplit()||s.crit==ROptMinRLostSplit())
 	end
