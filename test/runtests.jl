@@ -51,17 +51,19 @@ DecisionTreesTests = @testset verbose = true "DecisionTrees" begin
     graphvizsetup_is_working = false
     @testset verbose = true "GraphViz Setup" begin 
         if Sys.iswindows()
-            graphvizexe = raw"c:\program files\graphviz\bin\dot.exe" #as per github ci log of graphviz setup this seems to be the location of dot.exe
-            if !isfile(graphvizexe)
+            #graphvizexe = raw"c:\program files\graphviz\bin\dot.exe" #as per github ci log of graphviz setup this seems to be the location of dot.exe
+            graphvizexe = "dot"
+            #if !isfile(graphvizexe)
                 if haskey(ENV,"graphvizdot")
+                    #if key exists this takes precedence
                     graphvizexe = ENV["graphvizdot"]
                     #=
                         ENV["graphvizdot"]="c:\\program files\\Graphviz\\bin\\dot.exe"
                     =#
                 end 
-            end
+            #end
         else 
-            graphvizexe = "dot" #assume it is in in path
+            graphvizexe = "dot" #linux & appleOS assume it is in in path
         end
         
         #@test isfile(graphvizexe)
