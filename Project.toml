@@ -1,7 +1,7 @@
 name = "DecisionTrees"
 uuid = "5a283280-6d82-11e8-2283-f1ea5a810282"
 authors = ["bernhard.koenig"]
-version = "0.0.20"
+version = "0.0.21"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
