@@ -55,9 +55,18 @@
     # Run single tree model
     ##############################
 
+        if graphvizsetup_is_working
+            sett.write_dot_graph = true
+            sett.graphvizexecutable = graphvizexe
+        end 
         resultingFiles, resM = dtm(dtmtable, sett)
-        sett.write_dot_graph = true
-        sett.graphvizexecutable = graphvizexe
+        if graphvizsetup_is_working
+            @testset "Functionality Tests Graphviz Tree" begin
+                @test true
+                pdf_files_produced = filter(x->endswith(lowercase(x),".pdf"),resultingFiles)
+                @test size(pdf_files_produced,1)==1
+            end
+        end
         stats1 = resM.exceldata.sheets[2].data[63:end,1:2]
         @test isapprox(stats1[1,2], 0.9902398642839035, atol=tolForTheseTests)
         @test isapprox(stats1[5,2], 7.893600119119564, atol=tolForTheseTests)
@@ -74,6 +83,13 @@
         sett.learningRate = 0.1
         sett.model_type = "boosted_tree"
         strs, resm2 = dtm(dtmtable, sett)
+        if graphvizsetup_is_working
+            @testset "Functionality Tests Graphviz Boosting" begin
+                @test true
+                pdf_files_produced = filter(x->endswith(lowercase(x),".pdf"),strs)
+                @test size(pdf_files_produced,1) == 15
+            end
+        end
         @test typeof(resm2.modelstats) == DataFrame
         headr = resm2.exceldata.sheets[3].data[1,:] 
         headr2 = map(x->headr[x], 1:length(headr))
