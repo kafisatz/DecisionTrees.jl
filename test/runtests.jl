@@ -47,6 +47,8 @@ DecisionTreesTests = @testset "DecisionTrees" begin
     @warn("DTM: So far only very rudimentary tests have been implemented!")
     
     global graphvizexe
+    global graphvizsetup_is_working
+    graphvizsetup_is_working = false
     @testset "GraphViz Setup" begin 
         if Sys.iswindows()
             graphvizexe = raw"c:\program files\graphviz\bin\dot.exe" #as per github ci log of graphviz setup this seems to be the location of dot.exe
@@ -67,6 +69,8 @@ DecisionTreesTests = @testset "DecisionTrees" begin
         try 
             gres = run(gcmd)
             @test gres.exitcode == 0
+            @show gres.exitcode
+            graphvizsetup_is_working = true
         catch 
             @test false
         end

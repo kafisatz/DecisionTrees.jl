@@ -5096,7 +5096,7 @@ End Function
     boolListChar = write_and_create_boollist_char_vba(fiostream, mappings, df_name_vector, number_of_num_features, boolCharVarsUsedByModel)
     @assert length(boolListChar) == length(mappings)
     # csharp_write_RequiredElementsProvided(fiostream,df_name_vector,boolVariablesUsed)
-    @warn("todo, what if some variables are not as expected (unseen values for instance). Improve this / error handling similar to the generated SAS Code!")
+    @warn("todo, what if some variables are not as expected (unseen values for instance). Improve this (similar to the generated SAS Code)!")
     vba_write_booleans(fiostream, boolListNum, boolListChar, df_name_vector, candMatWOMaxValues, mappings, boolCharVarsUsedByModel, boolNumVarsUsedByModel, boolVariablesUsed)
     
     # for i=1:length(df_name_vector)

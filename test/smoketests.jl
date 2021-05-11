@@ -70,9 +70,8 @@
 ############################################
 
     @testset "Graphviz Smoketests" begin
-        @show graphvizexe
-        @show isfile(graphvizexe)
-        if isfile(graphvizexe)
+        @show graphvizexe        
+        if graphvizsetup_is_working
             #do graphviz tests 
                 dtmtableMini, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp[1:100,:], treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
                 sett.write_dot_graph = true
