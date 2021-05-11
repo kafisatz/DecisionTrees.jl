@@ -5569,6 +5569,6 @@ function gettree(bt::BoostedTree,n)
 
     xld =  ExcelData()
     t = Tree(bt.trees[n],bt.intVarsUsed[n],bt.candMatWOMaxValues,bt.charMappings,bt.inds_considered[n],bt.settings,xld,bt.featurepools)
-    t.modelstats = DataFrame(bt.modelstats[n,:], :auto)
+    t.modelstats = DataFrame(DataFrame(bt.modelstats[n,:]))
     return t 
 end
