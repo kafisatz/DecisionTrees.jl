@@ -37,7 +37,7 @@ end
 datadir = joinpath(pkgdir, "data")
 
 Random.seed!(1239946)
-DecisionTreesTests = @testset "DecisionTrees" begin
+DecisionTreesTests = @testset verbose = true "DecisionTrees" begin
     t0runtests = time_ns()
     println("DTM: Running tests...") # Time = $(t0runtests)")
         
