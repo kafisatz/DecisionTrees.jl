@@ -670,7 +670,7 @@ function checkIfSettingsAreValid(s::ModelSettings)
       #check graphvizexecutable
 
       if s.write_dot_graph 
-        gcmd = `$(graphvizexe) "-V"`      
+        gcmd = `$(s.graphvizexecutable) "-V"`      
         try 
             gres = run(gcmd)                
             if gres.exitcode != 0 

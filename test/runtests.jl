@@ -86,9 +86,10 @@ DecisionTreesTests = @testset verbose = true "DecisionTrees" begin
             end
         end
     end
-    include("smoketests.jl")
-    include("errors_and_warnings.jl")
-    include("functionalityTests.jl")
+
+    include("smoketests.jl") #running a number of functions to see if anything 'smokes' (runs into an unexpected error)
+    include("errors_and_warnings.jl") #testing a few warnings and errors
+    include("functionalityTests.jl") #testing resulting values of models
     include("helperfunctions.jl")
 
     @testset "Other Tests" begin

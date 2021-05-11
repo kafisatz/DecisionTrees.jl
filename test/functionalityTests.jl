@@ -1,5 +1,3 @@
-# smoketest_tree.jl
-
 @testset "Functionality Tests" begin
 
     import Random: rand,randstring
@@ -58,6 +56,8 @@
     ##############################
 
         resultingFiles, resM = dtm(dtmtable, sett)
+        sett.write_dot_graph = true
+        sett.graphvizexecutable = graphvizexe
         stats1 = resM.exceldata.sheets[2].data[63:end,1:2]
         @test isapprox(stats1[1,2], 0.9902398642839035, atol=tolForTheseTests)
         @test isapprox(stats1[5,2], 7.893600119119564, atol=tolForTheseTests)
