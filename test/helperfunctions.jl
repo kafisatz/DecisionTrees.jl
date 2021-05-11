@@ -1,4 +1,4 @@
-@testset "Helper functions Testing" begin
+@testset verbose = true "Helper functions Testing" begin
 
     @test DecisionTrees.isContiguous(collect(1:23))
     @test DecisionTrees.isContiguous(collect(22:23))

@@ -49,7 +49,7 @@ DecisionTreesTests = @testset verbose = true "DecisionTrees" begin
     global graphvizexe
     global graphvizsetup_is_working
     graphvizsetup_is_working = false
-    @testset "GraphViz Setup" begin 
+    @testset verbose = true "GraphViz Setup" begin 
         if Sys.iswindows()
             graphvizexe = raw"c:\program files\graphviz\bin\dot.exe" #as per github ci log of graphviz setup this seems to be the location of dot.exe
             if !isfile(graphvizexe)
@@ -92,7 +92,7 @@ DecisionTreesTests = @testset verbose = true "DecisionTrees" begin
     include("functionalityTests.jl") #testing resulting values of models
     include("helperfunctions.jl")
 
-    @testset "Other Tests" begin
+    @testset verbose = true "Other Tests" begin
         @test 1 == 1
     end
     println("DTM: Testing finished. Time needed:")

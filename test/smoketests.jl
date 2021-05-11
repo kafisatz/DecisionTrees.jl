@@ -1,6 +1,6 @@
 # smoketest_tree.jl
 
-@testset "Smoketests" begin
+@testset verbose = true "Smoketests" begin
 
     import DataFrames
     import Random: rand,randstring
@@ -69,7 +69,7 @@
 # graphviz 
 ############################################
 
-    @testset "Graphviz Smoketests" begin
+    @testset verbose = true "Graphviz Smoketests" begin
         @show graphvizexe
         if graphvizsetup_is_working
             #do graphviz tests 

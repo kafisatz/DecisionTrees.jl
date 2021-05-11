@@ -1,4 +1,4 @@
-@testset "Functionality Tests" begin
+@testset verbose = true "Functionality Tests" begin
 
     import Random: rand,randstring
 
@@ -61,7 +61,7 @@
         end 
         resultingFiles, resM = dtm(dtmtable, sett)
         if graphvizsetup_is_working
-            @testset "Functionality Tests Graphviz Tree" begin
+            @testset verbose = true "Functionality Tests Graphviz Tree" begin
                 @test true
                 pdf_files_produced = filter(x->endswith(lowercase(x),".pdf"),resultingFiles)
                 @test size(pdf_files_produced,1)==1
@@ -84,7 +84,7 @@
         sett.model_type = "boosted_tree"
         strs, resm2 = dtm(dtmtable, sett)
         if graphvizsetup_is_working
-            @testset "Functionality Tests Graphviz Boosting" begin
+            @testset verbose = true "Functionality Tests Graphviz Boosting" begin
                 @test true
                 pdf_files_produced = filter(x->endswith(lowercase(x),".pdf"),strs)
                 @test size(pdf_files_produced,1) == 15

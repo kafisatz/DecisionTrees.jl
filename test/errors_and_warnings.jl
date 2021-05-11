@@ -1,7 +1,7 @@
 # test errors
 # prepare_dataframe_for_dtm
 
-@testset "errorTesting" begin
+@testset verbose = true "errorTesting" begin
 
 
     thisfile = joinpath(datadir, "GermanMotorPremiums", "data1Small.csv")
