@@ -46,20 +46,32 @@ DecisionTreesTests = @testset "DecisionTrees" begin
     @info("DTM: Note that the tests produce a relatively long log and write a number of files in temporary directories. You can disregard the log, if all tests pass.")
     @warn("DTM: So far only very rudimentary tests have been implemented!")
     
-
-    global graphvizexe 
-    if Sys.iswindows()
-        graphvizexe = raw"c:\program files\graphviz\bin\dot.exe" #as per github ci log of graphviz setup this seems to be the location of dot.exe
-    else 
-        graphvizexe = "dot"
+    global graphvizexe
+    @testset "GraphViz Setup" begin 
+        if Sys.iswindows()
+            graphvizexe = raw"c:\program files\graphviz\bin\dot.exe" #as per github ci log of graphviz setup this seems to be the location of dot.exe
+            if !isfile(graphvizexe)
+                if haskey(ENV,"graphvizdot")
+                    graphvizexe = ENV["graphvizdot"]
+                    #=
+                        ENV["graphvizdot"]="c:\\program files\\Graphviz\\bin\\dot.exe"
+                    =#
+                end 
+            end
+        else 
+            graphvizexe = "dot" #assume it is in in path
+        end
+        
+        #@test isfile(graphvizexe)
+        gcmd = `$(graphvizexe) "-V"`
+        try 
+            gres = run(gcmd)
+            @test gres.exitcode == 0
+        catch 
+            @test false
+        end
+        
     end
-    if !isfile(graphvizexe)
-        if haskey(ENV,"graphvizdot")
-            graphvizexe = ENV["graphvizdot"]
-        end 
-    end
-    @test isfile(graphvizexe)
-
     include("smoketests.jl")
     include("errors_and_warnings.jl")
     include("functionalityTests.jl")
