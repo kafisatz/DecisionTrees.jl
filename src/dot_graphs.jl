@@ -146,9 +146,10 @@ function draw_dot_graph(gvloc::String, dot_txt_file::String, outputfilename::Str
     if length(gvloc) < 1 # || length(graph_as_string)<1
         return nothing
     else
-        if !isfile(gvloc)
-            @warn("DTM: GraphViz executable not found at: \n $(gvloc)")
-        else
+        #note: we historically checked if gvloc is a file. But on ubuntu this is not needed -> isfile of dot returns false, even though the file is callable and everything works.
+        if true #!isfile(gvloc) #this is obsolete!
+            #@warn("DTM: GraphViz executable not found at: \n $(gvloc)")
+        #else        
             if !isfile(dot_txt_file)
                 @warn("DTM: GraphViz dot file not found at: \n $(dot_txt_file)")
             else
