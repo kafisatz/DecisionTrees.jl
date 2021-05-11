@@ -137,10 +137,11 @@ function draw_dot_graph(gvloc::String, dot_txt_file::String, outputfilename::Str
 # gvloc="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe"
 
 #= 
-gvloc="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe"
-outfilename = "c:\\temp\\mo ha\\mi.pdf"
-isdir(splitdir(outfilename)[1])
-ma=draw_dot_graph(gvloc,"c:\\temp\\maroxi.dot.txt",outfilename) =#
+    gvloc="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe"
+    outfilename = "c:\\temp\\mo ha\\mi.pdf"
+    isdir(splitdir(outfilename)[1])
+    ma=draw_dot_graph(gvloc,"c:\\temp\\maroxi.dot.txt",outfilename) 
+=#
 
     if length(gvloc) < 1 # || length(graph_as_string)<1
         return nothing
