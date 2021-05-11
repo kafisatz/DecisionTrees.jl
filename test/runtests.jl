@@ -74,7 +74,10 @@ DecisionTreesTests = @testset verbose = true "DecisionTrees" begin
             @show gres.exitcode
             graphvizsetup_is_working = true
             @test true #graphviz setup works
-        catch 
+        catch e
+            @warn("DTM: unable to invoke gcmd")
+            @show gcmd
+            print(e)
             @test false
         end
     end
