@@ -1,8 +1,4 @@
 t0 = time_ns()
-#=
-    cd("/home/bernhard/DecisionTrees.jl");using Pkg;Pkg.activate(pwd());
-    Pkg.test();
-=#
 
 # test
 import CSV
@@ -36,6 +32,9 @@ else
 end
 datadir = joinpath(pkgdir, "data")
 
+global graphvizexe
+global graphvizsetup_is_working
+
 Random.seed!(1239946)
 DecisionTreesTests = @testset verbose = true "DecisionTrees" begin
     t0runtests = time_ns()
@@ -46,41 +45,7 @@ DecisionTreesTests = @testset verbose = true "DecisionTrees" begin
     @info("DTM: Note that the tests produce a relatively long log and write a number of files in temporary directories. You can disregard the log, if all tests pass.")
     @warn("DTM: So far only very rudimentary tests have been implemented!")
     
-    global graphvizexe
-    global graphvizsetup_is_working
-    graphvizsetup_is_working = false
-    @testset verbose = true "GraphViz Setup" begin 
-        if Sys.iswindows()
-            #graphvizexe = raw"c:\program files\graphviz\bin\dot.exe" #as per github ci log of graphviz setup this seems to be the location of dot.exe
-            graphvizexe = "dot"
-            #if !isfile(graphvizexe)
-                if haskey(ENV,"graphvizdot")
-                    #if key exists this takes precedence
-                    graphvizexe = ENV["graphvizdot"]
-                    #=
-                        ENV["graphvizdot"]="c:\\program files\\Graphviz\\bin\\dot.exe"
-                    =#
-                end 
-            #end
-        else 
-            graphvizexe = "dot" #linux & appleOS assume it is in in path
-        end
-        
-        #@test isfile(graphvizexe)
-        gcmd = `$(graphvizexe) "-V"`
-        try 
-            gres = run(gcmd)
-            @test gres.exitcode == 0
-            @show gres.exitcode
-            graphvizsetup_is_working = true
-            @test true #graphviz setup works
-        catch e
-            @warn("DTM: unable to invoke gcmd")
-            @show gcmd
-            print(e)
-            @test false
-        end
-    end
+    include("graphvizsetup.jl")
 
     include("smoketests.jl") #running a number of functions to see if anything 'smokes' (runs into an unexpected error)
     include("errors_and_warnings.jl") #testing a few warnings and errors

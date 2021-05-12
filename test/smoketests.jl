@@ -1,4 +1,3 @@
-# smoketest_tree.jl
 
 @testset verbose = true "Smoketests" begin
 
@@ -73,13 +72,12 @@
         @show graphvizexe
         @show graphvizsetup_is_working
         if graphvizsetup_is_working
-            #do graphviz tests 
-                dtmtableMini, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp[1:100,:], treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
+            #do graphviz tests
+                dtmtableMini, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp[1:100,:], treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars,print_details=false);
                 sett.write_dot_graph = true
                 sett.graphvizexecutable = graphvizexe
                 sett.minWeight = -.2
-                @info("DTM:Testing build tree (dtm mini)")
-                strs, resm = dtm(dtmtableMini, sett)
+                strs, resm = dtm(dtmtableMini, sett);
                 @test true
                 pdf_files_produced = filter(x->endswith(lowercase(x),".pdf"),strs)
                 @test size(pdf_files_produced,1)==1
@@ -104,7 +102,7 @@
 ##################################################
 # run tree
 ##################################################
-    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
+    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars,print_details=false);
     @info("DTM:Testing build tree")
     strs, resm = dtm(dtmtable, sett)
     @test typeof(resm.modelstats) == DataFrame
@@ -186,10 +184,10 @@ DecisionTrees.predict(resm2, dtmtable.features)
     mapToOther!(vnew, keep, 9999999)
     df_tmp[!,:PLZ_WOHNORT] = vnew
 
-    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
+    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars,print_details=false);
 
     sett.maxSplittingPoints = 300
-    dtmtable = prep_data_from_df(df_prepped, sett, joinpath(mktempdir(), "dtmsmoketest.csv"))
+    dtmtable = prep_data_from_df(df_prepped, sett, joinpath(mktempdir(), "dtmsmoketest.csv"),print_details=false);
     @test eltype(dtmtable.features[!,:PLZ_WOHNORT].refs) == UInt16
     @info("DTM:testing maxSplittingPoints=$(sett.maxSplittingPoints)")
     strs, resm2b = dtm(dtmtable, sett)
@@ -320,25 +318,25 @@ performanceMeasure="Average Poisson Error Val"
     prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], keycol="", numcol="LOSS20HALF", independent_vars=selected_explanatory_vars);
     df_tmp2 = deepcopy(df_tmp_orig)
     df_tmp2[!,:PREMIUM66][1:20] .= -20.1
-    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
+    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars,print_details=false);
     df_tmp2[!,:PREMIUM66][1:20] .= 0.0
-    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
+    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars,print_details=false);
     df_tmp2[!,:LOSS20HALF][1:20] .= 0.0
-    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
+    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars,print_details=false);
     df_tmp2[!,:LOSS20HALF][1:20] .= -20
-    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
+    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars,print_details=false);
 
 
     sett.minWeight = oldminw
 # example with weights.==1 and denominator.==1
-    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], numcol="LOSS20HALF", independent_vars=selected_explanatory_vars);
+    dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], numcol="LOSS20HALF", independent_vars=selected_explanatory_vars,print_details=false);
    
 
 # multithreaded runs
     if false  # currently disabled
         @info("DTM:testing multithreading")
         @test Distributed.nprocs() == 1 # we generally expect that tests are run on only 1 thread
-        dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars);
+        dtmtable, sett, df_prepped = prepare_dataframe_for_dtm!(df_tmp, treat_as_categorical_variable=["PLZ_WOHNORT"], weightcol="EXPOSURE", numcol="LOSS20HALF", denomcol="PREMIUM66", independent_vars=selected_explanatory_vars,print_details=false);
         sett.model_type = "boosted_tree"
         if Distributed.nprocs() < 2
             Distributed.addprocs(2)

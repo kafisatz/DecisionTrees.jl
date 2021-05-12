@@ -6,19 +6,20 @@ Prepares a DataFrame for the modelling.
 
 returns dtmtable::DTMTable,sett::ModelSettings,df_prepped::DataFrame
 """
-function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}(),methodForSplittingPointsSelection::String="basedOnWeightVector")
+function prepare_dataframe_for_dtm!(dfin::DataFrame;directory::String=mktempdir(),treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}(),methodForSplittingPointsSelection::String="basedOnWeightVector",print_details=true)    
     @assert isdir(directory)
     @assert in(methodForSplittingPointsSelection, globalConstAllowableMethodsForDefineCandidates)
-	@time (df_prepped, sett) = prepareDF!(dfin, treat_as_categorical_variable=treat_as_categorical_variable, numcol=numcol, denomcol=denomcol, weightcol=weightcol, trnvalcol=trnvalcol, valpct=valpct, keycol=keycol, independent_vars=independent_vars);
+	(df_prepped, sett) = prepareDF!(dfin, treat_as_categorical_variable=treat_as_categorical_variable, numcol=numcol, denomcol=denomcol, weightcol=weightcol, trnvalcol=trnvalcol, valpct=valpct, keycol=keycol, independent_vars=independent_vars,print_details=print_details);
 	# set this to false
 		sett.saveJLDFile = false
 		
 	fn = joinpath(directory, "DTMResult.csv")
-	dtmtable = prep_data_from_df(df_prepped, sett, fn, methodForSplittingPointsSelection=methodForSplittingPointsSelection)
+	dtmtable = prep_data_from_df(df_prepped, sett, fn, methodForSplittingPointsSelection=methodForSplittingPointsSelection,print_details = print_details);
+    sett.print_details = print_details
 	return dtmtable, sett, df_prepped
 end
 
-function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}())
+function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String}=Vector{String}(),numcol::String="",denomcol::String="",weightcol::String="",trnvalcol::String="",valpct::Float64=0.3,keycol::String="",independent_vars::Vector{String}=Vector{String}(),print_details=true)    
     sz = size(dfin, 1)
     dfnames = propertynames(dfin)
 
@@ -28,7 +29,7 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
     numDA = dfin[!,Symbol(numcol)]
 
     if denomcol == ""
-        @info "Using constant denominator for each row (.==1)" # of the form ones(size(yourIntputDataFrame,1))"        
+        print_details && @info "Using constant denominator for each row (.==1)" # of the form ones(size(yourIntputDataFrame,1))"        
         denomDA = ones(sz)        
     else
         @assert in(Symbol(denomcol), dfnames) "Denominator column not found. We searched for the column $(denomcol) in the vector $(string.(dfnames))"
@@ -36,7 +37,7 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
     end
 
     if weightcol == ""
-        @info "Using constant weight for each row (.==1)" # of the form ones(size(yourIntputDataFrame,1))"
+        print_details && @info "Using constant weight for each row (.==1)" # of the form ones(size(yourIntputDataFrame,1))"
         weightDA = ones(sz)
     else
         @assert in(Symbol(weightcol), dfnames) "Weight column not found. We searched for the column $(weightcol) in the vector $(string.(dfnames))"
@@ -44,7 +45,7 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
     end
 
     if trnvalcol == ""
-        @info "Using random choice of Training-Validation column with proportion $(valpct) for validation"
+        print_details && @info "Using random choice of Training-Validation column with proportion $(valpct) for validation"
         trnvalDA = map(x->x > valpct ? 1.0 : 0.0, rand(sz))
     else
         @assert in(Symbol(trnvalcol), dfnames) "Training-Validation column not found. We searched for the column $(trnvalcol) in the vector $(string.(dfnames))"
@@ -60,7 +61,7 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
     end
 
     if keycol == ""
-        @info "Using canonical choice of identifier column 1:size(yourIntputDataFrame,1)"
+        print_details && @info "Using canonical choice of identifier column 1:size(yourIntputDataFrame,1)"
         irkeyDA = collect(1:sz)
     else
         @assert in(Symbol(keycol), dfnames) "Identifier column not found. We searched for the column $(keycol) in the vector $(string.(dfnames))"
@@ -108,7 +109,7 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
         if in(this_name, Symbol.(treat_as_categorical_variable))
             # change variable type in original dataframe
             if !is_categorical_column(dfin[!,this_name], this_name)
-                @info "DTM: Converting the column $(this_name) from $(eltype(dfin[!,this_name])) to String."
+                print_details && @info "DTM: Converting the column $(this_name) from $(eltype(dfin[!,this_name])) to String."
                 dfin[!,this_name] = string.(dfin[!,this_name])
                 this_is_a_string = true
             else
@@ -127,28 +128,21 @@ function prepareDF!(dfin::DataFrame;treat_as_categorical_variable::Vector{String
 	n_char = length(char_features)
 	n_num = length(num_features)
 
-  # @warn("this might benefit from optimization. I am not entirely sure, how the code performs for larger data sets")
-    # if n_num>0        
-     #   @show num_features
-     # !WARN this also sets the ORDER of the COLUMNS, which is imporant (unfortunately....). numeric columns need to come first.
     for x in vcat(num_features, char_features)
         dfres[!, x] = dfin[!, x] 
     end
-        # dfres[num_features]=dfin[!,num_features]
-    # end
-    # if n_char>0        
-        # dfres[char_features]=dfin[!,char_features]
-    # end
     
     this_sett = ModelSettings()
 
     this_sett.df_name_vector = string.(propertynames(dfres)[1 + global_const_shift_cols:end])
     updateSettingsMod!(this_sett, number_of_num_features=n_num, number_of_char_features=n_char) 
-    @info "Data initialization finished:"
-    @show size(dfres)
-    @show n_num, n_char
-    @show char_features
-    @show num_features
+    if print_details 
+        @info "Data initialization finished:"
+        @show size(dfres)
+        @show n_num, n_char
+        @show char_features
+        @show num_features
+    end
     return dfres, this_sett
 end
 
@@ -190,14 +184,14 @@ function is_categorical_column(x, nm)
     return elt <: AbstractString
 end
 
-function prep_data_from_df(df_userinput::DataFrame, sett::ModelSettings, fn_with_ext::String;methodForSplittingPointsSelection::String="basedOnWeightVector")
+function prep_data_from_df(df_userinput::DataFrame, sett::ModelSettings, fn_with_ext::String;methodForSplittingPointsSelection::String="basedOnWeightVector",print_details = true)
     datafilename, ext = splitext(fn_with_ext) # actually one can provide fn_with_ext="c:\\temp\\my folder\\out" (so no extension is necessary)
     datafolder, outfileStringOnly = splitdir(datafilename)
     if length(outfileStringOnly) == 0
         error("DTM: fn_with_ext should be of the form C:\\some\\folder\\my_output.txt (the extension is irrelevant) \n You provided: $(fn_with_ext) \nAbort.")
     end
     dfIndata = df_userinput
-    println("Preparing Data for analysis...")
+    print_details && println("Preparing Data for analysis...")
 
     @assert check_for_missing_data(dfIndata, global_const_shift_cols) "Error dataset contains missing (NA) values! ABORT."
    
@@ -250,12 +244,12 @@ function prep_data_from_df(df_userinput::DataFrame, sett::ModelSettings, fn_with
     # this DataFrame will contain both categorical and numerical features
     features = DataFrame() 
     
-    print("Preparing numeric variables...")
+    print_details && print("Preparing numeric variables...")
     # this function modifies features -> the num features are added as pdas!
     candMatWOMaxValues = add_coded_numdata!(dfIndata, sett, trn_val_idx, sett.maxSplittingPoints, features, weight, methodForSplittingPointsSelection)
-    println(" done.")
+    print_details && println(" done.")
     # IMPORTANT convention  numerical data 'comes first' (i.e. first x columns are numerical), then categorical
-    print("Preparing character variables...")
+    print_details && print("Preparing character variables...")
     for i = 1:sett.number_of_char_features
         if !(eltype(dfIndata[!,global_const_shift_cols + i + sett.number_of_num_features]) <: AbstractString) 
             @show eltype(dfIndata[!,global_const_shift_cols + i + sett.number_of_num_features])
@@ -282,10 +276,10 @@ function prep_data_from_df(df_userinput::DataFrame, sett::ModelSettings, fn_with
     end
     mappings = deepcopy(map(i->features[!,i].pool, sett.number_of_num_features + 1:size(features, 2)))
     
-    println(" done.")
+    print_details && println(" done.")
     wlo, whi = extrema(weight)
     if wlo != whi
-        print("Max weight is $(whi), min weight is $(wlo)")
+        print_details && print("Max weight is $(whi), min weight is $(wlo)")
         # @info("Currently the automatic choice of splitting points does not consider the weight distribution!")
     end
     
@@ -325,11 +319,11 @@ function prep_data_from_df(df_userinput::DataFrame, sett::ModelSettings, fn_with
     
     if sett.saveJLDFile
         jldfile = string(fileroot(datafilename), ".jld2")
-        println("Saving prepped data to file:\n $(jldfile)")
+        print_details && println("Saving prepped data to file:\n $(jldfile)")
         isfile(jldfile) && rm(jldfile)
         # @time save(jldfile,"dtmtable",dtmtable,"candMatWOMaxValues",candMatWOMaxValues,"features",features,"mappings",mappings,"key",key,"trn_val_idx",trn_val_idx,"numerator",numerator,"denominator",denominator,"weight",weight,"oldsettings",sett)
         @time save(jldfile, "dtmtable", dtmtable, "candMatWOMaxValues", candMatWOMaxValues, "mappings", mappings, "sett", sett)
-        println("JLD2 file saved. Starting modelling... \n")
+        print_details && println("JLD2 file saved. Starting modelling... \n")
     end
 
     return dtmtable

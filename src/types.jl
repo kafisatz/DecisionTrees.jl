@@ -670,9 +670,12 @@ function checkIfSettingsAreValid(s::ModelSettings)
       #check graphvizexecutable
 
       if s.write_dot_graph 
-        gcmd = `$(s.graphvizexecutable) "-V"`      
+        gcmd = `$(s.graphvizexecutable) "-V"`
         try 
-            gres = run(gcmd)                
+            tmptxt = mktemp()[1]
+            tmperr = mktemp()[1]
+            pip = pipeline(gcmd, stdout=tmptxt, stderr=tmperr)
+            gres = run(pip)            
             if gres.exitcode != 0 
                 @warn("Please review the graphvizexecutable path in the settings")
                 @show s.write_dot_graph 
