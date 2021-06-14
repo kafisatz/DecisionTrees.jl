@@ -1,5 +1,5 @@
 # DecisionTrees.jl
-Decision Tree Algorithms for Regression
+A pure Julia implementation of Decision Tree Algorithms for Regression.
 
 [![CI Testing](https://github.com/kafisatz/DecisionTrees.jl/workflows/CI/badge.svg)](https://github.com/kafisatz/DecisionTrees.jl/actions?query=workflow%3ACI+branch%3Amaster)
 
@@ -32,16 +32,14 @@ Remark: Depending on the issue at hand, either `Pkg.build("Conda")` or `Pkg.buil
 
 ## Documentation
 
-This is in the works.
-
 This package provides Regression Decision Trees. Classification is not possible (except for a two class problem which can be viewed as binary response variable 0/1).
 Currently the following model types are provided:
 * Single Decision Tree
 * Boosted Decision Trees
 
-An approach for bagging (and random forest) is in development.
+An approach for bagging (and random forests) is in development.
 
-We note that the entire code is for the construction of the decision trees is written in Julia.
+As mentioned above, the code is 100% written in Julia.
 
 ### Motivation
 This package was developed for uses cases in insurance where other decision tree packages may not always be appropriate. Specifically the response variable for the trees is always considered to be a **ratio**. That is to say the "response variable" in these models always consists of **two** variables: a numerator and a denominator. As an example consider the task of **claim frequency modelling**: If we want to predict the number of insurance claims for any given policyholder during the next year (or an arbitrary period), we need to consider two elements: the number of claims that may occur and the time that the policy holder is insured (the exposure). Both of these elements are typically present in insurance data. The modelling of **loss ratios** (i.e. the sum of losses divided by the sum of premiums) is a similar problem. Both loss ratio and claim frequency modelling are difficult to be modelled with the mean squared error as a splitting criterion (which is the default in many decision tree implementations). One might be tempted to simply evaluate the claim frequency for each row in the data set and then use it as the target variable (in any decision tree or other model), however due to the nature of the problem, this may not necessarily yield good results. 
