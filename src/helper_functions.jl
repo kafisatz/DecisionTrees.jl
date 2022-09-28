@@ -2164,7 +2164,7 @@ function createTrnValStats!(trnidx::Vector{Int}, validx::Vector{Int}, sett::Mode
         catch er 
             @warn("Failed to calculate poissonError")
             @show er
-            poissonErrors = zeros(Float64, 2)::Vector{Float64}
+            poissonErrors = zeros(Float64, length(numerator))::Vector{Float64}
         end
         poissonErrTrn = sum(poissonErrors[trnidx]) / length(trnidx)
         poissonErrVal = sum(poissonErrors[validx]) / length(validx)        
