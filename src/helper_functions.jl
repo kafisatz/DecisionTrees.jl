@@ -2159,7 +2159,13 @@ function createTrnValStats!(trnidx::Vector{Int}, validx::Vector{Int}, sett::Mode
     thisres = [thisres;rss_rowval];overallstats = [overallstats;rss_rowval];
     # attach poisson error (for frequency models)    
     if sett.calculatePoissonError
-        poissonErrors = poissonError(numerator, numeratorEst)::Vector{Float64}
+        try
+            poissonErrors = poissonError(numerator, numeratorEst)::Vector{Float64}
+        catch er 
+            @warn("Failed to calculate poissonError")
+            @show er
+            poissonErrors = zeros(Float64, 2)::Vector{Float64}
+        end
         poissonErrTrn = sum(poissonErrors[trnidx]) / length(trnidx)
         poissonErrVal = sum(poissonErrors[validx]) / length(validx)        
     else
