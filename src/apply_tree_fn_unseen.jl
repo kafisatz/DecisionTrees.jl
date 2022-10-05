@@ -43,7 +43,7 @@ function apply_tree_by_leaf_inconsistent_features_iteration!(idx::Vector{Int}, t
     end
     subset = t.subset 
     subsetWhichIsStringOrFloatVector = fp[t.featid_new_positive][subset]
-    idxlInteger, idxrInteger = lrIndicesInconsitentFeatures(idx, features[t.featid_new_positive], subsetWhichIsStringOrFloatVector)  
+    idxlInteger, idxrInteger = lrIndicesInconsitentFeatures(idx, features[!,t.featid_new_positive], subsetWhichIsStringOrFloatVector)  
     apply_tree_by_leaf_inconsistent_features_iteration!(idxlInteger, t.left, features, fit, leaf, fp)
     apply_tree_by_leaf_inconsistent_features_iteration!(idxrInteger, t.right, features, fit, leaf, fp)
     return nothing 
