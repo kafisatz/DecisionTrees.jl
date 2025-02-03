@@ -167,7 +167,7 @@ end	 # singleRunDtm
 function get_model_stats(resulting_model::DTModel, defaulted_modelstats_df::DataFrame, i::Int)	
 	thesemodelstats = deepcopy(resulting_model.modelstats)	
 	nm = DataFrame(ones(Int, size(thesemodelstats, 1), 1) .* i, :auto)	
-	DataFrames.names!(nm, Symbol[symbol("ModelNumber")])	
+	DataFrames.rename!(nm, Symbol[symbol("ModelNumber")])	
 	return  thesemodelstats = hcat(nm, thesemodelstats)
 end
 

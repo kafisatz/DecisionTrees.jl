@@ -162,48 +162,48 @@ function hash(x::DTMTable,h)
     return h    
 end
 
-function getindex_internal(r::DTMTable,idx;compact_features=false) where T <: Number
+function getindex_internal(r::DTMTable,idx;compact_features=false)
     #this is currently not working for boolean indices (BitVector)
-@assert !compact_features 
-key=r.key[idx]
-numerator=r.numerator[idx]    
-denominator=r.denominator[idx]    
-weight=r.weight[idx]    
-features=r.features[idx,:]
+    @assert !compact_features 
+    key=r.key[idx]
+    numerator=r.numerator[idx]    
+    denominator=r.denominator[idx]    
+    weight=r.weight[idx]    
+    features=r.features[idx,:]
 
-#redefine trn and validx        
-#version with intermediate arrays
-#found=findall((in)(idx),trnidx)
-#integersNew=trnidx[found]
-#trnidxNEW=findall((in)(integersNew),idx)
+    #redefine trn and validx        
+    #version with intermediate arrays
+    #found=findall((in)(idx),trnidx)
+    #integersNew=trnidx[found]
+    #trnidxNEW=findall((in)(integersNew),idx)
 
-#version with fewer intermediate arrays
-found=findall((in)(idx),r.trnidx)
-found=r.trnidx[found]
-trnidxNEW=findall((in)(found),idx)
+    #version with fewer intermediate arrays
+    found=findall((in)(idx),r.trnidx)
+    found=r.trnidx[found]
+    trnidxNEW=findall((in)(found),idx)
 
-found=findall((in)(idx),r.validx)
-found=r.validx[found]
-validxNEW=findall((in)(found),idx)
+    found=findall((in)(idx),r.validx)
+    found=r.validx[found]
+    validxNEW=findall((in)(found),idx)
 
-(length(validxNEW)!=0)||@warn("DTM: Validation index of the DTMTable has length zero! You may need to redefine validx. The function resample_trnvalidx! might be helpful.")
-(length(trnidxNEW)!=0)||@warn("DTM: Training index of the DTMTable has length zero! You may need to redefine trnidx. The function resample_trnvalidx! might be helpful.")
+    (length(validxNEW)!=0)||@warn("DTM: Validation index of the DTMTable has length zero! You may need to redefine validx. The function resample_trnvalidx! might be helpful.")
+    (length(trnidxNEW)!=0)||@warn("DTM: Training index of the DTMTable has length zero! You may need to redefine trnidx. The function resample_trnvalidx! might be helpful.")
 
-#I think this is generally not desirable (e.g. when a dtmtable is created based on a large table, then models are fit to subsets of the data: in that case we want the pools to match perfectly!)
-if compact_features 
-    @assert false
-    @warn("for this to work one would need to update mappings and candMatWOMaxValues too!")
-    tmp_number_of_num_features=sum(map(x->eltype(r.features[x].pool),1:size(r.features,2)).!=String)	        
-    #"compact" features, it is possible that we could do this in a better/faster way
-    for i=tmp_number_of_num_features+1:size(features,2)
-        if eltype(features[i])!=UInt8
-            features[i]=DecisionTrees.PooledArraysDTM.PooledArray(Array(features[i]))
-        end
-    end    
-end 
+    #I think this is generally not desirable (e.g. when a dtmtable is created based on a large table, then models are fit to subsets of the data: in that case we want the pools to match perfectly!)
+    if compact_features 
+        @assert false
+        @warn("for this to work one would need to update mappings and candMatWOMaxValues too!")
+        tmp_number_of_num_features=sum(map(x->eltype(r.features[x].pool),1:size(r.features,2)).!=String)	        
+        #"compact" features, it is possible that we could do this in a better/faster way
+        for i=tmp_number_of_num_features+1:size(features,2)
+            if eltype(features[i])!=UInt8
+                features[i]=DecisionTrees.PooledArraysDTM.PooledArray(Array(features[i]))
+            end
+        end    
+    end 
 
-dt=DTMTable(key,trnidxNEW,validxNEW,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),deepcopy(r.mappings))
-return dt
+    dt=DTMTable(key,trnidxNEW,validxNEW,numerator,denominator,weight,features,deepcopy(r.candMatWOMaxValues),deepcopy(r.mappings))
+    return dt
 end
 
 function Base.getindex(r::DTMTable,idx::UnitRange{T};compact_features=false) where T <: Number
@@ -415,7 +415,7 @@ mutable struct ModelSettings
 	saveResultAsJLDFile=false
 	print_details=true
 	seed=90210
-	graphvizexecutable="" #C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe""
+	graphvizexecutable="" #C:\\Program Files\\Graphviz\\bin\\dot.exe""
 	showProgressBar_time=true
 	prroduceEstAndLeafMatrices=false
 	write_dot_graph=false

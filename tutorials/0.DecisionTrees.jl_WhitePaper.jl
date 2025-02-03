@@ -183,7 +183,7 @@ unique(leafnumbers)
 
 # Tree representation
 # If you have Graphviz installed, you can generate a plot (on a PDF) of the tree
-updateSettingsMod!(sett,write_dot_graph="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
+updateSettingsMod!(sett,write_dot_graph="true",graphvizexecutable="c:\\Program Files\\Graphviz\\bin\\dot.exe")
 resultingFiles, resM = dtm(dtmtable, sett)
 # You will also get a *.dot.txt file with a text representation of the graph
 

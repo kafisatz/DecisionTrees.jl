@@ -4,7 +4,7 @@ export writeStatistics
 function create_dataframe(arr::Array{U,2}, header::Array{T,1}) where {T <: AbstractString,U <: Any}
 	res = DataFrame( arr,:auto)
 	hsym = Symbol[x for x in header]
-	DataFrames.names!(res, hsym)
+	DataFrames.rename!(res, hsym)
 	return res
 end
 
@@ -59,7 +59,6 @@ function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObje
 		append!(fieldsWhichAreAlreadySet, resevedKeywords)		
 		if !in(x, fieldsWhichAreAlreadySet)
             PyCall.pycall(chart[x], PyCall.PyAny, chartDict[x])	# TBD: unclear how to fix this line... (deprecated syntax...)
-            #
 		end			
 	end
 	PyCall.pycall(worksheet."insert_chart", PyCall.PyAny, location, chart)
@@ -78,7 +77,7 @@ function writeStatistics(excelData::ExcelData, statsfile::T, write_header::Bool,
 		addChartToWorkbook!(workbook, worksheet, c.chartDict, c.location);
 	end
 	# save (=write) Excel file and close it	
-	writer.save()
+	writer.close()
 	return nothing
 end
 
@@ -100,7 +99,8 @@ function writeDFtoExcel(excelData::ExcelData, existingFile::T, row::Int, col::In
 		# create python dataframe	
 		dataDict = create_custom_dict(df)
 		pyDF = PyCall.pycall(pyModPandas.DataFrame, PyCall.PyObject, dataDict, columns=propertynames(df))		
-		PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col, encoding="utf-8")  # index=false suppress the rowcount		
+		#PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col, encoding="utf-8")  # index=false suppress the rowcount		
+        PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col)  # index=false suppress the rowcount		
 	end
 	# DataFrame.to_excel(excel_writer, sheet_name='Sheet1', na_rep='', float_format=None, columns=None, header=True, index=True, index_label=None, startrow=0, startcol=0, engine=None, merge_cells=True, encoding=None, inf_rep='inf')
 	# writer[:save]()

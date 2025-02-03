@@ -965,11 +965,13 @@ function writeStatisticsFile!(statsfileExcel, xlData, filelistWithFilesToBeZippe
         isfile(statsfileExcel) && rm(statsfileExcel)
         @time writeStatistics(xlData, statsfileExcel, false, false)
         push!(filelistWithFilesToBeZipped, statsfileExcel)
+    
     catch ePyCallWriteExcel
         @show ePyCallWriteExcel
         dump(ePyCallWriteExcel)
         @warn("DTM: Failed to create Excel Statistics file. You may want to check the PyCall installation and whether the required Python packages are installed. \r\n $(statsfileExcel)")
     end
+    
     return nothing
 end
 

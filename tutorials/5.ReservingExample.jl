@@ -202,7 +202,7 @@ dataKnownByYE2005 = fullData[indexOfClaimIsReportedByYE2005,:]
     # aggregate(df,:someColumn,[sum, mean])    
 dtmKnownByYE2005, sett, dfpreppedUnused = prepare_dataframe_for_dtm!(dataKnownByYE2005, keycol="ClNr", numcol="PayCum00", trnvalcol="trnValCol", independent_vars=selected_explanatory_vars, treat_as_categorical_variable=categoricalVars);
     # define general model settings
-updateSettingsMod!(sett, ignoreZeroDenominatorValues=true, model_type="build_tree", write_dot_graph=true, writeTree=false, graphvizexecutable="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
+updateSettingsMod!(sett, ignoreZeroDenominatorValues=true, model_type="build_tree", write_dot_graph=true, writeTree=false, graphvizexecutable="C:\\Program Files\\Graphviz\\bin\\dot.exe")
     # a note on the data
     # dataKnownByYE2005 is a DataFrame (it contains more data such as all PayCum columns and the AY)
     # dtmKnownByYE2005 is a DTMTable struct (it has a different structre than the DataFrame)    

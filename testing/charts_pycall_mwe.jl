@@ -49,7 +49,8 @@ function writeDFtoExcel(excelData::ExcelData, existingFile::T, row::Int, col::In
             # create python dataframe	
             dataDict = create_custom_dict(df)
             pyDF = PyCall.pycall(pyModPandas.DataFrame, PyCall.PyObject, dataDict, columns=propertynames(df))		
-            PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col, encoding="utf-8")  # index=false suppress the rowcount		
+            PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col)  # index=false suppress the rowcount		
+            #PyCall.pycall(pyDF."to_excel", PyCall.PyAny, writer, header=write_header, index=write_index, sheet_name=sheet, startrow=row, startcol=col, encoding="utf-8")  # index=false suppress the rowcount		
         end
         return writer        
     end
@@ -162,7 +163,7 @@ function writeStatistics(excelData::ExcelData, statsfile::T, write_header::Bool,
 		addChartToWorkbook!(workbook, worksheet, c.chartDict, c.location);
 	end
 	# save (=write) Excel file and close it	
-	writer.save()
+	writer.close()
 	return nothing
 end
 

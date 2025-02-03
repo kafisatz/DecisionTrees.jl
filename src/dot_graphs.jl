@@ -131,13 +131,13 @@ function draw_dot_graph(gvloc::String, dot_txt_file::String, outputfilename::Str
 
 # http://edutechwiki.unige.ch/en/Graphviz
 # this should work
-# "C:\Program Files (x86)\Graphviz2.38\bin\dot.exe mytree.dot.txt -Tpng -o c:\temp\mt.png"
-# C:\Program Files (x86)\Graphviz2.38\bin\dot.exe mytree.dot.txt -Tpdf -o c:\temp\mt.pdf
+# "C:\Program Files\Graphviz\bin\dot.exe mytree.dot.txt -Tpng -o c:\temp\mt.png"
+# C:\Program Files\Graphviz\bin\dot.exe mytree.dot.txt -Tpdf -o c:\temp\mt.pdf
  # dot mytree.dot.txt -Tsvg -o c:\temp\mt.svg
-# gvloc="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe"
+# gvloc="C:\\Program Files\\Graphviz\\bin\\dot.exe"
 
 #= 
-    gvloc="C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe"
+    gvloc="C:\\Program Files\\Graphviz\\bin\\dot.exe"
     outfilename = "c:\\temp\\mo ha\\mi.pdf"
     isdir(splitdir(outfilename)[1])
     ma=draw_dot_graph(gvloc,"c:\\temp\\maroxi.dot.txt",outfilename) 
@@ -169,7 +169,7 @@ function draw_dot_graph(gvloc::String, dot_txt_file::String, outputfilename::Str
             try
             # run(`$(gvloc) $(dot_txt_file) $(command)`)
             # run(`$(command2[])`)
-            # GOAL: run(`'C:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe' 'c:\\temp\\maroxi.dot.txt' -Tpdf -o 'c:\\temp\\mi.pdf'`)
+            # GOAL: run(`'C:\\Program Files\\Graphviz\\bin\\dot.exe' 'c:\\temp\\maroxi.dot.txt' -Tpdf -o 'c:\\temp\\mi.pdf'`)
                 run(actual_command)
 			println("Graph was visualized in the file: \n $(outputfilename)")				
             catch e

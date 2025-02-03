@@ -45,14 +45,14 @@ end
 
 # We will slightly modify the data in the following
 # add AreaInteger as new variable, i.e. A:F -> 1:6 (as suggested in the paper of Wüthrich, Noll, Salzmann)
-areasSorted = sort(unique(fullData[:Area]))
-AreaInteger = map(x->findall((in)([x]), areasSorted)[1], fullData[:Area])
-fullData[:AreaInteger] = AreaInteger
+areasSorted = sort(unique(fullData[!,:Area]))
+AreaInteger = map(x->findall((in)([x]), areasSorted)[1], fullData[!,:Area])
+fullData[!,:AreaInteger] = AreaInteger
 
 # correct for unreasonable observations
 for i = 1:size(fullData, 1)
-    fullData[:ClaimNb][i] = min(4, fullData[:ClaimNb][i])
-    fullData[:Exposure][i] = min(1.0, fullData[:Exposure][i])
+    fullData[i,:ClaimNb] = min(4, fullData[i,:ClaimNb])
+    fullData[i,:Exposure] = min(1.0, fullData[i,:Exposure])
 end
     
 # set independent variables
@@ -63,7 +63,7 @@ selected_explanatory_vars = ["Area","AreaInteger","VehPower","VehAge","DrivAge",
 # check type of each column
 for x in selected_explanatory_vars
     println(x)
-    println(eltype(fullData[Symbol(x)]))
+    println(eltype(fullData[!,Symbol(x)]))
     println("first ten values")
     print(fullData[1:10,Symbol(x)])
     println("")
@@ -121,7 +121,7 @@ dtmtable.features # explanatory variables
 # the data takes up less space in RAM and caches which generally increases performance
 
 # keep a copy of original train and test split
-originalTrnValIndex = deepcopy(fullData[:trnTest])
+originalTrnValIndex = deepcopy(fullData[!,:trnTest])
 
 # Redefine trn and val data sets
 # if you prefer train on X% of the data, you can use this function to adjust the training set. By default it is sampled randomly
@@ -180,7 +180,7 @@ unique(leafnumbers)
 
 # Tree representation
 # If you have Graphviz installed, you can generate a plot (on a PDF) of the tree
-updateSettingsMod!(sett,write_dot_graph="true",graphvizexecutable="c:\\Program Files (x86)\\Graphviz2.38\\bin\\dot.exe")
+updateSettingsMod!(sett,write_dot_graph="true",graphvizexecutable="c:\\Program Files\\Graphviz\\bin\\dot.exe")
 resultingFiles, resM = dtm(dtmtable, sett)
 # You will also get a *.dot.txt file with a text representation of the graph
 
@@ -271,14 +271,12 @@ length(settV)
 # shell> julia -p 8 
 # to start julia with 8 workers. Depending on your CPU you may want to choose a different number
 
-Sys.CPU_CORES # might be give you an indication of the number of workers() you could use
-
 ############################################################
 # Run grid search
 ############################################################
 
 tt0 = time_ns()
-gridResult = dtm(dtmtable, settV, file="R:\\temp\\1\\MTPLsingleTree.CSV")
+gridResult = dtm(dtmtable, settV, file="c:\\temp\\1\\MTPLsingleTree.CSV")
 @show ela = (-tt0 + time_ns()) / 1e9
 @info ".....done"
 
@@ -372,7 +370,7 @@ settV = createGridSearchSettings(sett,
     minWeight=minweight_list
     );
 
-gridResult = dtm(dtmtable, settV, file="R:\\temp\\13\\MTPLsingleTree.CSV")
+gridResult = dtm(dtmtable, settV, file="c:\\temp\\1\\MTPLsingleTree.CSV")
 
 
 ############################################################
