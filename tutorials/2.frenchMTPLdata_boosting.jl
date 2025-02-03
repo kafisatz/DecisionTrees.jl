@@ -11,7 +11,6 @@
 # Load packages
 ##############################
 t0 = time_ns()
-cd(joinpath(GLOBAL_julia_code_folder, "DecisionTrees.jl"))
 # @info("You may want to run 'pkg> instantiate' when you first run this. Use ] to enter the package mode.")
 
 using Distributed
@@ -37,14 +36,14 @@ datafile = joinpath("data", "freMTPL2", "freMTPL2.csv")
 # also the Noll, Salzmann, Wüthrich Paper has some descriptive graphs of the data.
 
 # add AreaInteger as new variable, i.e. A:F -> 1:6 (as suggested in the paper of Wüthrich, Noll, Salzmann)
-areasSorted = sort(unique(fullData[:Area]))
-AreaInteger = map(x->findall((in)([x]), areasSorted)[1], fullData[:Area])
-fullData[:AreaInteger] = AreaInteger
+areasSorted = sort(unique(fullData[!,:Area]))
+AreaInteger = map(x->findall((in)([x]), areasSorted)[1], fullData[!,:Area])
+fullData[!,:AreaInteger] = AreaInteger
 
 # correct for unreasonable observations
 for i = 1:size(fullData, 1)
-    fullData[:ClaimNb][i] = min(4, fullData[:ClaimNb][i])
-    fullData[:Exposure][i] = min(1.0, fullData[:Exposure][i])
+    fullData[!,:ClaimNb][i] = min(4, fullData[!,:ClaimNb][i])
+    fullData[!,:Exposure][i] = min(1.0, fullData[!,:Exposure][i])
 end
     
 # set independent variables
@@ -55,7 +54,7 @@ selected_explanatory_vars = ["Area","AreaInteger","VehPower","VehAge","DrivAge",
 # check type of each column
 for x in selected_explanatory_vars
     println(x)
-    println(eltype(fullData[Symbol(x)]))
+    println(eltype(fullData[!,Symbol(x)]))
     println("first ten values")
     print(fullData[1:10,Symbol(x)])
     println("")
@@ -99,7 +98,7 @@ dtmtable.features # explanatory variables
 # we realize that it may be sutiable to define the splitting in a different manner (than uniformly spaced).
 # this feature might be added at a later time. You can consider the function add_coded_numdata!(...) to see how splitting points are chosen
 
-originalTrnValIndex = deepcopy(fullData[:trnTest])
+originalTrnValIndex = deepcopy(fullData[!,:trnTest])
 
 # Redefine trn and val data sets
 # if you prefer train on X% of the data, you can use this function to adjust the training set. By default it is sampled randomly
