@@ -59,6 +59,9 @@ function addChartToWorkbook!(workbook::PyCall.PyObject, worksheet::PyCall.PyObje
 		append!(fieldsWhichAreAlreadySet, resevedKeywords)		
 		if !in(x, fieldsWhichAreAlreadySet)
             PyCall.pycall(chart[x], PyCall.PyAny, chartDict[x])	# TBD: unclear how to fix this line... (deprecated syntax...)
+            #https://discourse.julialang.org/t/pycall-deprecation-warning-getindex-o-x-vs-o-x-where-x-is-a-julia-variable/125495/2
+            #PyCall.pycall(getproperty(chart, x), PyCall.PyAny, getproperty(chart, x))
+            #PyCall.pycall(get(chart, x), PyCall.PyAny, getproperty(chart, x))
 		end			
 	end
 	PyCall.pycall(worksheet."insert_chart", PyCall.PyAny, location, chart)
